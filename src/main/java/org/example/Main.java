@@ -13,7 +13,7 @@ public class Main {
                 .config("spark.master", "local")
                 .getOrCreate();
 
-        Dataset<Row> df = spark.read().csv("/Users/asinha/intellij/spark-with-java8/src/main/resources/Hogwarts.csv");
+        Dataset<Row> df = spark.read().csv("src/main/resources/Hogwarts.csv");
         df.show();
     }
 }
