@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'org.example'
+version '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    implementation 'org.apache.spark:spark-sql_2.13:3.3.2'
+
+    implementation "org.apache.spark:spark-launcher_2.13:3.3.2"
+    implementation "org.apache.spark:spark-catalyst_2.13:3.3.2"
+    implementation "org.apache.spark:spark-streaming_2.13:3.3.2"
+    implementation "org.apache.spark:spark-core_2.13:3.3.2"
+}
+
+test {
+    useJUnitPlatform()
+}
