@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-  id 'net.saliman.properties' version '1.5.2'
-  id "com.marklogic.ml-gradle" version "4.5.1"
+    id 'net.saliman.properties' version '1.5.2'
+    id "com.marklogic.ml-gradle" version "4.5.1"
 }
 
 group 'org.example'
@@ -21,8 +21,20 @@ dependencies {
     implementation "org.apache.spark:spark-catalyst_2.13:3.3.2"
     implementation "org.apache.spark:spark-streaming_2.13:3.3.2"
     implementation "org.apache.spark:spark-core_2.13:3.3.2"
+    implementation "com.marklogic:marklogic-client-api:6.0.0"
 }
 
 test {
     useJUnitPlatform()
 }
+
+task testMarkLogicSparkReader(type: JavaExec) {
+  description = "testMarkLogicSparkReader"
+  classpath = sourceSets.test.runtimeClasspath
+  main = "testMarkLogicSparkReader"
+  //jvmArgs = ['--add-exports=java.base/sun.nio.ch=ALL-UNNAMED']
+}
+
+// References - https://levelup.gitconnected.com/easy-guide-to-create-a-custom-read-data-source-in-apache-spark-3-194afdc9627a
+//              https://github.com/aamargajbhiye/big-data-projects.git
+//              https://github.com/mongodb/mongo-spark.git
