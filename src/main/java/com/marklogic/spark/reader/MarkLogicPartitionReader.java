@@ -23,6 +23,7 @@ import com.marklogic.client.row.RawPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
 import com.marklogic.client.row.RowSet;
+import com.marklogic.spark.constants.MarkLogicConfig;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -39,35 +40,34 @@ public class MarkLogicPartitionReader implements PartitionReader {
     Map<String, String> map;
     StructType schema;
     RowSet<RowRecord> rows;
-    RowRecord row;
-    Iterator<RowRecord> itr;
+    Iterator<RowRecord> rowRecordIterator;
     public MarkLogicPartitionReader(StructType schema,Map<String, String> map) {
         this.index = 0;
         this.map = map;
         this.schema = schema;
         System.out.println("************** In MarkLogicPartitionReader");
-        String plan = map.get("plan");
-        DatabaseClient db = DatabaseClientFactory.newClient(map.get("host"), Integer.valueOf(map.get("port")),
-            new DatabaseClientFactory.DigestAuthContext(map.get("user"), map.get("password")),
-            DatabaseClient.ConnectionType.valueOf(System.getProperty("TEST_CONNECT_TYPE", "DIRECT")));
+        DatabaseClient db = DatabaseClientFactory.newClient(map.get(MarkLogicConfig.CONNECTION_HOST), Integer.valueOf(map.get(MarkLogicConfig.CONNECTION_PORT)),
+            new DatabaseClientFactory.DigestAuthContext(map.get(MarkLogicConfig.CONNECTION_USERNAME), map.get(MarkLogicConfig.CONNECTION_PASSWORD)));
         RowManager rowMgr = db.newRowManager();
-        RawPlan builtPlan = rowMgr.newRawQueryDSLPlan(new StringHandle(plan));
-        rows = rowMgr.resultRows(builtPlan);
-        itr = rows.iterator();
+        RawPlan builtPlan = rowMgr.newRawQueryDSLPlan(new StringHandle(map.get(MarkLogicConfig.OPTIC_DSL)));
+        try{
+            rows = rowMgr.resultRows(builtPlan);
+            rowRecordIterator = rows.iterator();
+        } catch(Exception ex){
+            throw ex;
+        }
     }
 
     @Override
     public boolean next() {
-        row = itr.hasNext()? itr.next():null;
-        return row!=null;
+        return rowRecordIterator.hasNext();
     }
 
     @Override
     public InternalRow get(){
         System.out.println("Calling get function");
-
         try {
-            Row sparkRow = RowFactory.create(index, String.valueOf(row));
+            Row sparkRow = RowFactory.create(index, String.valueOf(rowRecordIterator.next()));
             index++;
             MarkLogicRowToInternalRowFunction markLogicRowToInternalRowFunction = new MarkLogicRowToInternalRowFunction(schema);
             return markLogicRowToInternalRowFunction.apply(sparkRow);

@@ -49,11 +49,11 @@ public class MarkLogicSparkReadDriver {
         Dataset<Row> reader = sparkSession.read()
                 .schema(struct)
                 .format(MarkLogicReadDataSource.class.getName())
-            .option("host", "localhost")
-            .option("port", 8012)
-            .option("user", "admin")
-            .option("password","admin")
-            .option("plan", "op.fromView(\"Medical\",\"Authors\");")
+            .option("marklogic.connection.host", "localhost")
+            .option("marklogic.connection.port", 8012)
+            .option("marklogic.connection.username", "admin")
+            .option("marklogic.connection.password","admin")
+            .option("marklogic.opticDsl", "op.fromView(\"Medical\",\"Authors\");")
             // loads till MarkLogicReader
             .load();
 
