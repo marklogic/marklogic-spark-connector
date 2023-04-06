@@ -15,15 +15,21 @@
  */
 
 import com.marklogic.spark.reader.MarkLogicReadDataSource;
+import org.apache.spark.api.java.function.ForeachFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 public class MarkLogicSparkReadDriver {
-
+    static Set<String> hashSet = new HashSet<>();
     public static void main(String args[]) {
 
         SparkSession sparkSession = SparkSession.builder()
@@ -43,10 +49,19 @@ public class MarkLogicSparkReadDriver {
         Dataset<Row> reader = sparkSession.read()
                 .schema(struct)
                 .format(MarkLogicReadDataSource.class.getName())
+            .option("marklogic.connection.host", "localhost")
+            .option("marklogic.connection.port", 8012)
+            .option("marklogic.connection.username", "admin")
+            .option("marklogic.connection.password","admin")
+            .option("marklogic.opticDsl", "op.fromView(\"Medical\",\"Authors\");")
             // loads till MarkLogicReader
             .load();
 
         // Needed to navigate from MarkLogicReader to MarkLogicPartitionReader
-        reader.show();
+      //  reader.show();
+        reader.foreach((ForeachFunction<Row>) row -> {
+            hashSet.add((row.get(1).toString()));
+        });
+        assertTrue(hashSet.size()==15);
     }
 }
