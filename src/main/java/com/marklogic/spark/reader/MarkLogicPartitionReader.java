@@ -22,40 +22,30 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
-import com.marklogic.client.row.RowSet;
-import com.marklogic.spark.constants.MarkLogicConfig;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.sql.types.StructType;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Function;
 
 
 public class MarkLogicPartitionReader implements PartitionReader {
-    int index;
-    Map<String, String> map;
-    StructType schema;
-    RowSet<RowRecord> rows;
-    Iterator<RowRecord> rowRecordIterator;
-    public MarkLogicPartitionReader(StructType schema,Map<String, String> map) {
-        this.index = 0;
-        this.map = map;
-        this.schema = schema;
+
+    private int index;
+    private Iterator<RowRecord> rowRecordIterator;
+    private Function<Row, InternalRow> rowConverter;
+
+    public MarkLogicPartitionReader(StructType schema, Map<String, String> map) {
+        this.rowConverter = new MarkLogicRowToInternalRowFunction(schema);
         System.out.println("************** In MarkLogicPartitionReader");
-        DatabaseClient db = DatabaseClientFactory.newClient(map.get(MarkLogicConfig.CONNECTION_HOST), Integer.valueOf(map.get(MarkLogicConfig.CONNECTION_PORT)),
-            new DatabaseClientFactory.DigestAuthContext(map.get(MarkLogicConfig.CONNECTION_USERNAME), map.get(MarkLogicConfig.CONNECTION_PASSWORD)));
+        DatabaseClient db = DatabaseClientFactory.newClient(propertyName -> map.get(propertyName));
         RowManager rowMgr = db.newRowManager();
-        RawPlan builtPlan = rowMgr.newRawQueryDSLPlan(new StringHandle(map.get(MarkLogicConfig.OPTIC_DSL)));
-        try{
-            rows = rowMgr.resultRows(builtPlan);
-            rowRecordIterator = rows.iterator();
-        } catch(Exception ex){
-            throw ex;
-        }
+        RawPlan builtPlan = rowMgr.newRawQueryDSLPlan(new StringHandle(map.get("marklogic.opticDsl")));
+        rowRecordIterator = rowMgr.resultRows(builtPlan).iterator();
     }
 
     @Override
@@ -64,20 +54,15 @@ public class MarkLogicPartitionReader implements PartitionReader {
     }
 
     @Override
-    public InternalRow get(){
+    public InternalRow get() {
         System.out.println("Calling get function");
-        try {
-            Row sparkRow = RowFactory.create(index, String.valueOf(rowRecordIterator.next()));
-            index++;
-            MarkLogicRowToInternalRowFunction markLogicRowToInternalRowFunction = new MarkLogicRowToInternalRowFunction(schema);
-            return markLogicRowToInternalRowFunction.apply(sparkRow);
-        } catch (Exception e) {
-            throw e;
-        }
+        Row sparkRow = RowFactory.create(index, String.valueOf(rowRecordIterator.next()));
+        index++;
+        return this.rowConverter.apply(sparkRow);
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         System.out.println("Stopping");
     }
 }
