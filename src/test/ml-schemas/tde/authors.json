@@ -7,7 +7,7 @@
         "viewName": "Authors",
         "columns": [
           {
-            "name": "ID",
+            "name": "CitationID",
             "scalarType": "long",
             "val": "../../../ID"
           },
@@ -32,25 +32,6 @@
             "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day || 'T' || ../../Journal/JournalIssue/PubDate/Time"
           }
         ]
-      }
-    ],
-    "vars": [
-      {
-        "name": "prefix1",
-        "val": "\"http://marklogic.com/example/\""
-      }
-    ],
-    "triples": [
-      {
-        "subject": {
-          "val": "sem:iri($prefix1||'person/'||AuthorList/Author[1]/ForeName||'_'||AuthorList/Author[1]/LastName)"
-        },
-        "predicate": {
-          "val": "sem:iri(($prefix1||'authored'))"
-        },
-        "object": {
-          "val": "xs:string(../../Journal/ISSN)"
-        }
       }
     ]
   }
