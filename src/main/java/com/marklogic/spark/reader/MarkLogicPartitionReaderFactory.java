@@ -20,19 +20,28 @@ import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.types.StructType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public class MarkLogicPartitionReaderFactory implements PartitionReaderFactory {
+
+    private final Logger logger = LoggerFactory.getLogger(MarkLogicPartitionReaderFactory.class);
+
+    private PlanAnalysis planAnalysis;
     private StructType schema;
-    Map<String, String> map;
-    public MarkLogicPartitionReaderFactory(StructType schema,Map<String, String> options) {
-        this.map = options;
+    private Map<String, String> properties;
+
+    public MarkLogicPartitionReaderFactory(PlanAnalysis planAnalysis, StructType schema, Map<String, String> properties) {
+        this.planAnalysis = planAnalysis;
+        this.properties = properties;
         this.schema = schema;
-        System.out.println("************** inside MarkLogicPartitionReaderFactory");
     }
+
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
-        return new MarkLogicPartitionReader(this.schema, this.map);
+        logger.info("Creating reader for partition: {}", partition);
+        return new MarkLogicPartitionReader(this.planAnalysis.boundedPlan, (PlanAnalysis.Partition) partition, this.schema, this.properties);
     }
 }

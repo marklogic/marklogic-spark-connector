@@ -12,7 +12,11 @@
     <appender-ref ref="STDOUT"/>
   </root>
 
-  <logger name="com.marklogic" level="INFO" additivity="false">
+  <logger name="com.marklogic.client" level="WARN" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <logger name="com.marklogic.spark" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
 

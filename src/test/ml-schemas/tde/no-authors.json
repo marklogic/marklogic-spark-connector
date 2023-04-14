@@ -1,0 +1,24 @@
+{
+  "template": {
+    "description": "Used for testing a query that does not match any rows",
+    "context": "/NoAuthorsExistAtThisPath",
+    "rows": [
+      {
+        "schemaName": "Medical",
+        "viewName": "NoAuthors",
+        "columns": [
+          {
+            "name": "LastName",
+            "scalarType": "string",
+            "val": "LastName"
+          },
+          {
+            "name": "ForeName",
+            "scalarType": "string",
+            "val": "ForeName"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -23,7 +23,7 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 
-public class MarkLogicReadDataSource implements TableProvider {
+public class MarkLogicTableProvider implements TableProvider {
 
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
@@ -32,7 +32,6 @@ public class MarkLogicReadDataSource implements TableProvider {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        System.out.println("************** In MarkLogicReadDataSource");
         return new MarkLogicReader(schema, properties);
     }
 
