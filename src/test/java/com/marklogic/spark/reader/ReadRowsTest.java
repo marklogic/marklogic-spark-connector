@@ -37,6 +37,14 @@ public class ReadRowsTest extends AbstractIntegrationTest {
             .collectAsList();
 
         assertEquals(15, rows.size(), "Expecting all 15 rows to be returned from the view");
+
+        rows.forEach(row -> {
+            int id = row.getInt(0);
+            assertTrue(id >= 1 && id <= 5, "The citation ID is expected to be the first column value, and based on our " +
+                "test data, it should have a value from 1 to 5; actual value: " + id);
+            assertEquals(2, row.size(), "Expecting the row to have 2 columns since the schema in newDefaultReader " +
+                "only defines 2 columns.");
+        });
     }
 
     @Test

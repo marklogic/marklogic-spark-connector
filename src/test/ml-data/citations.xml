@@ -19,10 +19,14 @@
         <Author>
           <LastName>Golby</LastName>
           <ForeName>Pen</ForeName>
+          <Base64Value>c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l</Base64Value>
+          <BooleanValue>true</BooleanValue>
+          <CalendarInterval>interval 2 years 4 month</CalendarInterval>
         </Author>
         <Author>
           <LastName>Bernadzki</LastName>
           <ForeName>Cherianne</ForeName>
+          <BooleanValue>false</BooleanValue>
         </Author>
         <Author>
           <LastName>Canham</LastName>

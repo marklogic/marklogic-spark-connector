@@ -47,8 +47,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("marklogic.client.authType", "digest")
             .option("marklogic.optic_dsl", "op.fromView('Medical','Authors');")
             .schema(new StructType()
-                .add("CitationID", DataTypes.IntegerType)
-                .add("LastName", DataTypes.StringType)
+                .add("Medical.Authors.CitationID", DataTypes.IntegerType)
+                .add("Medical.Authors.LastName", DataTypes.StringType)
             );
     }
 }
