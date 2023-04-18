@@ -30,6 +30,24 @@
             "name": "DateTime",
             "scalarType": "dateTime",
             "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day || 'T' || ../../Journal/JournalIssue/PubDate/Time"
+          },
+          {
+            "name": "Base64Value",
+            "scalarType": "base64Binary",
+            "val": "Base64Value",
+            "nullable": true
+          },
+          {
+            "name": "BooleanValue",
+            "scalarType": "boolean",
+            "val": "BooleanValue",
+            "nullable": true
+          },
+          {
+            "name": "CalendarInterval",
+            "scalarType": "string",
+            "val": "CalendarInterval",
+            "nullable": true
           }
         ]
       }
