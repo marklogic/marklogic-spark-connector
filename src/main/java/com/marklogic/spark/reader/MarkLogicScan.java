@@ -19,20 +19,19 @@ package com.marklogic.spark.reader;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.types.StructType;
-import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 
-public class MarkLogicScan implements Scan {
-    private StructType schema;
-    private Map<String, String> properties;
-    private CaseInsensitiveStringMap options;
+class MarkLogicScan implements Scan {
 
-    public MarkLogicScan(StructType schema, Map<String, String> properties, CaseInsensitiveStringMap options) {
+    private final StructType schema;
+    private final Map<String, String> properties;
+
+    MarkLogicScan(StructType schema, Map<String, String> properties) {
         this.schema = schema;
         this.properties = properties;
-        this.options = options;
     }
+
     @Override
     public StructType readSchema() {
         return schema;
@@ -45,6 +44,6 @@ public class MarkLogicScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        return new MarkLogicBatch(schema,properties,options);
+        return new MarkLogicBatch(schema, properties);
     }
 }

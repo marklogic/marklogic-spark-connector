@@ -35,6 +35,12 @@ public class MarkLogicTableProvider implements TableProvider {
         return new MarkLogicReader(schema, properties);
     }
 
+    /**
+     * Per https://spark.apache.org/docs/3.2.4/api/java/org/apache/spark/sql/connector/catalog/TableProvider.html#supportsExternalMetadata-- ,
+     * this returns true as we allow for a user to provide their own schema instead of requiring schema inference.
+     *
+     * @return
+     */
     @Override
     public boolean supportsExternalMetadata() {
         return true;
