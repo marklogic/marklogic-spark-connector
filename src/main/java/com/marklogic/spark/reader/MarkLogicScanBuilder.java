@@ -29,11 +29,9 @@ public class MarkLogicScanBuilder implements ScanBuilder {
     private CaseInsensitiveStringMap options;
 
     public MarkLogicScanBuilder(StructType schema, Map<String, String> properties, CaseInsensitiveStringMap options) {
-        System.out.println("************** inside MarkLogicScanBuilder");
         this.schema = schema;
         this.properties = properties;
         this.options = options;
-
     }
 
     @Override

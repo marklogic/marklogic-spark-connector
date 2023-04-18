@@ -43,7 +43,7 @@ class PlanAnalyzer {
         List<PlanAnalysis.Partition> partitions = new ArrayList<>();
         for (int i = 1; i <= userPartitionCount; i++) {
             long upperBound = (i == userPartitionCount) ? -1 : nextLowerBound + partitionSize;
-            partitions.add(new PlanAnalysis.Partition(nextLowerBound, upperBound, bucketCount, partitionSize));
+            partitions.add(new PlanAnalysis.Partition(i, nextLowerBound, upperBound, bucketCount, partitionSize));
             nextLowerBound = nextLowerBound + partitionSize + 1;
         }
         return partitions;

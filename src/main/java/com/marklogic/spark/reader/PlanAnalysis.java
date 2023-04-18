@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,28 +32,44 @@ class PlanAnalysis implements Serializable {
         return allBuckets;
     }
 
+    Partition[] getPartitionArray() {
+        return this.partitions.toArray(new Partition[]{});
+    }
+
     /**
      * Each partition corresponds to a Spark partition reader, where the reader is expected to make a call to MarkLogic
      * for each bucket in the partition.
      */
-    static class Partition implements Serializable {
+    static class Partition implements InputPartition, Serializable {
 
         final static long serialVersionUID = 1;
 
+        final String identifier; // used solely for logging purposes
         final List<Bucket> buckets;
 
-        Partition(long lowerBound, long upperBound, long bucketCount, long partitionSize) {
+        Partition(int number, long lowerBound, long upperBound, long bucketCount, long partitionSize) {
+            this.identifier = String.format("[number: %d; lower bound: %s; upper bound: %s]",
+                number,
+                Long.toUnsignedString(lowerBound),
+                Long.toUnsignedString(upperBound)
+            );
+
             long nextLowerBound = lowerBound;
             long bucketSize = Long.divideUnsigned(partitionSize, bucketCount);
             this.buckets = new ArrayList<>();
             for (int i = 1; i <= bucketCount; i++) {
                 String lowerBoundStr = Long.toUnsignedString(nextLowerBound);
                 String upperBoundStr = (i == bucketCount) ?
-                Long.toUnsignedString(upperBound) :
-                Long.toUnsignedString(nextLowerBound + bucketSize);
+                    Long.toUnsignedString(upperBound) :
+                    Long.toUnsignedString(nextLowerBound + bucketSize);
                 buckets.add(new Bucket(lowerBoundStr, upperBoundStr));
                 nextLowerBound = nextLowerBound + bucketSize + 1;
             }
+        }
+
+        @Override
+        public String toString() {
+            return this.identifier;
         }
     }
 
@@ -63,7 +80,7 @@ class PlanAnalysis implements Serializable {
     static class Bucket implements Serializable {
 
         final static long serialVersionUID = 1;
-        
+
         final String lowerBound;
         final String upperBound;
 
@@ -74,7 +91,7 @@ class PlanAnalysis implements Serializable {
 
         // Only intended to help with debug logging
         public String toString() {
-            return lowerBound + ":" + upperBound;
+            return String.format("[%s:%s]", lowerBound, upperBound);
         }
     }
 }

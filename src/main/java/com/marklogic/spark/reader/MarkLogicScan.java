@@ -32,7 +32,6 @@ public class MarkLogicScan implements Scan {
         this.schema = schema;
         this.properties = properties;
         this.options = options;
-        System.out.println("************** inside MarkLogicScan");
     }
     @Override
     public StructType readSchema() {

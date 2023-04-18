@@ -17,36 +17,107 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
-import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ReadRowsTest extends AbstractIntegrationTest {
 
     @Test
-    void test() {
-        Dataset<Row> reader = newSparkSession().read()
-            .schema(new StructType()
-                .add("docNum", DataTypes.IntegerType)
-                .add("docName", DataTypes.StringType))
-            .format(MarkLogicReadDataSource.class.getName())
-            .option("marklogic.client.host", testConfig.getHost())
-            .option("marklogic.client.port", testConfig.getRestPort())
-            .option("marklogic.client.username", testConfig.getUsername())
-            .option("marklogic.client.password", testConfig.getPassword())
-            .option("marklogic.client.authType", "digest")
-            .option("marklogic.opticDsl", "op.fromView('Medical','Authors');")
-            .load();
+    void validPartitionCountAndBatchSize() {
+        List<Row> rows = newDefaultReader()
+            .option("marklogic.num_partitions", "3")
+            .option("marklogic.batch_size", "10000")
+            .load()
+            .collectAsList();
 
-        List<Row> rows = reader.collectAsList();
-        assertEquals(15, rows.size(),
-            "Expecting all 15 rows to be returned from the view");
+        assertEquals(15, rows.size(), "Expecting all 15 rows to be returned from the view");
+    }
+
+    @Test
+    void queryReturnsZeroRows() {
+        List<Row> rows = newDefaultReader()
+            .option("marklogic.optic_dsl", "op.fromView('Medical', 'NoAuthors')")
+            .load()
+            .collectAsList();
+
+        assertEquals(0, rows.size(), "When no rows exist, the /v1/rows endpoint currently (as of 11.0) throws a " +
+            "fairly cryptic error. A user does not expect an error in this scenario, so the connector is expected " +
+            "to catch that error and return a valid dataset with zero rows in it.");
+    }
+
+    @Test
+    void invalidQuery() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
+            .option("marklogic.optic_dsl", "op.fromView('Medical', 'ViewNotFound')")
+            .load()
+            .count());
+
+        assertTrue(ex.getMessage().startsWith("Unable to run Optic DSL query op.fromView('Medical', 'ViewNotFound'); cause: "),
+            "If the query throws an error for any reason other than no rows being found, the error should be wrapped " +
+                "in a new error with a message containing the user's query to assist with debugging; unexpected " +
+                "message: " + ex.getMessage());
+    }
+
+    @Test
+    void invalidCredentials() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
+            .option("marklogic.client.password", "invalid password")
+            .load()
+            .count());
+
+        assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", ex.getMessage(),
+            "The connector should verify that it can connect to MarkLogic before it tries to analyze the user's query. " +
+                "This allows for a more helpful error message so that the user can focus on fixing their connection and " +
+                "authentication properties.");
+    }
+
+    @Test
+    void nonNumericPartitionCount() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            newDefaultReader()
+                .option("marklogic.num_partitions", "abc")
+                .load()
+                .count()
+        );
+        assertEquals("Value of 'marklogic.num_partitions' option must be numeric", ex.getMessage());
+    }
+
+    @Test
+    void partitionCountLessThanOne() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            newDefaultReader()
+                .option("marklogic.num_partitions", "0")
+                .load()
+                .count()
+        );
+        assertEquals("Value of 'marklogic.num_partitions' option must be 1 or greater", ex.getMessage());
+    }
+
+    @Test
+    void nonNumericBatchSize() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            newDefaultReader()
+                .option("marklogic.batch_size", "abc")
+                .load()
+                .count()
+        );
+        assertEquals("Value of 'marklogic.batch_size' option must be numeric", ex.getMessage());
+    }
+
+    @Test
+    void batchSizeLessThanOne() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
+            newDefaultReader()
+                .option("marklogic.batch_size", "0")
+                .load()
+                .count()
+        );
+        assertEquals("Value of 'marklogic.batch_size' option must be 1 or greater", ex.getMessage());
     }
 }

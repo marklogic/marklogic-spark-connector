@@ -33,7 +33,6 @@ private Map<String, String> properties;
     public MarkLogicReader(StructType schema, Map<String, String> properties) {
         this.schema = schema;
         this.properties = properties;
-        System.out.println("************** inside MarkLogicReader");
     }
 
     @Override
