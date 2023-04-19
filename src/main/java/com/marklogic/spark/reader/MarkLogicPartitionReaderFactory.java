@@ -15,37 +15,27 @@
  */
 package com.marklogic.spark.reader;
 
-import com.marklogic.client.DatabaseClient;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
-import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
 
 class MarkLogicPartitionReaderFactory implements PartitionReaderFactory {
 
     final static long serialVersionUID = 1;
 
     private final Logger logger = LoggerFactory.getLogger(MarkLogicPartitionReaderFactory.class);
+    private final ReadContext readContext;
 
-    private final PlanAnalysis planAnalysis;
-    private final StructType schema;
-    private final Map<String, String> properties;
-
-    MarkLogicPartitionReaderFactory(PlanAnalysis planAnalysis, StructType schema, Map<String, String> properties) {
-        this.planAnalysis = planAnalysis;
-        this.schema = schema;
-        this.properties = properties;
+    MarkLogicPartitionReaderFactory(ReadContext readContext) {
+        this.readContext = readContext;
     }
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         logger.info("Creating reader for partition: {}", partition);
-        DatabaseClient client = ClientUtil.connectToMarkLogic(this.properties);
-        return new MarkLogicPartitionReader(this.planAnalysis.boundedPlan, (PlanAnalysis.Partition) partition, this.schema, client);
+        return new MarkLogicPartitionReader(this.readContext, (PlanAnalysis.Partition) partition);
     }
 }

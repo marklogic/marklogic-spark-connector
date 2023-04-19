@@ -18,12 +18,11 @@ package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.row.RawPlanDefinition;
 import com.marklogic.client.row.RowManager;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.CreateJacksonParser;
@@ -49,8 +48,8 @@ class MarkLogicPartitionReader implements PartitionReader {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicPartitionReader.class);
 
+    private final ReadContext readContext;
     private final PlanAnalysis.Partition partition;
-    private final JsonNode boundedPlan;
     private final RowManager rowManager;
 
     private final JacksonParser jacksonParser;
@@ -61,15 +60,14 @@ class MarkLogicPartitionReader implements PartitionReader {
     private int nextBucketIndex;
     private int currentBucketRowCount;
 
-    MarkLogicPartitionReader(JsonNode boundedPlan, PlanAnalysis.Partition partition, StructType schema, DatabaseClient databaseClient) {
-        this.boundedPlan = boundedPlan;
+    MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
+        this.readContext = readContext;
         this.partition = partition;
-
-        this.rowManager = databaseClient.newRowManager();
+        this.rowManager = readContext.connectToMarkLogic().newRowManager();
         // Nested values won't work with JacksonParser, so we ask for type info to not be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
 
-        this.jacksonParser = newJacksonParser(schema);
+        this.jacksonParser = newJacksonParser(readContext.getSchema());
 
         // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
         // scala-java8-compat, can now use scala.jdk.FunctionConverters since they're part of Scala 2.13.
@@ -152,9 +150,13 @@ class MarkLogicPartitionReader implements PartitionReader {
         if (logger.isDebugEnabled()) {
             logger.debug("Getting rows for partition {} and bucket {}", this.partition, bucket);
         }
-        PlanBuilder.Plan builtPlan = rowManager.newRawPlanDefinition(new JacksonHandle(this.boundedPlan))
+        JacksonHandle planHandle = new JacksonHandle(this.readContext.getPlanAnalysis().boundedPlan);
+        RawPlanDefinition rawPlan = rowManager.newRawPlanDefinition(planHandle);
+        PlanBuilder.Plan builtPlan = rawPlan
             .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
             .bindParam("ML_UPPER_BOUND", bucket.upperBound);
-        return rowManager.resultRows(builtPlan, new StringHandle().withFormat(Format.JSON)).iterator();
+
+        StringHandle resultHandle = new StringHandle().withFormat(Format.JSON);
+        return rowManager.resultRows(builtPlan, resultHandle).iterator();
     }
 }

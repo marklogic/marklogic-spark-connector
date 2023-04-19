@@ -17,22 +17,17 @@ package com.marklogic.spark.reader;
 
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
-import org.apache.spark.sql.types.StructType;
-
-import java.util.Map;
 
 class MarkLogicScanBuilder implements ScanBuilder {
 
-    private final StructType schema;
-    private final Map<String, String> properties;
+    private ReadContext readContext;
 
-    MarkLogicScanBuilder(StructType schema, Map<String, String> properties) {
-        this.schema = schema;
-        this.properties = properties;
+    MarkLogicScanBuilder(ReadContext readContext) {
+        this.readContext = readContext;
     }
 
     @Override
     public Scan build() {
-        return new MarkLogicScan(schema, properties);
+        return new MarkLogicScan(readContext);
     }
 }

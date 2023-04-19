@@ -20,21 +20,17 @@ import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.Map;
-
 class MarkLogicScan implements Scan {
 
-    private final StructType schema;
-    private final Map<String, String> properties;
+    private ReadContext readContext;
 
-    MarkLogicScan(StructType schema, Map<String, String> properties) {
-        this.schema = schema;
-        this.properties = properties;
+    MarkLogicScan(ReadContext readContext) {
+        this.readContext = readContext;
     }
 
     @Override
     public StructType readSchema() {
-        return schema;
+        return readContext.getSchema();
     }
 
     @Override
@@ -44,6 +40,6 @@ class MarkLogicScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        return new MarkLogicBatch(schema, properties);
+        return new MarkLogicBatch(readContext);
     }
 }
