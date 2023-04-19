@@ -19,7 +19,7 @@ package com.marklogic.spark.reader;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
@@ -44,7 +44,6 @@ import scala.jdk.FunctionConverters;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Map;
 
 class MarkLogicPartitionReader implements PartitionReader {
 
@@ -62,11 +61,11 @@ class MarkLogicPartitionReader implements PartitionReader {
     private int nextBucketIndex;
     private int currentBucketRowCount;
 
-    MarkLogicPartitionReader(JsonNode boundedPlan, PlanAnalysis.Partition partition, StructType schema, Map<String, String> properties) {
+    MarkLogicPartitionReader(JsonNode boundedPlan, PlanAnalysis.Partition partition, StructType schema, DatabaseClient databaseClient) {
         this.boundedPlan = boundedPlan;
         this.partition = partition;
 
-        this.rowManager = DatabaseClientFactory.newClient(propertyName -> properties.get(propertyName)).newRowManager();
+        this.rowManager = databaseClient.newRowManager();
         // Nested values won't work with JacksonParser, so we ask for type info to not be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
 

@@ -25,23 +25,36 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class MarkLogicReader implements SupportsRead {
-private StructType schema;
-private Set<TableCapability> capabilities;
-private Map<String, String> properties;
+class MarkLogicReader implements SupportsRead {
 
-    public MarkLogicReader(StructType schema, Map<String, String> properties) {
+    private final StructType schema;
+    private final Map<String, String> properties;
+    private final Set<TableCapability> capabilities;
+
+    MarkLogicReader(StructType schema, Map<String, String> properties) {
         this.schema = schema;
         this.properties = properties;
+        capabilities = new HashSet<>();
+        capabilities.add(TableCapability.BATCH_READ);
     }
 
+    /**
+     * We ignore the {@code options} map per the class's Javadocs, which note that it's intended to provide
+     * options for v2 implementations which expect case-insensitive keys. The map of properties provided by the
+     * {@code TableProvider} are sufficient for our connector.
+     *
+     * @param options The options for reading, which is an immutable case-insensitive
+     *                string-to-string map.
+     * @return
+     */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new MarkLogicScanBuilder(schema, properties, options);
+        return new MarkLogicScanBuilder(schema, properties);
     }
 
     @Override
     public String name() {
+        // TODO Figure out a good name
         return "test-project";
     }
 
@@ -52,11 +65,6 @@ private Map<String, String> properties;
 
     @Override
     public Set<TableCapability> capabilities() {
-        if(capabilities == null){
-            capabilities = new HashSet<>();
-            capabilities.add(TableCapability.BATCH_READ);
-        }
-
         return capabilities;
     }
 }
