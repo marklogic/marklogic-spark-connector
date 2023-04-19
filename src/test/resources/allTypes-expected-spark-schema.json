@@ -1,0 +1,215 @@
+{
+  "type": "struct",
+  "fields": [
+    {
+      "name": "sparkTest.AllTypeRows.intValue",
+      "type": "integer",
+      "nullable": false,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.unsignedIntValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.longValue",
+      "type": "long",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.unsignedLongValue",
+      "type": "long",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.floatValue",
+      "type": "float",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.doubleValue",
+      "type": "double",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.decimalValue",
+      "type": "double",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.dateTimeValue",
+      "type": "timestamp",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.timeValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.dateValue",
+      "type": "date",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.gYearMonthValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.gYearValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.gMonthValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.gDayValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.yearMonthDurationValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.dayTimeDurationValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.stringValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.anyURIValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.pointValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.longLatPointValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.booleanValue",
+      "type": "boolean",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.base64BinaryValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.hexBinaryValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.byteValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.durationValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.gMonthDayValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.integerValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.negativeIntegerValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.nonNegativeIntegerValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.nonPositiveIntegerValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.positiveIntegerValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.shortValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.unsignedByteValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.unsignedShortValue",
+      "type": "integer",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
+      "name": "sparkTest.AllTypeRows.IRIValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    }
+  ]
+}

@@ -3,8 +3,6 @@ package com.marklogic.spark.reader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,16 +43,9 @@ public class PerformanceTester {
             .option("marklogic.optic_dsl", "op.fromView('demo','employee')")
             .option("marklogic.num_partitions", partitionCount)
             .option("marklogic.batch_size", batchSize)
-            .schema(new StructType()
-                .add("employee_id", DataTypes.IntegerType)
-                .add("person_id", DataTypes.IntegerType)
-                .add("job_description", DataTypes.StringType)
-            )
             .load();
 
-        logger.info("Collecting rows as list");
         long now = System.currentTimeMillis();
-//        List<Row> rows = dataset.collectAsList();
         long count = dataset.count();
         logger.info("Duration: " + (System.currentTimeMillis() - now));
         logger.info("COUNT: " + count);

@@ -1,0 +1,48 @@
+{
+  "allTypes": [
+    {
+      "intValue": 1,
+      "unsignedIntValue": 2,
+      "longValue": 3,
+      "unsignedLongValue": 4,
+      "floatValue": 1.0,
+      "doubleValue": 2.2,
+      "decimalValue": 3.3,
+      "dateTimeValue": "2023-04-18T13:55:51.123-04:00",
+      "timeValue": "13:55:51",
+      "dateValue": "2023-04-18",
+      "gYearMonthValue": "2023-04",
+      "gYearValue": "2023",
+      "gMonthValue": "--04",
+      "gDayValue": "---18",
+      "yearMonthDurationValue": "P2Y6M",
+      "dayTimeDurationValue": "PT1M",
+      "stringValue": "hello",
+      "anyURIValue": "http://example.org/",
+      "pointValue": "50 50",
+      "longLatPointValue": "50 50",
+      "booleanValue": true,
+      "base64BinaryValue": "c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l",
+      "hexBinaryValue": "499602D2",
+      "byteValue": 1,
+      "durationValue": "PT1M",
+      "gMonthDayValue": "--04-18",
+      "integerValue": 1,
+      "negativeIntegerValue": -1,
+      "nonNegativeIntegerValue": 11,
+      "nonPositiveIntegerValue": -11,
+      "positiveIntegerValue": 20,
+      "shortValue": 7,
+      "unsignedByteValue": 4,
+      "unsignedShortValue": 8,
+      "IRIValue": "http://example.org/"
+    },
+    {
+      "intValue": 2
+    },
+    {
+      "intValue": 3,
+      "longValue": "this is not valid"
+    }
+  ]
+}
