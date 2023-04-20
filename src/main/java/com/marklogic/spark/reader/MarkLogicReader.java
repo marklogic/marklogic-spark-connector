@@ -22,18 +22,15 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 class MarkLogicReader implements SupportsRead {
 
-    private final StructType schema;
-    private final Map<String, String> properties;
+    private ReadContext readContext;
     private final Set<TableCapability> capabilities;
 
-    MarkLogicReader(StructType schema, Map<String, String> properties) {
-        this.schema = schema;
-        this.properties = properties;
+    MarkLogicReader(ReadContext readContext) {
+        this.readContext = readContext;
         capabilities = new HashSet<>();
         capabilities.add(TableCapability.BATCH_READ);
     }
@@ -49,7 +46,7 @@ class MarkLogicReader implements SupportsRead {
      */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new MarkLogicScanBuilder(schema, properties);
+        return new MarkLogicScanBuilder(readContext);
     }
 
     @Override
@@ -60,7 +57,7 @@ class MarkLogicReader implements SupportsRead {
 
     @Override
     public StructType schema() {
-        return schema;
+        return readContext.getSchema();
     }
 
     @Override

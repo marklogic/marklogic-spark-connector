@@ -32,7 +32,7 @@ public class MarkLogicTableProvider implements TableProvider {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        return new MarkLogicReader(schema, properties);
+        return new MarkLogicReader(new ReadContext(properties, schema));
     }
 
     /**
