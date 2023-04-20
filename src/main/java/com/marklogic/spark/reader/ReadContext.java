@@ -40,7 +40,7 @@ import java.util.Map;
  * Also simplifies passing state around to the various Spark-required classes, as we only need one argument instead of
  * N arguments.
  */
-class ReadContext implements Serializable {
+public class ReadContext implements Serializable {
 
     final static long serialVersionUID = 1;
 
@@ -52,7 +52,7 @@ class ReadContext implements Serializable {
     private StructType schema;
     private long serverTimestamp;
 
-    ReadContext(Map<String, String> properties, StructType schema) {
+    public ReadContext(Map<String, String> properties, StructType schema) {
         this(properties);
         // TODO Using the above constructor is a little inefficient, as we're always inferring the schema so that we can
         // also establish a server timestamp. We'll optimize this before the 1.0 release - i.e. if the user gives us a
@@ -66,7 +66,7 @@ class ReadContext implements Serializable {
      *
      * @param properties
      */
-    ReadContext(Map<String, String> properties) {
+    public ReadContext(Map<String, String> properties) {
         this.properties = properties;
 
         int partitionCount = getNumericOption("marklogic.num_partitions", SparkSession.active().sparkContext().defaultMinPartitions());
@@ -153,7 +153,7 @@ class ReadContext implements Serializable {
         return rowManager.resultRows(builtPlan, resultHandle).iterator();
     }
 
-    StructType getSchema() {
+    public StructType getSchema() {
         return schema;
     }
 

@@ -18,11 +18,11 @@ package com.marklogic.spark.reader;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 
-class MarkLogicScanBuilder implements ScanBuilder {
+public class MarkLogicScanBuilder implements ScanBuilder {
 
     private ReadContext readContext;
 
-    MarkLogicScanBuilder(ReadContext readContext) {
+    public MarkLogicScanBuilder(ReadContext readContext) {
         this.readContext = readContext;
     }
 

@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.spark.reader;
+package com.marklogic.spark;
 
+import com.marklogic.spark.reader.MarkLogicScanBuilder;
+import com.marklogic.spark.reader.ReadContext;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.TableCapability;
 import org.apache.spark.sql.connector.read.ScanBuilder;
@@ -24,12 +26,12 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import java.util.HashSet;
 import java.util.Set;
 
-class MarkLogicReader implements SupportsRead {
+class MarkLogicTable implements SupportsRead {
 
     private ReadContext readContext;
     private final Set<TableCapability> capabilities;
 
-    MarkLogicReader(ReadContext readContext) {
+    MarkLogicTable(ReadContext readContext) {
         this.readContext = readContext;
         capabilities = new HashSet<>();
         capabilities.add(TableCapability.BATCH_READ);

@@ -2,7 +2,6 @@ package com.marklogic.spark;
 
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
-import com.marklogic.spark.reader.MarkLogicTableProvider;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected DataFrameReader newDefaultReader() {
         return newSparkSession()
             .read()
-            .format(MarkLogicTableProvider.class.getName())
+            .format("com.marklogic.spark")
             .option("marklogic.client.host", testConfig.getHost())
             .option("marklogic.client.port", testConfig.getRestPort())
             .option("marklogic.client.username", testConfig.getUsername())
@@ -50,7 +49,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("marklogic.client.authType", "digest")
             .option("marklogic.optic_dsl", "op.fromView('Medical','Authors')");
     }
-    
+
     protected String readClasspathFile(String path) {
         try {
             return new String(FileCopyUtils.copyToByteArray(new ClassPathResource(path).getInputStream()));
