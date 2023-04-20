@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.marklogic.spark.reader;
+package com.marklogic.spark;
 
+import com.marklogic.spark.reader.ReadContext;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
@@ -23,7 +24,11 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 
-public class MarkLogicTableProvider implements TableProvider {
+/**
+ * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
+ * user specifies a package name and the class name is assumed to be "DefaultSource".
+ */
+public class DefaultSource implements TableProvider {
 
     private ReadContext readContext;
 
@@ -42,7 +47,7 @@ public class MarkLogicTableProvider implements TableProvider {
         if (this.readContext == null) {
             this.readContext = new ReadContext(properties, schema);
         }
-        return new MarkLogicReader(this.readContext);
+        return new MarkLogicTable(this.readContext);
     }
 
     /**

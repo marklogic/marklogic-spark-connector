@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
 import scala.Function1;
 import scala.Function2;
 import scala.collection.JavaConverters;
+import scala.collection.Seq;
 import scala.collection.immutable.HashMap;
-import scala.collection.immutable.Seq;
-import scala.jdk.FunctionConverters;
+import scala.compat.java8.JFunction;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -66,9 +66,11 @@ class MarkLogicPartitionReader implements PartitionReader {
         this.jacksonParser = newJacksonParser(readContext.getSchema());
 
         // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
-        // scala-java8-compat, can now use scala.jdk.FunctionConverters since they're part of Scala 2.13.
-        this.jsonParserCreator = FunctionConverters.enrichAsJavaBiFunction((jsonFactory, someString) -> CreateJacksonParser.string((JsonFactory) jsonFactory, (String) someString));
-        this.utf8StringCreator = FunctionConverters.enrichAsJavaFunction(someString -> UTF8String.fromString((String) someString));
+        // scala-java8-compat, we should be able to use scala.jdk.FunctionConverters since those are part of Scala
+        // 2.13. However, that is not yet working within PySpark. So sticking with this "legacy" appraoch as it seems
+        // to work fine in both vanilla Spark (i.e. JUnit tests) and PySpark.
+        this.jsonParserCreator = JFunction.func((jsonFactory, someString) -> CreateJacksonParser.string(jsonFactory, someString));
+        this.utf8StringCreator = JFunction.func((someString) -> UTF8String.fromString(someString));
     }
 
     @Override
@@ -137,8 +139,7 @@ class MarkLogicPartitionReader implements PartitionReader {
         final boolean allowArraysAsStructs = true;
 
         // No use cases for filters so far.
-        final Seq<Filter> filters = JavaConverters.asScalaIteratorConverter(new ArrayList<Filter>().iterator()).asScala().toSeq();
-
+        final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList().iterator()).toSeq();
         return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
     }
 }

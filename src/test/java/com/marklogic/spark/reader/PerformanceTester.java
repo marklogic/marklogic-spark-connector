@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader;
 
+import com.marklogic.spark.DefaultSource;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -34,7 +35,7 @@ public class PerformanceTester {
             .master(String.format("local[%d]", sparkConcurrentTaskCount))
             .getOrCreate()
             .read()
-            .format(MarkLogicTableProvider.class.getName())
+            .format("com.marklogic.spark")
             .option("marklogic.client.host", "localhost")
             .option("marklogic.client.port", 8009)
             .option("marklogic.client.username", "admin")
