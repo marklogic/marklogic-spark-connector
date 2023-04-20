@@ -25,14 +25,24 @@ import java.util.Map;
 
 public class MarkLogicTableProvider implements TableProvider {
 
+    private ReadContext readContext;
+
+    /**
+     * If no schema is provided, Spark invokes this before getTable is invoked.
+     */
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-        return null;
+        Map<String, String> serializableProperties = options.asCaseSensitiveMap();
+        this.readContext = new ReadContext(serializableProperties);
+        return this.readContext.getSchema();
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        return new MarkLogicReader(new ReadContext(properties, schema));
+        if (this.readContext == null) {
+            this.readContext = new ReadContext(properties, schema);
+        }
+        return new MarkLogicReader(this.readContext);
     }
 
     /**

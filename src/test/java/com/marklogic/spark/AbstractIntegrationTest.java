@@ -5,9 +5,11 @@ import com.marklogic.junit5.spring.SimpleTestConfig;
 import com.marklogic.spark.reader.MarkLogicTableProvider;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.util.FileCopyUtils;
+
+import java.io.IOException;
 
 /**
  * Uses marklogic-junit (from marklogic-unit-test) to construct a DatabaseClient
@@ -38,17 +40,22 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
      * @return
      */
     protected DataFrameReader newDefaultReader() {
-        return newSparkSession().read()
+        return newSparkSession()
+            .read()
             .format(MarkLogicTableProvider.class.getName())
             .option("marklogic.client.host", testConfig.getHost())
             .option("marklogic.client.port", testConfig.getRestPort())
             .option("marklogic.client.username", testConfig.getUsername())
             .option("marklogic.client.password", testConfig.getPassword())
             .option("marklogic.client.authType", "digest")
-            .option("marklogic.optic_dsl", "op.fromView('Medical','Authors');")
-            .schema(new StructType()
-                .add("Medical.Authors.CitationID", DataTypes.IntegerType)
-                .add("Medical.Authors.LastName", DataTypes.StringType)
-            );
+            .option("marklogic.optic_dsl", "op.fromView('Medical','Authors')");
+    }
+    
+    protected String readClasspathFile(String path) {
+        try {
+            return new String(FileCopyUtils.copyToByteArray(new ClassPathResource(path).getInputStream()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

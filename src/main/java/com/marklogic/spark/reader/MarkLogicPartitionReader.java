@@ -18,11 +18,7 @@ package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.marklogic.client.expression.PlanBuilder;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.row.RawPlanDefinition;
 import com.marklogic.client.row.RowManager;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.CreateJacksonParser;
@@ -96,7 +92,7 @@ class MarkLogicPartitionReader implements PartitionReader {
 
             PlanAnalysis.Bucket bucket = partition.buckets.get(nextBucketIndex);
             nextBucketIndex++;
-            this.rowIterator = runPlanForBucket(bucket);
+            this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
             boolean bucketHasAtLeastOneRow = this.rowIterator.hasNext();
             if (bucketHasAtLeastOneRow) {
                 return true;
@@ -144,19 +140,5 @@ class MarkLogicPartitionReader implements PartitionReader {
         final Seq<Filter> filters = JavaConverters.asScalaIteratorConverter(new ArrayList<Filter>().iterator()).asScala().toSeq();
 
         return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
-    }
-
-    private Iterator<StringHandle> runPlanForBucket(PlanAnalysis.Bucket bucket) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Getting rows for partition {} and bucket {}", this.partition, bucket);
-        }
-        JacksonHandle planHandle = new JacksonHandle(this.readContext.getPlanAnalysis().boundedPlan);
-        RawPlanDefinition rawPlan = rowManager.newRawPlanDefinition(planHandle);
-        PlanBuilder.Plan builtPlan = rawPlan
-            .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
-            .bindParam("ML_UPPER_BOUND", bucket.upperBound);
-
-        StringHandle resultHandle = new StringHandle().withFormat(Format.JSON);
-        return rowManager.resultRows(builtPlan, resultHandle).iterator();
     }
 }
