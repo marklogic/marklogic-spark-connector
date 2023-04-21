@@ -2,6 +2,7 @@ package com.marklogic.spark;
 
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
+import com.marklogic.spark.reader.ReadConstants;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.SparkSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,12 +43,12 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         return newSparkSession()
             .read()
             .format("com.marklogic.spark")
-            .option("marklogic.client.host", testConfig.getHost())
-            .option("marklogic.client.port", testConfig.getRestPort())
-            .option("marklogic.client.username", testConfig.getUsername())
-            .option("marklogic.client.password", testConfig.getPassword())
-            .option("marklogic.client.authType", "digest")
-            .option("marklogic.optic_dsl", "op.fromView('Medical','Authors')");
+            .option("spark.marklogic.client.host", testConfig.getHost())
+            .option("spark.marklogic.client.port", testConfig.getRestPort())
+            .option("spark.marklogic.client.username", testConfig.getUsername())
+            .option("spark.marklogic.client.password", testConfig.getPassword())
+            .option("spark.marklogic.client.authType", "digest")
+            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
     }
 
     protected String readClasspathFile(String path) {

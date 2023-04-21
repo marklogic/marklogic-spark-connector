@@ -130,7 +130,7 @@ class MarkLogicPartitionReader implements PartitionReader {
         // for more information.
         final String defaultColumnNameOfCorruptRecord = "_corrupt_record";
 
-        // TODO This may need to be configurable by the user, perhaps via a "marklogic.defaultTimeZoneId" option.
+        // TODO This may need to be configurable by the user
         final String defaultTimeZoneId = "Z";
         JSONOptions jsonOptions = new JSONOptions(new HashMap<>(), defaultTimeZoneId, defaultColumnNameOfCorruptRecord);
 
