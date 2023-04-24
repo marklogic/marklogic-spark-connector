@@ -54,12 +54,12 @@ which can be deployed via the instructions above for running this project's test
 
 ```
 df = spark.read.format("com.marklogic.spark")\
-    .option("marklogic.client.host", "localhost")\
-    .option("marklogic.client.port", "8016")\
-    .option("marklogic.client.username", "admin")\
-    .option("marklogic.client.password", "admin")\
-    .option("marklogic.client.authType", "digest")\
-    .option("marklogic.optic_dsl", "op.fromView('Medical', 'Authors')")\
+    .option("spark.marklogic.client.host", "localhost")\
+    .option("spark.marklogic.client.port", "8016")\
+    .option("spark.marklogic.client.username", "admin")\
+    .option("spark.marklogic.client.password", "admin")\
+    .option("spark.marklogic.client.authType", "digest")\
+    .option("spark.marklogic.read.opticDsl", "op.fromView('Medical', 'Authors')")\
     .load()
 ```
 

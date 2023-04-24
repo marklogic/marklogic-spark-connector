@@ -15,7 +15,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allTypes() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.optic_dsl",
+            .option(ReadConstants.OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 1'))")
             .load()
             .collectAsList();
@@ -64,7 +64,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allColumnsNullExceptRequiredOne() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.optic_dsl",
+            .option(ReadConstants.OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 2'))")
             .load()
             .collectAsList();
@@ -83,7 +83,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void rowWithInvalidLongValueThatShouldBeIgnored() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.optic_dsl",
+            .option(ReadConstants.OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 3'))")
             .load()
             .collectAsList();
@@ -98,10 +98,10 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void selectSubsetOfColumns() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.optic_dsl",
+            .option(ReadConstants.OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes')" +
                     ".select(['intValue', 'timeValue'])")
-            .option("marklogic.num_partitions", "1")
+            .option(ReadConstants.NUM_PARTITIONS, "1")
             .load()
             .collectAsList();
 

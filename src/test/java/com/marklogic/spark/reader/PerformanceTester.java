@@ -36,14 +36,14 @@ public class PerformanceTester {
             .getOrCreate()
             .read()
             .format("com.marklogic.spark")
-            .option("marklogic.client.host", "localhost")
-            .option("marklogic.client.port", 8009)
-            .option("marklogic.client.username", "admin")
-            .option("marklogic.client.password", "admin")
-            .option("marklogic.client.authType", "digest")
-            .option("marklogic.optic_dsl", "op.fromView('demo','employee')")
-            .option("marklogic.num_partitions", partitionCount)
-            .option("marklogic.batch_size", batchSize)
+            .option("spark.marklogic.client.host", "localhost")
+            .option("spark.marklogic.client.port", 8009)
+            .option("spark.marklogic.client.username", "admin")
+            .option("spark.marklogic.client.password", "admin")
+            .option("spark.marklogic.client.authType", "digest")
+            .option(ReadConstants.OPTIC_DSL, "op.fromView('demo','employee')")
+            .option(ReadConstants.NUM_PARTITIONS, partitionCount)
+            .option(ReadConstants.BATCH_SIZE, batchSize)
             .load();
 
         long now = System.currentTimeMillis();

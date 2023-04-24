@@ -69,9 +69,9 @@ public class ReadContext implements Serializable {
     public ReadContext(Map<String, String> properties) {
         this.properties = properties;
 
-        int partitionCount = getNumericOption("marklogic.num_partitions", SparkSession.active().sparkContext().defaultMinPartitions());
-        int batchSize = getNumericOption("marklogic.batch_size", DEFAULT_BATCH_SIZE);
-        String dslQuery = properties.get("marklogic.optic_dsl");
+        int partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS, SparkSession.active().sparkContext().defaultMinPartitions());
+        int batchSize = getNumericOption(ReadConstants.BATCH_SIZE, DEFAULT_BATCH_SIZE);
+        String dslQuery = properties.get(ReadConstants.OPTIC_DSL);
 
         DatabaseClient client = connectToMarkLogic();
         RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));
@@ -128,7 +128,7 @@ public class ReadContext implements Serializable {
     }
 
     DatabaseClient connectToMarkLogic() {
-        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> properties.get(propertyName));
+        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> properties.get("spark." + propertyName));
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
             throw new RuntimeException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));

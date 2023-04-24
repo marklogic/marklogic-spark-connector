@@ -31,8 +31,8 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void validPartitionCountAndBatchSize() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.num_partitions", "3")
-            .option("marklogic.batch_size", "10000")
+            .option(ReadConstants.NUM_PARTITIONS, "3")
+            .option(ReadConstants.BATCH_SIZE, "10000")
             .load()
             .collectAsList();
 
@@ -50,7 +50,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void queryReturnsZeroRows() {
         List<Row> rows = newDefaultReader()
-            .option("marklogic.optic_dsl", "op.fromView('Medical', 'NoAuthors')")
+            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'NoAuthors')")
             .load()
             .collectAsList();
 
@@ -62,7 +62,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidQuery() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
-            .option("marklogic.optic_dsl", "op.fromView('Medical', 'ViewNotFound')")
+            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'ViewNotFound')")
             .load()
             .count());
 
@@ -75,7 +75,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidCredentials() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
-            .option("marklogic.client.password", "invalid password")
+            .option("spark.marklogic.client.password", "invalid password")
             .load()
             .count());
 
@@ -89,43 +89,43 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     void nonNumericPartitionCount() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option("marklogic.num_partitions", "abc")
+                .option(ReadConstants.NUM_PARTITIONS, "abc")
                 .load()
                 .count()
         );
-        assertEquals("Value of 'marklogic.num_partitions' option must be numeric", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be numeric", ex.getMessage());
     }
 
     @Test
     void partitionCountLessThanOne() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option("marklogic.num_partitions", "0")
+                .option(ReadConstants.NUM_PARTITIONS, "0")
                 .load()
                 .count()
         );
-        assertEquals("Value of 'marklogic.num_partitions' option must be 1 or greater", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be 1 or greater", ex.getMessage());
     }
 
     @Test
     void nonNumericBatchSize() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option("marklogic.batch_size", "abc")
+                .option(ReadConstants.BATCH_SIZE, "abc")
                 .load()
                 .count()
         );
-        assertEquals("Value of 'marklogic.batch_size' option must be numeric", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric", ex.getMessage());
     }
 
     @Test
     void batchSizeLessThanOne() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option("marklogic.batch_size", "0")
+                .option(ReadConstants.BATCH_SIZE, "0")
                 .load()
                 .count()
         );
-        assertEquals("Value of 'marklogic.batch_size' option must be 1 or greater", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 1 or greater", ex.getMessage());
     }
 }
