@@ -21,8 +21,9 @@ pipeline{
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
           export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
           cd marklogic-spark-connector
-          ./gradlew -i mlDeploy -PmlUsername=admin -PmlPassword=admin
-          ./gradlew test -PmlUsername=admin -PmlPassword=admin || true
+          echo "mlPassword=admin" > gradle-local.properties
+          ./gradlew -i mlDeploy
+          ./gradlew test || true
         '''
         junit '**/build/**/*.xml'
       }
