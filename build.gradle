@@ -14,18 +14,12 @@ java {
 }
 
 repositories {
-  // Temporarily here for resolving Java Client 6.2-SNAPSHOT.
-  maven {
-    url "https://nexus.marklogic.com/repository/maven-snapshots/"
-  }
-  mavenLocal()
-
   mavenCentral()
 }
 
 dependencies {
   compileOnly 'org.apache.spark:spark-sql_2.12:3.4.0'
-  implementation "com.marklogic:marklogic-client-api:6.2-SNAPSHOT"
+  implementation "com.marklogic:marklogic-client-api:6.2.0"
 
   // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
   // See https://github.com/scala/scala-java8-compat for more information
@@ -44,6 +38,8 @@ dependencies {
 
 test {
   useJUnitPlatform()
+  // Allows mlHost to override the value in gradle.properties, which the test plumbing will default to.
+  environment "mlHost", mlHost
 }
 
 shadowJar {
@@ -52,4 +48,47 @@ shadowJar {
   // for more information on why these are relocated.
   relocate "okhttp3", "com.marklogic.okhttp3"
   relocate "okio", "com.marklogic.okio"
+}
+
+task perfTest(type: JavaExec) {
+  main = "com.marklogic.spark.reader.PerformanceTester"
+  classpath = sourceSets.test.runtimeClasspath
+  args mlHost
+}
+
+task dockerUp(type: Exec) {
+  description = "Creates and starts a 3 node MarkLogic cluster."
+  commandLine "docker-compose", "up", "-d", "--build"
+}
+
+task dockerBuildCache(type: Exec) {
+  description = "Creates an image named 'marklogic-spark-cache' containing a cache of the Gradle dependencies."
+  commandLine 'docker', 'build', '--no-cache', '-t', 'marklogic-spark-cache', '.'
+}
+
+task dockerTest(type: Exec) {
+  description = "Run all of the tests within a Docker environment."
+  commandLine 'docker', 'run',
+    // Allows for communicating with the MarkLogic cluster that is setup via docker-compose.yaml.
+    '--network=marklogic_spark_external_net',
+    // Map the project directory into the Docker container.
+    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
+    // Working directory for the Gradle tasks below.
+    '-w', '/root/project',
+    // Remove the container after it finishes running.
+    '--rm',
+    // Use the output of dockerBuildCache to avoid downloading all the Gradle dependencies.
+    'marklogic-spark-cache:latest',
+    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'test'
+}
+
+task dockerPerfTest(type: Exec) {
+  description = "Run PerformanceTester a Docker environment."
+  commandLine 'docker', 'run',
+    '--network=marklogic_spark_external_net',
+    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
+    '-w', '/root/project',
+    '--rm',
+    'marklogic-spark-cache:latest',
+    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'perfTest'
 }

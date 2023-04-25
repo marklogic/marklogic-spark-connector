@@ -15,6 +15,33 @@ You can then run all the tests:
 
     ./gradlew test
 
+# Running the tests against a 3-node cluster
+
+This project includes a `docker-compose.yaml` file for standing up a 3-node MarkLogic cluster. This is useful for 
+manually testing the connector's support for distributing requests to multiple hosts in a cluster. The automated 
+tests can also be run against this cluster too.
+
+To run the automated tests, first perform the following steps to set up a 3-node cluster and a Docker image 
+containing all of this project's Gradle dependencies:
+
+1. [Install Docker](https://docs.docker.com/get-docker/).
+2. Ensure that you don't have a MarkLogic instance running locally.
+3. Run `./gradlew dockerUp` (Gradle tasks are included as shortcuts for running Docker commands). This will start up 
+   the 3-node cluster, with one host listening on the standard ports from 8000 to 8002.
+4. Run `./gradlew -i mlDeploy` to deploy this project's test app to the 3-node cluster.
+5. Run `./gradlew dockerBuildCache` as a mostly one-time step to build a Docker image that contains all of this 
+   project's Gradle dependencies. This will allow the next step to run much more quickly. You'll only need to run 
+   this again when the project's Gradle dependencies change.
+
+You're now ready to run the automated tests; be sure you've created a `gradle-local.properties` file with 
+`mlPassword` in it per the instructions in the section above this. The tests can be run via:
+
+    ./gradlew dockerTest
+
+All the tests should pass successfully. In addition, you should be able to inspect the `8016_AccessLog.txt` file on each
+MarkLogic host and see that each host received requests while the tests were being run. 
+
+
 # Testing with PySpark
 
 First, [follow the instructions](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) on 

@@ -6,9 +6,12 @@ import com.marklogic.mgmt.resource.hosts.HostManager;
 import com.marklogic.spark.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GetDataHostsTest extends AbstractIntegrationTest {
 
@@ -20,12 +23,20 @@ public class GetDataHostsTest extends AbstractIntegrationTest {
         assertEquals(expectedHostNames.size(), dataHosts.size(), "Expecting each host in the cluster to be returned, " +
             "assuming that each has a forest with the associated database.");
 
+        List<String> actualHostNames = dataHosts.stream().map(host -> host.hostName).collect(Collectors.toList());
+        Collections.sort(actualHostNames);
+
         final String expectedBootstrapHostName = testConfig.getHost();
-        assertEquals(expectedBootstrapHostName, dataHosts.get(0).hostName,
-            "The first host in the list is expected to be the 'bootstrap' host and should have a 'request host' name " +
-                "equal to that of the 'mlHost' property that our test plumbing uses to connect to MarkLogic. " +
+        assertTrue(actualHostNames.contains(expectedBootstrapHostName),
+            "The host name used to connect to MarkLogic is expected to be in the list of actual host names. " +
                 "The code that was copied from the Java Client to determine hosts will prefer using the 'request host' " +
-                "name as opposed to the actual MarkLogic host name.");
+                "name as opposed to the actual MarkLogic host name. " + actualHostNames);
+
+        if (actualHostNames.size() > 1) {
+            final String message = "Unexpected host names: " + actualHostNames;
+            assertTrue(actualHostNames.contains("node2.local"), message);
+            assertTrue(actualHostNames.contains("node3.local"), message);
+        }
     }
 
     private List<String> getExpectedHostNames() {
