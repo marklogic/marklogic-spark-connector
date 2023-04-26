@@ -38,7 +38,7 @@ public class DefaultSource implements TableProvider {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         Map<String, String> serializableProperties = options.asCaseSensitiveMap();
-        this.readContext = new ReadContext(serializableProperties);
+        this.readContext = new ReadContext(serializableProperties, true);
         return this.readContext.getSchema();
     }
 

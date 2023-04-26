@@ -53,10 +53,7 @@ public class ReadContext implements Serializable {
     private long serverTimestamp;
 
     public ReadContext(Map<String, String> properties, StructType schema) {
-        this(properties);
-        // TODO Using the above constructor is a little inefficient, as we're always inferring the schema so that we can
-        // also establish a server timestamp. We'll optimize this before the 1.0 release - i.e. if the user gives us a
-        // schema, we just need to get the server timestamp and we don't need to spend time inferring a schema.
+        this(properties, false);
         this.schema = schema;
     }
 
@@ -65,8 +62,9 @@ public class ReadContext implements Serializable {
      * to MarkLogic and analyze the user's plan.
      *
      * @param properties
+     * @param inferSchema
      */
-    public ReadContext(Map<String, String> properties) {
+    public ReadContext(Map<String, String> properties, boolean inferSchema) {
         this.properties = properties;
 
         int partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS, SparkSession.active().sparkContext().defaultMinPartitions());
@@ -85,7 +83,14 @@ public class ReadContext implements Serializable {
         }
 
         if (this.planAnalysis != null) {
-            inferSchema(client.newRowManager(), dslPlan);
+            StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
+            this.serverTimestamp = columnInfoHandle.getServerTimestamp();
+            if (inferSchema) {
+                this.schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+                if (logger.isTraceEnabled()) {
+                    logger.trace(String.format("Inferred schema: %s", schema.json()));
+                }
+            }
         } else {
             // If no rows are found, and the user doesn't provide a schema, need a non-null one to keep Spark happy.
             this.schema = new StructType();
@@ -115,18 +120,6 @@ public class ReadContext implements Serializable {
         }
     }
 
-    private void inferSchema(RowManager rowManager, RawQueryDSLPlan dslPlan) {
-        StringHandle columnInfoHandle = new StringHandle();
-        rowManager.columnInfo(dslPlan, columnInfoHandle);
-        this.serverTimestamp = columnInfoHandle.getServerTimestamp();
-
-        this.schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
-        // Using trace as this can be very verbose.
-        if (logger.isTraceEnabled()) {
-            logger.trace(String.format("Inferred schema: %s", schema.json()));
-        }
-    }
-
     DatabaseClient connectToMarkLogic() {
         DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> properties.get("spark." + propertyName));
         DatabaseClient.ConnectionResult result = client.checkConnection();
@@ -139,6 +132,13 @@ public class ReadContext implements Serializable {
     Iterator<StringHandle> readRowsInBucket(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {
         if (logger.isDebugEnabled()) {
             logger.debug("Getting rows for partition {} and bucket {} at server timestamp {}", partition, bucket, serverTimestamp);
+        }
+
+        // This should never occur, as a query should only ever occur when rows were initially found, which leads to a
+        // server timestamp being captured. But if it were somehow to occur, we should error out as the row-ID-based
+        // partitions are not reliable without a consistent server timestamp.
+        if (serverTimestamp < 1) {
+            throw new RuntimeException(String.format("Unable to read rows; invalid server timestamp: %d", serverTimestamp));
         }
 
         JacksonHandle planHandle = new JacksonHandle(planAnalysis.boundedPlan);
