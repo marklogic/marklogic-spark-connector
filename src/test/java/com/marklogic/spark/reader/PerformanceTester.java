@@ -1,6 +1,5 @@
 package com.marklogic.spark.reader;
 
-import com.marklogic.spark.DefaultSource;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -9,18 +8,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Not a test, but a handy way to run ad hoc performance tests against the "employee" documents created by the default
- * configuration in the quick-table project.
- * <p>
- * Some performance notes:
- * <p>
- * For 100k rows with Spark task count of 16, showing partitions;duration:
- * <p>
- * 1;65.9
- * 4;15.3
- * 8;12.2
- * 10;12.5
- * 16;13.5
- * 24;14.1
+ * configuration in the quick-table project. Feel free to adjust the parameters in this for any ML app and TDE view to
+ * do some manual ad hoc testing.
  */
 public class PerformanceTester {
 
@@ -31,12 +20,14 @@ public class PerformanceTester {
         final int partitionCount = 8;
         final int batchSize = 10000;
 
+        final String host = args.length > 0 ? args[0] : "localhost";
+
         Dataset<Row> dataset = SparkSession.builder()
             .master(String.format("local[%d]", sparkConcurrentTaskCount))
             .getOrCreate()
             .read()
             .format("com.marklogic.spark")
-            .option("spark.marklogic.client.host", "localhost")
+            .option("spark.marklogic.client.host", host)
             .option("spark.marklogic.client.port", 8009)
             .option("spark.marklogic.client.username", "admin")
             .option("spark.marklogic.client.password", "admin")

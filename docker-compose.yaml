@@ -1,0 +1,74 @@
+version: '3.6'
+name: marklogic_spark
+
+services:
+  bootstrap_3n:
+    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    container_name: bootstrap_3n
+    hostname: bootstrap_3n.local
+    restart: always
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+    volumes:
+      - marklogic_spark_vol1:/var/opt/MarkLogic
+    ports:
+      - 8000-8020:8000-8020
+    networks:
+      - external_net
+      - internal_net
+
+  node2:
+    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    container_name: node2
+    hostname: node2.local
+    restart: always
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+      - MARKLOGIC_JOIN_CLUSTER=true
+      - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
+    volumes:
+      - marklogic_spark_vol2:/var/opt/MarkLogic
+    ports:
+      - 7100-7120:8000-8020
+    depends_on:
+      - bootstrap_3n
+    networks:
+      - external_net
+      - internal_net
+
+  node3:
+    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    container_name: node3
+    hostname: node3.local
+    restart: always
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+      - MARKLOGIC_JOIN_CLUSTER=true
+      - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
+    volumes:
+      - marklogic_spark_vol3:/var/opt/MarkLogic
+    ports:
+      - 7200-7220:8000-8020
+    depends_on:
+      - bootstrap_3n
+    networks:
+      - external_net
+      - internal_net
+
+networks:
+  external_net: { }
+  internal_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"
+
+volumes:
+  marklogic_spark_vol1:
+  marklogic_spark_vol2:
+  marklogic_spark_vol3:
