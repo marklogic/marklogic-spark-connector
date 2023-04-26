@@ -1,0 +1,7 @@
+{
+  "user-name": "spark-test-user",
+  "password": "spark",
+  "role": [
+    "spark-user-role"
+  ]
+}
