@@ -57,6 +57,8 @@ class MarkLogicTable implements SupportsRead {
         return "test-project";
     }
 
+    // This is marked as deprecated in the Table interface.
+    @Deprecated
     @Override
     public StructType schema() {
         return readContext.getSchema();

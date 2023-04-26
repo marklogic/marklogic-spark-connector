@@ -39,6 +39,8 @@ import scala.compat.java8.JFunction;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Random;
 
 class MarkLogicPartitionReader implements PartitionReader {
 
@@ -46,7 +48,7 @@ class MarkLogicPartitionReader implements PartitionReader {
 
     private final ReadContext readContext;
     private final PlanAnalysis.Partition partition;
-    private final RowManager rowManager;
+    private final List<HostUtil.DataHost> dataHosts;
 
     private final JacksonParser jacksonParser;
     private final Function2<JsonFactory, String, JsonParser> jsonParserCreator;
@@ -55,15 +57,18 @@ class MarkLogicPartitionReader implements PartitionReader {
     private Iterator<StringHandle> rowIterator;
     private int nextBucketIndex;
     private int currentBucketRowCount;
+    private int currentHostIndex = 0;
 
-    MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
+
+    MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition, List<HostUtil.DataHost> dataHosts) {
         this.readContext = readContext;
         this.partition = partition;
-        this.rowManager = readContext.connectToMarkLogic().newRowManager();
-        // Nested values won't work with JacksonParser, so we ask for type info to not be in the rows.
-        this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
-
         this.jacksonParser = newJacksonParser(readContext.getSchema());
+        this.dataHosts = dataHosts;
+
+        // To vary the order in which hosts are invoked across readers, select a random index in the host list to use
+        // as the starting point.
+        this.currentHostIndex = new Random().nextInt(dataHosts.size());
 
         // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
         // scala-java8-compat, we should be able to use scala.jdk.FunctionConverters since those are part of Scala
@@ -94,6 +99,8 @@ class MarkLogicPartitionReader implements PartitionReader {
 
             PlanAnalysis.Bucket bucket = partition.buckets.get(nextBucketIndex);
             nextBucketIndex++;
+
+            RowManager rowManager = selectRowManagerFromDataHosts();
             this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
             boolean bucketHasAtLeastOneRow = this.rowIterator.hasNext();
             if (bucketHasAtLeastOneRow) {
@@ -141,5 +148,15 @@ class MarkLogicPartitionReader implements PartitionReader {
         // No use cases for filters so far.
         final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList().iterator()).toSeq();
         return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
+    }
+
+    private RowManager selectRowManagerFromDataHosts() {
+        int hostIndex = currentHostIndex % dataHosts.size();
+        HostUtil.DataHost dataHost = dataHosts.get(hostIndex);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will send request to host: {}", dataHost.hostName);
+        }
+        currentHostIndex++;
+        return dataHost.rowManager;
     }
 }
