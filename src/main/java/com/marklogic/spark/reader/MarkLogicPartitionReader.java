@@ -137,7 +137,7 @@ class MarkLogicPartitionReader implements PartitionReader {
         // for more information.
         final String defaultColumnNameOfCorruptRecord = "_corrupt_record";
 
-        // TODO This may need to be configurable by the user
+        // As verified via tests, this default is overridden by a user via the spark.sql.session.timeZone option.
         final String defaultTimeZoneId = "Z";
         JSONOptions jsonOptions = new JSONOptions(new HashMap<>(), defaultTimeZoneId, defaultColumnNameOfCorruptRecord);
 

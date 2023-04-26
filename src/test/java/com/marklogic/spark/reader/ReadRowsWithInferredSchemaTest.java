@@ -30,10 +30,8 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals(1.0, row.getFloat(4));
         assertEquals(2.2, row.getDouble(5));
         assertEquals(3.3, row.getDouble(6));
-        // TODO Improve this with DEVEXP-388
         assertTrue(row.getTimestamp(7).toString().startsWith("2023-04-18 "),
             "Unexpected value: " + row.getTimestamp(7).toString());
-        //assertEquals("2023-04-18 13:55:51.123", row.getTimestamp(7).toString());
         assertEquals("13:55:51", row.getString(8)); // time
         assertEquals("2023-04-18", row.getDate(9).toString());
         assertEquals("2023-04", row.getString(10)); // gYearMonth

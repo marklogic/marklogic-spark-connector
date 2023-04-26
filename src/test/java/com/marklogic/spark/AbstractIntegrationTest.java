@@ -28,8 +28,13 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     }
 
     protected SparkSession newSparkSession() {
+        return newSparkSession("UTC");
+    }
+
+    protected SparkSession newSparkSession(String timeZone) {
         return SparkSession.builder()
             .master("local[*]")
+            .config("spark.sql.session.timeZone", timeZone)
             .getOrCreate();
     }
 
@@ -40,7 +45,11 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
      * @return
      */
     protected DataFrameReader newDefaultReader() {
-        return newSparkSession()
+        return newDefaultReader(newSparkSession());
+    }
+
+    protected DataFrameReader newDefaultReader(SparkSession session) {
+        return session
             .read()
             .format("com.marklogic.spark")
             .option("spark.marklogic.client.host", testConfig.getHost())
