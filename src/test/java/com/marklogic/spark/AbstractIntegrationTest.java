@@ -19,6 +19,15 @@ import java.io.IOException;
  */
 public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
+    // User credentials for all calls to MarkLogic by the Spark connector
+    protected final static String TEST_USERNAME = "spark-test-user";
+    protected final static String TEST_PASSWORD = "spark";
+
+    /**
+     * Via marklogic-junit5, this is populated via the mlHost/mlRestPort/mlUsername/mlPassword property values. Those
+     * are expected to be for an admin-like user who can deploy the test app. Thus, this should only be used for
+     * operations requiring an admin-like user.
+     */
     @Autowired
     protected SimpleTestConfig testConfig;
 
@@ -54,8 +63,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .format("com.marklogic.spark")
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", testConfig.getUsername())
-            .option("spark.marklogic.client.password", testConfig.getPassword())
+            .option("spark.marklogic.client.username", TEST_USERNAME)
+            .option("spark.marklogic.client.password", TEST_PASSWORD)
             .option("spark.marklogic.client.authType", "digest")
             .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
     }
