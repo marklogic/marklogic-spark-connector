@@ -26,8 +26,6 @@ import java.util.List;
 /**
  * "Analyze" = take a user's plan (from their Optic DSL query) and parameterize it with lower and upper bounds,
  * and also calculate partitions.
- * <p>
- * This will be used by MarkLogicBatch in DEVEXP-376 (and this comment will be removed).
  */
 class PlanAnalyzer {
 

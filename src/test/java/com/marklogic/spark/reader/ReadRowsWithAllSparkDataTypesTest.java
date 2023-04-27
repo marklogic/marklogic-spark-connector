@@ -5,9 +5,12 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,6 +23,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * This test does not cover int/string, as those are covered by ReadRowsTest.
  */
 public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
+
+    private TimeZone defaultTimeZone;
+
+    @BeforeEach
+    void beforeEach() {
+        defaultTimeZone = TimeZone.getDefault();
+    }
+
+    @AfterEach
+    void afterEach() {
+        // Ensure that no changes to the JVM time zone affect any other tests.
+        TimeZone.setDefault(defaultTimeZone);
+    }
 
     @Test
     void floatType() {
@@ -135,24 +151,19 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void timestampType() {
-        List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
-                ".where(op.sqlCondition(\"ForeName = 'Finlay'\"))")
-            .schema(new StructType()
-                .add("Medical.Authors.DateTime", DataTypes.TimestampType)
-            )
-            .load()
-            .collectAsList();
-
-        assertEquals(1, rows.size());
-        Object value = rows.get(0).get(0);
+    void timestampTypeWithZuluTimeZone() {
+        Row row = readFinlayRowWithTimeZone("UTC");
+        Object value = row.get(0);
         assertTrue(value instanceof java.sql.Timestamp);
-        // TODO Improve this with DEVEXP-388
-        assertTrue(value.toString().startsWith("2022-07-13"),
-            "Unexpected value: " + value.toString());
-//        assertEquals("2022-07-13 05:00:00.0", value.toString(),
-//            "The value is translated to Zulu time since that's the default time zone ID.");
+        assertEquals("2022-07-13 09:00:00.0", value.toString());
+    }
+
+    @Test
+    void timestampTypeWithLosAngelesTimeZone() {
+        Row row = readFinlayRowWithTimeZone("America/Los_Angeles");
+        Object value = row.get(0);
+        assertTrue(value instanceof java.sql.Timestamp);
+        assertEquals("2022-07-13 02:00:00.0", value.toString());
     }
 
     /**
@@ -174,6 +185,27 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
         assertEquals(1, rows.size());
         assertEquals("Golby", rows.get(0).get(0));
         assertEquals("2 years 4 months", rows.get(0).get(1).toString());
+    }
+
+    /**
+     * Per https://stackoverflow.com/questions/49644232/how-to-set-timezone-to-utc-in-apache-spark, a Spark user is
+     * expected to pass in spark.sql.session.timeZone, and depending on their environment, may need to alter the
+     * JVM's default time zone as well to get the expected value.
+     */
+    private Row readFinlayRowWithTimeZone(String timeZone) {
+        TimeZone.setDefault(TimeZone.getTimeZone(timeZone));
+        List<Row> rows = newDefaultReader(newSparkSession(timeZone))
+            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
+                ".where(op.sqlCondition(\"ForeName = 'Finlay'\"))")
+            .schema(new StructType()
+                .add("Medical.Authors.DateTime", DataTypes.TimestampType)
+            )
+            .load()
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        logger.info(rows.get(0).prettyJson());
+        return rows.get(0);
     }
 
     private List<Row> readRowsWithCitationIDType(DataType dataType) {
