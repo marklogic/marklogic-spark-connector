@@ -27,6 +27,7 @@ public class PerformanceTester {
             .getOrCreate()
             .read()
             .format("com.marklogic.spark")
+            .option("spark.marklogic.client.connectionType", "gateway")
             .option("spark.marklogic.client.host", host)
             .option("spark.marklogic.client.port", 8009)
             .option("spark.marklogic.client.username", "admin")

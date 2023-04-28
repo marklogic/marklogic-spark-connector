@@ -2,10 +2,43 @@ version: '3.6'
 name: marklogic_spark
 
 services:
+
+# The load balancer
+#  nginx:
+#    image: nginx:1.16.0-alpine
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#    ports:
+#      - "8080:80"
+#    networks:
+#      - external_net
+#      - internal_net
+
+  caddy-load-balancer:
+    networks:
+      - external_net
+      - internal_net
+    image: caddy:2-alpine
+    volumes:
+      - ./caddy/data:/data
+      - ./caddy/config/Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - bootstrap_3n
+      - node2
+      - node3
+    ports:
+      # For running marklogic-spark-connector tests against the 3-node cluster
+      - 8016:8816
+      # For running performance tests against quick-table data
+      - 8009:8809
+
   bootstrap_3n:
     image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
     container_name: bootstrap_3n
     hostname: bootstrap_3n.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
     restart: always
     environment:
       - MARKLOGIC_INIT=true
@@ -14,7 +47,7 @@ services:
     volumes:
       - marklogic_spark_vol1:/var/opt/MarkLogic
     ports:
-      - 8000-8020:8000-8020
+      - 8000-8002:8000-8002
     networks:
       - external_net
       - internal_net
@@ -23,6 +56,9 @@ services:
     image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
     container_name: node2
     hostname: node2.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
     restart: always
     environment:
       - MARKLOGIC_INIT=true
@@ -32,10 +68,10 @@ services:
       - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
     volumes:
       - marklogic_spark_vol2:/var/opt/MarkLogic
-    ports:
-      - 7100-7120:8000-8020
     depends_on:
       - bootstrap_3n
+    ports:
+      - 8100-8102:8000-8002
     networks:
       - external_net
       - internal_net
@@ -44,6 +80,9 @@ services:
     image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
     container_name: node3
     hostname: node3.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
     restart: always
     environment:
       - MARKLOGIC_INIT=true
@@ -53,12 +92,47 @@ services:
       - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
     volumes:
       - marklogic_spark_vol3:/var/opt/MarkLogic
-    ports:
-      - 7200-7220:8000-8020
     depends_on:
       - bootstrap_3n
+    ports:
+      - 8200-8202:8000-8002
     networks:
       - external_net
+      - internal_net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    networks:
+      - external_net
+      - internal_net
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - internal_net
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./config/promtail.yaml:/etc/promtail/docker-config.yaml
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/docker-config.yaml
+    depends_on:
+      - loki
+    networks:
       - internal_net
 
 networks:

@@ -61,6 +61,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         return session
             .read()
             .format("com.marklogic.spark")
+            // This has no impact on a single-node cluster, but is needed when a load balancer is in front of MarkLogic.
+            .option("spark.marklogic.client.connectionType", "gateway")
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", TEST_USERNAME)
