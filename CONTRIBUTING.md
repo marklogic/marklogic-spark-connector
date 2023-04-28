@@ -1,7 +1,44 @@
 This is an evolving guide for developers interested in developing and testing this project. This guide assumes that you
 have cloned this repository to your local workstation. 
 
-# Running the tests
+# Do this first!
+
+In order to develop and/or test the MarkLogic Spark connector, or to try out the PySpark instructions below, you first 
+need to deploy the test application in this project to MarkLogic. You can do so either on your own installation of 
+MarkLogic, or you can use `docker-compose` to install a 3-node MarkLogic cluster with a load balancer in front of it. 
+
+## Installing a 3-node cluster with docker-compose
+
+If you wish to use `docker-compose`, perform the following steps before deploying the test application.
+
+1. [Install Docker](https://docs.docker.com/get-docker/).
+2. Ensure that you don't have a MarkLogic instance running locally (if you do, you may run into port conflicts in 
+   the next step).
+3. Run `./gradlew dockerUp` (Gradle tasks are included as shortcuts for running Docker commands). This will start up
+   a 3-node cluster with a load balancer in front of it. Additionally, the 8000/8001/8002 ports are available on the 
+   "bootstrap" node of the cluster for accessing the out-of-the-box MarkLogic applications.
+
+### Accessing MarkLogic logs in Grafana
+
+This project's `docker-compose.yaml` file includes 
+[Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of 
+collecting MarkLogic log files and allowing them to be viewed and searched via Grafana. 
+
+Once you have run `docker-compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to 
+access MarkLogic logging data:
+
+1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to 
+   http://localhost:3000/explore . 
+2. Verify that "Loki" is the default data source - you should see it selected in the upper left hand corner below 
+   the "Home" link.
+3. Click on the "Select label" dropdown and choose `job`. Click on the "Select value" label for this filter and 
+   select `marklogic` as the value.
+4. Click on the blue "Run query" button in the upper right hand corner.
+
+You should now see logs from all 3 nodes in the MarkLogic cluster. 
+
+
+## Deploying the test application
 
 To deploy the test application, first create `./gradle-local.properties` and add the following to it:
 
@@ -11,40 +48,32 @@ Then deploy the test application:
 
     ./gradlew -i mlDeploy
 
-You can then run all the tests:
+After the deployment finishes, you can go to http://localhost:8016 to verify that you get the MarkLogic REST API 
+index page for the test application server. 
+
+# Running the tests
+
+To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
 
-# Running the tests against a 3-node cluster
+If you installed MarkLogic using this project's `docker-compose.yaml` file, you can also run the tests from within the 
+Docker environment by first running the following task:
 
-This project includes a `docker-compose.yaml` file for standing up a 3-node MarkLogic cluster. This is useful for 
-manually testing the connector's support for distributing requests to multiple hosts in a cluster. The automated 
-tests can also be run against this cluster too.
+    ./gradlew dockerBuildCache
 
-To run the automated tests, first perform the following steps to set up a 3-node cluster and a Docker image 
-containing all of this project's Gradle dependencies:
+The above task is a mostly one-time step to build a Docker image that contains all of this project's Gradle 
+dependencies. This will allow the next step to run much more quickly. You'll only need to run this again when the 
+project's Gradle dependencies change.
 
-1. [Install Docker](https://docs.docker.com/get-docker/).
-2. Ensure that you don't have a MarkLogic instance running locally.
-3. Run `./gradlew dockerUp` (Gradle tasks are included as shortcuts for running Docker commands). This will start up 
-   the 3-node cluster, with one host listening on the standard ports from 8000 to 8002.
-4. Run `./gradlew -i mlDeploy` to deploy this project's test app to the 3-node cluster.
-5. Run `./gradlew dockerBuildCache` as a mostly one-time step to build a Docker image that contains all of this 
-   project's Gradle dependencies. This will allow the next step to run much more quickly. You'll only need to run 
-   this again when the project's Gradle dependencies change.
-
-You're now ready to run the automated tests; be sure you've created a `gradle-local.properties` file with 
-`mlPassword` in it per the instructions in the section above this. The tests can be run via:
+You can then run the tests from within the Docker environment via the following task:
 
     ./gradlew dockerTest
-
-All the tests should pass successfully. In addition, you should be able to inspect the `8016_AccessLog.txt` file on each
-MarkLogic host and see that each host received requests while the tests were being run. 
 
 
 # Testing with PySpark
 
-First, [follow the instructions](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) on 
+First, [follow the instructions](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) for 
 installing PySpark. You'll need to install Python 3 first. [pyenv](https://github.com/pyenv/pyenv#installation) is 
 recommended for doing so, as it simplifies installing multiple versions of Python and easily switching between them. 
 
