@@ -17,25 +17,40 @@ package com.marklogic.spark;
 
 import com.marklogic.spark.reader.MarkLogicScanBuilder;
 import com.marklogic.spark.reader.ReadContext;
+import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
+import org.apache.spark.sql.connector.catalog.SupportsWrite;
 import org.apache.spark.sql.connector.catalog.TableCapability;
 import org.apache.spark.sql.connector.read.ScanBuilder;
+import org.apache.spark.sql.connector.write.LogicalWriteInfo;
+import org.apache.spark.sql.connector.write.WriteBuilder;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-class MarkLogicTable implements SupportsRead {
+public class MarkLogicTable implements SupportsRead, SupportsWrite {
 
     private ReadContext readContext;
-    private final Set<TableCapability> capabilities;
+    private Set<TableCapability> capabilities;
+    private StructType schema;
+    Map<String, String> properties;
 
     MarkLogicTable(ReadContext readContext) {
         this.readContext = readContext;
         capabilities = new HashSet<>();
         capabilities.add(TableCapability.BATCH_READ);
+        this.schema = readContext.getSchema();
     }
+
+    public MarkLogicTable(StructType schema, Set<TableCapability> capabilities, Map<String, String> properties) {
+        this.schema = schema;
+        this.capabilities = capabilities;
+        this.properties = properties;
+    }
+
 
     /**
      * We ignore the {@code options} map per the class's Javadocs, which note that it's intended to provide
@@ -61,11 +76,23 @@ class MarkLogicTable implements SupportsRead {
     @Deprecated
     @Override
     public StructType schema() {
-        return readContext.getSchema();
+        return schema;
     }
 
     @Override
     public Set<TableCapability> capabilities() {
+        // TODO: Need to add capabilities accordingly for Stream write.
+        if (capabilities == null) {
+            this.capabilities = new HashSet<>();
+            capabilities.add(TableCapability.BATCH_READ);
+            capabilities.add(TableCapability.BATCH_WRITE);
+        }
         return capabilities;
+    }
+
+    @Override
+    public WriteBuilder newWriteBuilder(LogicalWriteInfo info) {
+        // TODO: Look into the uses of LogicalWriteInfo
+        return new MarkLogicWriteBuilder(properties);
     }
 }
