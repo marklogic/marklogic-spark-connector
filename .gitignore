@@ -12,3 +12,4 @@ out
 *.iws
 gradle-local.properties
 .vscode
+logs
