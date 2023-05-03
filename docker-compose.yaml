@@ -19,6 +19,8 @@ services:
       - 8016:8816
       # For running performance tests against quick-table data
       - 8009:8809
+      # For the pyspark-example project
+      - 8020:8820
     networks:
       - external_net
       - internal_net

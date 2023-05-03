@@ -1,0 +1,179 @@
+{
+  "template": {
+    "context": "/",
+    "collections": [
+      "employee"
+    ],
+    "rows": [
+      {
+        "schemaName": "example",
+        "viewName": "employee",
+        "viewLayout": "sparse",
+        "columns": [
+          {
+            "name": "GUID",
+            "scalarType": "string",
+            "val": "GUID",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "HiredDate",
+            "scalarType": "date",
+            "val": "HiredDate",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Gender",
+            "scalarType": "string",
+            "val": "Gender",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Title",
+            "scalarType": "string",
+            "val": "Title",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "GivenName",
+            "scalarType": "string",
+            "val": "GivenName",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "MiddleInitial",
+            "scalarType": "string",
+            "val": "MiddleInitial",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Surname",
+            "scalarType": "string",
+            "val": "Surname",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "StreetAddress",
+            "scalarType": "string",
+            "val": "StreetAddress",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "City",
+            "scalarType": "string",
+            "val": "City",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "State",
+            "scalarType": "string",
+            "val": "State",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "ZipCode",
+            "scalarType": "string",
+            "val": "ZipCode",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Country",
+            "scalarType": "string",
+            "val": "Country",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "EmailAddress",
+            "scalarType": "string",
+            "val": "EmailAddress",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "TelephoneNumber",
+            "scalarType": "string",
+            "val": "TelephoneNumber",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "TelephoneCountryCode",
+            "scalarType": "string",
+            "val": "TelephoneCountryCode",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Birthday",
+            "scalarType": "string",
+            "val": "Birthday",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "NationalID",
+            "scalarType": "string",
+            "val": "NationalID",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Point",
+            "scalarType": "point",
+            "val": "cts:point(point/lat, point/long)",
+            "coordinateSystem": "raw",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "BaseSalary",
+            "scalarType": "double",
+            "val": "BaseSalary",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Bonus",
+            "scalarType": "double",
+            "val": "Bonus",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Department",
+            "scalarType": "string",
+            "val": "Department",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "Status",
+            "scalarType": "string",
+            "val": "Status",
+            "nullable": true,
+            "invalidValues": "ignore"
+          },
+          {
+            "name": "ManagerGUID",
+            "scalarType": "string",
+            "val": "ManagerGUID",
+            "nullable": true,
+            "invalidValues": "ignore"
+          }
+        ]
+      }
+    ]
+  }
+}

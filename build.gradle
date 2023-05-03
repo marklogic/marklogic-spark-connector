@@ -42,6 +42,9 @@ test {
 }
 
 shadowJar {
+  // "all" is the default; no need for that in the connector filename.
+  archiveClassifier.set("")
+
   // Spark uses an older version of OkHttp; see
   // https://stackoverflow.com/questions/61147800/how-to-override-spark-jars-while-running-spark-submit-command-in-cluster-mode
   // for more information on why these are relocated.
