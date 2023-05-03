@@ -73,40 +73,22 @@ You can then run the tests from within the Docker environment via the following 
 
 # Testing with PySpark
 
-First, [follow the instructions](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) for 
-installing PySpark. You'll need to install Python 3 first. [pyenv](https://github.com/pyenv/pyenv#installation) is 
-recommended for doing so, as it simplifies installing multiple versions of Python and easily switching between them. 
-
-Once you've installed PySpark, run it to make sure all is well:
-
-    pyspark
-
-That should open up a Python shell and print some logging like this:
-
-```
-Using Python version 3.9.11 (main, Sep 27 2022 13:33:29)
-Spark context Web UI available at http://10.114.228.34:4040
-Spark context available as 'sc' (master = local[*], app id = local-1682019905427).
-SparkSession available as 'spark'.
-```
-
-Quit out of the Python shell by hitting `ctrl-D`. 
-
-Build the MarkLogic Spark connector:
+The documentation for this project 
+[has instructions on using PySpark](https://marklogic.github.io/marklogic-spark-connector/getting-started-pyspark.html) 
+with the MarkLogic Spark connector. The documentation instructs a user to obtain the connector from this repository's 
+releases page. For development and testing, you will most likely want to build the connector yourself by running the 
+following command from the root of this repository:
 
     ./gradlew clean shadowJar
 
 This will produce a single jar file for the connector in the `./build/libs` directory. 
 
-Next, from any directory, run the following, assuming that you cloned this project to `/Users/myusername`:
+You can then launch PySpark with the connector available via:
 
-    pyspark --jars /Users/myusername/marklogic-spark-connector/build/libs/marklogic-spark-connector-1.0-SNAPSHOT-all.jar
+    pyspark --jars build/libs/marklogic-spark-connector-1.0-SNAPSHOT.jar
 
-The above command will start another Python shell, and the MarkLogic Spark connector will be available to Spark. 
-
-Now, let's make use of the connector - paste the following into the Python terminal, altering the connection details
-and the Optic query as necessary (this defaults to a query that will work against this project's test application, 
-which can be deployed via the instructions above for running this project's tests):
+The below command is an example of loading data from the test application deployed via the instructions at the top of 
+this page. 
 
 ```
 df = spark.read.format("com.marklogic.spark")\
@@ -127,3 +109,8 @@ You now have a Spark dataframe - try some commands out on it:
 
 Check out the [PySpark docs](https://spark.apache.org/docs/latest/api/python/getting_started/quickstart_df.html) for 
 more commands you can try out. 
+
+# Testing the documentation locally
+
+See the section with the same name in the 
+[MarkLogic Koop contributing guide](https://github.com/koopjs/koop-provider-marklogic/blob/master/CONTRIBUTING.md).

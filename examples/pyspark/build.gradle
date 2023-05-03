@@ -1,0 +1,30 @@
+plugins {
+  id 'net.saliman.properties' version '1.5.2'
+  id "com.marklogic.ml-gradle" version "4.5.1"
+}
+
+repositories {
+  mavenCentral()
+  maven { url "https://developer.marklogic.com/maven2/" }
+}
+
+configurations {
+  mlcp
+}
+
+dependencies {
+  mlcp "com.marklogic:mlcp:11.0.2"
+}
+
+task loadEmployees(type: com.marklogic.gradle.task.MlcpTask) {
+  classpath = configurations.mlcp
+  command = "IMPORT"
+  port = mlAppConfig.restPort
+  database = mlAppConfig.contentDatabaseName
+  input_file_path = "data/employees.zip"
+  input_compressed = true
+  output_collections = "employee"
+  output_permissions = "rest-reader,read,rest-reader,update"
+  output_uri_replace = ".*data/,'/'"
+}
+mlDeploy.finalizedBy loadEmployees

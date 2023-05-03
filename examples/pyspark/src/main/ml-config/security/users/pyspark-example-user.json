@@ -1,0 +1,8 @@
+{
+  "user-name": "pyspark-example-user",
+  "password": "password",
+  "role": [
+    "rest-reader",
+    "qconsole-user"
+  ]
+}
