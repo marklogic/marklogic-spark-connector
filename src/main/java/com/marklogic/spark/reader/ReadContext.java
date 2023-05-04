@@ -16,7 +16,6 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.impl.DatabaseClientImpl;
@@ -26,12 +25,12 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawPlanDefinition;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.ContextSupport;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -40,14 +39,13 @@ import java.util.Map;
  * Also simplifies passing state around to the various Spark-required classes, as we only need one argument instead of
  * N arguments.
  */
-public class ReadContext implements Serializable {
+public class ReadContext extends ContextSupport {
 
     final static long serialVersionUID = 1;
 
     private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
     private final static long DEFAULT_BATCH_SIZE = 10000;
 
-    private final Map<String, String> properties;
     private PlanAnalysis planAnalysis;
     private StructType schema;
     private long serverTimestamp;
@@ -65,7 +63,7 @@ public class ReadContext implements Serializable {
      * @param inferSchema
      */
     public ReadContext(Map<String, String> properties, boolean inferSchema) {
-        this.properties = properties;
+        super(properties);
 
         final long partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS,
             SparkSession.active().sparkContext().defaultMinPartitions(), 1);
@@ -104,8 +102,8 @@ public class ReadContext implements Serializable {
 
     private long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
-            long value = this.properties.containsKey(optionName) ?
-                Long.parseLong(this.properties.get(optionName)) :
+            long value = this.getProperties().containsKey(optionName) ?
+                Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
             if (value < minimumValue) {
                 throw new IllegalArgumentException(String.format("Value of '%s' option must be %d or greater", optionName, minimumValue));
@@ -123,15 +121,6 @@ public class ReadContext implements Serializable {
         } else {
             throw new RuntimeException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
         }
-    }
-
-    DatabaseClient connectToMarkLogic() {
-        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> properties.get("spark." + propertyName));
-        DatabaseClient.ConnectionResult result = client.checkConnection();
-        if (!result.isConnected()) {
-            throw new RuntimeException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
-        }
-        return client;
     }
 
     Iterator<StringHandle> readRowsInBucket(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {

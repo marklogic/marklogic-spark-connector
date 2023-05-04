@@ -19,19 +19,16 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 
-import java.util.Map;
+class MarkLogicDataWriterFactory implements DataWriterFactory {
 
-public class MarkLogicDataWriterFactory implements DataWriterFactory {
-    private Map<String, String> map;
+    private WriteContext writeContext;
 
-    public MarkLogicDataWriterFactory(Map<String, String> map) {
-        this.map = map;
+    MarkLogicDataWriterFactory(WriteContext writeContext) {
+        this.writeContext = writeContext;
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-    // TODO: Need to keep record of partitionId for logging purposes
-        //TODO: Look into taskId and how it can be used
-        return new MarkLogicDataWriter(map);
+        return new MarkLogicDataWriter(writeContext, partitionId, taskId);
     }
 }

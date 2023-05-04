@@ -19,28 +19,32 @@ import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+class MarkLogicBatchWrite implements BatchWrite {
 
-public class MarkLogicBatchWrite implements BatchWrite {
-    Map<String, String> properties;
-    public MarkLogicBatchWrite(Map<String, String> properties) {
-        this.properties = properties;
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatchWrite.class);
+
+    private WriteContext writeContext;
+
+    MarkLogicBatchWrite(WriteContext writeContext) {
+        this.writeContext = writeContext;
     }
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        //TODO: Look into the uses of PhysicalWriteInfo
-        return new MarkLogicDataWriterFactory(properties);
+        logger.info("Number of partitions: {}", info.numPartitions());
+        return new MarkLogicDataWriterFactory(writeContext);
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-    //TODO: Need to update commit messages
+        logger.info("Commit messages received: {}", messages);
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-    //TODO: Need to update reason why the job was aborted
+        logger.error("Abort messages received: {}", messages);
     }
 }

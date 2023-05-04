@@ -15,7 +15,9 @@
  */
 package com.marklogic.spark;
 
+import com.marklogic.spark.reader.ReadConstants;
 import com.marklogic.spark.reader.ReadContext;
+import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
@@ -33,7 +35,10 @@ public class DefaultSource implements TableProvider {
     private ReadContext readContext;
 
     /**
-     * If no schema is provided, Spark invokes this before getTable is invoked.
+     * If no schema is provided when reading data, Spark invokes this before getTable is invoked.
+     * <p>
+     * This will not be invoked during a write operation, as the schema in the Dataset being written will be used
+     * instead.
      */
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
@@ -44,10 +49,13 @@ public class DefaultSource implements TableProvider {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        if (this.readContext == null) {
-            this.readContext = new ReadContext(properties, schema);
+        if (isReadOperation(properties)) {
+            if (this.readContext == null) {
+                this.readContext = new ReadContext(properties, schema);
+            }
+            return new MarkLogicTable(this.readContext);
         }
-        return new MarkLogicTable(this.readContext);
+        return new MarkLogicTable(new WriteContext(schema, properties));
     }
 
     /**
@@ -59,5 +67,9 @@ public class DefaultSource implements TableProvider {
     @Override
     public boolean supportsExternalMetadata() {
         return true;
+    }
+
+    private boolean isReadOperation(Map<String, String> properties) {
+        return properties.containsKey(ReadConstants.OPTIC_DSL);
     }
 }
