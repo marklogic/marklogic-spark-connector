@@ -33,8 +33,6 @@ public class WriteRowsTest extends AbstractIntegrationTest {
                 .format("csv")
                 .csv("src/test/ml-data/data.csv"); // Path from repository root
 
-        // TODO: The dataset passed in should be available to read (TableProvider or DataWriter?)
-        System.out.println(dataset); // [docNum: string, docName: string]
         StringBuffer headers = new StringBuffer();
         for(int i=0; i<dataset.schema().fields().length; i++) {
             headers.append(dataset.schema().fields()[i].name());
@@ -50,7 +48,7 @@ public class WriteRowsTest extends AbstractIntegrationTest {
             .option("spark.marklogic.client.password", testConfig.getPassword())
             .option("spark.marklogic.client.authType", "digest")
             // TODO: The below schema passed in should be readable by the inferschema method.
-            .option("schema", headers.toString())
+           // .option("spark.marklogic.client.schema", headers.toString())
             .mode(SaveMode.Append); // mode is needed, else the doc is not written
 
         dataFrameWriter.save();
@@ -59,6 +57,8 @@ public class WriteRowsTest extends AbstractIntegrationTest {
 
     private void verifyDocIsWritten() {
         TextDocumentManager textDocumentManager = getDatabaseClient().newTextDocumentManager();
-        assertNotNull(textDocumentManager.read("doc1.txt"));
+        for(int i=1; i<201; i++){
+            assertNotNull(textDocumentManager.read("doc"+i+".txt"));
+        }
     }
 }

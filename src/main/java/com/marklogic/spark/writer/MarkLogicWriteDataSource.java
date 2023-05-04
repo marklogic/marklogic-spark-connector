@@ -25,17 +25,25 @@ import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
 public class MarkLogicWriteDataSource implements TableProvider {
+
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-       // TODO: Need a story to read the schema passed in since this method is needed and it cannot return null.
-        StructType struct = new StructType()
-            .add("docNum", DataTypes.StringType)
-            .add("docName", DataTypes.StringType);
-        return struct;
+        // TODO: Need a story to read the schema passed in.
+       // return new StructType(options.get("spark.marklogic.client.schema"));
+        return null;
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        return new MarkLogicTable(inferSchema(null), null, properties);
+        if(properties.containsKey("spark.marklogic.client.schema")){
+            CaseInsensitiveStringMap caseInsensitiveStringMap = new CaseInsensitiveStringMap(properties);
+            return new MarkLogicTable(inferSchema(caseInsensitiveStringMap), null, properties);
+        }
+        return new MarkLogicTable(schema, null, properties);
+    }
+
+    @Override
+    public boolean supportsExternalMetadata() {
+        return true;
     }
 }

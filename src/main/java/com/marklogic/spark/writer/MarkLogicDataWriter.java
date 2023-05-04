@@ -37,13 +37,14 @@ public class MarkLogicDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void write(InternalRow record) throws IOException {
-      // TODO: Find a way to write based on the schema passed in by the user
         DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> map.get("spark." + propertyName));
         TextDocumentManager textDocumentManager = client.newTextDocumentManager();
         DocumentWriteSet batch = textDocumentManager.newWriteSet();
         DocumentMetadataHandle defaultMetadata =
             new DocumentMetadataHandle().withCollections("my-test-data");
-        batch.add("doc1.txt", new StringHandle("Document - 2").withFormat(Format.TEXT));
+        // TODO: modify below to use https://github.com/marklogic/marklogic-data-hub/blob/develop/marklogic-data-hub-spark-connector/src/main/java/com/marklogic/hub/spark/sql/sources/v2/writer/HubDataWriter.java#L111
+        batch.add("doc"+record.getString(0)+".txt",
+            new StringHandle(record.getString(0)+" "+record.getString(1)).withFormat(Format.TEXT));
         batch.addDefault(defaultMetadata);
         textDocumentManager.write(batch);
     }
