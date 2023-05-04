@@ -18,6 +18,8 @@ package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RowManager;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -56,6 +58,10 @@ class MarkLogicPartitionReader implements PartitionReader {
     private int nextBucketIndex;
     private int currentBucketRowCount;
 
+    // Used solely for logging metrics
+    private long totalRowCount;
+    private long totalDuration;
+
     MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
         this.readContext = readContext;
         this.partition = partition;
@@ -79,8 +85,10 @@ class MarkLogicPartitionReader implements PartitionReader {
             if (rowIterator.hasNext()) {
                 return true;
             } else {
-                logger.debug("Count of rows for partition {} and bucket {}: {}", this.partition,
-                    this.partition.buckets.get(nextBucketIndex - 1), currentBucketRowCount);
+                if (logger.isTraceEnabled()) {
+                    logger.trace("Count of rows for partition {} and bucket {}: {}", this.partition,
+                        this.partition.buckets.get(nextBucketIndex - 1), currentBucketRowCount);
+                }
                 currentBucketRowCount = 0;
             }
         }
@@ -94,7 +102,11 @@ class MarkLogicPartitionReader implements PartitionReader {
 
             PlanAnalysis.Bucket bucket = partition.buckets.get(nextBucketIndex);
             nextBucketIndex++;
+            long start = System.currentTimeMillis();
             this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
+            if (logger.isDebugEnabled()) {
+                this.totalDuration += System.currentTimeMillis() - start;
+            }
             boolean bucketHasAtLeastOneRow = this.rowIterator.hasNext();
             if (bucketHasAtLeastOneRow) {
                 return true;
@@ -105,12 +117,15 @@ class MarkLogicPartitionReader implements PartitionReader {
     @Override
     public InternalRow get() {
         this.currentBucketRowCount++;
+        this.totalRowCount++;
         String row = rowIterator.next().get();
         return this.jacksonParser.parse(row, this.jsonParserCreator, this.utf8StringCreator).head();
     }
 
     @Override
     public void close() {
+        // Not yet certain how to make use of CustomTaskMetric, so just logging metrics of interest for now.
+        logMetrics();
     }
 
     /**
@@ -141,5 +156,18 @@ class MarkLogicPartitionReader implements PartitionReader {
         // No use cases for filters so far.
         final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList().iterator()).toSeq();
         return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
+    }
+
+    private void logMetrics() {
+        if (logger.isDebugEnabled()) {
+            double rowsPerSecond = totalRowCount > 0 ? (double) totalRowCount / ((double) totalDuration / 1000) : 0;
+            ObjectNode metrics = new ObjectMapper().createObjectNode()
+                .put("partitionId", this.partition.identifier)
+                .put("totalRequests", this.partition.buckets.size())
+                .put("totalRowCount", this.totalRowCount)
+                .put("totalDuration", this.totalDuration)
+                .put("rowsPerSecond", String.format("%.2f", rowsPerSecond));
+            logger.debug(metrics.toString());
+        }
     }
 }

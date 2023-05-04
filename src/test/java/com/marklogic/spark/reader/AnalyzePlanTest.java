@@ -31,19 +31,22 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
+        "1,0",
         "1,1",
         "1,2",
         "1,16",
+        "2,0",
         "2,1",
         "2,2",
         "2,16",
         // Using more partitions than there are results isn't an efficient choice by the user,
         // but it should still work fine - some buckets just won't return anything.
+        "16,0",
         "16,1",
         "16,2",
         "16,16"
     })
-    void partitionCountAndBatchSize(int partitionCount, int batchSize) {
+    void partitionCountAndBatchSize(long partitionCount, long batchSize) {
         logger.info(partitionCount + ":" + batchSize);
 
         PlanAnalysis planAnalysis = analyzePlan(partitionCount, batchSize);
@@ -51,7 +54,7 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
         verifyAllFifteenAuthorsAreReturned(planAnalysis);
     }
 
-    private PlanAnalysis analyzePlan(int partitionCount, int batchSize) {
+    private PlanAnalysis analyzePlan(long partitionCount, long batchSize) {
         RawQueryDSLPlan userPlan = rowManager.newRawQueryDSLPlan(new StringHandle("op.fromView('Medical', 'Authors')"));
         PlanAnalyzer partitioner = new PlanAnalyzer((DatabaseClientImpl) getDatabaseClient());
         PlanAnalysis planAnalysis = partitioner.analyzePlan(userPlan.getHandle(), partitionCount, batchSize);
