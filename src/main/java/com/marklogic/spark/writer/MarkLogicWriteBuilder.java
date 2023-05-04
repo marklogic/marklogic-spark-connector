@@ -18,18 +18,17 @@ package com.marklogic.spark.writer;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.WriteBuilder;
 
-import java.util.Map;
-
 public class MarkLogicWriteBuilder implements WriteBuilder {
-    Map<String, String> properties;
-    public MarkLogicWriteBuilder(Map<String, String> properties) {
-        this.properties = properties;
+
+    private WriteContext writeContext;
+
+    public MarkLogicWriteBuilder(WriteContext writeContext) {
+        this.writeContext = writeContext;
     }
 
+    @Deprecated
     @Override
     public BatchWrite buildForBatch() {
-        return new MarkLogicBatchWrite(properties);
+        return new MarkLogicBatchWrite(writeContext);
     }
-
-    // TODO: Look into the second overload function - buildForStreaming. Will be needing MarkLogicStreamWrite (that implements StreamWrite)
 }

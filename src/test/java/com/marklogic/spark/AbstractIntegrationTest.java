@@ -32,8 +32,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected SimpleTestConfig testConfig;
 
     @Override
-    public void deleteDocumentsBeforeTestRuns() {
-        getDatabaseClient().newServerEval().javascript("xdmp.collectionDelete('my-test-data')").evalAs(String.class);
+    protected String getJavascriptForDeletingDocumentsBeforeTestRuns() {
+        return "declareUpdate(); xdmp.collectionDelete('my-test-data')";
     }
 
     protected SparkSession newSparkSession() {

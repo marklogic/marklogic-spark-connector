@@ -22,9 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.CreateJacksonParser;
-import org.apache.spark.sql.catalyst.json.JSONOptions;
 import org.apache.spark.sql.catalyst.json.JacksonParser;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.sql.sources.Filter;
@@ -36,7 +36,6 @@ import scala.Function1;
 import scala.Function2;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
-import scala.collection.immutable.HashMap;
 import scala.compat.java8.JFunction;
 
 import java.util.ArrayList;
@@ -140,22 +139,13 @@ class MarkLogicPartitionReader implements PartitionReader {
      * @param schema
      */
     private JacksonParser newJacksonParser(StructType schema) {
-        // We don't expect corrupted records - i.e. corrupted values - to be present in the index. But Spark
-        // requires that this be set. See https://medium.com/@sasidharan-r/how-to-handle-corrupt-or-bad-record-in-apache-spark-custom-logic-pyspark-aws-430ddec9bb41
-        // for more information.
-        final String defaultColumnNameOfCorruptRecord = "_corrupt_record";
-
-        // As verified via tests, this default is overridden by a user via the spark.sql.session.timeZone option.
-        final String defaultTimeZoneId = "Z";
-        JSONOptions jsonOptions = new JSONOptions(new HashMap<>(), defaultTimeZoneId, defaultColumnNameOfCorruptRecord);
-
         // Have not yet found documentation on this parameter for JacksonParser, but it does not seem relevant as a
         // column value in TDE will be a single value and not an array.
         final boolean allowArraysAsStructs = true;
 
         // No use cases for filters so far.
         final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList().iterator()).toSeq();
-        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
+        return new JacksonParser(schema, Util.DEFAULT_JSON_OPTIONS, allowArraysAsStructs, filters);
     }
 
     private void logMetrics() {

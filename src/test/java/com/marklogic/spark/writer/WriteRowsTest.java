@@ -15,50 +15,44 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.client.document.TextDocumentManager;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.AbstractIntegrationTest;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 public class WriteRowsTest extends AbstractIntegrationTest {
 
     @Test
-    void test() {
+    void write200RowsFromCsvFile() {
         SparkSession sparkSession = newSparkSession();
 
-        Dataset<Row> dataset = sparkSession.read().option("header", true)
-                .format("csv")
-                .csv("src/test/ml-data/data.csv"); // Path from repository root
+        Dataset<Row> dataset = sparkSession.read()
+            .option("header", true)
+            .format("csv")
+            .csv("src/test/resources/data.csv");
 
-        // TODO: The dataset passed in should be available to read (TableProvider or DataWriter?)
-        System.out.println(dataset); // [docNum: string, docName: string]
-        StringBuffer headers = new StringBuffer();
-        for(int i=0; i<dataset.schema().fields().length; i++) {
-            headers.append(dataset.schema().fields()[i].name());
-            headers.append(",");
-        }
-        System.out.println("************ Starting MarkLogicSparkWriteDriver ****************");
-        DataFrameWriter<Row> dataFrameWriter = dataset
-            .write()
-            .format(MarkLogicWriteDataSource.class.getName())
+
+        dataset.write()
+            .format("com.marklogic.spark")
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", testConfig.getUsername())
             .option("spark.marklogic.client.password", testConfig.getPassword())
             .option("spark.marklogic.client.authType", "digest")
-            // TODO: The below schema passed in should be readable by the inferschema method.
-            .option("schema", headers.toString())
-            .mode(SaveMode.Append); // mode is needed, else the doc is not written
+            // Only Append is supported so far, and it must be specified.
+            .mode(SaveMode.Append)
+            .save();
 
-        dataFrameWriter.save();
-        verifyDocIsWritten();
-    }
-
-    private void verifyDocIsWritten() {
-        TextDocumentManager textDocumentManager = getDatabaseClient().newTextDocumentManager();
-        assertNotNull(textDocumentManager.read("doc1.txt"));
+        final int expectedCollectionSize = 200;
+        String uri = getUrisInCollection("my-test-data", expectedCollectionSize).get(0);
+        JsonNode doc = readJsonDocument(uri);
+        assertTrue(doc.has("docNum"));
+        assertTrue(doc.has("docName"));
     }
 }
