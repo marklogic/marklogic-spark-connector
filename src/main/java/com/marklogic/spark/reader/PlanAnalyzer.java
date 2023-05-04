@@ -35,7 +35,7 @@ class PlanAnalyzer {
         this.databaseClient = databaseClient;
     }
 
-    PlanAnalysis analyzePlan(AbstractWriteHandle userPlan, int userPartitionCount, int userBatchSize) {
+    PlanAnalysis analyzePlan(AbstractWriteHandle userPlan, long userPartitionCount, long userBatchSize) {
         JsonNode viewInfo = databaseClient.getServices().postResource(
             null, "internal/viewinfo", null, null, userPlan, new JacksonHandle()
         ).get();
@@ -45,8 +45,9 @@ class PlanAnalyzer {
         return new PlanAnalysis(viewInfo.get("modifiedPlan"), partitions);
     }
 
-    private List<PlanAnalysis.Partition> calculatePartitions(long rowCount, int userPartitionCount, int userBatchSize) {
-        long bucketCount = (rowCount / userPartitionCount) / userBatchSize;
+    private List<PlanAnalysis.Partition> calculatePartitions(long rowCount, long userPartitionCount, long userBatchSize) {
+        final long batchSize = userBatchSize > 0 ? userBatchSize : Long.parseLong("-1");
+        long bucketCount = (rowCount / userPartitionCount) / batchSize;
         if (bucketCount < 1) {
             bucketCount = 1;
         }

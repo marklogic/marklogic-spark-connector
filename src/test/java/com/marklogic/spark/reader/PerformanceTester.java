@@ -17,8 +17,11 @@ public class PerformanceTester {
 
     public static void main(String[] args) {
         final int sparkConcurrentTaskCount = 16;
-        final int partitionCount = 8;
-        final int batchSize = 10000;
+        final String query = "op.fromView('demo','employee')";
+//        final String query = "op.fromView('demo','employee').where(op.eq(op.col('job_description'), 'Technician'))";
+//        final String query = "op.fromView('demo', 'employee').where(op.le(op.col('person_id'), 8))";
+        final long partitionCount = 8;
+        final long batchSize = 100000;
 
         final String host = args.length > 0 ? args[0] : "localhost";
 
@@ -32,15 +35,16 @@ public class PerformanceTester {
             .option("spark.marklogic.client.username", "admin")
             .option("spark.marklogic.client.password", "admin")
             .option("spark.marklogic.client.authType", "digest")
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('demo','employee')")
+            .option(ReadConstants.OPTIC_DSL, query)
             .option(ReadConstants.NUM_PARTITIONS, partitionCount)
             .option(ReadConstants.BATCH_SIZE, batchSize)
             .load();
 
         long now = System.currentTimeMillis();
         long count = dataset.count();
-        logger.info("Duration: " + (System.currentTimeMillis() - now));
-        logger.info("COUNT: " + count);
+        long duration = System.currentTimeMillis() - now;
+        logger.info("Duration: {}; row count: {}; rows per second: {}", duration, count,
+            (double) count / ((double) duration / 1000));
 //        rows.forEach(row -> logger.info(row.prettyJson()));
     }
 }

@@ -119,13 +119,13 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void batchSizeLessThanOne() {
+    void batchSizeLessThanZero() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option(ReadConstants.BATCH_SIZE, "0")
+                .option(ReadConstants.BATCH_SIZE, "-1")
                 .load()
                 .count()
         );
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 1 or greater", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 0 or greater", ex.getMessage());
     }
 }

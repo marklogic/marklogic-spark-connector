@@ -45,7 +45,7 @@ public class ReadContext implements Serializable {
     final static long serialVersionUID = 1;
 
     private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
-    private final static int DEFAULT_BATCH_SIZE = 10000;
+    private final static long DEFAULT_BATCH_SIZE = 10000;
 
     private final Map<String, String> properties;
     private PlanAnalysis planAnalysis;
@@ -67,9 +67,10 @@ public class ReadContext implements Serializable {
     public ReadContext(Map<String, String> properties, boolean inferSchema) {
         this.properties = properties;
 
-        int partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS, SparkSession.active().sparkContext().defaultMinPartitions());
-        int batchSize = getNumericOption(ReadConstants.BATCH_SIZE, DEFAULT_BATCH_SIZE);
-        String dslQuery = properties.get(ReadConstants.OPTIC_DSL);
+        final long partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS,
+            SparkSession.active().sparkContext().defaultMinPartitions(), 1);
+        final long batchSize = getNumericOption(ReadConstants.BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
+        final String dslQuery = properties.get(ReadConstants.OPTIC_DSL);
 
         DatabaseClient client = connectToMarkLogic();
         RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));
@@ -83,6 +84,10 @@ public class ReadContext implements Serializable {
         }
 
         if (this.planAnalysis != null) {
+            if (logger.isInfoEnabled()) {
+                logger.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
+                    this.planAnalysis.partitions.size(), this.planAnalysis.getAllBuckets().size());
+            }
             StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
             this.serverTimestamp = columnInfoHandle.getServerTimestamp();
             if (inferSchema) {
@@ -97,13 +102,13 @@ public class ReadContext implements Serializable {
         }
     }
 
-    private int getNumericOption(String optionName, int defaultValue) {
+    private long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
-            int value = this.properties.containsKey(optionName) ?
-                Integer.parseInt(this.properties.get(optionName)) :
+            long value = this.properties.containsKey(optionName) ?
+                Long.parseLong(this.properties.get(optionName)) :
                 defaultValue;
-            if (value < 1) {
-                throw new IllegalArgumentException(String.format("Value of '%s' option must be 1 or greater", optionName));
+            if (value < minimumValue) {
+                throw new IllegalArgumentException(String.format("Value of '%s' option must be %d or greater", optionName, minimumValue));
             }
             return value;
         } catch (NumberFormatException ex) {
