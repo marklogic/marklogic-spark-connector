@@ -3,6 +3,7 @@ plugins {
   id 'net.saliman.properties' version '1.5.2'
   id 'com.github.johnrengelman.shadow' version '7.1.2'
   id "com.marklogic.ml-gradle" version "4.5.1"
+  id 'maven-publish'
 }
 
 group 'org.example'
@@ -112,7 +113,6 @@ publishing {
     }
     sourcesJava(MavenPublication) {
       from components.java
-      artifact sourcesJar
     }
   }
   repositories {
