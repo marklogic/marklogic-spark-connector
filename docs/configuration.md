@@ -47,4 +47,8 @@ information on how data is read from MarkLogic.
 These options control how the connector writes data to MarkLogic. See [the guide on writing](writing.md) for more 
 information on how data is written to MarkLogic.
 
-TBD
+| Option | Description                                                                                       | 
+| --- |---------------------------------------------------------------------------------------------------|
+| spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
+| spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
+

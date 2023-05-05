@@ -8,6 +8,11 @@
       "privilege-name": "rest-reader",
       "action": "http://marklogic.com/xdmp/privileges/rest-reader",
       "kind": "execute"
+    },
+    {
+      "privilege-name": "rest-writer",
+      "action": "http://marklogic.com/xdmp/privileges/rest-writer",
+      "kind": "execute"
     }
   ]
 }
