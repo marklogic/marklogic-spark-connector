@@ -38,7 +38,7 @@ pipeline{
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
           export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
           cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
-          cd marklogic-geo-data-services
+          cd marklogic-spark-connector
            ./gradlew publish
         '''
       }
