@@ -16,11 +16,9 @@
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
-import org.apache.spark.sql.DataFrameWriter;
-import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -30,19 +28,17 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class WriteRowsTest extends AbstractIntegrationTest {
-
-    private final static String EXPECTED_COLLECTION = "my-test-data";
+public class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void defaultBatchSizeAndThreadCount() {
-        newWriterFromCsvFile().save();
+        newWriter().save();
         verifyTwoHundredDocsWereWritten();
     }
 
     @Test
     void batchSizeGreaterThanNumberOfRowsToWrite() {
-        newWriterFromCsvFile()
+        newWriter()
             .option(Options.WRITE_BATCH_SIZE, 1000)
             .save();
 
@@ -53,7 +49,7 @@ public class WriteRowsTest extends AbstractIntegrationTest {
 
     @Test
     void twoPartitions() {
-        newWriterFromCsvFile(2).save();
+        newWriter(2).save();
 
         // Just verifies that the operation succeeds with multiple partitions. Check the logging to see that two
         // partitions were in fact created, each with its own WriteBatcher.
@@ -61,10 +57,43 @@ public class WriteRowsTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void temporalTest() {
+        String temporalCollection = "temporal-collection";
+        newWriterWithDefaultConfig("temporal-data.csv", 1)
+            .option(Options.WRITE_TEMPORAL_COLLECTION, temporalCollection)
+            .save();
+
+        String uri = getUrisInCollection(COLLECTION, 1).get(0);
+        // Temporal doc is written to the temporal collection; "latest" since it's the latest version for that URI;
+        // and to a collection matching the URI of the document.
+        assertInCollections(uri, COLLECTION, temporalCollection, "latest", uri);
+    }
+
+    @Test
+    void testWithCustomConfig() {
+        final String collection = "other-collection";
+
+        newWriterForSingleRow()
+            .option(Options.WRITE_COLLECTIONS, collection)
+            .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update")
+            .option(Options.WRITE_URI_PREFIX, "/example/")
+            .option(Options.WRITE_URI_SUFFIX, ".txt")
+            .save();
+
+        String uri = getUrisInCollection(collection, 1).get(0);
+        PermissionsTester perms = readDocumentPermissions(uri);
+        perms.assertReadPermissionExists("rest-extension-user");
+        perms.assertUpdatePermissionExists("rest-writer");
+
+        assertTrue(uri.startsWith("/example/"));
+        assertTrue(uri.endsWith(".txt"));
+    }
+
+    @Test
     void invalidThreadCount() {
         SparkException ex = assertThrows(
             SparkException.class,
-            () -> newWriterFromCsvFile().option(Options.WRITE_THREAD_COUNT, 0).save()
+            () -> newWriter().option(Options.WRITE_THREAD_COUNT, 0).save()
         );
 
         assertTrue(ex.getCause() instanceof IllegalArgumentException, "Unexpected cause: " + ex.getCause().getClass());
@@ -76,7 +105,7 @@ public class WriteRowsTest extends AbstractIntegrationTest {
     void invalidBatchSize() {
         SparkException ex = assertThrows(
             SparkException.class,
-            () -> newWriterFromCsvFile().option(Options.WRITE_BATCH_SIZE, 0).save()
+            () -> newWriter().option(Options.WRITE_BATCH_SIZE, 0).save()
         );
 
         assertTrue(ex.getCause() instanceof IllegalArgumentException, "Unexpected cause: " + ex.getCause().getClass());
@@ -95,7 +124,7 @@ public class WriteRowsTest extends AbstractIntegrationTest {
     @Test
     void userNotPermittedToWriteAndFailOnCommit() {
         SparkException ex = assertThrows(SparkException.class,
-            () -> newWriterFromCsvFile()
+            () -> newWriter()
                 .option("spark.marklogic.client.username", "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 500)
                 .save()
@@ -111,7 +140,7 @@ public class WriteRowsTest extends AbstractIntegrationTest {
     @Test
     void userNotPermittedToWriteAndFailOnWrite() {
         SparkException ex = assertThrows(SparkException.class,
-            () -> newWriterFromCsvFile()
+            () -> newWriter()
                 .option("spark.marklogic.client.username", "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 1)
                 .option(Options.WRITE_THREAD_COUNT, 1)
@@ -121,6 +150,18 @@ public class WriteRowsTest extends AbstractIntegrationTest {
         verifyFailureIsDueToLackOfPermission(ex);
     }
 
+    @Test
+    void invalidPermissionsConfig() {
+        SparkException ex = assertThrows(SparkException.class, () -> newWriter()
+            .option(Options.WRITE_PERMISSIONS, "rest-reader,read,rest-writer")
+            .save());
+
+        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        assertEquals("Unable to parse permissions string, which must be a comma-separated list of role names and " +
+            "capabilities - i.e. role1,read,role2,update,role3,execute; " +
+            "string: rest-reader,read,rest-writer", ex.getCause().getMessage());
+    }
+
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
         assertTrue(ex.getCause() instanceof IOException, "Unexpected cause: " + ex.getCause().getClass());
         assertTrue(ex.getCause().getMessage().contains("Server Message: You do not have permission to this method and URL"),
@@ -128,35 +169,22 @@ public class WriteRowsTest extends AbstractIntegrationTest {
         verifyNoDocsWereWritten();
     }
 
-    private DataFrameWriter newWriterFromCsvFile() {
-        return newWriterFromCsvFile(1);
-    }
-
-    private DataFrameWriter newWriterFromCsvFile(int partitionCount) {
-        return newSparkSession().read()
-            .option("header", true)
-            .format("csv")
-            .csv("src/test/resources/data.csv")
-            .repartition(partitionCount)
-            .write()
-            .format("com.marklogic.spark")
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", "spark-test-user")
-            .option("spark.marklogic.client.password", "spark")
-            .option("spark.marklogic.client.authType", "digest")
-            .mode(SaveMode.Append);
-    }
-
     private void verifyTwoHundredDocsWereWritten() {
         final int expectedCollectionSize = 200;
-        String uri = getUrisInCollection(EXPECTED_COLLECTION, expectedCollectionSize).get(0);
+        String uri = getUrisInCollection(COLLECTION, expectedCollectionSize).get(0);
+        assertTrue(uri.startsWith("/test/"), "URI should start with '/test/' due to uriPrefix option: " + uri);
+        assertTrue(uri.endsWith(".json"), "URI should end with '.json' due to uriSuffix option: " + uri);
+
         JsonNode doc = readJsonDocument(uri);
         assertTrue(doc.has("docNum"));
         assertTrue(doc.has("docName"));
+
+        PermissionsTester perms = readDocumentPermissions(uri);
+        perms.assertReadPermissionExists("spark-user-role");
+        perms.assertUpdatePermissionExists("spark-user-role");
     }
 
     private void verifyNoDocsWereWritten() {
-        assertCollectionSize(EXPECTED_COLLECTION, 0);
+        assertCollectionSize(COLLECTION, 0);
     }
 }
