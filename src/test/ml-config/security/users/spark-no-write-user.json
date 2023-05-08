@@ -1,0 +1,8 @@
+{
+  "user-name": "spark-no-write-user",
+  "description": "For tests where a user is not able to write using the REST API",
+  "password": "spark",
+  "role": [
+    "rest-reader"
+  ]
+}

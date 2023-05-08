@@ -100,20 +100,6 @@ public class ReadContext extends ContextSupport {
         }
     }
 
-    private long getNumericOption(String optionName, long defaultValue, long minimumValue) {
-        try {
-            long value = this.getProperties().containsKey(optionName) ?
-                Long.parseLong(this.getProperties().get(optionName)) :
-                defaultValue;
-            if (value < minimumValue) {
-                throw new IllegalArgumentException(String.format("Value of '%s' option must be %d or greater", optionName, minimumValue));
-            }
-            return value;
-        } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(String.format("Value of '%s' option must be numeric", optionName), ex);
-        }
-    }
-
     private void handlePlanAnalysisError(String query, FailedRequestException ex) {
         final String indicatorOfNoRowsExisting = "$tableId as xs:string -- Invalid coercion: () as xs:string";
         if (ex.getMessage().contains(indicatorOfNoRowsExisting)) {

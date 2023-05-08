@@ -22,6 +22,8 @@ import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+
 class MarkLogicBatchWrite implements BatchWrite {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatchWrite.class);
@@ -40,11 +42,15 @@ class MarkLogicBatchWrite implements BatchWrite {
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        logger.info("Commit messages received: {}", messages);
+        if (messages != null && messages.length > 0) {
+            logger.info("Commit messages received: {}", Arrays.asList(messages));
+        }
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-        logger.error("Abort messages received: {}", messages);
+        if (messages != null && messages.length > 0) {
+            logger.error("Abort messages received: {}", Arrays.asList(messages));
+        }
     }
 }
