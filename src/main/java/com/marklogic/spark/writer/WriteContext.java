@@ -4,7 +4,7 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatch;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.WriteEvent;
-import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.document.ServerTransform;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.types.StructType;
@@ -36,12 +36,53 @@ public class WriteContext extends ContextSupport {
             writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
         }
 
-        // TODO Make this all configurable
-        writeBatcher.withDefaultMetadata(new DocumentMetadataHandle()
-            .withCollections("my-test-data")
-            .withPermission("spark-user-role", DocumentMetadataHandle.Capability.READ, DocumentMetadataHandle.Capability.UPDATE));
+        String temporalCollection = getProperties().get(Options.WRITE_TEMPORAL_COLLECTION);
+        if (temporalCollection != null && temporalCollection.trim().length() > 0) {
+            writeBatcher.withTemporalCollection(temporalCollection);
+        }
+
+        configureRestTransform(writeBatcher);
 
         return writeBatcher;
+    }
+
+    public DocBuilder newDocBuilder() {
+        return new DocBuilderFactory()
+            .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
+            .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS))
+            // TODO This will be enhanced in 437 when URI template support is added
+            .withSimpleUriStrategy(
+                getProperties().get(Options.WRITE_URI_PREFIX),
+                getProperties().containsKey(Options.WRITE_URI_SUFFIX) ? getProperties().get(Options.WRITE_URI_SUFFIX) : ".json"
+            )
+            .newDocBuilder();
+    }
+
+    private void configureRestTransform(WriteBatcher writeBatcher) {
+        String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
+        if (transformName != null && transformName.trim().length() > 0) {
+            ServerTransform transform = new ServerTransform(transformName);
+            String paramsValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS);
+            if (paramsValue != null && paramsValue.trim().length() > 0) {
+                addRestTransformParams(transform, paramsValue);
+            }
+            writeBatcher.withTransform(transform);
+        }
+    }
+
+    private void addRestTransformParams(ServerTransform transform, String paramsValue) {
+        String delimiterValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS_DELIMITER);
+        String delimiter = delimiterValue != null && delimiterValue.trim().length() > 0 ? delimiterValue : ",";
+        String[] params = paramsValue.split(delimiter);
+        if (params.length % 2 != 0) {
+            throw new IllegalArgumentException(
+                String.format("The %s option must contain an equal number of parameter names and values; received: %s",
+                    Options.WRITE_TRANSFORM_PARAMS, paramsValue)
+            );
+        }
+        for (int i = 0; i < params.length; i += 2) {
+            transform.add(params[i], params[i + 1]);
+        }
     }
 
     private void logBatchOnSuccess(WriteBatch batch) {

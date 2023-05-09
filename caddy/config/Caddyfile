@@ -5,6 +5,10 @@
     reverse_proxy bootstrap_3n.local:8016 node2.local:8016 node3.local:8016 {
     }
 }
+:8815 {
+    reverse_proxy bootstrap_3n.local:8015 node2.local:8015 node3.local:8015 {
+    }
+}
 
 # For the examples/pyspark application.
 :8820 {

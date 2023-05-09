@@ -17,6 +17,7 @@ services:
     ports:
       # For running marklogic-spark-connector tests against the 3-node cluster
       - 8016:8816
+      - 8015:8815
       # For running performance tests against quick-table data
       - 8009:8809
       # For the pyspark-example project

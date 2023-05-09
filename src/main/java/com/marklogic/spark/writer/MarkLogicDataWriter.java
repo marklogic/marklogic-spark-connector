@@ -20,6 +20,7 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
@@ -30,7 +31,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 class MarkLogicDataWriter implements DataWriter<InternalRow> {
@@ -41,6 +41,7 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
     private final DatabaseClient databaseClient;
     private final DataMovementManager dataMovementManager;
     private final WriteBatcher writeBatcher;
+    private final DocBuilder docBuilder;
     private final int partitionId;
     private final long taskId;
 
@@ -55,6 +56,8 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
         this.taskId = taskId;
         this.writeFailure = new AtomicReference<>();
 
+        this.docBuilder = this.writeContext.newDocBuilder();
+
         this.databaseClient = writeContext.connectToMarkLogic();
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
@@ -68,10 +71,10 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow record) throws IOException {
         throwWriteFailureIfExists();
-        // TODO Make the URI configurable, like in MLCP
-        final String uri = "/test/" + UUID.randomUUID() + ".json";
+
         String json = convertRowToJSONString(record);
-        this.writeBatcher.add(uri, new StringHandle(json).withFormat(Format.JSON));
+        StringHandle content = new StringHandle(json).withFormat(Format.JSON);
+        this.writeBatcher.add(this.docBuilder.build(content));
         this.docCount++;
     }
 

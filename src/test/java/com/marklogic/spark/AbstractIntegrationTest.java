@@ -33,7 +33,10 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
     @Override
     protected String getJavascriptForDeletingDocumentsBeforeTestRuns() {
-        return "declareUpdate(); xdmp.collectionDelete('my-test-data')";
+        return "declareUpdate(); " +
+            "for (var uri of cts.uris(null, null, cts.notQuery(cts.collectionQuery('test-config')))) {" +
+            "  xdmp.documentDelete(uri);" +
+            "}";
     }
 
     protected SparkSession newSparkSession() {
