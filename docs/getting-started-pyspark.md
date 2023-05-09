@@ -87,7 +87,10 @@ a similar mechanism for including third party connectors; please see the documen
 environment. In the example above, the `--jars` option allows for the MarkLogic Spark connector to be used within 
 PySpark. 
 
-Next, paste the following Python statement into PySpark, adjusting the host and password values as needed:
+### Reading data with the connector
+
+The connector reads data from MarkLogic as rows to construct a Spark DataFrame. To see this in action, 
+paste the following Python statement into PySpark, adjusting the host and password values as needed:
 
 ```
 df = spark.read.format("com.marklogic.spark")\
@@ -100,16 +103,43 @@ df = spark.read.format("com.marklogic.spark")\
     .load()
 ```
 
-The `df` variable is an instance of a Spark dataframe. Try the following commands on it:
+The `df` variable is an instance of a Spark DataFrame. Try the following commands on it:
 
     df.count()
     df.head()
     df.show(10)
 
 The [PySpark docs](https://spark.apache.org/docs/latest/api/python/getting_started/quickstart_df.html) provide more 
-information on how a Spark dataframe works along with more commands that you can try on it. 
+information on how a Spark DataFrame works along with more commands that you can try on it. 
 
 The instructions above can be applied to your own MarkLogic application. You can use the same Spark command above, 
 simply adjusting the connection details and the Optic DSL query. Please see [the guide on reading](reading.md) for 
 more information on how data can be read from MarkLogic.
+
+### Writing data to the connector
+
+The connector writes the rows in a Spark DataFrame to MarkLogic as new JSON documents, which can also be transformed 
+into XML documents if desired. To try this on the DataFrame that was read from MarkLogic in the above section, 
+paste the following into PySpark, adjusting the host and password values as needed:
+
+```
+df.write.format("com.marklogic.spark")\
+    .option("spark.marklogic.client.host", "localhost")\
+    .option("spark.marklogic.client.port", "8020")\
+    .option("spark.marklogic.client.username", "pyspark-example-user")\
+    .option("spark.marklogic.client.password", "password")\
+    .option("spark.marklogic.client.authType", "digest")\
+    .option("spark.marklogic.write.collections", "write-test")\
+    .option("spark.marklogic.write.uriPrefix", "/write/")\
+    .mode("append")\
+    .save()
+```
+
+To examine the results, access your MarkLogic server's qconsole tool again and click on the "Explore" button for the 
+`pyspark-example-content` database. The database should now have 2,000 documents - the 1,000 documents in the 
+`employee` collection that were loaded when the application was deployed, and the 1,000 documents in the 
+`write-test` collection that were written by the PySpark command above. Each document in the `write-test` collection 
+will have field names based on the column names in the Spark DataFrame. 
+
+For more information on writing data to MarkLogic, see the [guide on writing data](writing.md).
 
