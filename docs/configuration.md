@@ -59,3 +59,5 @@ information on how data is written to MarkLogic.
 | spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option |
 | spark.marklogic.write.uriPrefix | String to prepend to each document URI, where the URI defaults to a UUID |
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID |
+| spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
+
