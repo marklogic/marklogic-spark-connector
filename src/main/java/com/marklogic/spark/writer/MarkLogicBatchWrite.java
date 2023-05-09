@@ -15,18 +15,25 @@
  */
 package com.marklogic.spark.writer;
 
+import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.BatchWrite;
+import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
+import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-class MarkLogicBatchWrite implements BatchWrite {
+class MarkLogicBatchWrite implements BatchWrite, StreamingWrite, Serializable {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatchWrite.class);
+    final static long serialVersionUID = 1;
+
+//    private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatchWrite.class);
 
     private WriteContext writeContext;
 
@@ -35,22 +42,42 @@ class MarkLogicBatchWrite implements BatchWrite {
     }
 
     @Override
+    public StreamingDataWriterFactory createStreamingWriterFactory(PhysicalWriteInfo info) {
+        return new StreamingDataWriterFactory() {
+            @Override
+            public DataWriter<InternalRow> createWriter(int partitionId, long taskId, long epochId) {
+                return new MarkLogicDataWriter(writeContext, partitionId, taskId);
+            }
+        };
+    }
+
+    @Override
+    public void commit(long epochId, WriterCommitMessage[] messages) {
+//        logger.info("STREAMING COMMIT!");
+    }
+
+    @Override
+    public void abort(long epochId, WriterCommitMessage[] messages) {
+//        logger.info("STREAMING ABORT!");
+    }
+
+    @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        logger.info("Number of partitions: {}", info.numPartitions());
+//        logger.info("Number of partitions: {}", info.numPartitions());
         return new MarkLogicDataWriterFactory(writeContext);
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            logger.info("Commit messages received: {}", Arrays.asList(messages));
-        }
+//        if (messages != null && messages.length > 0) {
+//            logger.info("Commit messages received: {}", Arrays.asList(messages));
+//        }
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            logger.error("Abort messages received: {}", Arrays.asList(messages));
-        }
+//        if (messages != null && messages.length > 0) {
+//            logger.error("Abort messages received: {}", Arrays.asList(messages));
+//        }
     }
 }

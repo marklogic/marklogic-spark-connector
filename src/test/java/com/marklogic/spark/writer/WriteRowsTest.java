@@ -19,6 +19,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
+import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
@@ -33,6 +37,37 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class WriteRowsTest extends AbstractIntegrationTest {
 
     private final static String EXPECTED_COLLECTION = "my-test-data";
+
+    @Test
+    void streaming() throws Exception {
+        StreamingQuery stream = newSparkSession().readStream()
+            .schema(new StructType()
+                .add("docNum", DataTypes.IntegerType)
+                .add("docName", DataTypes.StringType))
+            .option("header", true)
+            .format("csv")
+            // Spark complains if this is a single file path - ??
+            .csv("src/test/resources/data*.csv")
+            .writeStream()
+            .format("com.marklogic.spark")
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .option(Options.WRITE_THREAD_COUNT, 1)
+            .option("spark.marklogic.client.host", testConfig.getHost())
+            .option("spark.marklogic.client.port", testConfig.getRestPort())
+            .option("spark.marklogic.client.username", "spark-test-user")
+            .option("spark.marklogic.client.password", "spark")
+            .option("spark.marklogic.client.authType", "digest")
+
+            // This should really be a new temp directory
+            .option("checkpointLocation", "/Users/rrudin/spark-temp/")
+            .start();
+
+//        stream.awaitTermination(5000);
+        stream.processAllAvailable();
+        System.out.println("All done!");
+
+        verifyTwoHundredDocsWereWritten();
+    }
 
     @Test
     void defaultBatchSizeAndThreadCount() {

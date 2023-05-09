@@ -17,6 +17,7 @@ package com.marklogic.spark.writer;
 
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.WriteBuilder;
+import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 
 public class MarkLogicWriteBuilder implements WriteBuilder {
 
@@ -29,6 +30,11 @@ public class MarkLogicWriteBuilder implements WriteBuilder {
     @Deprecated
     @Override
     public BatchWrite buildForBatch() {
+        return new MarkLogicBatchWrite(writeContext);
+    }
+
+    @Override
+    public StreamingWrite buildForStreaming() {
         return new MarkLogicBatchWrite(writeContext);
     }
 }
