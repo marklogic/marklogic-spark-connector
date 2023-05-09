@@ -2,6 +2,7 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import org.apache.spark.sql.Row;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -10,6 +11,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+// Getting some odd behavior with this class where if it runs in a suite after any of the "write" tests, then the
+// queries involving sparkTest.allTypes will not return any data. Have not figured out why that is. Running this test
+// first or by itself produces a successful test.
+@Order(1)
 public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
 
     @Test
@@ -70,7 +75,6 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
             .load()
             .collectAsList();
 
-        System.out.println(rows.get(0).prettyJson());
         assertEquals(1, rows.size());
 
         Row row = rows.get(0);

@@ -10,6 +10,7 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
 
@@ -47,15 +48,26 @@ public class WriteContext extends ContextSupport {
     }
 
     public DocBuilder newDocBuilder() {
-        return new DocBuilderFactory()
+        DocBuilderFactory factory = new DocBuilderFactory()
             .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
-            .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS))
-            // TODO This will be enhanced in 437 when URI template support is added
-            .withSimpleUriStrategy(
-                getProperties().get(Options.WRITE_URI_PREFIX),
-                getProperties().containsKey(Options.WRITE_URI_SUFFIX) ? getProperties().get(Options.WRITE_URI_SUFFIX) : ".json"
-            )
-            .newDocBuilder();
+            .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS));
+
+        String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
+        if (uriTemplate != null && uriTemplate.trim().length() > 0) {
+            factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
+            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX).forEach(option -> {
+                if (getProperties().containsKey(option)) {
+                    logger.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
+                }
+            });
+        } else {
+            final String uriSuffix = getProperties().containsKey(Options.WRITE_URI_SUFFIX) ?
+                getProperties().get(Options.WRITE_URI_SUFFIX) :
+                ".json";
+            factory.withSimpleUriStrategy(getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix);
+        }
+
+        return factory.newDocBuilder();
     }
 
     private void configureRestTransform(WriteBatcher writeBatcher) {

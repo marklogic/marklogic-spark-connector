@@ -56,14 +56,18 @@ class DocBuilderFactory {
     }
 
     DocBuilderFactory withSimpleUriStrategy(String prefix, String suffix) {
-        this.uriMaker = contentHandle -> {
+        return withUriMaker(contentHandle -> {
             String uri = "";
             if (prefix != null) {
                 uri += prefix;
             }
             uri += UUID.randomUUID().toString();
             return suffix != null ? uri + suffix : uri;
-        };
+        });
+    }
+
+    DocBuilderFactory withUriMaker(DocumentWriteOperation.DocumentUriMaker uriMaker) {
+        this.uriMaker = uriMaker;
         return this;
     }
 }
