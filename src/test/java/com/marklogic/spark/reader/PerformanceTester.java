@@ -34,7 +34,6 @@ public class PerformanceTester {
             .option("spark.marklogic.client.port", 8009)
             .option("spark.marklogic.client.username", "admin")
             .option("spark.marklogic.client.password", "admin")
-            .option("spark.marklogic.client.authType", "digest")
             .option(ReadConstants.OPTIC_DSL, query)
             .option(ReadConstants.NUM_PARTITIONS, partitionCount)
             .option(ReadConstants.BATCH_SIZE, batchSize)
