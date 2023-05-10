@@ -44,16 +44,18 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
     private final DocBuilder docBuilder;
     private final int partitionId;
     private final long taskId;
+    private final long epochId;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
     private final AtomicReference<Throwable> writeFailure;
 
     private int docCount;
 
-    MarkLogicDataWriter(WriteContext writeContext, int partitionId, long taskId) {
+    MarkLogicDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
         this.writeContext = writeContext;
         this.partitionId = partitionId;
         this.taskId = taskId;
+        this.epochId = epochId;
         this.writeFailure = new AtomicReference<>();
 
         this.docBuilder = this.writeContext.newDocBuilder();
@@ -81,12 +83,12 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() throws IOException {
         if (logger.isDebugEnabled()) {
-            logger.debug("Committing; partitionId: {}; taskId: {}; document count: {}",
-                partitionId, taskId, docCount);
+            logger.debug("Committing; partitionId: {}; taskId: {}; document count: {}; epochId: {}",
+                partitionId, taskId, docCount, epochId);
         }
         this.writeBatcher.flushAndWait();
         throwWriteFailureIfExists();
-        return new MarkLogicCommitMessage(docCount, partitionId, taskId);
+        return new MarkLogicCommitMessage(docCount, partitionId, taskId, epochId);
     }
 
     @Override
@@ -134,16 +136,21 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
         private int docCount;
         private int partitionId;
         private long taskId;
+        private long epochId;
 
-        public MarkLogicCommitMessage(int docCount, int partitionId, long taskId) {
+        public MarkLogicCommitMessage(int docCount, int partitionId, long taskId, long epochId) {
             this.docCount = docCount;
             this.partitionId = partitionId;
             this.taskId = taskId;
+            this.epochId = epochId;
         }
 
         @Override
         public String toString() {
-            return String.format("partitionId: %d; taskId: %d; docCount: %d", partitionId, taskId, docCount);
+            String message = epochId != 0L?
+                String.format("partitionId: %d; taskId: %d; docCount: %d; epochId: %d", partitionId, taskId, docCount, epochId)
+                :String.format("partitionId: %d; taskId: %d; docCount: %d", partitionId, taskId, docCount);
+            return message;
         }
     }
 }

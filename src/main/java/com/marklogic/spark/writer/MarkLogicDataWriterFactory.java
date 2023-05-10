@@ -18,8 +18,9 @@ package com.marklogic.spark.writer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
+import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
 
-class MarkLogicDataWriterFactory implements DataWriterFactory {
+class MarkLogicDataWriterFactory implements DataWriterFactory, StreamingDataWriterFactory {
 
     private WriteContext writeContext;
 
@@ -29,6 +30,11 @@ class MarkLogicDataWriterFactory implements DataWriterFactory {
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-        return new MarkLogicDataWriter(writeContext, partitionId, taskId);
+        return new MarkLogicDataWriter(writeContext, partitionId, taskId, 0L);
+    }
+
+    @Override
+    public DataWriter<InternalRow> createWriter(int partitionId, long taskId, long epochId) {
+        return new MarkLogicDataWriter(writeContext, partitionId, taskId, epochId);
     }
 }

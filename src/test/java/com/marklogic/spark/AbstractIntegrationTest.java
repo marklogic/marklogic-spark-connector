@@ -4,7 +4,11 @@ import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import com.marklogic.spark.reader.ReadConstants;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.streaming.DataStreamWriter;
+import org.apache.spark.sql.types.StructType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
@@ -70,6 +74,22 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("spark.marklogic.client.password", TEST_PASSWORD)
             .option("spark.marklogic.client.authType", "digest")
             .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
+    }
+
+    protected DataStreamWriter newDefaultStreamWriter(SparkSession session, String path, StructType struct, String format) {
+        Dataset<Row> dataset = session.readStream().schema(struct)
+            .option("header", true)
+            .format(format)
+            .load(path); // Needs to be a directory when using streams
+        return dataset
+            .writeStream()
+            .format("com.marklogic.spark")
+            .option("spark.marklogic.client.host", testConfig.getHost())
+            .option("spark.marklogic.client.port", testConfig.getRestPort())
+            .option("spark.marklogic.client.username", TEST_USERNAME)
+            .option("spark.marklogic.client.password", TEST_PASSWORD)
+            .option("spark.marklogic.client.authType", "digest")
+            .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update");
     }
 
     protected String readClasspathFile(String path) {
