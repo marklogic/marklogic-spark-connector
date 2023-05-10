@@ -3,6 +3,7 @@
   "password": "password",
   "role": [
     "rest-reader",
+    "rest-writer",
     "qconsole-user"
   ]
 }
