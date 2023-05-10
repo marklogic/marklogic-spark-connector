@@ -34,7 +34,39 @@ public class ContextSupport implements Serializable {
             put("spark.marklogic.client.connectionType", "gateway");
         }};
         connectionProps.putAll(this.properties);
+
+        String clientUri = properties.get(Options.CLIENT_URI);
+        if (clientUri != null && clientUri.trim().length() > 0) {
+            parseClientUri(clientUri, connectionProps);
+        }
+
         return connectionProps;
+    }
+
+    private void parseClientUri(String clientUri, Map<String, String> connectionProps) {
+        final String errorMessage = String.format("Invalid value for %s; must be username:password@host:port", Options.CLIENT_URI);
+        String[] parts = clientUri.split("@");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+        String[] tokens = parts[0].split(":");
+        if (tokens.length != 2) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+        connectionProps.put("spark.marklogic.client.username", tokens[0]);
+        connectionProps.put("spark.marklogic.client.password", tokens[1]);
+        tokens = parts[1].split(":");
+        if (tokens.length != 2) {
+            throw new IllegalArgumentException(errorMessage);
+        }
+        connectionProps.put("spark.marklogic.client.host", tokens[0]);
+        if (tokens[1].contains("/")) {
+            tokens = tokens[1].split("/");
+            connectionProps.put("spark.marklogic.client.port", tokens[0]);
+            connectionProps.put("spark.marklogic.client.database", tokens[1]);
+        } else {
+            connectionProps.put("spark.marklogic.client.port", tokens[1]);
+        }
     }
 
     protected long getNumericOption(String optionName, long defaultValue, long minimumValue) {

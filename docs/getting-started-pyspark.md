@@ -98,7 +98,16 @@ df = spark.read.format("com.marklogic.spark")\
     .option("spark.marklogic.client.port", "8020")\
     .option("spark.marklogic.client.username", "pyspark-example-user")\
     .option("spark.marklogic.client.password", "password")\
-    .option("spark.marklogic.client.authType", "digest")\
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
+    .load()
+```
+
+When using `digest` or `basic` authentication, you can also use this more succinct approach for specifying the 
+client options in one option:
+
+```
+df = spark.read.format("com.marklogic.spark")\
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020")\
     .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
     .load()
 ```
@@ -128,7 +137,6 @@ df.write.format("com.marklogic.spark")\
     .option("spark.marklogic.client.port", "8020")\
     .option("spark.marklogic.client.username", "pyspark-example-user")\
     .option("spark.marklogic.client.password", "password")\
-    .option("spark.marklogic.client.authType", "digest")\
     .option("spark.marklogic.write.collections", "write-test")\
     .option("spark.marklogic.write.uriPrefix", "/write/")\
     .mode("append")\
