@@ -20,7 +20,6 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
@@ -82,13 +81,13 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() throws IOException {
+        MarkLogicCommitMessage commitMessage = new MarkLogicCommitMessage(docCount, partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
-            logger.debug("Committing; partitionId: {}; taskId: {}; document count: {}; epochId: {}",
-                partitionId, taskId, docCount, epochId);
+            logger.debug("Committing {}", commitMessage);
         }
         this.writeBatcher.flushAndWait();
         throwWriteFailureIfExists();
-        return new MarkLogicCommitMessage(docCount, partitionId, taskId, epochId);
+        return commitMessage;
     }
 
     @Override
@@ -147,10 +146,9 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
 
         @Override
         public String toString() {
-            String message = epochId != 0L?
-                String.format("partitionId: %d; taskId: %d; docCount: %d; epochId: %d", partitionId, taskId, docCount, epochId)
-                :String.format("partitionId: %d; taskId: %d; docCount: %d", partitionId, taskId, docCount);
-            return message;
+            return epochId != 0L ?
+                String.format("[partitionId: %d; taskId: %d; epochId: %d]; docCount: %d", partitionId, taskId, epochId, docCount) :
+                String.format("[partitionId: %d; taskId: %d]; docCount: %d", partitionId, taskId, docCount);
         }
     }
 }

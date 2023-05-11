@@ -35,7 +35,7 @@ TODO - until the 1.0 release occurs, you will need to build the Spark connector 
 before the 1.0 release occurs). To do so:
 
 - Clone this repository.
-- Run `gradlew clean shadowJar`.
+- Run `./gradlew clean shadowJar`.
 
 The connector can then be accessed at `./build/libs/marklogic-spark-connector-1.0-SNAPSHOT.jar`.
 
@@ -130,6 +130,7 @@ df.write.format("com.marklogic.spark")\
     .option("spark.marklogic.client.password", "password")\
     .option("spark.marklogic.client.authType", "digest")\
     .option("spark.marklogic.write.collections", "write-test")\
+    .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update")\
     .option("spark.marklogic.write.uriPrefix", "/write/")\
     .mode("append")\
     .save()
