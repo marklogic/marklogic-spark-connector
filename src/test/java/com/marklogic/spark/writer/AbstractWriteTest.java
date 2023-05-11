@@ -41,7 +41,6 @@ abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", "spark-test-user")
-            .option("spark.marklogic.client.password", "spark")
-            .option("spark.marklogic.client.authType", "digest");
+            .option("spark.marklogic.client.password", "spark");
     }
 }

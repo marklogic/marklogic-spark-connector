@@ -17,8 +17,8 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.port                 | Required; the port of the app server in MarkLogic to connect to. |
 | spark.marklogic.client.basePath             | Base path to prefix on each request to MarkLogic. |
 | spark.marklogic.client.database             | Name of the database to interact with; only needs to be set if it differs from the content database assigned to the app server that the connector will connect to.|
-| spark.marklogic.client.connectionType       | Either `gateway` for when connecting to a load balancer, or `direct` (default). |
-| spark.marklogic.client.authType             | Required; one of `basic`, `digest`, `cloud`, `kerberos`, `certificate`, or `saml`. |
+| spark.marklogic.client.connectionType       | Either `gateway` for when connecting to a load balancer, or `direct` when connecting directly to MarkLogic. Defaults to `gateway` which works in either scenario. |
+| spark.marklogic.client.authType             | Required; one of `basic`, `digest`, `cloud`, `kerberos`, `certificate`, or `saml`. Defaults to `digest`. |
 | spark.marklogic.client.username             | Required for `basic` and `digest` authentication. |
 | spark.marklogic.client.password             | Required for `basic` and `digest` authentication. |
 | spark.marklogic.client.certificate.file     | Required for `certificate` authentication; the path to a certificate file. |

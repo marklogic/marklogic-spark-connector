@@ -6,9 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.Map;
 
-public abstract class ContextSupport implements Serializable {
+public class ContextSupport implements Serializable {
 
     protected final static Logger logger = LoggerFactory.getLogger(ContextSupport.class);
     private final Map<String, String> properties;
@@ -18,12 +19,22 @@ public abstract class ContextSupport implements Serializable {
     }
 
     public DatabaseClient connectToMarkLogic() {
-        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> properties.get("spark." + propertyName));
+        Map<String, String> connectionProps = buildConnectionProperties();
+        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> connectionProps.get("spark." + propertyName));
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
             throw new RuntimeException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
         }
         return client;
+    }
+
+    protected final Map<String, String> buildConnectionProperties() {
+        Map<String, String> connectionProps = new HashMap() {{
+            put("spark.marklogic.client.authType", "digest");
+            put("spark.marklogic.client.connectionType", "gateway");
+        }};
+        connectionProps.putAll(this.properties);
+        return connectionProps;
     }
 
     protected long getNumericOption(String optionName, long defaultValue, long minimumValue) {

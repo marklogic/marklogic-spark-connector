@@ -68,7 +68,6 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", TEST_USERNAME)
             .option("spark.marklogic.client.password", TEST_PASSWORD)
-            .option("spark.marklogic.client.authType", "digest")
             .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
     }
 
