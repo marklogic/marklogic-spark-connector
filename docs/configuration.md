@@ -28,6 +28,33 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.saml.token | Required for `saml` authentication. |
 | spark.marklogic.client.sslProtocol | If `default`, an SSL connection is created using the JVM's default SSL context; else the value is passed to the [SSLContext method](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html#getInstance-java.lang.String-) for instantiating an SSL context. |
 | spark.marklogic.client.sslHostnameVerifier | Either `any`, `common`, or `strict`. |
+| spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
+
+## Connecting with a client URI
+
+The `spark.marklogic.client.uri` is a convenience for the common case of using `basic` or `digest` authentication.
+It allows you to specify username, password, host, and port via the following syntax:
+
+    username:password@host:port
+
+This avoids the need to set the individual options for the above 4 properties. Note that if any of the 4 properties, 
+such as the password, contains a ":" or "@" symbol, you will not yet be able to make use of this feature. 
+
+You may also configure a database name via the following syntax:
+
+    username:password@host:port/database
+
+A database name is only needed when you wish to work with a database other than the one associated with the app server 
+that the connector will connect to via the `port` value. 
+
+Using this convenience can provide a much more succinct set of options - for example:
+
+```
+df = spark.read.format("com.marklogic.spark")\
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020")\
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
+    .load()
+```
 
 # Read options
 
