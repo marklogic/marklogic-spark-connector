@@ -99,3 +99,16 @@ with its own set of threads.
 Optimizing performance will thus involve testing various combinations of partition counts, batch sizes, and thread 
 counts. The [MarkLogic Monitoring tools](https://docs.marklogic.com/guide/monitoring/intro) can help you understand 
 resource consumption and throughput from Spark to MarkLogic. 
+
+## Supported save modes
+
+Spark supports 
+[several save modes](https://spark.apache.org/docs/latest/sql-data-sources-load-save-functions.html#save-modes) 
+when writing data. The MarkLogic Spark connector requires the `append` mode to be used. Because Spark defaults to 
+the `error` mode, you will need to set this to `append` each time you use the connector to write data. 
+
+`append` is the only supported mode because MarkLogic does not have the concept of a "table" that a document 
+must belong to, and only belong to one of. The Spark save modes give a user control over how data is written based 
+on whether the target table exists. Because no such concept of a table exists in MarkLogic, the differences between 
+the various modes do not apply to MarkLogic. Note that while a collection in MarkLogic has some similarities to a 
+table, it is fundamentally different in that a document can belong to zero to many collections. 
