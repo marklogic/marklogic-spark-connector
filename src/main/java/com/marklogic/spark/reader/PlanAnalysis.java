@@ -20,6 +20,7 @@ import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -80,6 +81,17 @@ class PlanAnalysis implements Serializable {
                 buckets.add(new Bucket(lowerBoundStr, upperBoundStr));
                 nextLowerBound = nextLowerBound + bucketSize + 1;
             }
+        }
+
+        /**
+         * For micro-batch reading, where each Spark task is intended to process a single bucket.
+         *
+         * @param bucketIndex
+         * @param bucket
+         */
+        Partition(int bucketIndex, Bucket bucket) {
+            this.identifier = bucketIndex + "";
+            this.buckets = Arrays.asList(bucket);
         }
 
         @Override

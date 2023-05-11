@@ -82,4 +82,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             throw new RuntimeException(e);
         }
     }
+
+    protected final String makeClientUri() {
+        return String.format("%s:%s@%s:%d", TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort());
+    }
 }

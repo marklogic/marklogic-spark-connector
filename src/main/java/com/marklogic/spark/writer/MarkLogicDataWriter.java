@@ -98,7 +98,9 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void close() {
-        logger.info("Close called; stopping job");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Close called; stopping job");
+        }
         stopJobAndRelease();
     }
 

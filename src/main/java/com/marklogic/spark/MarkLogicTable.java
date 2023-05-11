@@ -40,6 +40,7 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
     static {
         capabilities = new HashSet<>();
         capabilities.add(TableCapability.BATCH_READ);
+        capabilities.add(TableCapability.MICRO_BATCH_READ);
         capabilities.add(TableCapability.BATCH_WRITE);
         capabilities.add(TableCapability.STREAMING_WRITE);
     }
