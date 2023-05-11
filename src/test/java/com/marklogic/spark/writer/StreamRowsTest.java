@@ -18,6 +18,8 @@ package com.marklogic.spark.writer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.streaming.StreamingQuery;
+import org.apache.spark.sql.streaming.StreamingQueryException;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
@@ -26,39 +28,47 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.util.concurrent.TimeoutException;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class StreamRowsTest extends AbstractIntegrationTest {
-    StructType struct = new StructType()
+
+    private final static StructType SCHEMA = new StructType()
         .add("Name", DataTypes.StringType)
         .add("House", DataTypes.StringType);
 
     @Test
     void streamRowsFromCsvFile(@TempDir Path tempDir) throws TimeoutException {
+        final String collection = "hogwarts";
 
-        newDefaultStreamWriter(newSparkSession(), "src/test/resources/inputForStream", struct, "csv")
+        newDefaultStreamWriter(newSparkSession(), "src/test/resources/inputForStream", SCHEMA, "csv")
             .outputMode("append")
-            .option(Options.WRITE_COLLECTIONS, "my-test-data")
+            .option(Options.WRITE_URI_TEMPLATE, "/hogwarts/{Name}.json")
+            .option(Options.WRITE_COLLECTIONS, collection)
             // checkpointLocation needs to be a new location everytime job is run else docs are not written.
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath()).start().processAllAvailable();
-        final int expectedCollectionSize = 9;
-        String uri = getUrisInCollection("my-test-data", expectedCollectionSize).get(0);
-        JsonNode doc = readJsonDocument(uri);
-        assertTrue(doc.has("Name"));
-        assertTrue(doc.has("House"));
+
+        assertCollectionSize(collection, 9);
+        JsonNode doc = readJsonDocument("/hogwarts/Hermione Granger.json");
+        assertEquals("Gryffindor", doc.get("House").asText());
+        assertEquals("Hermione Granger", doc.get("Name").asText());
     }
 
     @Test
-    void inValidTransform(@TempDir Path tempDir) {
-        try{
-            newDefaultStreamWriter(newSparkSession(), "src/test/resources/inputForStream", struct, "csv")
-                .outputMode("append")
-                .option(Options.WRITE_COLLECTIONS, "my-test-data")
-                .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
-                .option("checkpointLocation", tempDir.toFile().getAbsolutePath()) // checkpointLocation needs to be a new location everytime job is run else docs are not written.
-                .start().processAllAvailable();
-        } catch (Exception ex){
-            assertTrue(ex.getMessage().contains("XDMP-MODNOTFOUND: (err:XQST0059) Module /marklogic.rest.transform/this-doesnt-exist/assets/transform.xqy not found"));
-        }
+    void inValidTransform(@TempDir Path tempDir) throws Exception {
+        StreamingQuery query = newDefaultStreamWriter(newSparkSession(), "src/test/resources/inputForStream", SCHEMA, "csv")
+            .outputMode("append")
+            .option(Options.WRITE_COLLECTIONS, "my-test-data")
+            .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
+            .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
+            .start();
+
+        // No error will be thrown yet as the streaming occurs in the background, though we'll likely see errors
+        // from the background thread. Calling processAllAvailable should force an error to occur.
+
+        StreamingQueryException ex = assertThrows(StreamingQueryException.class, () -> query.processAllAvailable());
+        assertTrue(ex.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
+            "Unexpected error: " + ex.getCause());
     }
 }

@@ -26,12 +26,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
-import java.io.Serializable;
-
-class MarkLogicWrite implements BatchWrite, StreamingWrite, Serializable {
+class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
-    final static long serialVersionUID = 1;
 
     private WriteContext writeContext;
 
@@ -66,17 +63,15 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite, Serializable {
 
     @Override
     public void commit(long epochId, WriterCommitMessage[] messages) {
-        logger.info("EpochId for commit is "+ epochId);
         if (messages != null && messages.length > 0) {
-            logger.info("Commit messages received: {}", Arrays.asList(messages));
+            logger.info("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
         }
     }
 
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
-        logger.info("EpochId for abort is "+ epochId);
         if (messages != null && messages.length > 0) {
-            logger.info("Abort messages received: {}", Arrays.asList(messages));
+            logger.info("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
         }
     }
 }
