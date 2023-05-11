@@ -19,18 +19,23 @@ import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
+import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
-class MarkLogicBatchWrite implements BatchWrite {
+import java.io.Serializable;
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatchWrite.class);
+class MarkLogicWrite implements BatchWrite, StreamingWrite, Serializable {
+
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
+    final static long serialVersionUID = 1;
 
     private WriteContext writeContext;
 
-    MarkLogicBatchWrite(WriteContext writeContext) {
+    MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
     }
 
@@ -51,6 +56,27 @@ class MarkLogicBatchWrite implements BatchWrite {
     public void abort(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
             logger.error("Abort messages received: {}", Arrays.asList(messages));
+        }
+    }
+
+    @Override
+    public StreamingDataWriterFactory createStreamingWriterFactory(PhysicalWriteInfo info) {
+        return new MarkLogicDataWriterFactory(writeContext);
+    }
+
+    @Override
+    public void commit(long epochId, WriterCommitMessage[] messages) {
+        logger.info("EpochId for commit is "+ epochId);
+        if (messages != null && messages.length > 0) {
+            logger.info("Commit messages received: {}", Arrays.asList(messages));
+        }
+    }
+
+    @Override
+    public void abort(long epochId, WriterCommitMessage[] messages) {
+        logger.info("EpochId for abort is "+ epochId);
+        if (messages != null && messages.length > 0) {
+            logger.info("Abort messages received: {}", Arrays.asList(messages));
         }
     }
 }
