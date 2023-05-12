@@ -82,6 +82,46 @@ also specify a temporal collection for each document to be assigned to via the
 `spark.marklogic.write.temporalCollection`. Each document must define values for the axes associated with the 
 temporal collection. 
 
+## Streaming support
+
+The MarkLogic Spark connector supports 
+[streaming writes](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) to MarkLogic. 
+The connector configuration does not change; instead, different Spark APIs are used to read a stream of data and 
+write that stream to MarkLogic. 
+
+A common use case for streaming involves writing data to MarkLogic from a CSV file, where there is no need to capture
+the data in a DataFrame first; the data just needs to be written to MarkLogic. The following shows an example in 
+PySpark of streaming CSV files from a directory (it also uses the `spark.marklogic.client.uri` option for a more 
+concise set of options). This example can be run from the `./examples/pyspark` directory in this repository after 
+following the instructions in the [Getting Started with PySpark guide](getting-started-pyspark.md) for deploying the 
+example application:
+
+```
+import tempfile
+from pyspark.sql.types import *
+spark.readStream \
+    .format("csv") \
+    .schema(StructType([StructField("GivenName", StringType()), StructField("Surname", StringType())])) \
+    .option("header", True) \
+    .load("data/csv-files") \
+    .writeStream \
+    .format("com.marklogic.spark") \
+    .option("checkpointLocation", tempfile.mkdtemp()) \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.uriPrefix", "/streaming-example/") \
+    .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
+    .option("spark.marklogic.write.collections", "streaming-example") \
+    .start() \
+    .processAllAvailable()
+```
+
+The above example will stream the data in the `./data/csv-files/100-employees.csv` file through the MarkLogic Spark 
+connector and into MarkLogic. This will result 100 new JSON documents in the `streaming-example` collection. 
+
+The ability to stream data into MarkLogic can make Spark an effective tool for obtaining data from a variety of data 
+sources and writing it directly to MarkLogic. 
+
+
 ## Tuning performance
 
 The MarkLogic Spark connector uses MarkLogic's 

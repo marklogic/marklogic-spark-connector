@@ -75,22 +75,6 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
     }
 
-    protected DataStreamWriter newDefaultStreamWriter(SparkSession session, String path, StructType struct, String format) {
-        Dataset<Row> dataset = session.readStream().schema(struct)
-            .option("header", true)
-            .format(format)
-            .load(path); // Needs to be a directory when using streams
-        return dataset
-            .writeStream()
-            .format("com.marklogic.spark")
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", TEST_USERNAME)
-            .option("spark.marklogic.client.password", TEST_PASSWORD)
-            .option("spark.marklogic.client.authType", "digest")
-            .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update");
-    }
-
     protected String readClasspathFile(String path) {
         try {
             return new String(FileCopyUtils.copyToByteArray(new ClassPathResource(path).getInputStream()));
