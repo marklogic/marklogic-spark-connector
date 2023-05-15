@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,8 +60,9 @@ public class ContextSupport implements Serializable {
         if (tokens.length != 2) {
             throw new IllegalArgumentException(errorMessage);
         }
-        connectionProps.put("spark.marklogic.client.username", tokens[0]);
-        connectionProps.put("spark.marklogic.client.password", tokens[1]);
+        connectionProps.put("spark.marklogic.client.username", decodeValue(tokens[0], "username"));
+        connectionProps.put("spark.marklogic.client.password", decodeValue(tokens[1], "password"));
+
         tokens = parts[1].split(":");
         if (tokens.length != 2) {
             throw new IllegalArgumentException(errorMessage);
@@ -71,6 +74,14 @@ public class ContextSupport implements Serializable {
             connectionProps.put("spark.marklogic.client.database", tokens[1]);
         } else {
             connectionProps.put("spark.marklogic.client.port", tokens[1]);
+        }
+    }
+
+    private String decodeValue(String value, String label) {
+        try {
+            return URLDecoder.decode(value, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(String.format("Unable to decode %s; cause: %s", label, value));
         }
     }
 

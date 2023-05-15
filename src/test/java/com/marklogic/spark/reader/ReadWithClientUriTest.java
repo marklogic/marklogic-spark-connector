@@ -23,6 +23,17 @@ public class ReadWithClientUriTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void usernameAndPasswordBothRequireDecoding() {
+        List<Row> rows = readRowsWithClientUri(String.format(
+            "%s:%s@%s:%d",
+            "spark-test-user%40", "sp%40r%3Ak", testConfig.getHost(), testConfig.getRestPort()
+        ));
+        assertEquals(15, rows.size(), "This is just verifying that the user's username and password are correctly " +
+            "decoded. The user must encode the ':' and '@' values so that they can be included in the client.uri " +
+            "value.");
+    }
+
+    @Test
     void uriWithDatabase() {
         List<Row> rows = readRowsWithClientUri(String.format(
             "%s:%s@%s:%d/spark-test-test-content",

@@ -37,8 +37,7 @@ It allows you to specify username, password, host, and port via the following sy
 
     username:password@host:port
 
-This avoids the need to set the individual options for the above 4 properties. Note that if any of the 4 properties, 
-such as the password, contains a ":" or "@" symbol, you will not yet be able to make use of this feature. 
+This avoids the need to set the individual options for the above 4 properties.  
 
 You may also configure a database name via the following syntax:
 
@@ -55,6 +54,10 @@ df = spark.read.format("com.marklogic.spark")\
     .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
     .load()
 ```
+
+Note that if the username or password contain either a `@` or a `:` character, you must first convert them using 
+[percent encoding](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) into the correct character 
+triplet. For example, a password of `sp@r:k` must appear in the `spark.marklogic.client.uri` string as `sp%40r%3Ak`. 
 
 # Read options
 
