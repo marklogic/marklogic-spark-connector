@@ -18,6 +18,7 @@ package com.marklogic.spark.reader;
 
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
+import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.types.StructType;
 
 class MarkLogicScan implements Scan {
@@ -41,5 +42,10 @@ class MarkLogicScan implements Scan {
     @Override
     public Batch toBatch() {
         return new MarkLogicBatch(readContext);
+    }
+
+    @Override
+    public MicroBatchStream toMicroBatchStream(String checkpointLocation) {
+        return new MarkLogicMicroBatchStream(readContext);
     }
 }

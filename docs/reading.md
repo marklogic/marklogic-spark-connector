@@ -28,16 +28,62 @@ be provided within PySpark; this assumes that you have deployed the application 
 
 ```
 from pyspark.sql.types import StructField, StructType, StringType
-df = spark.read.format("com.marklogic.spark")\
-    .schema(StructType([StructField("example.employee.GivenName", StringType()), StructField("example.employee.Surname", StringType())]))\
-    .option("spark.marklogic.client.host", "localhost")\
-    .option("spark.marklogic.client.port", "8020")\
-    .option("spark.marklogic.client.username", "pyspark-example-user")\
-    .option("spark.marklogic.client.password", "password")\
-    .option("spark.marklogic.client.authType", "digest")\
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
+df = spark.read.format("com.marklogic.spark") \
+    .schema(StructType([StructField("example.employee.GivenName", StringType()), StructField("example.employee.Surname", StringType())])) \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.numPartitions", 2) \
+    .option("spark.marklogic.client.batchSize", 100) \
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
     .load()
 ```
+
+## Streaming support
+
+The MarkLogic Spark connector supports
+[streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) from MarkLogic
+via micro-batches. The connector configuration does not change; instead, different Spark APIs are used to read a 
+stream of data from MarkLogic.
+
+The below PySpark example demonstrates how to stream micro-batches from MarkLogic to the console (streaming to the 
+console is only recommend for demonstration and debugging); this can be run against the MarkLogic application 
+deployed in the [Getting Started with PySpark](getting-started-pyspark.md):
+
+```
+spark.readStream \
+    .format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.numPartitions", 2) \
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .load() \
+    .writeStream \
+    .format("console") \
+    .start() \
+    .processAllAvailable()
+```
+
+Micro-batches are constructed based on the number of partitions and user-defined batch size; more information on each
+setting can be found in section below on tuning performance. Each request to MarkLogic that is made in "batch read"
+mode - i.e. when using Spark's `read` function instead of `readStream` - corresponds to a micro-batch when reading
+data via a stream. In the example above, which uses the connector's default batch size of 10,000 rows and 2 
+partitions, 2 calls are made to MarkLogic, resulting in two micro-batches. 
+
+The number of micro-batches can be determined by enabling info-level logging and looking for a message similar to:
+
+    Partition count: 2; number of requests that will be made to MarkLogic: 2
+
+For example, the above query can be shortened to only create a stream, thus allowing for the above log message to be 
+seen: 
+
+```
+sc.setLogLevel("INFO")
+spark.readStream \
+    .format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.numPartitions", 2) \
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .load()
+```
+
 
 ## Tuning performance
 

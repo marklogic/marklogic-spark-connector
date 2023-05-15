@@ -75,7 +75,7 @@ public class ReadWithClientUriTest extends AbstractIntegrationTest {
     private List<Row> readRowsWithClientUri(String clientUri) {
         return newSparkSession()
             .read()
-            .format("com.marklogic.spark")
+            .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, clientUri)
             .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')")
             .load()

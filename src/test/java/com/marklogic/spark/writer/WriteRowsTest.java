@@ -133,6 +133,20 @@ public class WriteRowsTest extends AbstractWriteTest {
         verifyFailureIsDueToLackOfPermission(ex);
     }
 
+    @Test
+    void invalidPassword() {
+        SparkException ex = assertThrows(SparkException.class,
+            () -> newWriter()
+                .option(Options.CLIENT_URI, "spark-test-user:wrong-password@" + testConfig.getHost() + ":" + testConfig.getRestPort())
+                .save()
+        );
+
+        assertTrue(ex.getCause() instanceof RuntimeException, "Expecting a RuntimeException due to the invalid " +
+            "credentials; unexpected cause: " + ex.getCause());
+
+        assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", ex.getCause().getMessage());
+    }
+
     /**
      * Uses a batch size of 1 to ensure that the write() method in the data writer should fail, as each write() call
      * should result in a request to MarkLogic, which should cause a failure before commit() is called.

@@ -4,11 +4,8 @@ import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import com.marklogic.spark.reader.ReadConstants;
 import org.apache.spark.sql.DataFrameReader;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.streaming.DataStreamWriter;
-import org.apache.spark.sql.types.StructType;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
@@ -26,6 +23,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     // User credentials for all calls to MarkLogic by the Spark connector
     protected final static String TEST_USERNAME = "spark-test-user";
     protected final static String TEST_PASSWORD = "spark";
+    protected final static String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
 
     /**
      * Via marklogic-junit5, this is populated via the mlHost/mlRestPort/mlUsername/mlPassword property values. Those
@@ -34,6 +32,15 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
      */
     @Autowired
     protected SimpleTestConfig testConfig;
+
+    protected SparkSession sparkSession;
+
+    @AfterEach
+    public void closeSparkSession() {
+        if (sparkSession != null) {
+            sparkSession.close();
+        }
+    }
 
     @Override
     protected String getJavascriptForDeletingDocumentsBeforeTestRuns() {
@@ -48,10 +55,11 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     }
 
     protected SparkSession newSparkSession(String timeZone) {
-        return SparkSession.builder()
+        sparkSession = SparkSession.builder()
             .master("local[*]")
             .config("spark.sql.session.timeZone", timeZone)
             .getOrCreate();
+        return sparkSession;
     }
 
     /**
@@ -67,7 +75,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected DataFrameReader newDefaultReader(SparkSession session) {
         return session
             .read()
-            .format("com.marklogic.spark")
+            .format(CONNECTOR_IDENTIFIER)
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", TEST_USERNAME)
@@ -81,5 +89,9 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    protected final String makeClientUri() {
+        return String.format("%s:%s@%s:%d", TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort());
     }
 }
