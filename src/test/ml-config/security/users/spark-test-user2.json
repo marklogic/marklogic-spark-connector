@@ -1,0 +1,8 @@
+{
+  "user-name": "spark-test-user@",
+  "password": "sp@r:k",
+  "description": "For testing that symbols are decoded in a username and password",
+  "role": [
+    "spark-user-role"
+  ]
+}
