@@ -88,7 +88,7 @@ public class ReadWithClientUriTest extends AbstractIntegrationTest {
             .read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, clientUri)
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')")
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors')")
             .load()
             .collectAsList();
     }

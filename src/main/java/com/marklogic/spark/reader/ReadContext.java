@@ -26,6 +26,7 @@ import com.marklogic.client.row.RawPlanDefinition;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
@@ -65,12 +66,12 @@ public class ReadContext extends ContextSupport {
     public ReadContext(Map<String, String> properties, boolean inferSchema) {
         super(properties);
 
-        final long partitionCount = getNumericOption(ReadConstants.NUM_PARTITIONS,
+        final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS,
             SparkSession.active().sparkContext().defaultMinPartitions(), 1);
-        final long batchSize = getNumericOption(ReadConstants.BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
-        final String dslQuery = properties.get(ReadConstants.OPTIC_DSL);
+        final long batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
+        final String dslQuery = properties.get(Options.READ_OPTIC_DSL);
         if (dslQuery == null || dslQuery.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", ReadConstants.OPTIC_DSL));
+            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_DSL));
         }
         DatabaseClient client = connectToMarkLogic();
         RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));

@@ -2,7 +2,6 @@ package com.marklogic.spark;
 
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
-import com.marklogic.spark.reader.ReadConstants;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterEach;
@@ -80,7 +79,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", TEST_USERNAME)
             .option("spark.marklogic.client.password", TEST_PASSWORD)
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical','Authors')");
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors')");
     }
 
     protected String readClasspathFile(String path) {

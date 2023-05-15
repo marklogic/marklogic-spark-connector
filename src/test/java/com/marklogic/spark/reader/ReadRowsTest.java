@@ -17,6 +17,7 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +32,8 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void validPartitionCountAndBatchSize() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.NUM_PARTITIONS, "3")
-            .option(ReadConstants.BATCH_SIZE, "10000")
+            .option(Options.READ_NUM_PARTITIONS, "3")
+            .option(Options.READ_BATCH_SIZE, "10000")
             .load()
             .collectAsList();
 
@@ -50,7 +51,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void queryReturnsZeroRows() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'NoAuthors')")
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'NoAuthors')")
             .load()
             .collectAsList();
 
@@ -62,7 +63,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidQuery() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL, "op.fromView('Medical', 'ViewNotFound')")
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'ViewNotFound')")
             .load()
             .count());
 
@@ -89,7 +90,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     void nonNumericPartitionCount() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option(ReadConstants.NUM_PARTITIONS, "abc")
+                .option(Options.READ_NUM_PARTITIONS, "abc")
                 .load()
                 .count()
         );
@@ -100,7 +101,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     void partitionCountLessThanOne() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option(ReadConstants.NUM_PARTITIONS, "0")
+                .option(Options.READ_NUM_PARTITIONS, "0")
                 .load()
                 .count()
         );
@@ -111,7 +112,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     void nonNumericBatchSize() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option(ReadConstants.BATCH_SIZE, "abc")
+                .option(Options.READ_BATCH_SIZE, "abc")
                 .load()
                 .count()
         );
@@ -122,7 +123,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     void batchSizeLessThanZero() {
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () ->
             newDefaultReader()
-                .option(ReadConstants.BATCH_SIZE, "-1")
+                .option(Options.READ_BATCH_SIZE, "-1")
                 .load()
                 .count()
         );

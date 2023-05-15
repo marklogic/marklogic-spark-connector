@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader;
 
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -34,9 +35,9 @@ public class PerformanceTester {
             .option("spark.marklogic.client.port", 8009)
             .option("spark.marklogic.client.username", "admin")
             .option("spark.marklogic.client.password", "admin")
-            .option(ReadConstants.OPTIC_DSL, query)
-            .option(ReadConstants.NUM_PARTITIONS, partitionCount)
-            .option(ReadConstants.BATCH_SIZE, batchSize)
+            .option(Options.READ_OPTIC_DSL, query)
+            .option(Options.READ_NUM_PARTITIONS, partitionCount)
+            .option(Options.READ_BATCH_SIZE, batchSize)
             .load();
 
         long now = System.currentTimeMillis();

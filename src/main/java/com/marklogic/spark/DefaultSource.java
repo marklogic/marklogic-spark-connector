@@ -15,7 +15,6 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.ReadConstants;
 import com.marklogic.spark.reader.ReadContext;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.connector.catalog.Table;
@@ -70,6 +69,6 @@ public class DefaultSource implements TableProvider {
     }
 
     private boolean isReadOperation(Map<String, String> properties) {
-        return properties.containsKey(ReadConstants.OPTIC_DSL);
+        return properties.containsKey(Options.READ_OPTIC_DSL);
     }
 }
