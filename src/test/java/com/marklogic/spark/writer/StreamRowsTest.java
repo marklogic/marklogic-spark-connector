@@ -76,12 +76,9 @@ public class StreamRowsTest extends AbstractIntegrationTest {
             .format("csv")
             .load("src/test/resources/inputForStream")
             .writeStream()
-            .format("com.marklogic.spark")
+            .format(CONNECTOR_IDENTIFIER)
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", TEST_USERNAME)
-            .option("spark.marklogic.client.password", TEST_PASSWORD)
+            .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update");
     }
 

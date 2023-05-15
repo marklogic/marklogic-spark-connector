@@ -20,7 +20,12 @@ public class ContextSupport implements Serializable {
 
     public DatabaseClient connectToMarkLogic() {
         Map<String, String> connectionProps = buildConnectionProperties();
-        DatabaseClient client = DatabaseClientFactory.newClient(propertyName -> connectionProps.get("spark." + propertyName));
+        DatabaseClient client;
+        try {
+            client = DatabaseClientFactory.newClient(propertyName -> connectionProps.get("spark." + propertyName));
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Unable to connect to MarkLogic; cause: %s", e.getMessage()), e);
+        }
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
             throw new RuntimeException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));

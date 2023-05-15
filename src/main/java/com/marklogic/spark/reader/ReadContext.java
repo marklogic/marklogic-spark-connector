@@ -69,7 +69,9 @@ public class ReadContext extends ContextSupport {
             SparkSession.active().sparkContext().defaultMinPartitions(), 1);
         final long batchSize = getNumericOption(ReadConstants.BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
         final String dslQuery = properties.get(ReadConstants.OPTIC_DSL);
-
+        if (dslQuery == null || dslQuery.trim().length() < 1) {
+            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", ReadConstants.OPTIC_DSL));
+        }
         DatabaseClient client = connectToMarkLogic();
         RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));
 

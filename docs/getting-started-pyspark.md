@@ -87,6 +87,14 @@ a similar mechanism for including third party connectors; please see the documen
 environment. In the example above, the `--jars` option allows for the MarkLogic Spark connector to be used within 
 PySpark. 
 
+When PySpark starts, you should see information like this on how to configure logging:
+
+    Setting default log level to "WARN".
+    To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+
+Setting the default log level to "INFO" or "DEBUG" will show logging from the MarkLogic Spark connector. This will also
+include potentially significant amounts of log messages from PySpark itself. 
+
 ### Reading data with the connector
 
 The connector reads data from MarkLogic as rows to construct a Spark DataFrame. To see this in action, 

@@ -36,7 +36,7 @@ abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .csv("src/test/resources/" + csvFilename)
             .repartition(partitionCount)
             .write()
-            .format("com.marklogic.spark")
+            .format(CONNECTOR_IDENTIFIER)
             .mode(SaveMode.Append)
             .option("spark.marklogic.client.host", testConfig.getHost())
             .option("spark.marklogic.client.port", testConfig.getRestPort())
