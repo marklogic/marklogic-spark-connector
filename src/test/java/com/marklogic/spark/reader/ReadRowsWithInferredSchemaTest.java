@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allTypes() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL,
+            .option(Options.READ_OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 1'))")
             .load()
             .collectAsList();
@@ -70,7 +71,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allColumnsNullExceptRequiredOne() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL,
+            .option(Options.READ_OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 2'))")
             .load()
             .collectAsList();
@@ -88,7 +89,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void rowWithInvalidLongValueThatShouldBeIgnored() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL,
+            .option(Options.READ_OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 3'))")
             .load()
             .collectAsList();
@@ -103,10 +104,10 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void selectSubsetOfColumns() {
         List<Row> rows = newDefaultReader()
-            .option(ReadConstants.OPTIC_DSL,
+            .option(Options.READ_OPTIC_DSL,
                 "op.fromView('sparkTest', 'allTypes')" +
                     ".select(['intValue', 'timeValue'])")
-            .option(ReadConstants.NUM_PARTITIONS, "1")
+            .option(Options.READ_NUM_PARTITIONS, "1")
             .load()
             .collectAsList();
 

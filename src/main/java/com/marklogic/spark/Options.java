@@ -7,6 +7,10 @@ public interface Options {
 
     String CLIENT_URI = "spark.marklogic.client.uri";
 
+    String READ_OPTIC_DSL = "spark.marklogic.read.opticDsl";
+    String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
+    String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
+
     String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
 
