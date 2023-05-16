@@ -78,15 +78,20 @@ abstract class SchemaInferrer {
     }
 
     private static String makeColumnName(JsonNode column) {
-        StringBuilder name = new StringBuilder();
-        if (column.has("schema")) {
-            name.append(column.get("schema").asText()).append(".");
+        StringBuilder builder = new StringBuilder();
+        appendIfNotEmpty(column, "schema", builder);
+        appendIfNotEmpty(column, "view", builder);
+        builder.append(column.get("column").asText());
+        return builder.toString();
+    }
+
+    private static void appendIfNotEmpty(JsonNode column, String columnName, StringBuilder builder) {
+        if (column.has(columnName)) {
+            String value = column.get(columnName).asText();
+            if (value != null && value.trim().length() > 0) {
+                builder.append(value).append(".");
+            }
         }
-        if (column.has("view")) {
-            name.append(column.get("view").asText()).append(".");
-        }
-        name.append(column.get("column").asText());
-        return name.toString();
     }
 
     private static boolean isColumnNullable(JsonNode column) {

@@ -101,12 +101,12 @@ The connector reads data from MarkLogic as rows to construct a Spark DataFrame. 
 paste the following Python statement into PySpark, adjusting the host and password values as needed:
 
 ```
-df = spark.read.format("com.marklogic.spark")\
-    .option("spark.marklogic.client.host", "localhost")\
-    .option("spark.marklogic.client.port", "8020")\
-    .option("spark.marklogic.client.username", "pyspark-example-user")\
-    .option("spark.marklogic.client.password", "password")\
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.host", "localhost") \
+    .option("spark.marklogic.client.port", "8020") \
+    .option("spark.marklogic.client.username", "pyspark-example-user") \
+    .option("spark.marklogic.client.password", "password") \
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
     .load()
 ```
 
@@ -114,9 +114,9 @@ When using `digest` or `basic` authentication, you can also use this more succin
 client options in one option:
 
 ```
-df = spark.read.format("com.marklogic.spark")\
-    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020")\
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
     .load()
 ```
 
@@ -140,15 +140,12 @@ into XML documents if desired. To try this on the DataFrame that was read from M
 paste the following into PySpark, adjusting the host and password values as needed:
 
 ```
-df.write.format("com.marklogic.spark")\
-    .option("spark.marklogic.client.host", "localhost")\
-    .option("spark.marklogic.client.port", "8020")\
-    .option("spark.marklogic.client.username", "pyspark-example-user")\
-    .option("spark.marklogic.client.password", "password")\
-    .option("spark.marklogic.write.collections", "write-test")\
-    .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update")\
-    .option("spark.marklogic.write.uriPrefix", "/write/")\
-    .mode("append")\
+df.write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.collections", "write-test") \
+    .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
+    .option("spark.marklogic.write.uriPrefix", "/write/") \
+    .mode("append") \
     .save()
 ```
 
