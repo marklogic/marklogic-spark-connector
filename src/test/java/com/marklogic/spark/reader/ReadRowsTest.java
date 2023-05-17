@@ -41,10 +41,30 @@ public class ReadRowsTest extends AbstractIntegrationTest {
 
         rows.forEach(row -> {
             long id = row.getLong(0);
+            assertEquals(id, (long) row.getAs("Medical.Authors.CitationID"), "Verifying that the first column has " +
+                "the citation ID and can be accessed via a fully qualified column name.");
+
             assertTrue(id >= 1 && id <= 5, "The citation ID is expected to be the first column value, and based on our " +
                 "test data, it should have a value from 1 to 5; actual value: " + id);
+
             assertEquals(8, row.size(), "Expecting the row to have 8 columns since the TDE defines 8 columns, and the " +
                 "Spark schema is expected to be inferred from the TDE.");
+        });
+    }
+
+    @Test
+    void emptyQualifier() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors', '')")
+            .load()
+            .collectAsList();
+
+        assertEquals(15, rows.size());
+
+        rows.forEach(row -> {
+            long id = row.getLong(0);
+            assertEquals(id, (long) row.getAs("CitationID"), "Verifying that the first column has " +
+                "the citation ID and can be accessed via a column name with no qualifier.");
         });
     }
 
