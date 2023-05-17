@@ -15,13 +15,18 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.ReadContext;
+import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.row.RawQueryDSLPlan;
+import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.reader.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -31,7 +36,7 @@ import java.util.Map;
  */
 public class DefaultSource implements TableProvider {
 
-    private ReadContext readContext;
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
 
     /**
      * If no schema is provided when reading data, Spark invokes this before getTable is invoked.
@@ -41,18 +46,30 @@ public class DefaultSource implements TableProvider {
      */
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-        Map<String, String> serializableProperties = options.asCaseSensitiveMap();
-        this.readContext = new ReadContext(serializableProperties, true);
-        return this.readContext.getSchema();
+        final String query = options.get(Options.READ_OPTIC_DSL);
+        if (query == null || query.trim().length() < 1) {
+            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_DSL));
+        }
+        RowManager rowManager = new ContextSupport(options).connectToMarkLogic().newRowManager();
+        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
+        try {
+            StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
+            return SchemaInferrer.inferSchema(columnInfoHandle.get());
+        } catch (Exception ex) {
+            throw new RuntimeException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+        }
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isReadOperation(properties)) {
-            if (this.readContext == null) {
-                this.readContext = new ReadContext(properties, schema);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Creating new table for reading");
             }
-            return new MarkLogicTable(this.readContext);
+            return new MarkLogicTable(schema, properties);
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating new table for writing");
         }
         return new MarkLogicTable(new WriteContext(schema, properties));
     }

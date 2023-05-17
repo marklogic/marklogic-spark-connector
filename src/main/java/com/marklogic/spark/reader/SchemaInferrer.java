@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-abstract class SchemaInferrer {
+public abstract class SchemaInferrer {
 
     private final static Logger logger = LoggerFactory.getLogger(SchemaInferrer.class);
     private final static ObjectMapper objectMapper = new ObjectMapper();
@@ -51,7 +51,7 @@ abstract class SchemaInferrer {
      *                           returns a String of newline-delimited JSON objects
      * @return
      */
-    static StructType inferSchema(String columnInfoResponse) {
+    public static StructType inferSchema(String columnInfoResponse) {
         StructType schema = new StructType();
         for (String columnInfo : columnInfoResponse.split("\n")) {
             try {

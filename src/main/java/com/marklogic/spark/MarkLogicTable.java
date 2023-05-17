@@ -27,14 +27,22 @@ import org.apache.spark.sql.connector.write.LogicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriteBuilder;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class MarkLogicTable implements SupportsRead, SupportsWrite {
 
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
+
     private static Set<TableCapability> capabilities;
-    private ReadContext readContext;
+
+    private StructType readSchema;
+    private Map<String, String> readProperties;
+
     private WriteContext writeContext;
 
     static {
@@ -45,8 +53,9 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
         capabilities.add(TableCapability.STREAMING_WRITE);
     }
 
-    MarkLogicTable(ReadContext readContext) {
-        this.readContext = readContext;
+    MarkLogicTable(StructType schema, Map<String, String> properties) {
+        this.readSchema = schema;
+        this.readProperties = properties;
     }
 
     MarkLogicTable(WriteContext writeContext) {
@@ -65,7 +74,12 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
      */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new MarkLogicScanBuilder(readContext);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating new scan builder");
+        }
+        // A ReadContext is created at this point, as a new ScanBuilder is created each time the user invokes a
+        // function that requires a result, such as "count()".
+        return new MarkLogicScanBuilder(new ReadContext(readProperties, readSchema));
     }
 
     @Override
@@ -83,7 +97,7 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
     @Deprecated
     @Override
     public StructType schema() {
-        return readContext != null ? readContext.getSchema() : writeContext.getSchema();
+        return readSchema != null ? readSchema : writeContext.getSchema();
     }
 
     @Override

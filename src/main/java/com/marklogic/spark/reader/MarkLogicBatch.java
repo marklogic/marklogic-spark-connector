@@ -18,8 +18,12 @@ package com.marklogic.spark.reader;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class MarkLogicBatch implements Batch {
+
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicBatch.class);
 
     private final ReadContext readContext;
 
@@ -37,6 +41,9 @@ class MarkLogicBatch implements Batch {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating new partition reader factory");
+        }
         return new MarkLogicPartitionReaderFactory(readContext);
     }
 }

@@ -15,11 +15,11 @@
  */
 package com.marklogic.spark.reader;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.impl.DatabaseClientImpl;
-import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawPlanDefinition;
@@ -32,6 +32,7 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -52,19 +53,8 @@ public class ReadContext extends ContextSupport {
     private long serverTimestamp;
 
     public ReadContext(Map<String, String> properties, StructType schema) {
-        this(properties, false);
-        this.schema = schema;
-    }
-
-    /**
-     * Sure seems that as soon as we create this, we should try to connect
-     * to MarkLogic and analyze the user's plan.
-     *
-     * @param properties
-     * @param inferSchema
-     */
-    public ReadContext(Map<String, String> properties, boolean inferSchema) {
         super(properties);
+        this.schema = schema;
 
         final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS,
             SparkSession.active().sparkContext().defaultMinPartitions(), 1);
@@ -89,17 +79,12 @@ public class ReadContext extends ContextSupport {
                 logger.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
                     this.planAnalysis.partitions.size(), this.planAnalysis.getAllBuckets().size());
             }
+            // Calling this to establish a server timestamp.
             StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
             this.serverTimestamp = columnInfoHandle.getServerTimestamp();
-            if (inferSchema) {
-                this.schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
-                if (logger.isTraceEnabled()) {
-                    logger.trace(String.format("Inferred schema: %s", schema.json()));
-                }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Will use server timestamp: {}", serverTimestamp);
             }
-        } else {
-            // If no rows are found, and the user doesn't provide a schema, need a non-null one to keep Spark happy.
-            this.schema = new StructType();
         }
     }
 
@@ -112,7 +97,7 @@ public class ReadContext extends ContextSupport {
         }
     }
 
-    Iterator<StringHandle> readRowsInBucket(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {
+    Iterator<JsonNode> readRowsInBucket(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {
         if (logger.isDebugEnabled()) {
             logger.debug("Getting rows for partition {} and bucket {} at server timestamp {}", partition, bucket, serverTimestamp);
         }
@@ -131,9 +116,13 @@ public class ReadContext extends ContextSupport {
             .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
             .bindParam("ML_UPPER_BOUND", bucket.upperBound);
 
-        StringHandle resultHandle = new StringHandle().withFormat(Format.JSON);
-        resultHandle.setPointInTimeQueryTimestamp(serverTimestamp);
-        return rowManager.resultRows(builtPlan, resultHandle).iterator();
+        JacksonHandle jsonHandle = new JacksonHandle();
+        jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
+        // Unable to use resultRows as Java Client <= 6.2.0 has a bug where the serverTimestamp is ignored.
+        JsonNode result = rowManager.resultDoc(builtPlan, jsonHandle).get();
+        return result != null && result.has("rows") ?
+            result.get("rows").iterator() :
+            new ArrayList<JsonNode>().iterator();
     }
 
     public StructType getSchema() {
