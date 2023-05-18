@@ -18,9 +18,9 @@ package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -53,7 +53,7 @@ class MarkLogicPartitionReader implements PartitionReader {
     private final Function2<JsonFactory, String, JsonParser> jsonParserCreator;
     private final Function1<String, UTF8String> utf8StringCreator;
 
-    private Iterator<StringHandle> rowIterator;
+    private Iterator<JsonNode> rowIterator;
     private int nextBucketIndex;
     private int currentBucketRowCount;
 
@@ -117,8 +117,8 @@ class MarkLogicPartitionReader implements PartitionReader {
     public InternalRow get() {
         this.currentBucketRowCount++;
         this.totalRowCount++;
-        String row = rowIterator.next().get();
-        return this.jacksonParser.parse(row, this.jsonParserCreator, this.utf8StringCreator).head();
+        JsonNode row = rowIterator.next();
+        return this.jacksonParser.parse(row.toString(), this.jsonParserCreator, this.utf8StringCreator).head();
     }
 
     @Override

@@ -17,8 +17,12 @@ package com.marklogic.spark.reader;
 
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MarkLogicScanBuilder implements ScanBuilder {
+
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
     private ReadContext readContext;
 
@@ -28,6 +32,9 @@ public class MarkLogicScanBuilder implements ScanBuilder {
 
     @Override
     public Scan build() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating new scan");
+        }
         return new MarkLogicScan(readContext);
     }
 }

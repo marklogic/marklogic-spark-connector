@@ -20,8 +20,12 @@ import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.types.StructType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class MarkLogicScan implements Scan {
+
+    private final static Logger logger = LoggerFactory.getLogger(MarkLogicScan.class);
 
     private ReadContext readContext;
 
@@ -41,6 +45,9 @@ class MarkLogicScan implements Scan {
 
     @Override
     public Batch toBatch() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating new batch");
+        }
         return new MarkLogicBatch(readContext);
     }
 
