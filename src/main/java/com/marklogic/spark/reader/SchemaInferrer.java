@@ -21,6 +21,9 @@ public abstract class SchemaInferrer {
     // not equivalent to the set of TDE types; for example, /v1/rows returns "none" as a column type for several TDE types.
     private final static Map<String, DataType> COLUMN_INFO_TYPES_TO_SPARK_TYPES = new HashMap() {{
         put("int", DataTypes.IntegerType);
+        // Including "short" here, but a TDE column of type "short" reports "int" as its type in column info. So not
+        // yet able to test this, but including it here in case the server does report "short" in the future.
+        put("short", DataTypes.ShortType);
         put("unsignedInt", DataTypes.IntegerType);
         put("long", DataTypes.LongType);
         put("unsignedLong", DataTypes.LongType);

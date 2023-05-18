@@ -16,17 +16,20 @@
 package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.row.RawPlanDefinition;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
@@ -34,6 +37,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,10 +51,12 @@ public class ReadContext extends ContextSupport {
 
     private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
     private final static long DEFAULT_BATCH_SIZE = 10000;
+    private final static ObjectMapper objectMapper = new ObjectMapper();
 
     private PlanAnalysis planAnalysis;
     private StructType schema;
     private long serverTimestamp;
+    private List<OpticFilter> opticFilters;
 
     public ReadContext(Map<String, String> properties, StructType schema) {
         super(properties);
@@ -109,23 +115,53 @@ public class ReadContext extends ContextSupport {
             throw new RuntimeException(String.format("Unable to read rows; invalid server timestamp: %d", serverTimestamp));
         }
 
-        JacksonHandle planHandle = new JacksonHandle(planAnalysis.boundedPlan);
-
-        RawPlanDefinition rawPlan = rowManager.newRawPlanDefinition(planHandle);
-        PlanBuilder.Plan builtPlan = rawPlan
-            .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
-            .bindParam("ML_UPPER_BOUND", bucket.upperBound);
-
+        PlanBuilder.Plan plan = buildPlanForBucket(rowManager, bucket);
         JacksonHandle jsonHandle = new JacksonHandle();
         jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
         // Unable to use resultRows as Java Client <= 6.2.0 has a bug where the serverTimestamp is ignored.
-        JsonNode result = rowManager.resultDoc(builtPlan, jsonHandle).get();
+        // TODO Change this to use resultRows once Java Client 6.2.1 is available. That should perform better as it
+        // avoids creating a JsonNode.
+        JsonNode result = rowManager.resultDoc(plan, jsonHandle).get();
         return result != null && result.has("rows") ?
             result.get("rows").iterator() :
             new ArrayList<JsonNode>().iterator();
     }
 
-    public StructType getSchema() {
+    private PlanBuilder.Plan buildPlanForBucket(RowManager rowManager, PlanAnalysis.Bucket bucket) {
+        PlanBuilder.Plan plan = rowManager.newRawPlanDefinition(new JacksonHandle(planAnalysis.boundedPlan))
+            .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
+            .bindParam("ML_UPPER_BOUND", bucket.upperBound);
+
+        if (opticFilters != null) {
+            for (OpticFilter opticFilter : opticFilters) {
+                plan = opticFilter.bindFilterValue(plan);
+            }
+        }
+
+        return plan;
+    }
+
+    void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
+        this.opticFilters = opticFilters;
+
+        // All the filters will be added to a new "where" clause. And because the internal/viewinfo endpoint is known
+        // to place an op:prepare call as the last arg (which apparently needs to be last), the new 'where' clause is
+        // inserted before the op:prepare call.
+        final ObjectNode whereClause = objectMapper.createObjectNode().put("ns", "op").put("fn", "where");
+        final ArrayNode operators = (ArrayNode) planAnalysis.boundedPlan.get("$optic").get("args");
+        operators.insert(operators.size() - 1, whereClause);
+
+        // If there's only one filter, can toss it into the "where" clause. Else, toss an "and" into the "where" and
+        // then toss every filter into the "and" clause (which accepts 2 to N args).
+        final ArrayNode whereArgs = whereClause.putArray("args");
+        final ArrayNode targetArgs = opticFilters.size() == 1 ?
+            whereArgs :
+            whereArgs.addObject().put("ns", "op").put("fn", "and").putArray("args");
+
+        opticFilters.forEach(planFilter -> planFilter.populateArg(targetArgs.addObject()));
+    }
+
+    StructType getSchema() {
         return schema;
     }
 
