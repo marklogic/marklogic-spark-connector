@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class DefaultSource implements TableProvider {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
+    private final static Logger logger = LoggerFactory.getLogger(DefaultSource.class);
 
     /**
      * If no schema is provided when reading data, Spark invokes this before getTable is invoked.
