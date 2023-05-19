@@ -17,17 +17,22 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
+import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
+import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
+import org.apache.spark.sql.connector.read.SupportsPushDownOffset;
+import org.apache.spark.sql.connector.read.SupportsPushDownTopN;
 import org.apache.spark.sql.sources.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters {
+public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit, SupportsPushDownOffset, SupportsPushDownTopN {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
@@ -86,4 +91,43 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
     public Filter[] pushedFilters() {
         return pushedFilters.toArray(new Filter[0]);
     }
+
+    @Override
+    public boolean pushLimit(int limit) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down limit: {}", limit);
+        }
+        readContext.pushDownLimit(limit);
+        return true;
+    }
+
+    @Override
+    public boolean pushTopN(SortOrder[] orders, int limit) {
+        // This will be invoked when the user calls both orderBy and limit in their Spark program. If the user only
+        // calls limit, then only pushLimit is called and this will not be called. If the user only calls orderBy and
+        // not limit, then neither this nor pushLimit will be called.
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
+        }
+        readContext.pushDownTopN(orders, limit);
+        return true;
+    }
+
+    @Override
+    public boolean isPartiallyPushed() {
+        // If a single bucket exists - i.e. a single call will be made to MarkLogic - then any limit/orderBy can be
+        // fully pushed down to MarkLogic. Otherwise, we also need Spark to apply the limit/orderBy to the returned rows
+        // to ensure that the user receives the correct response.
+        return readContext.getBucketCount() > 1;
+    }
+
+    @Override
+    public boolean pushOffset(int offset) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down offset: {}", offset);
+        }
+        readContext.pushDownOffset(offset);
+        return true;
+    }
+
 }

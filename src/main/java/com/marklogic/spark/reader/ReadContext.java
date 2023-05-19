@@ -31,6 +31,8 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.connector.expressions.SortDirection;
+import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,12 +146,9 @@ public class ReadContext extends ContextSupport {
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
         this.opticFilters = opticFilters;
 
-        // All the filters will be added to a new "where" clause. And because the internal/viewinfo endpoint is known
-        // to place an op:prepare call as the last arg (which apparently needs to be last), the new 'where' clause is
-        // inserted before the op:prepare call.
+        // All the filters will be added to a new "where" clause.
         final ObjectNode whereClause = objectMapper.createObjectNode().put("ns", "op").put("fn", "where");
-        final ArrayNode operators = (ArrayNode) planAnalysis.boundedPlan.get("$optic").get("args");
-        operators.insert(operators.size() - 1, whereClause);
+        addOperatorToPlan(whereClause);
 
         // If there's only one filter, can toss it into the "where" clause. Else, toss an "and" into the "where" and
         // then toss every filter into the "and" clause (which accepts 2 to N args).
@@ -161,11 +160,55 @@ public class ReadContext extends ContextSupport {
         opticFilters.forEach(planFilter -> planFilter.populateArg(targetArgs.addObject()));
     }
 
+    void pushDownLimit(int pushDownLimit) {
+        ObjectNode limitArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "limit");
+        limitArg.putArray("args").add(pushDownLimit);
+        addOperatorToPlan(limitArg);
+    }
+
+    void pushDownOffset(int offset) {
+        ObjectNode offsetArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "offset");
+        offsetArg.putArray("args").add(offset);
+        addOperatorToPlan(offsetArg);
+    }
+
+    void pushDownTopN(SortOrder[] orders, int limit) {
+        for (SortOrder sortOrder : orders) {
+            final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
+            final String columnName = sortOrder.expression().describe();
+
+            ObjectNode orderArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "order-by");
+            addOperatorToPlan(orderArg);
+            orderArg.putArray("args").addObject()
+                .put("ns", "op").put("fn", direction)
+                .putArray("args").addObject()
+                .put("ns", "op").put("fn", "col").putArray("args").add(columnName);
+        }
+
+        pushDownLimit(limit);
+    }
+
+    /**
+     * The internal/viewinfo endpoint is known to add an op:prepare operator at the end of the list of operator
+     * args. Each operator added by the connector based on pushdowns needs to be added before this op:prepare
+     * operator; otherwise, MarkLogic will throw an error.
+     *
+     * @param operator
+     */
+    private void addOperatorToPlan(ObjectNode operator) {
+        ArrayNode operators = (ArrayNode) planAnalysis.boundedPlan.get("$optic").get("args");
+        operators.insert(operators.size() - 1, operator);
+    }
+
     StructType getSchema() {
         return schema;
     }
 
     PlanAnalysis getPlanAnalysis() {
         return planAnalysis;
+    }
+
+    long getBucketCount() {
+        return planAnalysis != null ? planAnalysis.getAllBuckets().size() : 0;
     }
 }
