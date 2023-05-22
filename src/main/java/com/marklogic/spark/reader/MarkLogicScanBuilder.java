@@ -15,16 +15,24 @@
  */
 package com.marklogic.spark.reader;
 
+import com.marklogic.spark.reader.filter.FilterFactory;
+import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
+import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
+import org.apache.spark.sql.sources.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MarkLogicScanBuilder implements ScanBuilder {
+import java.util.ArrayList;
+import java.util.List;
+
+public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
     private ReadContext readContext;
+    private List<Filter> pushedFilters;
 
     public MarkLogicScanBuilder(ReadContext readContext) {
         this.readContext = readContext;
@@ -36,5 +44,46 @@ public class MarkLogicScanBuilder implements ScanBuilder {
             logger.debug("Creating new scan");
         }
         return new MarkLogicScan(readContext);
+    }
+
+    /**
+     * @param filters
+     * @return an array of filters that are not pushed down so that Spark knows it must apply them to data returned
+     * by the connector
+     */
+    @Override
+    public Filter[] pushFilters(Filter[] filters) {
+        List<Filter> unsupportedFilters = new ArrayList<>();
+        List<OpticFilter> opticFilters = new ArrayList<>();
+        pushedFilters = new ArrayList<>();
+        if (logger.isDebugEnabled()) {
+            logger.debug("Filter count: {}", filters.length);
+        }
+        for (Filter filter : filters) {
+            OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
+            if (opticFilter != null) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Pushing down filter: {}", filter);
+                }
+                opticFilters.add(opticFilter);
+                this.pushedFilters.add(filter);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Unsupported filter, will be handled by Spark: {}", filter);
+                }
+                unsupportedFilters.add(filter);
+            }
+        }
+
+        readContext.pushDownFiltersIntoOpticQuery(opticFilters);
+        return unsupportedFilters.toArray(new Filter[0]);
+    }
+
+    /**
+     * @return array of filters that were pushed down to MarkLogic so that Spark knows not to apply them itself
+     */
+    @Override
+    public Filter[] pushedFilters() {
+        return pushedFilters.toArray(new Filter[0]);
     }
 }

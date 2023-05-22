@@ -40,6 +40,7 @@ import scala.compat.java8.JFunction;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.function.Consumer;
 
 class MarkLogicPartitionReader implements PartitionReader {
 
@@ -60,6 +61,11 @@ class MarkLogicPartitionReader implements PartitionReader {
     // Used solely for logging metrics
     private long totalRowCount;
     private long totalDuration;
+
+    // Used solely for testing purposes; is never expected to be used in production. Intended to provide a way for
+    // a test to get the count of rows returned from MarkLogic, which is important for ensuring that pushdown operations
+    // are working correctly.
+    static Consumer<Long> totalRowCountListener;
 
     MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
         this.readContext = readContext;
@@ -123,6 +129,10 @@ class MarkLogicPartitionReader implements PartitionReader {
 
     @Override
     public void close() {
+        if (totalRowCountListener != null) {
+            totalRowCountListener.accept(totalRowCount);
+        }
+
         // Not yet certain how to make use of CustomTaskMetric, so just logging metrics of interest for now.
         logMetrics();
     }
