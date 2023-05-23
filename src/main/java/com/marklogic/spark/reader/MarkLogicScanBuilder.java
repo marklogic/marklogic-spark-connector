@@ -18,8 +18,12 @@ package com.marklogic.spark.reader;
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.expressions.SortOrder;
+import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
+import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
+import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
+import org.apache.spark.sql.connector.read.SupportsPushDownAggregates;
 import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
 import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
 import org.apache.spark.sql.connector.read.SupportsPushDownOffset;
@@ -32,7 +36,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit, SupportsPushDownOffset, SupportsPushDownTopN {
+public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit, SupportsPushDownOffset, SupportsPushDownTopN, SupportsPushDownAggregates {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
@@ -130,4 +134,22 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         return true;
     }
 
+    @Override
+    public boolean pushAggregation(Aggregation aggregation) {
+        if (supportCompletePushDown(aggregation)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Pushing down count()");
+            }
+            readContext.pushDownCount();
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public boolean supportCompletePushDown(Aggregation aggregation) {
+        // Only a single "count()" call is supported so far. Will expand as we add support for other aggregations.
+        AggregateFunc[] expressions = aggregation.aggregateExpressions();
+        return expressions != null && expressions.length == 1 && expressions[0] instanceof CountStar;
+    }
 }

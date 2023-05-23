@@ -42,6 +42,18 @@ class PlanAnalysis implements Serializable {
         this.partitions = partitions;
     }
 
+    /**
+     * Copy constructor for creating a new plan analysis with the given plan and a single bucket. Used for pushing down
+     * aggregate operations that can be efficiently calculated by MarkLogic in a single request.
+     *
+     * @param boundedPlan
+     */
+    PlanAnalysis(JsonNode boundedPlan) {
+        this.boundedPlan = boundedPlan;
+        final String maxUnsignedLong = "18446744073709551615";
+        this.partitions = Arrays.asList(new Partition(0, new Bucket("0", maxUnsignedLong)));
+    }
+
     List<Bucket> getAllBuckets() {
         List<PlanAnalysis.Bucket> allBuckets = new ArrayList<>();
         partitions.forEach(partition -> allBuckets.addAll(partition.buckets));
