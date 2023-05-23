@@ -66,10 +66,10 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
     /**
      * We ignore the {@code options} map per the class's Javadocs, which note that it's intended to provide
      * options for v2 implementations which expect case-insensitive keys. The map of properties provided by the
-     * {@code TableProvider} are sufficient for our connector.
+     * {@code TableProvider} are sufficient for our connector, particularly as those keys are case-sensitive, which is
+     * expected by the Java Client's method for creating a client based on case-sensitive property names.
      *
-     * @param options The options for reading, which is an immutable case-insensitive
-     *                string-to-string map.
+     * @param options The options for reading, which is an immutable case-insensitive string-to-string map.
      * @return
      */
     @Override
