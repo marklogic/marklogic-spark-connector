@@ -46,11 +46,12 @@ public class DefaultSource implements TableProvider {
      */
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-        final String query = options.get(Options.READ_OPTIC_DSL);
+        final Map<String, String> caseSensitiveOptions = options.asCaseSensitiveMap();
+        final String query = caseSensitiveOptions.get(Options.READ_OPTIC_DSL);
         if (query == null || query.trim().length() < 1) {
             throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_DSL));
         }
-        RowManager rowManager = new ContextSupport(options).connectToMarkLogic().newRowManager();
+        RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
         try {
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
