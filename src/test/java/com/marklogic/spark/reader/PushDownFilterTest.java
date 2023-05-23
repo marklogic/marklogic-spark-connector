@@ -1,30 +1,16 @@
 package com.marklogic.spark.reader;
 
-import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownFilterTest extends AbstractIntegrationTest {
-
-    private final static String QUERY_WITH_NO_QUALIFIER = "op.fromView('Medical', 'Authors', '')";
-
-    private long countOfRowsReadFromMarkLogic;
-
-    @BeforeEach
-    void setup() {
-        // This is used to track how many rows were read from MarkLogic. It's used to ensure that the filtering is
-        // correctly pushed down to MarkLogic as opposed to being handled by Spark, which should make operations
-        // faster as MarkLogic is returning fewer rows.
-        MarkLogicPartitionReader.totalRowCountListener = totalRowCount -> this.countOfRowsReadFromMarkLogic += totalRowCount;
-    }
+public class PushDownFilterTest extends AbstractPushDownTest {
 
     /**
      * equalTo has several tests to verify that filter/where work the same (or at least appear to) and they can be

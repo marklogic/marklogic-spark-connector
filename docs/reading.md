@@ -37,6 +37,23 @@ df = spark.read.format("com.marklogic.spark") \
     .load()
 ```
 
+## Pushing down operations
+
+The Spark connector framework supports pushing down multiple operations to the connector data source. This can 
+often provide a significant performance boost by allowing the data source to perform the operation, which can result in 
+both fewer rows returned to Spark and less work for Spark to perform. The MarkLogic Spark connector supports pushing 
+down the following operations to MarkLogic:
+
+- `filter` and `where`
+- `orderBy`
+- `limit`
+- `offset`
+
+For each of the above operations, the Optic pipeline associated with the user's Optic DSL query is modified to include
+the associated Optic function. Note that if multiple partitions are used to perform the `read` operation, each 
+partition will apply the above functions on the rows that it retrieves from MarkLogic. Spark will then merge the results
+from each partition and re-apply the function calls as necessary to ensure that the correct response is returned.
+
 ## Streaming support
 
 The MarkLogic Spark connector supports
