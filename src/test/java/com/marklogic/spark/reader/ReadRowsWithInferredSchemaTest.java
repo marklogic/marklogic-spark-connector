@@ -48,8 +48,13 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals("PT1M", row.getString(15)); // dayTimeDuration
         assertEquals("hello", row.getString(16));
         assertEquals("http://example.org/", row.getString(17)); // anyURI
-        assertEquals("50,50", row.getString(18)); // point
-        assertEquals("50,50", row.getString(19)); // longLatPoint
+        if (isMarkLogic10()) {
+            assertNull(row.getString(18)); // point
+            assertNull(row.getString(19)); // longLatPoint
+        } else {
+            assertEquals("50,50", row.getString(18)); // point
+            assertEquals("50,50", row.getString(19)); // longLatPoint
+        }
         assertTrue(row.getBoolean(20));
         assertEquals("c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l", row.getString(21)); // base64Binary
         assertEquals("499602D2", row.getString(22)); // hexBinary

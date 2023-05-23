@@ -24,6 +24,8 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected final static String TEST_PASSWORD = "spark";
     protected final static String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
 
+    private static MarkLogicVersion markLogicVersion;
+
     /**
      * Via marklogic-junit5, this is populated via the mlHost/mlRestPort/mlUsername/mlPassword property values. Those
      * are expected to be for an admin-like user who can deploy the test app. Thus, this should only be used for
@@ -93,4 +95,13 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected final String makeClientUri() {
         return String.format("%s:%s@%s:%d", TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort());
     }
+
+    protected final boolean isMarkLogic10() {
+        if (markLogicVersion == null) {
+            String version = getDatabaseClient().newServerEval().javascript("xdmp.version()").evalAs(String.class);
+            markLogicVersion = new MarkLogicVersion(version);
+        }
+        return markLogicVersion.getMajor() == 10;
+    }
+
 }

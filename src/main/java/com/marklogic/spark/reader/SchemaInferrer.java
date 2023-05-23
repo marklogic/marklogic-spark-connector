@@ -59,8 +59,7 @@ public abstract class SchemaInferrer {
         for (String columnInfo : columnInfoResponse.split("\n")) {
             try {
                 JsonNode column = objectMapper.readTree(columnInfo);
-                // "rowid" is an example of a hidden column.
-                if (column.has("hidden") && Boolean.TRUE.equals(column.get("hidden").asBoolean())) {
+                if (ignoreColumn(column)) {
                     continue;
                 }
                 schema = schema.add(makeColumnName(column), determineSparkType(column), isColumnNullable(column));
@@ -71,12 +70,21 @@ public abstract class SchemaInferrer {
         return schema;
     }
 
+    private static boolean ignoreColumn(JsonNode column) {
+        // MarkLogic 11 defines some columns, such as "rowid", as "hidden".
+        if (column.has("hidden") && Boolean.TRUE.equals(column.get("hidden").asBoolean())) {
+            return true;
+        }
+        // In MarkLogic 10, "hidden" doesn't exist, so need to explicitly check for rowid
+        return "rowid".equals(column.get("type").asText());
+    }
+
     private static DataType determineSparkType(JsonNode column) {
         final String type = column.get("type").asText();
         if (COLUMN_INFO_TYPES_TO_SPARK_TYPES.containsKey(type)) {
             return COLUMN_INFO_TYPES_TO_SPARK_TYPES.get(type);
         }
-        logger.warn("Unrecognized column type: {}; will map to Spark StringType", type);
+        logger.warn("Unrecognized column type: {}; will map to Spark StringType", column);
         return DataTypes.StringType;
     }
 
