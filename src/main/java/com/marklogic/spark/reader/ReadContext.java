@@ -16,7 +16,6 @@
 package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
@@ -31,7 +30,6 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.connector.expressions.SortDirection;
 import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -54,7 +52,6 @@ public class ReadContext extends ContextSupport {
 
     private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
     private final static long DEFAULT_BATCH_SIZE = 10000;
-    private final static ObjectMapper objectMapper = new ObjectMapper();
 
     private PlanAnalysis planAnalysis;
     private StructType schema;
@@ -145,63 +142,56 @@ public class ReadContext extends ContextSupport {
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
-        this.opticFilters = opticFilters;
-
-        // All the filters will be added to a new "where" clause.
-        final ObjectNode whereClause = objectMapper.createObjectNode().put("ns", "op").put("fn", "where");
-        addOperatorToPlan(whereClause);
-
-        // If there's only one filter, can toss it into the "where" clause. Else, toss an "and" into the "where" and
-        // then toss every filter into the "and" clause (which accepts 2 to N args).
-        final ArrayNode whereArgs = whereClause.putArray("args");
-        final ArrayNode targetArgs = opticFilters.size() == 1 ?
-            whereArgs :
-            whereArgs.addObject().put("ns", "op").put("fn", "and").putArray("args");
-
-        opticFilters.forEach(planFilter -> planFilter.populateArg(targetArgs.addObject()));
+        if (planAnalysisFoundAtLeastOneRow()) {
+            this.opticFilters = opticFilters;
+            addOperatorToPlan(PlanUtil.buildWhere(opticFilters));
+        }
     }
 
-    void pushDownLimit(int pushDownLimit) {
-        ObjectNode limitArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "limit");
-        limitArg.putArray("args").add(pushDownLimit);
-        addOperatorToPlan(limitArg);
+    void pushDownLimit(int limit) {
+        if (planAnalysisFoundAtLeastOneRow()) {
+            addOperatorToPlan(PlanUtil.buildLimit(limit));
+        }
     }
 
     void pushDownOffset(int offset) {
-        ObjectNode offsetArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "offset");
-        offsetArg.putArray("args").add(offset);
-        addOperatorToPlan(offsetArg);
+        if (planAnalysisFoundAtLeastOneRow()) {
+            addOperatorToPlan(PlanUtil.buildOffset(offset));
+        }
     }
 
     void pushDownTopN(SortOrder[] orders, int limit) {
-        for (SortOrder sortOrder : orders) {
-            final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
-            final String columnName = sortOrder.expression().describe();
-
-            ObjectNode orderArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "order-by");
-            addOperatorToPlan(orderArg);
-            orderArg.putArray("args").addObject()
-                .put("ns", "op").put("fn", direction)
-                .putArray("args").addObject()
-                .put("ns", "op").put("fn", "col").putArray("args").add(columnName);
+        if (planAnalysisFoundAtLeastOneRow()) {
+            for (SortOrder sortOrder : orders) {
+                addOperatorToPlan(PlanUtil.buildOrderBy(sortOrder));
+            }
+            pushDownLimit(limit);
         }
-
-        pushDownLimit(limit);
     }
 
     void pushDownCount() {
-        ObjectNode groupArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "group-by");
-        addOperatorToPlan(groupArg);
-        groupArg.putArray("args")
-            .add(objectMapper.nullNode())
-            // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
-            .addObject().put("ns", "op").put("fn", "count").putArray("args").add("Count").add(objectMapper.nullNode());
+        if (planAnalysisFoundAtLeastOneRow()) {
+            addOperatorToPlan(PlanUtil.buildGroupByCount());
 
-        // As will likely be the case for all aggregations, the schema needs to be modified. And the plan analysis is
-        // rebuilt to contain a single bucket, as the assumption is that MarkLogic can efficiently determine the count
-        // in a single call to /v1/rows, regardless of the number of matching rows.
-        this.schema = new StructType().add("Count", DataTypes.LongType);
-        this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
+            // As will likely be the case for all aggregations, the schema needs to be modified. And the plan analysis is
+            // rebuilt to contain a single bucket, as the assumption is that MarkLogic can efficiently determine the count
+            // in a single call to /v1/rows, regardless of the number of matching rows.
+            this.schema = new StructType().add("Count", DataTypes.LongType);
+            this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
+        }
+    }
+
+    void pushDownRequiredSchema(StructType requiredSchema) {
+        if (planAnalysisFoundAtLeastOneRow()) {
+            this.schema = requiredSchema;
+            addOperatorToPlan(PlanUtil.buildSelect(requiredSchema));
+        }
+    }
+
+    private boolean planAnalysisFoundAtLeastOneRow() {
+        // The planAnalysis will be null if no rows were found, which internal/viewinfo unfortunately throws an error
+        // on. None of the push down operations need to be applied in this scenario.
+        return planAnalysis != null;
     }
 
     /**

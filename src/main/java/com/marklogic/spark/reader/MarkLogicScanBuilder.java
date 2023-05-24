@@ -27,8 +27,10 @@ import org.apache.spark.sql.connector.read.SupportsPushDownAggregates;
 import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
 import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
 import org.apache.spark.sql.connector.read.SupportsPushDownOffset;
+import org.apache.spark.sql.connector.read.SupportsPushDownRequiredColumns;
 import org.apache.spark.sql.connector.read.SupportsPushDownTopN;
 import org.apache.spark.sql.sources.Filter;
+import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +38,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit, SupportsPushDownOffset, SupportsPushDownTopN, SupportsPushDownAggregates {
+public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
+    SupportsPushDownOffset, SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
@@ -151,5 +154,13 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         // Only a single "count()" call is supported so far. Will expand as we add support for other aggregations.
         AggregateFunc[] expressions = aggregation.aggregateExpressions();
         return expressions != null && expressions.length == 1 && expressions[0] instanceof CountStar;
+    }
+
+    @Override
+    public void pruneColumns(StructType requiredSchema) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down required schema: {}", requiredSchema.json());
+        }
+        readContext.pushDownRequiredSchema(requiredSchema);
     }
 }
