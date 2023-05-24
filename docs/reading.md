@@ -18,7 +18,7 @@ adheres to as well.
 
 ## Schema inference
 
-The MarkLogic Spark connector will infer a Spark schema automatically based on the view that is used referenced in 
+The connector will infer a Spark schema automatically based on the view identified by `op.fromView`
 the Optic DSL query. Each column returned by your Optic DSL query will be mapped to a Spark schema column with the 
 same name and an appropriate type. 
 
@@ -41,9 +41,11 @@ df = spark.read.format("com.marklogic.spark") \
 
 The Spark connector framework supports pushing down multiple operations to the connector data source. This can 
 often provide a significant performance boost by allowing the data source to perform the operation, which can result in 
-both fewer rows returned to Spark and less work for Spark to perform. The MarkLogic Spark connector supports pushing 
+both fewer rows returned to Spark and less work for Spark to perform. The connector supports pushing 
 down the following operations to MarkLogic:
 
+- `count`
+- `drop` and `select`
 - `filter` and `where`
 - `orderBy`
 - `limit`
@@ -56,7 +58,7 @@ from each partition and re-apply the function calls as necessary to ensure that 
 
 ## Streaming support
 
-The MarkLogic Spark connector supports
+The connector supports
 [streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) from MarkLogic
 via micro-batches. The connector configuration does not change; instead, different Spark APIs are used to read a 
 stream of data from MarkLogic.
@@ -104,7 +106,7 @@ spark.readStream \
 
 ## Tuning performance
 
-The primary factor affecting how quickly the MarkLogic Spark connector can retrieve rows is MarkLogic's ability to 
+The primary factor affecting how quickly the connector can retrieve rows is MarkLogic's ability to 
 process your Optic DSL query. The 
 [MarkLogic Optic performance documentation](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_91398) can help with 
 optimizing your query to maximize performance. 
@@ -141,7 +143,7 @@ one. This will result in the connector sending a single request to MarkLogic.
 
 ### More detail on partitions
 
-This section is solely informational and is not required understanding for using the MarkLogic Spark connector 
+This section is solely informational and is not required understanding for using the connector 
 successfully. 
 
 For MarkLogic users familiar with the [Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement), the 
@@ -149,7 +151,7 @@ concept of a "partition" may suggest that the number and location of forests in 
 the ability of an Optic query to perform joins across documents, the goal of running a query against a single forest 
 is not meaningful, as constructing a row may require data from documents in many forests across many hosts. 
 
-Instead of referring to forests, a "partition" in the scope of the MarkLogic Spark connector refers to a set of 
+Instead of referring to forests, a "partition" in the scope of the connector refers to a set of 
 internal row identifiers that are generated at a particular server timestamp. Each row matching an Optic query is 
 assigned a random identifier, which can be any number in the range from zero to the max unsigned long value. A 
 partition is then a slice of numbers within that range. Because row identifiers are generated randomly, matching rows 
