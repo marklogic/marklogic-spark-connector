@@ -51,7 +51,7 @@ above options for setting a prefix and suffix will be ignored, as the template c
 For example, consider a Spark DataFrame with, among other columns, columns named `organization` and `employee_id`. 
 The following template would construct URIs based on both columns:
 
-    .options("spark.marklogic.write.uriTemplate", "/example/{organization}/{employee_id}.json")
+    .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{employee_id}.json")
 
 Both columns should have values in each row in the DataFrame. If the connector encounters a row that does not have a 
 value for any column in the URI template, an error will be thrown.
