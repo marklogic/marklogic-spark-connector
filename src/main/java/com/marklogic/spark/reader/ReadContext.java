@@ -33,6 +33,7 @@ import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.expressions.SortDirection;
 import org.apache.spark.sql.connector.expressions.SortOrder;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,6 +187,21 @@ public class ReadContext extends ContextSupport {
         }
 
         pushDownLimit(limit);
+    }
+
+    void pushDownCount() {
+        ObjectNode groupArg = objectMapper.createObjectNode().put("ns", "op").put("fn", "group-by");
+        addOperatorToPlan(groupArg);
+        groupArg.putArray("args")
+            .add(objectMapper.nullNode())
+            // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
+            .addObject().put("ns", "op").put("fn", "count").putArray("args").add("Count").add(objectMapper.nullNode());
+
+        // As will likely be the case for all aggregations, the schema needs to be modified. And the plan analysis is
+        // rebuilt to contain a single bucket, as the assumption is that MarkLogic can efficiently determine the count
+        // in a single call to /v1/rows, regardless of the number of matching rows.
+        this.schema = new StructType().add("Count", DataTypes.LongType);
+        this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
     }
 
     /**

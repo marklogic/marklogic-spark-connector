@@ -18,19 +18,19 @@ public class PushDownFilterTest extends AbstractPushDownTest {
      */
     @Test
     void equalToWithFilter() {
-        assertEquals(4, newDataset().filter("CitationID == 1").count());
+        assertEquals(4, getCountOfRowsWithFilter("CitationID == 1"));
         assertEquals(4, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void equalToWithWhere() {
-        assertEquals(2, newDataset().where("CitationID = 5").count());
+        assertEquals(2, getCountOfRowsWithFilter("CitationID = 5"));
         assertEquals(2, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void equalToWithString() {
-        assertEquals(0, newDataset().filter("LastName == 'No match'").count());
+        assertEquals(0, getCountOfRowsWithFilter("LastName == 'No match'"));
         assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
@@ -50,25 +50,25 @@ public class PushDownFilterTest extends AbstractPushDownTest {
 
     @Test
     void greaterThan() {
-        assertEquals(3, newDataset().filter("CitationID > 3").count());
+        assertEquals(3, getCountOfRowsWithFilter("CitationID > 3"));
         assertEquals(3, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void greaterThanOrEqual() {
-        assertEquals(7, newDataset().filter("CitationID >= 3").count());
+        assertEquals(7, getCountOfRowsWithFilter("CitationID >= 3"));
         assertEquals(7, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void lessThan() {
-        assertEquals(4, newDataset().filter("CitationID < 2").count());
+        assertEquals(4, getCountOfRowsWithFilter("CitationID < 2"));
         assertEquals(4, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void lessThanOrEqual() {
-        assertEquals(8, newDataset().filter("CitationID <= 2").count());
+        assertEquals(8, getCountOfRowsWithFilter("CitationID <= 2"));
         assertEquals(8, countOfRowsReadFromMarkLogic);
     }
 
@@ -78,63 +78,59 @@ public class PushDownFilterTest extends AbstractPushDownTest {
      */
     @Test
     void and() {
-        assertEquals(9, newDataset().filter("CitationID < 5 AND CitationID > 1").count());
+        assertEquals(9, getCountOfRowsWithFilter("CitationID < 5 AND CitationID > 1"));
         assertEquals(9, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void or() {
-        assertEquals(8, newDataset().filter("CitationID == 1 OR CitationID == 2").count());
+        assertEquals(8, getCountOfRowsWithFilter("CitationID == 1 OR CitationID == 2"));
         assertEquals(8, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void andWithinOr() {
         // This actually results in an "and" filter being created.
-        assertEquals(5, newDataset().filter("(CitationID < 3 AND CitationID > 1) OR CitationID == 4").count());
+        assertEquals(5, getCountOfRowsWithFilter("(CitationID < 3 AND CitationID > 1) OR CitationID == 4"));
         assertEquals(5, countOfRowsReadFromMarkLogic,
             "Expecting 4 authors with a CitationID of 2 and 1 with a CitationID of 4.");
     }
 
     @Test
     void not() {
-        assertEquals(11, newDataset().filter("CitationID != 1").count());
+        assertEquals(11, getCountOfRowsWithFilter("CitationID != 1"));
         assertEquals(11, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void multipleLevelsOfBooleanExpressions() {
-        long count = newDataset()
-            .filter("((CitationID == 4 OR CitationID == 5) AND CitationID < 10) OR (CitationID != 3 AND CitationID > 2)")
-            .count();
-
-        assertEquals(3, count,
+        assertEquals(3, getCountOfRowsWithFilter("((CitationID == 4 OR CitationID == 5) AND CitationID < 10) OR (CitationID != 3 AND CitationID > 2)"),
             "Expecting the 3 authors with ID of 4 or 5; the query is just intended to be a complicated " +
                 "way of asking for those 3 authors, verifying that boolean expressions can be at varying depths.");
     }
 
     @Test
     void in() {
-        assertEquals(7, newDataset().filter("CitationID IN (3,4,5)").count());
+        assertEquals(7, getCountOfRowsWithFilter("CitationID IN (3,4,5)"));
         assertEquals(7, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void inWithNoMatches() {
-        assertEquals(0, newDataset().filter("LastName in ('Doesnt', 'Match', 'Anything')").count());
+        assertEquals(0, getCountOfRowsWithFilter("LastName in ('Doesnt', 'Match', 'Anything')"));
         assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
     @Test
     void isNotNull() {
-        assertEquals(2, newDataset().filter(new Column("BooleanValue").isNotNull()).count());
+        assertEquals(2, newDataset().filter(new Column("BooleanValue").isNotNull()).collectAsList().size());
         assertEquals(2, countOfRowsReadFromMarkLogic,
             "2 of the authors are expected to have a BooleanValue column.");
     }
 
     @Test
     void isNull() {
-        assertEquals(13, newDataset().filter(new Column("BooleanValue").isNull()).count());
+        assertEquals(13, newDataset().filter(new Column("BooleanValue").isNull()).collectAsList().size());
         assertEquals(13, countOfRowsReadFromMarkLogic,
             "13 of the authors are expected to have a null BooleanValue column.");
     }
@@ -149,7 +145,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
 
     @Test
     void stringContainsNoMatch() {
-        assertEquals(0, newDataset().filter(new Column("LastName").contains("umee")).count());
+        assertEquals(0, newDataset().filter(new Column("LastName").contains("umee")).collectAsList().size());
         assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
@@ -163,7 +159,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
 
     @Test
     void stringStartsWithNoMatch() {
-        assertEquals(0, newDataset().filter(new Column("LastName").startsWith("umbe")).count());
+        assertEquals(0, newDataset().filter(new Column("LastName").startsWith("umbe")).collectAsList().size());
         assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
@@ -177,7 +173,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
 
     @Test
     void stringEndsWithNoMatch() {
-        assertEquals(0, newDataset().filter(new Column("LastName").endsWith("umbe")).count());
+        assertEquals(0, newDataset().filter(new Column("LastName").endsWith("umbe")).collectAsList().size());
         assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
@@ -189,5 +185,11 @@ public class PushDownFilterTest extends AbstractPushDownTest {
             .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_BATCH_SIZE, 0)
             .load();
+    }
+
+    private long getCountOfRowsWithFilter(String filter) {
+        // collectAsList is used here so we can count how many rows are returned, as "count()" will always return
+        // a single row.
+        return newDataset().filter(filter).collectAsList().size();
     }
 }
