@@ -24,7 +24,7 @@ abstract class PlanUtil {
         return newOperation("group-by", args -> args
             .add(objectMapper.nullNode())
             // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
-            .addObject().put("ns", "op").put("fn", "count").putArray("args").add("Count").add(objectMapper.nullNode()));
+            .addObject().put("ns", "op").put("fn", "count").putArray("args").add("count").add(objectMapper.nullNode()));
     }
 
     static ObjectNode buildLimit(int limit) {

@@ -151,9 +151,10 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
-        // Only a single "count()" call is supported so far. Will expand as we add support for other aggregations.
+        // Only a single "count()" call is supported so far. Will expand as we add support for other aggregations,
+        // including support for groupBy() + count().
         AggregateFunc[] expressions = aggregation.aggregateExpressions();
-        return expressions != null && expressions.length == 1 && expressions[0] instanceof CountStar;
+        return expressions.length == 1 && expressions[0] instanceof CountStar && aggregation.groupByExpressions().length == 0;
     }
 
     @Override

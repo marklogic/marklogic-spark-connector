@@ -176,7 +176,7 @@ public class ReadContext extends ContextSupport {
             // As will likely be the case for all aggregations, the schema needs to be modified. And the plan analysis is
             // rebuilt to contain a single bucket, as the assumption is that MarkLogic can efficiently determine the count
             // in a single call to /v1/rows, regardless of the number of matching rows.
-            this.schema = new StructType().add("Count", DataTypes.LongType);
+            this.schema = new StructType().add("count", DataTypes.LongType);
             this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
         }
     }
