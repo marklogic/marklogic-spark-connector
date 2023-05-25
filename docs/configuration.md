@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Configuration Reference
-nav_order: 6
+nav_order: 7
 ---
 
 The MarkLogic Spark connector has 3 sets of configuration options - connection options, reading options, and writing 

@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Writing Data
-nav_order: 5
+nav_order: 6
 ---
 
 The MarkLogic Spark connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. The sections below
