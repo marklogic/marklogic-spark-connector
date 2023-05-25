@@ -37,6 +37,30 @@ df = spark.read.format("com.marklogic.spark") \
     .load()
 ```
 
+## Accessing documents 
+
+While the connector requires that an Optic query use `op.fromView` as its accessor function, documents can still be
+retrieved via the [Optic functions for joining documents](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_78437). 
+
+For example, the following query will find all matching rows and then retrieve the documents and URIs associated with 
+those rows:
+
+```
+query = "const joinCol = op.fragmentIdCol('id'); \
+op.fromView('example', 'employee', '', joinCol) \
+  .joinDoc('doc', joinCol) \
+  .select('doc')"
+
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.opticDsl", query) \
+    .load()
+```
+
+Calling `df.show()` will then show the URI and JSON contents of the document associated with each row. The Python 
+[from_json](https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.functions.from_json.html)
+function can then be used to parse the contents of each `doc` column into a JSON object as needed. 
+
 ## Pushing down operations
 
 The Spark connector framework supports pushing down multiple operations to the connector data source. This can 

@@ -43,6 +43,7 @@ public abstract class SchemaInferrer {
         put("point", DataTypes.StringType);
         put("boolean", DataTypes.BooleanType);
         put("none", DataTypes.StringType); // See DBQ-296, this is intentional for some column types.
+        put ("value", DataTypes.StringType); // In MarkLogic 10, "value" is returned for a column containing a JSON object.
         put("integer", DataTypes.IntegerType);
         put("unsignedInt", DataTypes.IntegerType);
         put("iri", DataTypes.StringType);
