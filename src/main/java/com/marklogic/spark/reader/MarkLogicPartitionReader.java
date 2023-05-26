@@ -90,8 +90,8 @@ class MarkLogicPartitionReader implements PartitionReader {
             if (rowIterator.hasNext()) {
                 return true;
             } else {
-                if (logger.isTraceEnabled()) {
-                    logger.trace("Count of rows for partition {} and bucket {}: {}", this.partition,
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Count of rows for partition {} and bucket {}: {}", this.partition,
                         this.partition.buckets.get(nextBucketIndex - 1), currentBucketRowCount);
                 }
                 currentBucketRowCount = 0;

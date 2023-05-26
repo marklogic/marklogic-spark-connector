@@ -30,8 +30,10 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -172,13 +174,42 @@ public class ReadContext extends ContextSupport {
     void pushDownCount() {
         if (planAnalysisFoundAtLeastOneRow()) {
             addOperatorToPlan(PlanUtil.buildGroupByCount());
-
-            // As will likely be the case for all aggregations, the schema needs to be modified. And the plan analysis is
-            // rebuilt to contain a single bucket, as the assumption is that MarkLogic can efficiently determine the count
-            // in a single call to /v1/rows, regardless of the number of matching rows.
+            // As will likely be the case for all aggregations, the schema needs to be modified.
             this.schema = new StructType().add("count", DataTypes.LongType);
-            this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
+            modifyPlanAnalysisToUseSingleBucket();
         }
+    }
+
+    void pushDownGroupByCount(Expression groupBy) {
+        if (planAnalysisFoundAtLeastOneRow()) {
+            final String columnName = PlanUtil.expressionToColumnName(groupBy);
+            addOperatorToPlan(PlanUtil.buildGroupByCount(columnName));
+
+            StructField columnField = null;
+            for (StructField field : this.schema.fields()) {
+                if (columnName.equals(field.name())) {
+                    columnField = field;
+                    break;
+                }
+            }
+            if (columnField == null) {
+                throw new IllegalArgumentException("Unable to find groupBy column in schema; groupBy expression: " + groupBy.describe());
+            }
+            this.schema = new StructType().add(columnField).add("count", DataTypes.LongType);
+            modifyPlanAnalysisToUseSingleBucket();
+        }
+    }
+
+    /**
+     * Used when the assumption is that MarkLogic can efficiently execute a plan in a single call to /v1/rows. This is
+     * typically done for "count()" operations. In such a scenario, returning 2 or more rows may produce an incorrect
+     * result as well - for example, for a "count()" call, only the first row will be reported as the count.
+     */
+    private void modifyPlanAnalysisToUseSingleBucket() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Modifying plan analysis to use a single bucket");
+        }
+        this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
     }
 
     void pushDownRequiredSchema(StructType requiredSchema) {
@@ -202,6 +233,9 @@ public class ReadContext extends ContextSupport {
      * @param operator
      */
     private void addOperatorToPlan(ObjectNode operator) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding operator to plan: {}", operator);
+        }
         ArrayNode operators = (ArrayNode) planAnalysis.boundedPlan.get("$optic").get("args");
         operators.insert(operators.size() - 1, operator);
     }

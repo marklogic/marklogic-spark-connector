@@ -17,6 +17,7 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
+import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
 import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
@@ -140,10 +141,18 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
     @Override
     public boolean pushAggregation(Aggregation aggregation) {
         if (supportCompletePushDown(aggregation)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Pushing down count()");
+            if (aggregation.groupByExpressions().length > 0) {
+                Expression expr = aggregation.groupByExpressions()[0];
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Pushing down by groupBy + count on: {}", expr.describe());
+                }
+                readContext.pushDownGroupByCount(expr);
+            } else {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Pushing down count()");
+                }
+                readContext.pushDownCount();
             }
-            readContext.pushDownCount();
             return true;
         }
         return false;
@@ -151,17 +160,26 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
-        // Only a single "count()" call is supported so far. Will expand as we add support for other aggregations,
-        // including support for groupBy() + count().
         AggregateFunc[] expressions = aggregation.aggregateExpressions();
-        return expressions.length == 1 && expressions[0] instanceof CountStar && aggregation.groupByExpressions().length == 0;
+        if (expressions.length == 1 && expressions[0] instanceof CountStar) {
+            // If a count() is used, it's supported if there's no groupBy - i.e. just doing a count() by itself -
+            // and supported with a single groupBy - e.g. groupBy("column").count().
+            return aggregation.groupByExpressions().length < 2;
+        }
+        return false;
     }
 
     @Override
     public void pruneColumns(StructType requiredSchema) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Pushing down required schema: {}", requiredSchema.json());
+        if (requiredSchema.equals(readContext.getSchema())) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("The schema to push down is equal to the existing schema, so not pushing it down.");
+            }
+        } else {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Pushing down required schema: {}", requiredSchema.json());
+            }
+            readContext.pushDownRequiredSchema(requiredSchema);
         }
-        readContext.pushDownRequiredSchema(requiredSchema);
     }
 }
