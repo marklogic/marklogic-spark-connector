@@ -2,6 +2,7 @@ package com.marklogic.spark.reader.filter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.expression.PlanBuilder;
+import com.marklogic.spark.reader.PlanUtil;
 import org.apache.spark.sql.sources.IsNull;
 
 class IsNullFilter implements OpticFilter {
@@ -16,13 +17,13 @@ class IsNullFilter implements OpticFilter {
 
     @Override
     public void populateArg(ObjectNode arg) {
-        arg
+        ObjectNode colArg = arg
             .put("ns", "op").put("fn", "not")
             .putArray("args").addObject()
             .put("ns", "op").put("fn", "is-defined")
-            .putArray("args").addObject()
-            .put("ns", "op").put("fn", "col")
-            .putArray("args").add(filter.attribute());
+            .putArray("args").addObject();
+
+        PlanUtil.populateSchemaCol(colArg, filter.attribute());
     }
 
     @Override
