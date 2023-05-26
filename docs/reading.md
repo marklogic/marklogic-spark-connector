@@ -71,9 +71,10 @@ down the following operations to MarkLogic:
 - `count`
 - `drop` and `select`
 - `filter` and `where`
-- `orderBy`
+- `groupBy` when followed by `count`
 - `limit`
 - `offset`
+- `orderBy`
 
 For each of the above operations, the Optic pipeline associated with the user's Optic DSL query is modified to include
 the associated Optic function. Note that if multiple partitions are used to perform the `read` operation, each 

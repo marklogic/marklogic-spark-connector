@@ -23,6 +23,27 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     }
 
     @Test
+    void equalToWithSchemaAndViewQualifier() {
+        assertEquals(4, newDefaultReader()
+            .load()
+            .filter("`Medical.Authors.CitationID` == 1")
+            .collectAsList()
+            .size(), "Verifying that a filter with a fully-qualified column name still works correctly.");
+        assertEquals(4, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
+    void equalToWithViewQualifier() {
+        assertEquals(4, newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'myView')")
+            .load()
+            .filter("`myView.CitationID` == 1")
+            .collectAsList()
+            .size(), "Verifying that a filter with a view-qualified column name still works correctly.");
+        assertEquals(4, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
     void equalToWithWhere() {
         assertEquals(2, getCountOfRowsWithFilter("CitationID = 5"));
         assertEquals(2, countOfRowsReadFromMarkLogic);
@@ -124,15 +145,38 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     @Test
     void isNotNull() {
         assertEquals(2, newDataset().filter(new Column("BooleanValue").isNotNull()).collectAsList().size());
+        assertEquals(2, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
+    void isNotNullQualified() {
+        assertEquals(2, newDefaultReader()
+            .load()
+            .filter(new Column("`Medical.Authors.BooleanValue`").isNotNull())
+            .collectAsList()
+            .size());
+
         assertEquals(2, countOfRowsReadFromMarkLogic,
             "2 of the authors are expected to have a BooleanValue column.");
     }
 
     @Test
     void isNull() {
-        assertEquals(13, newDataset().filter(new Column("BooleanValue").isNull()).collectAsList().size());
+        assertEquals(13, newDataset()
+            .filter(new Column("BooleanValue").isNull())
+            .collectAsList()
+            .size());
         assertEquals(13, countOfRowsReadFromMarkLogic,
             "13 of the authors are expected to have a null BooleanValue column.");
+    }
+
+    @Test
+    void isNullQualified() {
+        assertEquals(13, newDefaultReader()
+            .load()
+            .filter(new Column("`Medical.Authors.BooleanValue`").isNull())
+            .collectAsList().size());
+        assertEquals(13, countOfRowsReadFromMarkLogic);
     }
 
     @Test

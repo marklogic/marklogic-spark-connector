@@ -3,6 +3,7 @@ package com.marklogic.spark.reader.filter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.expression.PlanBuilder;
+import com.marklogic.spark.reader.PlanUtil;
 
 import java.util.UUID;
 
@@ -29,14 +30,11 @@ class SingleValueFilter implements OpticFilter {
     public void populateArg(ObjectNode arg) {
         arg.put("ns", "op");
         arg.put("fn", this.functionName);
-        ArrayNode equalArgs = arg.putArray("args");
+        ArrayNode functionArgs = arg.putArray("args");
 
-        ObjectNode equalArg = equalArgs.addObject();
-        equalArg.put("ns", "op");
-        equalArg.put("fn", "col");
-        equalArg.putArray("args").add(this.columnName);
+        PlanUtil.populateSchemaCol(functionArgs.addObject(), this.columnName);
 
-        ObjectNode paramArg = equalArgs.addObject();
+        ObjectNode paramArg = functionArgs.addObject();
         paramArg.put("ns", "op");
         paramArg.put("fn", "param");
         paramArg.putArray("args").add(this.paramName);

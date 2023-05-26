@@ -20,7 +20,7 @@ import java.util.function.Consumer;
  * Methods for modifying a serialized Optic plan. These were moved here both to facilitate unit testing for some of them
  * and to simplify {@code ReadContext}.
  */
-abstract class PlanUtil {
+public abstract class PlanUtil {
 
     private final static Logger logger = LoggerFactory.getLogger(PlanUtil.class);
 
@@ -73,9 +73,20 @@ abstract class PlanUtil {
         });
     }
 
-    private static void populateSchemaCol(ObjectNode node, String columnName) {
+    /**
+     * Knows how to handle any of 3 variations of a column name: 1) no qualifier - "CitationID"; 2) view qualifier -
+     * "myView.CitationID"; and 3) schema+view qualifier - "mySchema.myView.CitationID".
+     * <p>
+     * This should always be used whenever a push down operation involves constructing a column, as we need to handle
+     * all 3 of the variations above. And op.schemaCol is required in order to achieve that.
+     *
+     * @param node
+     * @param columnName
+     */
+    public static void populateSchemaCol(ObjectNode node, String columnName) {
+        final String[] parts = removeTickMarksFromColumnName(columnName).split("\\.");
+
         ArrayNode colArgs = node.put("ns", "op").put("fn", "schema-col").putArray("args");
-        String[] parts = columnName.split("\\.");
         if (parts.length == 3) {
             colArgs.add(parts[0]).add(parts[1]).add(parts[2]);
         } else if (parts.length == 2) {
@@ -83,6 +94,22 @@ abstract class PlanUtil {
         } else {
             colArgs.add(objectMapper.nullNode()).add(objectMapper.nullNode()).add(parts[0]);
         }
+    }
+
+    /**
+     * For some push down operations, the tick marks that a user must use when a column name contains a period will
+     * still be present.
+     *
+     * @param columnName
+     * @return
+     */
+    private static String removeTickMarksFromColumnName(String columnName) {
+        if (columnName.startsWith("`")) {
+            columnName = columnName.substring(1);
+        }
+        return columnName.endsWith("`") ?
+            columnName.substring(0, columnName.length() - 1) :
+            columnName;
     }
 
     static ObjectNode buildWhere(List<OpticFilter> opticFilters) {
