@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Reading Data
-nav_order: 4
+nav_order: 5
 ---
 
 The MarkLogic Spark connector allows for data to be retrieved from MarkLogic as rows via an 
