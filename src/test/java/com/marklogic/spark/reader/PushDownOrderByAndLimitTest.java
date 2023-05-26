@@ -95,7 +95,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void limitWithTwoPartitionsAndOrderBy() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', '')")
+            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
             .option(Options.READ_NUM_PARTITIONS, 2)
             .option(Options.READ_BATCH_SIZE, 0)
             .load()
@@ -133,6 +133,44 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
         assertEquals("Wooles", rows.get(0).getAs("LastName"));
         assertEquals("Tonnesen", rows.get(1).getAs("LastName"));
         assertEquals("Shoebotham", rows.get(2).getAs("LastName"));
+    }
+
+    @Test
+    void orderByWithSchemaAndView() {
+        List<Row> rows = newDefaultReader()
+            .load()
+            .orderBy("`Medical.Authors.CitationID`")
+            .limit(10)
+            .collectAsList();
+
+        assertEquals(10, rows.size());
+        verifyRowsAreOrderedByCitationID(rows);
+    }
+
+    @Test
+    void orderByWithView() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'myQualifier')")
+            .load()
+            .orderBy("`myQualifier.CitationID`")
+            .limit(8)
+            .collectAsList();
+
+        assertEquals(8, rows.size());
+        verifyRowsAreOrderedByCitationID(rows);
+    }
+
+    @Test
+    void sort() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .load()
+            .sort("CitationID")
+            .limit(8)
+            .collectAsList();
+
+        assertEquals(8, rows.size());
+        verifyRowsAreOrderedByCitationID(rows);
     }
 
     private void verifyRowsAreOrderedByCitationID(List<Row> rows) {
