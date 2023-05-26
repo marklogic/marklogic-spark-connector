@@ -121,6 +121,22 @@ connector and into MarkLogic. This will result 100 new JSON documents in the `st
 The ability to stream data into MarkLogic can make Spark an effective tool for obtaining data from a variety of data 
 sources and writing it directly to MarkLogic. 
 
+## Error handling
+
+The connector may throw an error during one of two phases of operation - before it begins to write data to MarkLogic, 
+and during the writing of data to MarkLogic. 
+
+For the first kind of error, the error will be immediately returned to the user and no data will have been written. 
+Such errors are often due to misconfiguration of the connector options and should be fixable. 
+
+For the second kind of error, the error will eventually be returned to the user, usually within seconds of it 
+occurring. The slight delay is due to the asynchronous nature of data being written by the connector. The error will 
+be logged by the connector and the write operation will be aborted. Any batches of documents that were written 
+successfully prior to the error occurring will still exist in the database. 
+
+Similar to errors with reading data, the connector will strive to provide meaningful context when an error occurs to 
+assist with debugging the cause of the error. Any errors that cannot be fixed via changes to the options passed to the 
+connector should be reported as new issues to this GitHub repository.
 
 ## Tuning performance
 
