@@ -1,13 +1,13 @@
 ---
 layout: default
 title: Configuration Reference
-nav_order: 7
+nav_order: 5
 ---
 
 The MarkLogic Spark connector has 3 sets of configuration options - connection options, reading options, and writing 
 options. Each set of options is defined in a separate table below.
 
-# Connection options
+## Connection options
 
 These options define how the connector connects and authenticates with MarkLogic.
 
@@ -30,7 +30,7 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.sslHostnameVerifier | Either `any`, `common`, or `strict`. |
 | spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
 
-## Connecting with a client URI
+### Connecting with a client URI
 
 The `spark.marklogic.client.uri` is a convenience for the common case of using `basic` or `digest` authentication.
 It allows you to specify username, password, host, and port via the following syntax:
@@ -50,7 +50,7 @@ Using this convenience can provide a much more succinct set of options - for exa
 
 ```
 df = spark.read.format("com.marklogic.spark")\
-    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020")\
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020")\
     .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')")\
     .load()
 ```
@@ -59,7 +59,7 @@ Note that if the username or password contain either a `@` or a `:` character, y
 [percent encoding](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) into the correct character 
 triplet. For example, a password of `sp@r:k` must appear in the `spark.marklogic.client.uri` string as `sp%40r%3Ak`. 
 
-# Read options
+## Read options
 
 These options control how the connector reads data from MarkLogic. See [the guide on reading](reading.md) for more 
 information on how data is read from MarkLogic.
@@ -70,9 +70,7 @@ information on how data is read from MarkLogic.
 | spark.marklogic.read.numPartitions | The number of Spark partitions to create; defaults to `spark.default.parallelism` .               |
 | spark.marklogic.read.batchSize | Approximate number of rows to retrieve in each call to MarkLogic; defaults to 10000.              |
 
-## Schema support
-
-# Write options
+## Write options
 
 These options control how the connector writes data to MarkLogic. See [the guide on writing](writing.md) for more 
 information on how data is written to MarkLogic.

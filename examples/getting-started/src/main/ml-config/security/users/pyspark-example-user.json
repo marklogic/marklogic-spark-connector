@@ -1,5 +1,5 @@
 {
-  "user-name": "pyspark-example-user",
+  "user-name": "spark-example-user",
   "password": "password",
   "role": [
     "rest-reader",
