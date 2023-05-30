@@ -85,7 +85,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-1.0-SNAPSHOT.jar
+    pyspark --jars build/libs/marklogic-spark-connector-2.0-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 

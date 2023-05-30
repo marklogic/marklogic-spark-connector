@@ -1,7 +1,7 @@
 ---
 layout: default
 title: Writing Data
-nav_order: 6
+nav_order: 4
 ---
 
 The MarkLogic Spark connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. The sections below
@@ -16,7 +16,7 @@ To change the content of documents, a [REST transform](https://docs.marklogic.co
 configured via the `spark.marklogic.write.transform` option. The transform will receive a JSON document as the 
 document content. This can be transformed in any manner, including into XML documents. For example, the 
 [transform-from-json](https://docs.marklogic.com/json:transform-from-json) MarkLogic function could be used to 
-convert the JSON document into an XML document, which then can be further modified by the code in the REST transform. 
+convert the JSON document into an XML document, which then can be further modified by the code in your REST transform. 
 
 Parameters can be passed to your REST transform via the `spark.marklogic.write.transformParams` option. The value of 
 this option must be a comma-delimited string of the form `param1,value1,param2,value,etc`. For example, if your 
@@ -45,11 +45,11 @@ via `spark.marklogic.write.uriSuffix`. For example, the following options would 
     .option("spark.marklogic.write.uriSuffix", "/record.json")
 
 URIs can also be constructed based on column values for a given row. The `spark.marklogic.write.uriTemplate` option 
-allows for column names to be referenced via braces when constructing a URI. Additionally, if this option is used, the 
+allows for column names to be referenced via braces when constructing a URI. If this option is used, the 
 above options for setting a prefix and suffix will be ignored, as the template can be used to define the entire URI. 
 
 For example, consider a Spark DataFrame with, among other columns, columns named `organization` and `employee_id`. 
-The following template would construct URIs based on both columns:
+The following template would construct URIs based on those two columns:
 
     .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{employee_id}.json")
 
@@ -65,13 +65,13 @@ document to collections named `employee` and `data`:
 
     .option("spark.marklogic.write.collections", "employee,data")
 
-Each document can also be assigned to zero to many 
+Each document can also be assigned zero to many 
 [permissions in MarkLogic](https://docs.marklogic.com/guide/security/permissions). Generally, you will want to 
 assign at least one read permission and one update permission so that at least some users of your application can 
 read and update the documents. 
 
 Permissions are specified as a comma-delimited list via the `spark.marklogic.write.permissions` option. The list is 
-a series of MarkLogic role names and capabilities in the form `role1,capability1,role2,capability2,etc`. For example,
+a series of MarkLogic role names and capabilities in the form of `role1,capability1,role2,capability2,etc`. For example,
 the following will assign each document a read permission for the role `rest-reader` and an update permission for 
 the role `rest-writer`:
 
@@ -89,12 +89,11 @@ The MarkLogic Spark connector supports
 The connector configuration does not change; instead, different Spark APIs are used to read a stream of data and 
 write that stream to MarkLogic. 
 
-A common use case for streaming involves writing data to MarkLogic from a CSV file, where there is no need to capture
-the data in a DataFrame first; the data just needs to be written to MarkLogic. The following shows an example in 
-PySpark of streaming CSV files from a directory (it also uses the `spark.marklogic.client.uri` option for a more 
-concise set of options). This example can be run from the `./examples/pyspark` directory in this repository after 
-following the instructions in the [Getting Started with PySpark guide](getting-started-pyspark.md) for deploying the 
-example application:
+A common use case for streaming involves writing data to MarkLogic from a CSV file, where the data simply needs to be 
+written to MarkLogic. The following shows an example in PySpark of streaming CSV files from a directory. 
+This example can be run from the `./examples/getting-started` directory in this repository 
+after following the instructions in the [Getting Started with PySpark guide](getting-started/pyspark.md) for deploying 
+the example application:
 
 ```
 import tempfile
@@ -107,7 +106,7 @@ spark.readStream \
     .writeStream \
     .format("com.marklogic.spark") \
     .option("checkpointLocation", tempfile.mkdtemp()) \
-    .option("spark.marklogic.client.uri", "pyspark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
     .option("spark.marklogic.write.uriPrefix", "/streaming-example/") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
     .option("spark.marklogic.write.collections", "streaming-example") \
