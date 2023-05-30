@@ -54,6 +54,7 @@ public class DefaultSource implements TableProvider {
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
         try {
+            // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
             return SchemaInferrer.inferSchema(columnInfoHandle.get());
         } catch (Exception ex) {
