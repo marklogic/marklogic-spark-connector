@@ -20,6 +20,9 @@ pipeline{
   triggers{
     parameterizedCron(env.BRANCH_NAME == "develop" ? "00 02 * * * % regressions=true" : "")
   }
+  parameters{
+    booleanParam(name: 'regressions', defaultValue: false, description: 'indicator if build is for regressions')
+  }
   options {
     checkoutToSubdirectory 'marklogic-spark-connector'
     buildDiscarder logRotator(artifactDaysToKeepStr: '7', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '')
