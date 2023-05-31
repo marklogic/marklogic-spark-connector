@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class StreamRowsTest extends AbstractIntegrationTest {
+public class WriteStreamOfRowsTest extends AbstractIntegrationTest {
 
     private final static StructType SCHEMA = new StructType()
         .add("Name", DataTypes.StringType)
