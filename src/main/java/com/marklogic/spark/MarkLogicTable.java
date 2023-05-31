@@ -89,8 +89,7 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
 
     @Override
     public String name() {
-        // TODO Figure out a good name
-        return "test-project";
+        return "MarkLogicTable()";
     }
 
     // This is marked as deprecated in the Table interface.
