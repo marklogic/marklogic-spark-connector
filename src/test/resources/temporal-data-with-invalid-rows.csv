@@ -1,0 +1,11 @@
+id,content,systemStart,systemEnd,validStart,validEnd,columnWithOnlyWhitespace
+1,this should fail to write,,,,,"   "
+2,this should fail to write,,,,,"   "
+3,this should fail to write,,,,,"   "
+4,this should fail to write,,,,,"   "
+5,this should fail to write,,,,,"   "
+6,this should fail to write,,,,,"   "
+7,this should fail to write,,,,,"   "
+8,this should fail to write,,,,,"   "
+9,this should fail to write,,,,,"   "
+10,hello world,2014-04-03T11:00:00,2014-04-03T16:00:00,2014-04-03T11:00:00,2014-04-03T16:00:00,"   "

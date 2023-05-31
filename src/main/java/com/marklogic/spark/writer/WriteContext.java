@@ -42,7 +42,7 @@ public class WriteContext extends ContextSupport {
         return schema;
     }
 
-    public WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
+    WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
@@ -62,7 +62,7 @@ public class WriteContext extends ContextSupport {
         return writeBatcher;
     }
 
-    public DocBuilder newDocBuilder() {
+    DocBuilder newDocBuilder() {
         DocBuilderFactory factory = new DocBuilderFactory()
             .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
             .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS));
@@ -83,6 +83,10 @@ public class WriteContext extends ContextSupport {
         }
 
         return factory.newDocBuilder();
+    }
+
+    boolean isAbortOnFailure() {
+        return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
     }
 
     private void configureRestTransform(WriteBatcher writeBatcher) {

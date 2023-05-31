@@ -30,6 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WriteRowsTest extends AbstractWriteTest {
 
+    private final static String TEMPORAL_COLLECTION = "temporal-collection";
+
     @Test
     void defaultBatchSizeAndThreadCount() {
         newWriter().save();
@@ -58,15 +60,14 @@ public class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void temporalTest() {
-        String temporalCollection = "temporal-collection";
         newWriterWithDefaultConfig("temporal-data.csv", 1)
-            .option(Options.WRITE_TEMPORAL_COLLECTION, temporalCollection)
+            .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
             .save();
 
         String uri = getUrisInCollection(COLLECTION, 1).get(0);
         // Temporal doc is written to the temporal collection; "latest" since it's the latest version for that URI;
         // and to a collection matching the URI of the document.
-        assertInCollections(uri, COLLECTION, temporalCollection, "latest", uri);
+        assertInCollections(uri, COLLECTION, TEMPORAL_COLLECTION, "latest", uri);
     }
 
     @Test
@@ -174,6 +175,19 @@ public class WriteRowsTest extends AbstractWriteTest {
         assertEquals("Unable to parse permissions string, which must be a comma-separated list of role names and " +
             "capabilities - i.e. role1,read,role2,update,role3,execute; " +
             "string: rest-reader,read,rest-writer", ex.getCause().getMessage());
+    }
+
+    @Test
+    void dontAbortOnFailure() {
+        newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
+            .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
+            // Force each row in the CSV to be written in its own batch, ensuring that the one row that should succeed
+            // will in fact succeed (if it's stuck in a batch with other bad rows, it'll fail too).
+            .option(Options.WRITE_BATCH_SIZE, 1)
+            .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .save();
+
+        assertCollectionSize("9 of the batches should have failed, with the 10th batch succeeding", COLLECTION, 1);
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {

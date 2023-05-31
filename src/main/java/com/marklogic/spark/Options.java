@@ -25,6 +25,7 @@ public interface Options {
 
     String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
+    String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
     String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";

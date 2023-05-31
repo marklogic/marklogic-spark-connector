@@ -62,10 +62,12 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
         this.databaseClient = writeContext.connectToMarkLogic();
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
-        this.writeBatcher.onBatchFailure((batch, failure) -> {
-            // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
-            this.writeFailure.compareAndSet(null, failure);
-        });
+        if (writeContext.isAbortOnFailure()) {
+            this.writeBatcher.onBatchFailure((batch, failure) -> {
+                // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
+                this.writeFailure.compareAndSet(null, failure);
+            });
+        }
         this.dataMovementManager.startJob(this.writeBatcher);
     }
 
