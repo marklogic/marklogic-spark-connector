@@ -42,17 +42,25 @@ public abstract class PlanUtil {
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     static ObjectNode buildGroupByCount() {
-        return newOperation("group-by", args -> args
-            .add(objectMapper.nullNode())
-            .addObject().put("ns", "op").put("fn", "count").putArray("args").add("count").add(objectMapper.nullNode()));
+        return newOperation("group-by", args -> {
+            args.add(objectMapper.nullNode());
+            addCountArg(args);
+        });
     }
 
     static ObjectNode buildGroupByCount(String columnName) {
         return newOperation("group-by", args -> {
             populateSchemaCol(args.addObject(), columnName);
-            // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
-            args.addObject().put("ns", "op").put("fn", "count").putArray("args").add("count").add(objectMapper.nullNode());
+            addCountArg(args);
         });
+    }
+
+    private static void addCountArg(ArrayNode args) {
+        args.addObject().put("ns", "op").put("fn", "count").putArray("args")
+            // "count" is used as the column name as that's what Spark uses when the operation is not pushed down.
+            .add("count")
+            // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
+            .add(objectMapper.nullNode());
     }
 
     static ObjectNode buildLimit(int limit) {
