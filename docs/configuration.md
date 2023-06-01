@@ -77,11 +77,12 @@ information on how data is written to MarkLogic.
 
 | Option | Description                                                                       | 
 | --- |-----------------------------------------------------------------------------------|
+| spark.marklogic.write.abortOnFailure | Whether the Spark job should abort if a batch fails to be written; defaults to `true`. |
 | spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
-| spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to |
+| spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
 | spark.marklogic.write.transform | Name of a REST transform to apply to each document |
 | spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 |
 | spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option |

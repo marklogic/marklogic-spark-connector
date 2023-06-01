@@ -128,10 +128,10 @@ and during the writing of data to MarkLogic.
 For the first kind of error, the error will be immediately returned to the user and no data will have been written. 
 Such errors are often due to misconfiguration of the connector options and should be fixable. 
 
-For the second kind of error, the error will eventually be returned to the user, usually within seconds of it 
-occurring. The slight delay is due to the asynchronous nature of data being written by the connector. The error will 
-be logged by the connector and the write operation will be aborted. Any batches of documents that were written 
-successfully prior to the error occurring will still exist in the database. 
+For the second kind of error, the connector defaults to logging the error and asking Spark to abort the entire write 
+operation. Any batches of documents that were written successfully prior to the error occurring will still exist in the 
+database. To configure the connector to only log the error and continue writing batches of documents to MarkLogic, set 
+the `spark.marklogic.write.abortOnFailure` option to a value of `false`. 
 
 Similar to errors with reading data, the connector will strive to provide meaningful context when an error occurs to 
 assist with debugging the cause of the error. Any errors that cannot be fixed via changes to the options passed to the 
