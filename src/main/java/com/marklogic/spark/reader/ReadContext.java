@@ -120,9 +120,9 @@ public class ReadContext extends ContextSupport {
         PlanBuilder.Plan plan = buildPlanForBucket(rowManager, bucket);
         JacksonHandle jsonHandle = new JacksonHandle();
         jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
-        // Unable to use resultRows as Java Client <= 6.2.0 has a bug where the serverTimestamp is ignored.
-        // TODO Change this to use resultRows once Java Client 6.2.1 is available. That should perform better as it
-        // avoids creating a JsonNode.
+        // Remarkably, the use of resultDoc has consistently proven to be a few percentage points faster than using
+        // resultRows with a StringHandle, even though the latter avoids the need for converting to and from a JsonNode.
+        // The overhead with resultRows may be due to the processing of a multipart response; it's not yet clear.
         JsonNode result = rowManager.resultDoc(plan, jsonHandle).get();
         return result != null && result.has("rows") ?
             result.get("rows").iterator() :
