@@ -40,6 +40,20 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     }
 
     @Test
+    void noRowsFound() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .load()
+            .groupBy("CitationID")
+            .count()
+            .orderBy("CitationID")
+            .collectAsList();
+
+        assertEquals(0, rows.size());
+        assertEquals(0, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
     void groupByWithView() {
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'example')")

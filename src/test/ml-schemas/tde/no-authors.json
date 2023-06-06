@@ -8,6 +8,11 @@
         "viewName": "NoAuthors",
         "columns": [
           {
+            "name": "CitationID",
+            "scalarType": "long",
+            "val": "ID"
+          },
+          {
             "name": "LastName",
             "scalarType": "string",
             "val": "LastName"

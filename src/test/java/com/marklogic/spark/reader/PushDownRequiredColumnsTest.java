@@ -49,6 +49,18 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
     }
 
     @Test
+    void noRowsFound() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .load()
+            .select("CitationID")
+            .collectAsList();
+
+        assertEquals(0, rows.size());
+        assertEquals(0, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
     void withSchemaAndViewQualifiers() {
         List<Row> rows = newDefaultReader()
             .load()

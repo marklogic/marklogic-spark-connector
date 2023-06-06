@@ -144,60 +144,48 @@ public class ReadContext extends ContextSupport {
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            this.opticFilters = opticFilters;
-            addOperatorToPlan(PlanUtil.buildWhere(opticFilters));
-        }
+        this.opticFilters = opticFilters;
+        addOperatorToPlan(PlanUtil.buildWhere(opticFilters));
     }
 
     void pushDownLimit(int limit) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            addOperatorToPlan(PlanUtil.buildLimit(limit));
-        }
+        addOperatorToPlan(PlanUtil.buildLimit(limit));
     }
 
     void pushDownOffset(int offset) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            addOperatorToPlan(PlanUtil.buildOffset(offset));
-        }
+        addOperatorToPlan(PlanUtil.buildOffset(offset));
     }
 
     void pushDownTopN(SortOrder[] orders, int limit) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            for (SortOrder sortOrder : orders) {
-                addOperatorToPlan(PlanUtil.buildOrderBy(sortOrder));
-            }
-            pushDownLimit(limit);
+        for (SortOrder sortOrder : orders) {
+            addOperatorToPlan(PlanUtil.buildOrderBy(sortOrder));
         }
+        pushDownLimit(limit);
     }
 
     void pushDownCount() {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            addOperatorToPlan(PlanUtil.buildGroupByCount());
-            // As will likely be the case for all aggregations, the schema needs to be modified.
-            this.schema = new StructType().add("count", DataTypes.LongType);
-            modifyPlanAnalysisToUseSingleBucket();
-        }
+        addOperatorToPlan(PlanUtil.buildGroupByCount());
+        // As will likely be the case for all aggregations, the schema needs to be modified.
+        this.schema = new StructType().add("count", DataTypes.LongType);
+        modifyPlanAnalysisToUseSingleBucket();
     }
 
     void pushDownGroupByCount(Expression groupBy) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            final String columnName = PlanUtil.expressionToColumnName(groupBy);
-            addOperatorToPlan(PlanUtil.buildGroupByCount(columnName));
+        final String columnName = PlanUtil.expressionToColumnName(groupBy);
+        addOperatorToPlan(PlanUtil.buildGroupByCount(columnName));
 
-            StructField columnField = null;
-            for (StructField field : this.schema.fields()) {
-                if (columnName.equals(field.name())) {
-                    columnField = field;
-                    break;
-                }
+        StructField columnField = null;
+        for (StructField field : this.schema.fields()) {
+            if (columnName.equals(field.name())) {
+                columnField = field;
+                break;
             }
-            if (columnField == null) {
-                throw new IllegalArgumentException("Unable to find groupBy column in schema; groupBy expression: " + groupBy.describe());
-            }
-            this.schema = new StructType().add(columnField).add("count", DataTypes.LongType);
-            modifyPlanAnalysisToUseSingleBucket();
         }
+        if (columnField == null) {
+            throw new IllegalArgumentException("Unable to find groupBy column in schema; groupBy expression: " + groupBy.describe());
+        }
+        this.schema = new StructType().add(columnField).add("count", DataTypes.LongType);
+        modifyPlanAnalysisToUseSingleBucket();
     }
 
     /**
@@ -213,16 +201,14 @@ public class ReadContext extends ContextSupport {
     }
 
     void pushDownRequiredSchema(StructType requiredSchema) {
-        if (planAnalysisFoundAtLeastOneRow()) {
-            this.schema = requiredSchema;
-            addOperatorToPlan(PlanUtil.buildSelect(requiredSchema));
-        }
+        this.schema = requiredSchema;
+        addOperatorToPlan(PlanUtil.buildSelect(requiredSchema));
     }
 
-    private boolean planAnalysisFoundAtLeastOneRow() {
+    boolean planAnalysisFoundNoRows() {
         // The planAnalysis will be null if no rows were found, which internal/viewinfo unfortunately throws an error
         // on. None of the push down operations need to be applied in this scenario.
-        return planAnalysis != null;
+        return planAnalysis == null;
     }
 
     /**

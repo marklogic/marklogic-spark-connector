@@ -66,9 +66,13 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
      */
     @Override
     public Filter[] pushFilters(Filter[] filters) {
+        pushedFilters = new ArrayList<>();
+        if (readContext.planAnalysisFoundNoRows()) {
+            return filters;
+        }
+
         List<Filter> unsupportedFilters = new ArrayList<>();
         List<OpticFilter> opticFilters = new ArrayList<>();
-        pushedFilters = new ArrayList<>();
         if (logger.isDebugEnabled()) {
             logger.debug("Filter count: {}", filters.length);
         }
@@ -102,6 +106,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean pushLimit(int limit) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return false;
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down limit: {}", limit);
         }
@@ -111,6 +118,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean pushTopN(SortOrder[] orders, int limit) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return false;
+        }
         // This will be invoked when the user calls both orderBy and limit in their Spark program. If the user only
         // calls limit, then only pushLimit is called and this will not be called. If the user only calls orderBy and
         // not limit, then neither this nor pushLimit will be called.
@@ -131,6 +141,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean pushOffset(int offset) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return false;
+        }
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down offset: {}", offset);
         }
@@ -140,6 +153,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean pushAggregation(Aggregation aggregation) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return false;
+        }
         if (supportCompletePushDown(aggregation)) {
             if (aggregation.groupByExpressions().length > 0) {
                 Expression expr = aggregation.groupByExpressions()[0];
@@ -160,6 +176,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return false;
+        }
         AggregateFunc[] expressions = aggregation.aggregateExpressions();
         if (expressions.length == 1 && expressions[0] instanceof CountStar) {
             // If a count() is used, it's supported if there's no groupBy - i.e. just doing a count() by itself -
@@ -171,6 +190,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     @Override
     public void pruneColumns(StructType requiredSchema) {
+        if (readContext.planAnalysisFoundNoRows()) {
+            return;
+        }
         if (requiredSchema.equals(readContext.getSchema())) {
             if (logger.isDebugEnabled()) {
                 logger.debug("The schema to push down is equal to the existing schema, so not pushing it down.");

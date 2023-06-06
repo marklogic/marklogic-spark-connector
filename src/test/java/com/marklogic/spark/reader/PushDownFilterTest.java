@@ -59,6 +59,17 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     }
 
     @Test
+    void noRowsFound() {
+        assertEquals(0, newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .load()
+            .filter("CitationID == 1")
+            .collectAsList()
+            .size());
+        assertEquals(0, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
     void equalToWithWhere() {
         assertEquals(2, getCountOfRowsWithFilter("CitationID = 5"));
         assertEquals(2, countOfRowsReadFromMarkLogic);
