@@ -16,7 +16,10 @@ obtaining the connector and deploying an example application to MarkLogic.
 
 To get started, install either [JupyterLab or Jupyter Notebook](https://jupyter.org/install). Both of these tools
 allow you to work with the connector in the same fashion. The rest of this guide will assume the use of Jupyter 
-Notebook, though the instructions will work for JupyterLab as well. 
+Notebook, though the instructions will work for JupyterLab as well.
+
+Note that if you have not already installed PySpark, run `pip install pyspark` using the same Python interpreter that 
+you will use to run Jupyter Notebook or JupyterLab.
 
 Once you have installed, started, and accessed Jupyter Notebook in your web browser - in a default Notebook 
 installation, you should be able to access it at http://localhost:8889/tree - click on "New" in the upper right hand 

@@ -13,3 +13,5 @@ out
 gradle-local.properties
 .vscode
 logs
+.ipynb_checkpoints
+venv

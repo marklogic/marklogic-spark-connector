@@ -11,15 +11,10 @@ environments, as those examples depend on an application being deployed to MarkL
 ## Obtaining the connector
 
 The MarkLogic Spark connector can be downloaded from
-[this repository's Releases page](https://github.com/marklogic/marklogic-spark-connector/releases).
+[this repository's Releases page](https://github.com/marklogic/marklogic-spark-connector/releases). Each Spark 
+environment should have documentation on how to include third-party connectors; please consult your Spark 
+environment's documentation on how to achieve this.
 
-TODO - until the 2.0 release occurs, you will need to build the Spark connector yourself (this will be removed
-before the 2.0 release occurs). To do so:
-
-- Clone this repository.
-- Run `./gradlew clean shadowJar`.
-
-The connector can then be accessed at `./build/libs/marklogic-spark-connector-2.0-SNAPSHOT.jar`.
 
 ## Deploy an example application
 
@@ -32,13 +27,18 @@ To facilitate trying out the connector, perform the following steps to deploy an
 MarkLogic server that includes a
 [TDE view](https://docs.marklogic.com/guide/app-dev/TDE) and some documents that conform to that view.
 
-1. Clone this repository using git.
-2. In the directory in which you cloned this repository, run `cd examples/getting-started`.
-3. Create a file named `gradle-local.properties` and add `mlPassword=changeme`, changing the text "changeme" to the
+1. From [this repository's Releases page](https://github.com/marklogic/marklogic-spark-connector/releases), select 
+   the latest release and download the `marklogic-spark-getting-started-2.0.0.zip` file.
+2. Extract the contents of the downloaded zip file. 
+3. Open a terminal window and go to the directory created by extracting the zip file; the directory should have a 
+   name of "marklogic-spark-getting-started-2.0.0".
+4. Create a file named `gradle-local.properties` and add `mlPassword=changeme`, changing the text "changeme" to the
    password of your MarkLogic `admin` user.
-4. Open the `gradle.properties` file and verify that the value of the `mlPort` property is an available port on the
+5. Open the `gradle.properties` file and verify that the value of the `mlPort` property is an available port on the
    machine running your MarkLogic server; the default port is 8020.
-5. Run `./gradlew -i mlDeploy` to deploy the example application.
+6. Ensure that the `./gradlew` file is executable; depending on your operating system, you may need to run
+   `chmod 755 gradlew` to make the file executable.
+7. Run `./gradlew -i mlDeploy` to deploy the example application.
 
 After the deployment finishes, your MarkLogic server will now have the following:
 
