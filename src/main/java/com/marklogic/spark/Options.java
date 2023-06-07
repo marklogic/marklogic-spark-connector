@@ -19,7 +19,7 @@ public interface Options {
 
     String CLIENT_URI = "spark.marklogic.client.uri";
 
-    String READ_OPTIC_DSL = "spark.marklogic.read.opticDsl";
+    String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
 

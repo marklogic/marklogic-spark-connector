@@ -37,7 +37,7 @@ public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             // With 3 partitions, the logging will show 3 queries to MarkLogic with a "write" occurring after each one.
             .option(Options.READ_NUM_PARTITIONS, 3)
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')")
             .load()
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
@@ -62,7 +62,7 @@ public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_NUM_PARTITIONS, 2)
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')")
             .load()
             .writeStream()
             .format("memory")
@@ -91,6 +91,6 @@ public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
                 .load()
         );
 
-        assertEquals("No Optic query found; must define spark.marklogic.read.opticDsl", ex.getMessage());
+        assertEquals("No Optic query found; must define spark.marklogic.read.opticQuery", ex.getMessage());
     }
 }

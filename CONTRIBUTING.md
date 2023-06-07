@@ -97,7 +97,7 @@ df = spark.read.format("com.marklogic.spark")\
     .option("spark.marklogic.client.username", "admin")\
     .option("spark.marklogic.client.password", "admin")\
     .option("spark.marklogic.client.authType", "digest")\
-    .option("spark.marklogic.read.opticDsl", "op.fromView('Medical', 'Authors')")\
+    .option("spark.marklogic.read.opticQuery", "op.fromView('Medical', 'Authors')")\
     .load()
 ```
 

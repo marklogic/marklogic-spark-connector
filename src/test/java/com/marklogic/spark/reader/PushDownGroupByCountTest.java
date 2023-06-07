@@ -28,7 +28,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     @Test
     void groupByWithNoQualifier() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .groupBy("CitationID")
             .count()
@@ -42,7 +42,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     @Test
     void noRowsFound() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .groupBy("CitationID")
             .count()
@@ -56,7 +56,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     @Test
     void groupByWithView() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'example')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', 'example')")
             .load()
             .groupBy("`example.CitationID`")
             .count()
@@ -83,7 +83,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     @Test
     void groupByCountLimitOrderBy() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .groupBy("CitationID")
             .count()
@@ -102,7 +102,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
     @Test
     void groupByCountOrderByLimit() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .groupBy("CitationID")
             .count()

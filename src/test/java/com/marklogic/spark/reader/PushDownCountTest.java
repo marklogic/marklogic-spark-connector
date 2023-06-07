@@ -42,7 +42,7 @@ public class PushDownCountTest extends AbstractPushDownTest {
     @Test
     void noRowsFound() {
         long count = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .count();
 

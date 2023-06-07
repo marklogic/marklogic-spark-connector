@@ -43,7 +43,7 @@ abstract class AbstractPushDownTest extends AbstractIntegrationTest {
 
     protected Dataset<Row> newDatasetOrderedByCitationIDWithOneBucket() {
         return newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_ORDERED_BY_CITATION_ID)
+            .option(Options.READ_OPTIC_QUERY, QUERY_ORDERED_BY_CITATION_ID)
             .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_BATCH_SIZE, 0)
             .load();

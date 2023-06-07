@@ -87,7 +87,7 @@ public class PushDownFilterValueTypesTest extends AbstractIntegrationTest {
 
     private Dataset<Row> newDataset() {
         return newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('sparkTest', 'allTypes', '')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('sparkTest', 'allTypes', '')")
             .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_BATCH_SIZE, 0)
             .load();

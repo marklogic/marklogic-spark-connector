@@ -50,7 +50,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     @Test
     void equalToWithViewQualifier() {
         assertEquals(4, newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'myView')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', 'myView')")
             .load()
             .filter("`myView.CitationID` == 1")
             .collectAsList()
@@ -61,7 +61,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     @Test
     void noRowsFound() {
         assertEquals(0, newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .filter("CitationID == 1")
             .collectAsList()
@@ -249,7 +249,7 @@ public class PushDownFilterTest extends AbstractPushDownTest {
 
     private Dataset<Row> newDataset() {
         return newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             // Use a single call to MarkLogic so it's easier to verify from the logging
             // that only N rows were returned.
             .option(Options.READ_NUM_PARTITIONS, 1)

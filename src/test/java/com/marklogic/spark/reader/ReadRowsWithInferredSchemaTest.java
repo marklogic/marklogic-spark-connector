@@ -36,7 +36,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allTypes() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL,
+            .option(Options.READ_OPTIC_QUERY,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 1'))")
             .load()
             .collectAsList();
@@ -91,7 +91,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void allColumnsNullExceptRequiredOne() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL,
+            .option(Options.READ_OPTIC_QUERY,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 2'))")
             .load()
             .collectAsList();
@@ -109,7 +109,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void rowWithInvalidLongValueThatShouldBeIgnored() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL,
+            .option(Options.READ_OPTIC_QUERY,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 3'))")
             .load()
             .collectAsList();
@@ -124,7 +124,7 @@ public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
     @Test
     void selectSubsetOfColumns() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL,
+            .option(Options.READ_OPTIC_QUERY,
                 "op.fromView('sparkTest', 'allTypes')" +
                     ".select(['intValue', 'timeValue'])")
             .option(Options.READ_NUM_PARTITIONS, "1")
