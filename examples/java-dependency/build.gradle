@@ -1,0 +1,18 @@
+plugins {
+  id "java"
+}
+
+repositories {
+  mavenCentral()
+  mavenLocal()
+}
+
+dependencies {
+  implementation 'org.apache.spark:spark-sql_2.12:3.4.0'
+  implementation 'com.marklogic:marklogic-spark-connector:2.0-SNAPSHOT'
+}
+
+task runApp(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'org.example.App'
+}
