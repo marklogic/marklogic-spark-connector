@@ -38,4 +38,16 @@ public class PushDownCountTest extends AbstractPushDownTest {
             "that regardless of the number of matching rows, MarkLogic can efficiently determine a count in a single " +
             "request.");
     }
+
+    @Test
+    void noRowsFound() {
+        long count = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .load()
+            .count();
+
+        assertEquals(0, count);
+        assertEquals(0, countOfRowsReadFromMarkLogic, "When no rows exist, neither the count() operation nor the " +
+            "pruneColumns() operation should be pushed down since there's no optimization to be done.");
+    }
 }

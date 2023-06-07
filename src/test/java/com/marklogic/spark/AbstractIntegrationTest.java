@@ -38,6 +38,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected final static String TEST_USERNAME = "spark-test-user";
     protected final static String TEST_PASSWORD = "spark";
     protected final static String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
+    protected final static String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
 
     private static MarkLogicVersion markLogicVersion;
 

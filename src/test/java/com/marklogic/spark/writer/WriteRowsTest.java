@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -191,6 +192,7 @@ public class WriteRowsTest extends AbstractWriteTest {
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
+        assertNotNull(ex.getCause(), "Unexpected exception with no cause: " + ex.getClass() + "; " + ex.getMessage());
         assertTrue(ex.getCause() instanceof IOException, "Unexpected cause: " + ex.getCause().getClass());
         assertTrue(ex.getCause().getMessage().contains("Server Message: You do not have permission to this method and URL"),
             "Unexpected cause message: " + ex.getCause().getMessage());

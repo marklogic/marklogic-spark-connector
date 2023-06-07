@@ -71,7 +71,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void queryReturnsZeroRows() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'NoAuthors')")
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
             .load()
             .collectAsList();
 

@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark.reader;
 
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +35,18 @@ public class PushDownOffsetTest extends AbstractPushDownTest {
         assertEquals(7, rows.size(),
             "Expecting the 4 authors with CitationID=3; then the 1 with CitationID=4; then the 2 with CitationID=5");
         assertEquals(7, countOfRowsReadFromMarkLogic);
+    }
+
+    @Test
+    void noRowsFound() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .load()
+            .offset(1)
+            .collectAsList();
+
+        assertEquals(0, rows.size());
+        assertEquals(0, countOfRowsReadFromMarkLogic);
     }
 
     @Test
