@@ -36,7 +36,7 @@ public class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
     void twoReadsWithInsertInBetween() throws Exception {
         logger.info("Creating reader");
         Dataset<Row> dataset = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('sparkTest', 'allTypes')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('sparkTest', 'allTypes')")
             .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_BATCH_SIZE, 0)
             .load();

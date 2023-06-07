@@ -40,7 +40,7 @@ public class PushDownOffsetTest extends AbstractPushDownTest {
     @Test
     void noRowsFound() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .offset(1)
             .collectAsList();

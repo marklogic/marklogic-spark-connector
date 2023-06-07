@@ -97,7 +97,7 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
             .option("spark.marklogic.client.port", testConfig.getRestPort())
             .option("spark.marklogic.client.username", TEST_USERNAME)
             .option("spark.marklogic.client.password", TEST_PASSWORD)
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors')");
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')");
     }
 
     protected String readClasspathFile(String path) {

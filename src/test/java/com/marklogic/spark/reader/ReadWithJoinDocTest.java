@@ -31,7 +31,7 @@ public class ReadWithJoinDocTest extends AbstractIntegrationTest {
     @Test
     void jsonDocuments() throws Exception {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL,
+            .option(Options.READ_OPTIC_QUERY,
                 "const idCol = op.fragmentIdCol('id'); " +
                     "op.fromView('sparkTest', 'allTypes', '', idCol)" +
                     ".where(op.sqlCondition('intValue = 1'))" +

@@ -107,7 +107,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     @Test
     void binaryType() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors').where(op.sqlCondition(\"ForeName = 'Pen'\"))")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors').where(op.sqlCondition(\"ForeName = 'Pen'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.Base64Value", DataTypes.BinaryType)
             )
@@ -123,7 +123,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     @Test
     void trueBooleanValue() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors').where(op.sqlCondition(\"ForeName = 'Pen'\"))")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors').where(op.sqlCondition(\"ForeName = 'Pen'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.BooleanValue", DataTypes.BooleanType)
             )
@@ -137,7 +137,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     @Test
     void falseBooleanValue() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors')" +
                 ".where(op.sqlCondition(\"ForeName = 'Cherianne'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.BooleanValue", DataTypes.BooleanType)
@@ -152,7 +152,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     @Test
     void dateType() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors')" +
                 ".where(op.sqlCondition(\"ForeName = 'Finlay'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.Date", DataTypes.DateType)
@@ -189,7 +189,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     @Test
     void calendarIntervalType() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors')" +
                 ".where(op.sqlCondition(\"ForeName = 'Pen'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.LastName", DataTypes.StringType)
@@ -211,7 +211,7 @@ public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
     private Row readFinlayRowWithTimeZone(String timeZone) {
         TimeZone.setDefault(TimeZone.getTimeZone(timeZone));
         List<Row> rows = newDefaultReader(newSparkSession(timeZone))
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors')" +
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors')" +
                 ".where(op.sqlCondition(\"ForeName = 'Finlay'\"))")
             .schema(new StructType()
                 .add("Medical.Authors.DateTime", DataTypes.TimestampType)

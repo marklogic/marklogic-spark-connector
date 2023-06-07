@@ -47,9 +47,9 @@ public class DefaultSource implements TableProvider {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> caseSensitiveOptions = options.asCaseSensitiveMap();
-        final String query = caseSensitiveOptions.get(Options.READ_OPTIC_DSL);
+        final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_DSL));
+            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
@@ -88,6 +88,6 @@ public class DefaultSource implements TableProvider {
     }
 
     private boolean isReadOperation(Map<String, String> properties) {
-        return properties.containsKey(Options.READ_OPTIC_DSL);
+        return properties.containsKey(Options.READ_OPTIC_QUERY);
     }
 }

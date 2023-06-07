@@ -40,7 +40,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void orderByWithTwoPartitions() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_ORDERED_BY_CITATION_ID)
+            .option(Options.READ_OPTIC_QUERY, QUERY_ORDERED_BY_CITATION_ID)
             .option(Options.READ_NUM_PARTITIONS, 2)
             .option(Options.READ_BATCH_SIZE, 0)
             .load()
@@ -110,7 +110,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void limitWithTwoPartitionsAndOrderBy() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .option(Options.READ_NUM_PARTITIONS, 2)
             .option(Options.READ_BATCH_SIZE, 0)
             .load()
@@ -131,7 +131,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void limitWithTwoPartitionsAndOrderByLastNameDescending() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', '')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', '')")
             .option(Options.READ_NUM_PARTITIONS, 2)
             .option(Options.READ_BATCH_SIZE, 0)
             .load()
@@ -165,7 +165,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void orderByWithView() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'myQualifier')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', 'myQualifier')")
             .load()
             .orderBy("`myQualifier.CitationID`")
             .limit(8)
@@ -178,7 +178,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     @Test
     void sort() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .sort("CitationID")
             .limit(8)

@@ -17,7 +17,7 @@ public class App {
                 .read()
                 .format("com.marklogic.spark")
                 .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020")
-                .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee', '')")
+                .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee', '')")
                 .load()
                 .filter("City == 'San Diego'")
                 .collectAsList();

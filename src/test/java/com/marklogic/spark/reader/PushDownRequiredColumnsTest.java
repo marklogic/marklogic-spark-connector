@@ -37,7 +37,7 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
     @Test
     void withNoQualifier() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .orderBy("ForeName")
             .select("ForeName", "LastName")
@@ -51,7 +51,7 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
     @Test
     void noRowsFound() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .select("CitationID")
             .collectAsList();
@@ -76,7 +76,7 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
     @Test
     void withViewQualifier() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'Authors', 'hey')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', 'hey')")
             .load()
             .orderBy("`hey.ForeName`")
             .select("`hey.ForeName`", "`hey.LastName`")
@@ -90,7 +90,7 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
     @Test
     void dropColumns() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .load()
             .orderBy("ForeName")
             .drop("CitationID", "LastName")

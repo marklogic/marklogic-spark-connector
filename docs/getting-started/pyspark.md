@@ -57,7 +57,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.port", "8020") \
     .option("spark.marklogic.client.username", "spark-example-user") \
     .option("spark.marklogic.client.password", "password") \
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
 
@@ -67,7 +67,7 @@ client options in one option:
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
 

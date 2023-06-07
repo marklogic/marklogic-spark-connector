@@ -55,7 +55,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void emptyQualifier() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical','Authors', '')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors', '')")
             .load()
             .collectAsList();
 
@@ -71,7 +71,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void queryReturnsZeroRows() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, NO_AUTHORS_QUERY)
+            .option(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY)
             .load()
             .collectAsList();
 
@@ -83,7 +83,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidQuery() {
         RuntimeException ex = assertThrows(RuntimeException.class, () -> newDefaultReader()
-            .option(Options.READ_OPTIC_DSL, "op.fromView('Medical', 'ViewNotFound')")
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'ViewNotFound')")
             .load()
             .count());
 

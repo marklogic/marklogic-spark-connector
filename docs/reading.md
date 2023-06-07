@@ -31,7 +31,7 @@ from pyspark.sql.types import StructField, StructType, StringType
 df = spark.read.format("com.marklogic.spark") \
     .schema(StructType([StructField("example.employee.GivenName", StringType()), StructField("example.employee.Surname", StringType())])) \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
 
@@ -51,7 +51,7 @@ op.fromView('example', 'employee', '', joinCol) \
 
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.opticDsl", query) \
+    .option("spark.marklogic.read.opticQuery", query) \
     .load()
 ```
 
@@ -75,7 +75,7 @@ stream = spark.readStream \
     .format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
     .option("spark.marklogic.read.numPartitions", 2) \
-    .option("spark.marklogic.read.opticDsl", "op.fromView('example', 'employee')") \
+    .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load() \
     .writeStream \
     .format("console") \
