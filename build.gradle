@@ -1,9 +1,10 @@
 plugins {
-  id 'java'
+  id 'java-library'
   id 'net.saliman.properties' version '1.5.2'
   id 'com.github.johnrengelman.shadow' version '7.1.2'
   id "com.marklogic.ml-gradle" version "4.5.2"
   id 'maven-publish'
+  id 'signing'
 }
 
 group 'com.marklogic'
@@ -107,13 +108,59 @@ task dockerPerfTest(type: Exec) {
     'marklogic-spark-cache:latest',
     'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'perfTest'
 }
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+  classifier 'sources'
+  from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier "javadoc"
+  from javadoc
+}
+javadoc.failOnError = false
+// Ignores warnings on params that don't have descriptions, which is a little too noisy
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+artifacts {
+  archives javadocJar, sourcesJar
+}
+signing {
+  sign configurations.archives
+}
+
 publishing {
   publications {
-    main(MavenPublication) {
+    mainJava(MavenPublication) {
+      pom {
+        name = "${group}:${project.name}"
+        description = "Spark 3 connector for MarkLogic"
+        packaging = "jar"
+        url = "https://github.com/marklogic/${project.name}"
+        licenses {
+          license {
+            name = "The Apache License, Version 2.0"
+            url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+          }
+        }
+        developers {
+          developer {
+            id = "marklogic"
+            name = "MarkLogic Github Contributors"
+            email = "general@developer.marklogic.com"
+            organization = "MarkLogic"
+            organizationUrl = "https://www.marklogic.com"
+          }
+        }
+        scm {
+          url = "git@github.com:marklogic/${project.name}.git"
+          connection = "scm:git@github.com:marklogic/${project.name}.git"
+          developerConnection = "scm:git@github.com:marklogic/${project.name}.git"
+        }
+      }
       from components.java
-    }
-    sourcesJava(MavenPublication) {
-      from components.java
+      artifact sourcesJar
+      artifact javadocJar
     }
   }
   repositories {
@@ -123,9 +170,16 @@ publishing {
           username mavenUser
           password mavenPassword
         }
+        url publishUrl
+        allowInsecureProtocol = true
+      } else {
+        name = "central"
+        url = mavenCentralUrl
+        credentials {
+          username mavenCentralUsername
+          password mavenCentralPassword
+        }
       }
-      url publishUrl
-      allowInsecureProtocol = true
     }
   }
 }
