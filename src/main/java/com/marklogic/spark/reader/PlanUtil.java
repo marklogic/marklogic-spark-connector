@@ -67,10 +67,6 @@ public abstract class PlanUtil {
         return newOperation("limit", args -> args.add(limit));
     }
 
-    static ObjectNode buildOffset(int offset) {
-        return newOperation("offset", args -> args.add(offset));
-    }
-
     static ObjectNode buildOrderBy(SortOrder sortOrder) {
         final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
         final String columnName = expressionToColumnName(sortOrder.expression());

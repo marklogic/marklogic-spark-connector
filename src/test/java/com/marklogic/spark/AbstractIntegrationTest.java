@@ -19,12 +19,15 @@ import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.util.VersionUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Uses marklogic-junit (from marklogic-unit-test) to construct a DatabaseClient
@@ -120,4 +123,11 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         return markLogicVersion.getMajor() == 10;
     }
 
+    protected final boolean isSpark340OrHigher() {
+        assertNotNull(sparkSession, "Cannot check Spark version until a Spark Session has been created.");
+        final String version = sparkSession.version();
+        int major = VersionUtils.majorVersion(version);
+        int minor = VersionUtils.minorVersion(version);
+        return major > 3 || (major == 3 && minor >= 4);
+    }
 }

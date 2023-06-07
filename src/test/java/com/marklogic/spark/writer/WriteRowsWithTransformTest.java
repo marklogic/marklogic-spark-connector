@@ -98,11 +98,12 @@ public class WriteRowsWithTransformTest extends AbstractWriteTest {
                 .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
                 .save());
 
-        assertTrue(ex.getCause() instanceof IOException);
-        assertTrue(ex.getCause().getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IOException);
+        assertTrue(cause.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
             "The connector can't easily validate that a REST transform is valid, but the expectation is that the " +
                 "error message from the REST API will make the problem evident to the user; " +
-                "unexpected message: " + ex.getCause().getMessage());
+                "unexpected message: " + cause.getMessage());
     }
 
     @Test
@@ -113,10 +114,11 @@ public class WriteRowsWithTransformTest extends AbstractWriteTest {
                 .option(Options.WRITE_TRANSFORM_PARAMS, "param1,value1,param2")
                 .save());
 
-        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException);
         assertEquals(
             "The spark.marklogic.write.transformParams option must contain an equal number of parameter names and values; received: param1,value1,param2",
-            ex.getCause().getMessage()
+            cause.getMessage()
         );
     }
 }

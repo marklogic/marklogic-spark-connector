@@ -58,4 +58,16 @@ abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .option("spark.marklogic.client.username", "spark-test-user")
             .option("spark.marklogic.client.password", "spark");
     }
+
+    /**
+     * In Spark 3.3, an error from our writer - such as an IllegalArgumentException for an invalid option - is two
+     * layers deep in a SparkException. In Spark 3.4, it's one layer deep. This method is used to hide that from
+     * test classes so that when we upgrade from Spark 3.3 to Spark 3.4, it's easy to update the tests.
+     *
+     * @param ex
+     * @return
+     */
+    protected final Throwable getCauseFromWriterException(Exception ex) {
+        return isSpark340OrHigher() ? ex.getCause() : ex.getCause().getCause();
+    }
 }

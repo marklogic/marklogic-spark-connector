@@ -27,7 +27,6 @@ import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.read.SupportsPushDownAggregates;
 import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
 import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
-import org.apache.spark.sql.connector.read.SupportsPushDownOffset;
 import org.apache.spark.sql.connector.read.SupportsPushDownRequiredColumns;
 import org.apache.spark.sql.connector.read.SupportsPushDownTopN;
 import org.apache.spark.sql.sources.Filter;
@@ -40,7 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
-    SupportsPushDownOffset, SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
+    SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
@@ -140,18 +139,6 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
     }
 
     @Override
-    public boolean pushOffset(int offset) {
-        if (readContext.planAnalysisFoundNoRows()) {
-            return false;
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Pushing down offset: {}", offset);
-        }
-        readContext.pushDownOffset(offset);
-        return true;
-    }
-
-    @Override
     public boolean pushAggregation(Aggregation aggregation) {
         if (readContext.planAnalysisFoundNoRows()) {
             return false;
@@ -160,7 +147,7 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
             if (aggregation.groupByExpressions().length > 0) {
                 Expression expr = aggregation.groupByExpressions()[0];
                 if (logger.isDebugEnabled()) {
-                    logger.debug("Pushing down by groupBy + count on: {}", expr.describe());
+                    logger.debug("Pushing down groupBy + count on: {}", expr.describe());
                 }
                 readContext.pushDownGroupByCount(expr);
             } else {

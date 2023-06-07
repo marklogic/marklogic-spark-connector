@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-  compileOnly 'org.apache.spark:spark-sql_2.12:3.4.0'
+  compileOnly 'org.apache.spark:spark-sql_2.12:' + sparkVersion
   implementation "com.marklogic:marklogic-client-api:6.2.1"
 
   // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
@@ -29,7 +29,7 @@ dependencies {
     exclude module: "scala-library"
   }
 
-  testImplementation 'org.apache.spark:spark-sql_2.12:3.4.0'
+  testImplementation 'org.apache.spark:spark-sql_2.12:' + sparkVersion
   testImplementation 'com.marklogic:ml-app-deployer:4.5.2'
   testImplementation 'com.marklogic:marklogic-junit5:1.3.0'
   testImplementation "ch.qos.logback:logback-classic:1.3.5"
