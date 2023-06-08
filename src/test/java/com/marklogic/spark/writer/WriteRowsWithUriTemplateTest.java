@@ -70,7 +70,8 @@ public class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
                 .save()
         );
 
-        assertTrue(ex.getCause() instanceof RuntimeException, "Unexpected cause: " + ex.getCause());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof RuntimeException, "Unexpected cause: " + cause);
         final String expectedMessage = "Did not find column 'doesntExist' in row: " +
             "{\"id\":\"1\",\"content\":\"hello world\"," +
             "\"systemStart\":\"2014-04-03T11:00:00\",\"systemEnd\":\"2014-04-03T16:00:00\"," +
@@ -78,7 +79,7 @@ public class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             "\"columnWithOnlyWhitespace\":\"   \"}; " +
             "column is required by URI template: /test/{id}/{doesntExist}.json";
 
-        assertEquals(expectedMessage, ex.getCause().getMessage(), "The entire JSON row is being included in the error " +
+        assertEquals(expectedMessage, cause.getMessage(), "The entire JSON row is being included in the error " +
             "message so that the user is able to figure out what a column they chose in the URI template isn't " +
             "populated in a particular row.");
 
@@ -93,8 +94,9 @@ public class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
                 .save()
         );
 
-        assertTrue(ex.getCause() instanceof RuntimeException, "Unexpected cause: " + ex.getCause());
-        System.out.println(ex.getCause().getMessage());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof RuntimeException, "Unexpected cause: " + cause);
+        System.out.println(cause.getMessage());
     }
 
     private void verifyTemplateIsInvalid(String uriTemplate, String expectedMessage) {
@@ -103,9 +105,10 @@ public class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             () -> newWriter().option(Options.WRITE_URI_TEMPLATE, uriTemplate).save()
         );
 
-        assertTrue(ex.getCause() instanceof IllegalArgumentException, "Unexpected cause: " + ex.getCause());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause);
 
-        String message = ex.getCause().getMessage();
+        String message = cause.getMessage();
         expectedMessage = "Invalid value for " + Options.WRITE_URI_TEMPLATE + ": " + uriTemplate + "; " + expectedMessage;
         assertEquals(expectedMessage, message, "Unexpected error message: " + message);
     }

@@ -152,10 +152,6 @@ public class ReadContext extends ContextSupport {
         addOperatorToPlan(PlanUtil.buildLimit(limit));
     }
 
-    void pushDownOffset(int offset) {
-        addOperatorToPlan(PlanUtil.buildOffset(offset));
-    }
-
     void pushDownTopN(SortOrder[] orders, int limit) {
         for (SortOrder sortOrder : orders) {
             addOperatorToPlan(PlanUtil.buildOrderBy(sortOrder));

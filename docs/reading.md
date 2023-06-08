@@ -118,7 +118,6 @@ down the following operations to MarkLogic:
 - `filter` and `where`
 - `groupBy` when followed by `count`
 - `limit`
-- `offset`
 - `orderBy`
 
 For each of the above operations, user's Optic query is enhanced to include the associated Optic function.

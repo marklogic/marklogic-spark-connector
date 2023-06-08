@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WriteStreamOfRowsTest extends AbstractIntegrationTest {
+public class WriteStreamOfRowsTest extends AbstractWriteTest {
 
     private final static StructType SCHEMA = new StructType()
         .add("Name", DataTypes.StringType)
@@ -65,8 +65,10 @@ public class WriteStreamOfRowsTest extends AbstractIntegrationTest {
         // from the background thread. Calling processAllAvailable should force an error to occur.
 
         StreamingQueryException ex = assertThrows(StreamingQueryException.class, () -> query.processAllAvailable());
-        assertTrue(ex.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
-            "Unexpected error: " + ex.getCause());
+        Throwable cause = getCauseFromWriterException(ex);
+        cause = isSpark340OrHigher() ? cause : cause.getCause();
+        assertTrue(cause.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
+            "Unexpected error: " + cause);
     }
 
     private DataStreamWriter newDefaultStreamWriter(Path tempDir) {

@@ -98,8 +98,9 @@ public class WriteRowsTest extends AbstractWriteTest {
             () -> newWriter().option(Options.WRITE_THREAD_COUNT, 0).save()
         );
 
-        assertTrue(ex.getCause() instanceof IllegalArgumentException, "Unexpected cause: " + ex.getCause().getClass());
-        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater", ex.getCause().getMessage());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
+        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater", cause.getMessage());
         verifyNoDocsWereWritten();
     }
 
@@ -110,8 +111,9 @@ public class WriteRowsTest extends AbstractWriteTest {
             () -> newWriter().option(Options.WRITE_BATCH_SIZE, 0).save()
         );
 
-        assertTrue(ex.getCause() instanceof IllegalArgumentException, "Unexpected cause: " + ex.getCause().getClass());
-        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater", ex.getCause().getMessage(),
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
+        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater", cause.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
                 "many requests will be made by a partition, and zero is a valid value for reading.");
@@ -143,10 +145,11 @@ public class WriteRowsTest extends AbstractWriteTest {
                 .save()
         );
 
-        assertTrue(ex.getCause() instanceof RuntimeException, "Expecting a RuntimeException due to the invalid " +
-            "credentials; unexpected cause: " + ex.getCause());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof RuntimeException, "Expecting a RuntimeException due to the invalid " +
+            "credentials; unexpected cause: " + cause);
 
-        assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", ex.getCause().getMessage());
+        assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", cause.getMessage());
     }
 
     /**
@@ -172,10 +175,11 @@ public class WriteRowsTest extends AbstractWriteTest {
             .option(Options.WRITE_PERMISSIONS, "rest-reader,read,rest-writer")
             .save());
 
-        assertTrue(ex.getCause() instanceof IllegalArgumentException);
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException);
         assertEquals("Unable to parse permissions string, which must be a comma-separated list of role names and " +
             "capabilities - i.e. role1,read,role2,update,role3,execute; " +
-            "string: rest-reader,read,rest-writer", ex.getCause().getMessage());
+            "string: rest-reader,read,rest-writer", cause.getMessage());
     }
 
     @Test
@@ -192,10 +196,11 @@ public class WriteRowsTest extends AbstractWriteTest {
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
-        assertNotNull(ex.getCause(), "Unexpected exception with no cause: " + ex.getClass() + "; " + ex.getMessage());
-        assertTrue(ex.getCause() instanceof IOException, "Unexpected cause: " + ex.getCause().getClass());
-        assertTrue(ex.getCause().getMessage().contains("Server Message: You do not have permission to this method and URL"),
-            "Unexpected cause message: " + ex.getCause().getMessage());
+        Throwable cause = getCauseFromWriterException(ex);
+        assertNotNull(cause, "Unexpected exception with no cause: " + ex.getClass() + "; " + ex.getMessage());
+        assertTrue(cause instanceof IOException, "Unexpected cause: " + cause.getClass());
+        assertTrue(cause.getMessage().contains("Server Message: You do not have permission to this method and URL"),
+            "Unexpected cause message: " + cause.getMessage());
         verifyNoDocsWereWritten();
     }
 

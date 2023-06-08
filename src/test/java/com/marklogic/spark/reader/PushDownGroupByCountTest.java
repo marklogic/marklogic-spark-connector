@@ -114,12 +114,25 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(4, rows.size());
-        assertEquals(4, countOfRowsReadFromMarkLogic);
+        if (isSpark340OrHigher()) {
+            assertEquals(4, countOfRowsReadFromMarkLogic);
+        } else {
+            assertEquals(5, countOfRowsReadFromMarkLogic, "With Spark 3.3.x, the limit is not pushed down, perhaps " +
+                "when groupBy is called as well. Spark 3.4.0 fixes this so that the limit is pushed down. So for 3.3.x, " +
+                "we expect all 5 rows - one per CitationID.");
+        }
         assertEquals(4l, (long) rows.get(0).getAs("CitationID"));
         assertEquals(1l, (long) rows.get(0).getAs("count"));
     }
 
     private void verifyGroupByWasPushedDown(List<Row> rows) {
+        /**
+         * Note that in Spark 3.3.0, there seems to be a bug where groupBy+count are not always pushed down. That's not
+         * an issue in Spark 3.3.2, so the behavior in 3.3.0 seems to be considered buggy and thus fixed in 3.3.2.
+         * While AWS Glue and EMR are both currently using 3.3.0 and not 3.3.2, we'd rather test against the latest
+         * bugfix release to ensure we're in sync with that and not writing test assertions against what's considered
+         * buggy behavior in 3.3.0.
+         */
         assertEquals(5, countOfRowsReadFromMarkLogic, "groupBy should be pushed down to MarkLogic when used with " +
             "count, and since there are 5 CitationID values, 5 rows should be returned.");
 
