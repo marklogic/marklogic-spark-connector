@@ -90,6 +90,23 @@ pipeline{
             runtests('Release','10.0-9.5','JAVA17_HOME_DIR')
           }
         }
+        stage('11.0.2-java8-spark3.4'){
+          agent {label 'devExpLinuxPool'}
+          steps{
+            copyRPM 'Release','11.0.2'
+            setUpML '$WORKSPACE/xdmp/src/Mark*.rpm'
+            sh label:'test', script: '''#!/bin/bash
+              export JAVA_HOME=$JAVA8_HOME_DIR
+              export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
+              export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
+              cd marklogic-spark-connector
+              echo "mlPassword=admin" > gradle-local.properties
+              ./gradlew -i mlDeploy
+              ./gradlew test -PsparkVersion="3.4.0" || true
+            '''
+            junit '**/build/**/*.xml'
+          }
+        }
       }
     }
   }
