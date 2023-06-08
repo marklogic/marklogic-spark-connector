@@ -120,10 +120,14 @@ down the following operations to MarkLogic:
 - `limit`
 - `orderBy`
 
-For each of the above operations, user's Optic query is enhanced to include the associated Optic function.
+For each of the above operations, the user's Optic query is enhanced to include the associated Optic function.
 Note that if multiple partitions are used to perform the `read` operation, each
 partition will apply the above functions on the rows that it retrieves from MarkLogic. Spark will then merge the results
 from each partition and re-apply the function calls as necessary to ensure that the correct response is returned.
+
+If either `count` or `groupBy` and `count` are pushed down, the connector will make a single request to MarkLogic to 
+resolve the query (thus ignoring the number of partitions and batch size that may have been configured; see below 
+for more information on these options), ensuring that a single count or set of counts is returned to Spark. 
 
 ## Tuning performance
 
