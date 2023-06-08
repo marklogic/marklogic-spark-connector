@@ -145,11 +145,10 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         }
         if (supportCompletePushDown(aggregation)) {
             if (aggregation.groupByExpressions().length > 0) {
-                Expression expr = aggregation.groupByExpressions()[0];
                 if (logger.isInfoEnabled()) {
-                    logger.info("Pushing down groupBy + count on: {}", expr.describe());
+                    logger.info("Pushing down groupBy + count on: {}", Arrays.asList(aggregation.groupByExpressions()));
                 }
-                readContext.pushDownGroupByCount(expr);
+                readContext.pushDownGroupByCount(aggregation.groupByExpressions());
             } else {
                 if (logger.isInfoEnabled()) {
                     logger.info("Pushing down count()");
@@ -167,12 +166,10 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
             return false;
         }
         AggregateFunc[] expressions = aggregation.aggregateExpressions();
-        if (expressions.length == 1 && expressions[0] instanceof CountStar) {
-            // If a count() is used, it's supported if there's no groupBy - i.e. just doing a count() by itself -
-            // and supported with a single groupBy - e.g. groupBy("column").count().
-            return aggregation.groupByExpressions().length < 2;
-        }
-        return false;
+        // If a count() is used, it's supported if there's no groupBy - i.e. just doing a count() by itself -
+        // and supported with 1 to many groupBy's - e.g. groupBy("column", "someOtherColumn").count().
+        // Other aggregate functions will be supported in the near future.
+        return expressions.length == 1 && expressions[0] instanceof CountStar;
     }
 
     @Override

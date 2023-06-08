@@ -48,9 +48,10 @@ public abstract class PlanUtil {
         });
     }
 
-    static ObjectNode buildGroupByCount(String columnName) {
+    static ObjectNode buildGroupByCount(List<String> columnNames) {
         return newOperation("group-by", args -> {
-            populateSchemaCol(args.addObject(), columnName);
+            ArrayNode columns = args.addArray();
+            columnNames.forEach(columnName -> populateSchemaCol(columns.addObject(), columnName));
             addCountArg(args);
         });
     }
