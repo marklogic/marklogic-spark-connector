@@ -63,6 +63,7 @@ public abstract class SchemaInferrer {
         put("unsignedInt", DataTypes.IntegerType);
         put("iri", DataTypes.StringType);
         put("time", DataTypes.StringType);
+        put("unknown", DataTypes.StringType);
     }};
 
     /**
