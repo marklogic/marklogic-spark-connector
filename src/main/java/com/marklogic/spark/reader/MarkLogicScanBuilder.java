@@ -78,8 +78,8 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         for (Filter filter : filters) {
             OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
             if (opticFilter != null) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Pushing down filter: {}", filter);
+                if (logger.isInfoEnabled()) {
+                    logger.info("Pushing down filter: {}", filter);
                 }
                 opticFilters.add(opticFilter);
                 this.pushedFilters.add(filter);
@@ -108,8 +108,8 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         if (readContext.planAnalysisFoundNoRows()) {
             return false;
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Pushing down limit: {}", limit);
+        if (logger.isInfoEnabled()) {
+            logger.info("Pushing down limit: {}", limit);
         }
         readContext.pushDownLimit(limit);
         return true;
@@ -123,8 +123,8 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         // This will be invoked when the user calls both orderBy and limit in their Spark program. If the user only
         // calls limit, then only pushLimit is called and this will not be called. If the user only calls orderBy and
         // not limit, then neither this nor pushLimit will be called.
-        if (logger.isDebugEnabled()) {
-            logger.debug("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
+        if (logger.isInfoEnabled()) {
+            logger.info("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
         }
         readContext.pushDownTopN(orders, limit);
         return true;
@@ -146,13 +146,13 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         if (supportCompletePushDown(aggregation)) {
             if (aggregation.groupByExpressions().length > 0) {
                 Expression expr = aggregation.groupByExpressions()[0];
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Pushing down groupBy + count on: {}", expr.describe());
+                if (logger.isInfoEnabled()) {
+                    logger.info("Pushing down groupBy + count on: {}", expr.describe());
                 }
                 readContext.pushDownGroupByCount(expr);
             } else {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Pushing down count()");
+                if (logger.isInfoEnabled()) {
+                    logger.info("Pushing down count()");
                 }
                 readContext.pushDownCount();
             }
@@ -185,6 +185,7 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
                 logger.debug("The schema to push down is equal to the existing schema, so not pushing it down.");
             }
         } else {
+            // Keeping this at debug level as it can be fairly verbose.
             if (logger.isDebugEnabled()) {
                 logger.debug("Pushing down required schema: {}", requiredSchema.json());
             }
