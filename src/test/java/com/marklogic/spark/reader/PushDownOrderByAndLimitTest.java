@@ -188,6 +188,25 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
         verifyRowsAreOrderedByCitationID(rows);
     }
 
+    @Test
+    void sortByMultiple() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
+            .load()
+            .sort("CitationID", "LastName")
+            .limit(8)
+            .collectAsList();
+
+        assertEquals(8, rows.size());
+        verifyRowsAreOrderedByCitationID(rows);
+
+        // Verify the first few rows to make sure they're sorted by LastName as well based on known values.
+        final String column = "LastName";
+        assertEquals("Awton", rows.get(0).getAs(column));
+        assertEquals("Bernadzki", rows.get(1).getAs(column));
+        assertEquals("Canham", rows.get(2).getAs(column));
+    }
+
     private void verifyRowsAreOrderedByCitationID(List<Row> rows) {
         // Lowest known CitationID is 1, so start comparisons against that.
         long previousValue = 1;

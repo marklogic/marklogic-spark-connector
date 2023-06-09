@@ -118,7 +118,7 @@ down the following operations to MarkLogic:
 - `filter` and `where`
 - `groupBy` when followed by `count`
 - `limit`
-- `orderBy`
+- `orderBy` and `sort`
 
 For each of the above operations, the user's Optic query is enhanced to include the associated Optic function.
 Note that if multiple partitions are used to perform the `read` operation, each
@@ -127,7 +127,42 @@ from each partition and re-apply the function calls as necessary to ensure that 
 
 If either `count` or `groupBy` and `count` are pushed down, the connector will make a single request to MarkLogic to 
 resolve the query (thus ignoring the number of partitions and batch size that may have been configured; see below 
-for more information on these options), ensuring that a single count or set of counts is returned to Spark. 
+for more information on these options), ensuring that a single count or set of counts is returned to Spark.
+
+In the following example, every operation after `load()` is pushed down to MarkLogic, thereby resulting in far fewer 
+rows being returned to Spark and far less work having to be done by Spark:
+
+```
+spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee', '')") \
+    .load() \
+    .filter("HiredDate < '2020-01-01'") \
+    .groupBy("State", "Department") \
+    .count() \
+    .orderBy("State", "count") \
+    .limit(10) \
+    .show()
+```
+
+The following results are returned:
+
+```
++-----+-----------+-----+                                                       
+|State| Department|count|
++-----+-----------+-----+
+|   AL|  Marketing|    1|
+|   AL|   Training|    1|
+|   AL|        R&D|    4|
+|   AL|      Sales|    4|
+|   AR|      Sales|    1|
+|   AR|  Marketing|    3|
+|   AR|        R&D|    9|
+|   AZ|   Training|    1|
+|   AZ|Engineering|    2|
+|   AZ|        R&D|    2|
++-----+-----------+-----+
+```
 
 ## Tuning performance
 
