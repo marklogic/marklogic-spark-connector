@@ -42,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Captures state - all of which is serializable - that can be calculated at different times based on a user's inputs.
@@ -166,21 +168,30 @@ public class ReadContext extends ContextSupport {
         modifyPlanAnalysisToUseSingleBucket();
     }
 
-    void pushDownGroupByCount(Expression groupBy) {
-        final String columnName = PlanUtil.expressionToColumnName(groupBy);
-        addOperatorToPlan(PlanUtil.buildGroupByCount(columnName));
+    void pushDownGroupByCount(Expression[] groupByExpressions) {
+        List<String> columnNames = Stream.of(groupByExpressions)
+            .map(groupBy -> PlanUtil.expressionToColumnName(groupBy))
+            .collect(Collectors.toList());
 
-        StructField columnField = null;
-        for (StructField field : this.schema.fields()) {
-            if (columnName.equals(field.name())) {
-                columnField = field;
-                break;
+        addOperatorToPlan(PlanUtil.buildGroupByCount(columnNames));
+
+        StructType newSchema = new StructType();
+
+        for (String columnName : columnNames) {
+            StructField columnField = null;
+            for (StructField field : this.schema.fields()) {
+                if (columnName.equals(field.name())) {
+                    columnField = field;
+                    break;
+                }
             }
+            if (columnField == null) {
+                throw new IllegalArgumentException("Unable to find groupBy column in schema; column name: " + columnName);
+            }
+            newSchema = newSchema.add(columnField);
         }
-        if (columnField == null) {
-            throw new IllegalArgumentException("Unable to find groupBy column in schema; groupBy expression: " + groupBy.describe());
-        }
-        this.schema = new StructType().add(columnField).add("count", DataTypes.LongType);
+
+        this.schema = newSchema.add("count", DataTypes.LongType);
         modifyPlanAnalysisToUseSingleBucket();
     }
 

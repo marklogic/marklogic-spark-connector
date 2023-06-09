@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 
@@ -37,6 +38,24 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
 
         verifyGroupByWasPushedDown(rows);
         assertEquals(1l, (long) rows.get(0).getAs("CitationID"));
+    }
+
+    @Test
+    void groupByMultipleColumns() {
+        List<Row> rows = newDefaultReader()
+            .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
+            .load()
+            .groupBy("CitationID", "Date")
+            .count()
+            .orderBy("CitationID")
+            .collectAsList();
+
+        verifyGroupByWasPushedDown(rows);
+
+        assertEquals(1l, (long) rows.get(0).getAs("CitationID"));
+        assertEquals("2022-07-13", rows.get(0).getAs("Date").toString());
+        assertEquals(2l, (long) rows.get(1).getAs("CitationID"));
+        assertEquals("2022-05-11", rows.get(1).getAs("Date").toString());
     }
 
     @Test
@@ -79,6 +98,23 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
         verifyGroupByWasPushedDown(rows);
         assertEquals(1l, (long) rows.get(0).getAs("Medical.Authors.CitationID"));
     }
+
+    @Test
+    void groupByMultipleColumnsAndSchemaAndView() {
+        List<Row> rows = newDefaultReader()
+            .load()
+            .groupBy("`Medical.Authors.CitationID`", "`Medical.Authors.Date`")
+            .count()
+            .orderBy("`Medical.Authors.CitationID`")
+            .collectAsList();
+
+        verifyGroupByWasPushedDown(rows);
+
+        verifyGroupByWasPushedDown(rows);
+        assertEquals(1l, (long) rows.get(0).getAs("Medical.Authors.CitationID"));
+        assertEquals("2022-07-13", rows.get(0).getAs("Medical.Authors.Date").toString());
+    }
+
 
     @Test
     void groupByCountLimitOrderBy() {
