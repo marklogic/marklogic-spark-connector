@@ -155,9 +155,7 @@ public class ReadContext extends ContextSupport {
     }
 
     void pushDownTopN(SortOrder[] orders, int limit) {
-        for (SortOrder sortOrder : orders) {
-            addOperatorToPlan(PlanUtil.buildOrderBy(sortOrder));
-        }
+        addOperatorToPlan(PlanUtil.buildOrderBy(orders));
         pushDownLimit(limit);
     }
 
