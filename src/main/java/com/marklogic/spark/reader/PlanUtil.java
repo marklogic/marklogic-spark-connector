@@ -68,19 +68,25 @@ public abstract class PlanUtil {
         return newOperation("limit", args -> args.add(limit));
     }
 
-    static ObjectNode buildOrderBy(SortOrder sortOrder) {
-        final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
-        final String columnName = expressionToColumnName(sortOrder.expression());
+    static ObjectNode buildOrderBy(SortOrder[] sortOrders) {
         return newOperation("order-by", args -> {
-            ArrayNode orderByArgs = args.addObject().put("ns", "op").put("fn", direction).putArray("args");
-            // This may be a bad hack to account for when the user does a groupBy/count/orderBy/limit, which does not
-            // seem like the correct approach - the Spark ScanBuilder javadocs indicate that it should be limit/orderBy
-            // instead. In the former scenario, we get "COUNT(*)" as the expression to order by, and we know that's not
-            // the column name.
-            if (logger.isDebugEnabled()) {
-                logger.debug("Adjusting `COUNT(*)` column to be `count`");
+            ArrayNode innerArgs = args.addArray();
+            for (SortOrder sortOrder: sortOrders) {
+                final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
+                ArrayNode orderByArgs = innerArgs.addObject().put("ns", "op").put("fn", direction).putArray("args");
+                String columnName = expressionToColumnName(sortOrder.expression());
+                // This may be a bad hack to account for when the user does a groupBy/count/orderBy/limit, which does not
+                // seem like the correct approach - the Spark ScanBuilder javadocs indicate that it should be limit/orderBy
+                // instead. In the former scenario, we get "COUNT(*)" as the expression to order by, and we know that's not
+                // the column name.
+                if ("COUNT(*)".equals(columnName)) {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Adjusting `COUNT(*)` column to be `count`");
+                    }
+                    columnName = "count";
+                }
+                populateSchemaCol(orderByArgs.addObject(), columnName);
             }
-            populateSchemaCol(orderByArgs.addObject(), "COUNT(*)".equals(columnName) ? "count" : columnName);
         });
     }
 
