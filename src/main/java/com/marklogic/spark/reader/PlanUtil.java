@@ -23,13 +23,24 @@ import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.NamedReference;
 import org.apache.spark.sql.connector.expressions.SortDirection;
 import org.apache.spark.sql.connector.expressions.SortOrder;
+import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
+import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
+import org.apache.spark.sql.connector.expressions.aggregate.Avg;
+import org.apache.spark.sql.connector.expressions.aggregate.Count;
+import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
+import org.apache.spark.sql.connector.expressions.aggregate.Max;
+import org.apache.spark.sql.connector.expressions.aggregate.Min;
+import org.apache.spark.sql.connector.expressions.aggregate.Sum;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Methods for modifying a serialized Optic plan. These were moved here both to facilitate unit testing for some of them
@@ -41,27 +52,59 @@ public abstract class PlanUtil {
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
-    static ObjectNode buildGroupByCount() {
-        return newOperation("group-by", args -> {
-            args.add(objectMapper.nullNode());
-            addCountArg(args);
+    private static Map<Class<? extends AggregateFunc>, Function<AggregateFunc, OpticFunction>> aggregateFunctionHandlers;
+
+    // Construct the mapping of Spark aggregate function instances to OpticFunction instances that are used to build
+    // the corresponding serialized Optic function reference.
+    static {
+        aggregateFunctionHandlers = new HashMap<>();
+        aggregateFunctionHandlers.put(Avg.class, func -> {
+            Avg avg = (Avg) func;
+            return new OpticFunction("avg", avg.column(), avg.isDistinct());
+        });
+        aggregateFunctionHandlers.put(Count.class, func -> {
+            Count count = (Count)func;
+            return new OpticFunction("count", count.column(), count.isDistinct());
+        });
+        aggregateFunctionHandlers.put(Max.class, func -> new OpticFunction("max", ((Max) func).column()));
+        aggregateFunctionHandlers.put(Min.class, func -> new OpticFunction("min", ((Min) func).column()));
+        aggregateFunctionHandlers.put(Sum.class, func -> {
+            Sum sum = (Sum) func;
+            return new OpticFunction("sum", sum.column(), sum.isDistinct());
         });
     }
 
-    static ObjectNode buildGroupByCount(List<String> columnNames) {
-        return newOperation("group-by", args -> {
-            ArrayNode columns = args.addArray();
+    static ObjectNode buildGroupByAggregation(List<String> columnNames, Aggregation aggregation) {
+        return newOperation("group-by", groupByArgs -> {
+            ArrayNode columns = groupByArgs.addArray();
             columnNames.forEach(columnName -> populateSchemaCol(columns.addObject(), columnName));
-            addCountArg(args);
-        });
-    }
 
-    private static void addCountArg(ArrayNode args) {
-        args.addObject().put("ns", "op").put("fn", "count").putArray("args")
-            // "count" is used as the column name as that's what Spark uses when the operation is not pushed down.
-            .add("count")
-            // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
-            .add(objectMapper.nullNode());
+            ArrayNode aggregates = groupByArgs.addArray();
+            for (AggregateFunc func : aggregation.aggregateExpressions()) {
+                // Need special handling for CountStar, as it does not have a column name with it.
+                if (func instanceof CountStar) {
+                    aggregates.addObject().put("ns", "op").put("fn", "count").putArray("args")
+                        // "count" is used as the column name as that's what Spark uses when the operation is not pushed down.
+                        .add("count")
+                        // Using "null" is the equivalent of "count(*)" - it counts rows, not values.
+                        .add(objectMapper.nullNode());
+                } else if (aggregateFunctionHandlers.containsKey(func.getClass())) {
+                    OpticFunction opticFunction = aggregateFunctionHandlers.get(func.getClass()).apply(func);
+                    ArrayNode aggregateArgs = aggregates
+                        .addObject().put("ns", "op").put("fn", opticFunction.functionName)
+                        .putArray("args");
+                    aggregateArgs.add(func.toString());
+                    populateSchemaCol(aggregateArgs.addObject(), opticFunction.columnName);
+                    // TODO This is the correct JSON to add, but have not found a way to create an AggregateFunc that
+                    // returns "true" for isDistinct().
+                    if (opticFunction.distinct) {
+                        aggregateArgs.addObject().put("values", "distinct");
+                    }
+                } else {
+                    logger.info("Unsupported aggregate function, will not be pushed to Optic: {}", func);
+                }
+            }
+        });
     }
 
     static ObjectNode buildLimit(int limit) {
@@ -71,7 +114,7 @@ public abstract class PlanUtil {
     static ObjectNode buildOrderBy(SortOrder[] sortOrders) {
         return newOperation("order-by", args -> {
             ArrayNode innerArgs = args.addArray();
-            for (SortOrder sortOrder: sortOrders) {
+            for (SortOrder sortOrder : sortOrders) {
                 final String direction = SortDirection.ASCENDING.equals(sortOrder.direction()) ? "asc" : "desc";
                 ArrayNode orderByArgs = innerArgs.addObject().put("ns", "op").put("fn", direction).putArray("args");
                 String columnName = expressionToColumnName(sortOrder.expression());
@@ -169,5 +212,25 @@ public abstract class PlanUtil {
                 "to have exactly one field name.");
         }
         return fieldNames[0];
+    }
+
+    /**
+     * Captures the name of an Optic function and the column name based on a Spark AggregateFunc's Expression. Used
+     * to simplify building a serialized Optic function reference.
+     */
+    private static class OpticFunction {
+        final String functionName;
+        final String columnName;
+        final boolean distinct;
+
+        OpticFunction(String functionName, Expression column) {
+            this(functionName, column, false);
+        }
+
+        OpticFunction(String functionName, Expression column, boolean distinct) {
+            this.functionName = functionName;
+            this.columnName = expressionToColumnName(column);
+            this.distinct = distinct;
+        }
     }
 }

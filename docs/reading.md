@@ -110,24 +110,20 @@ fixed via changes to the options passed to the connector should be reported as n
 
 The Spark connector framework supports pushing down multiple operations to the connector data source. This can
 often provide a significant performance boost by allowing the data source to perform the operation, which can result in
-both fewer rows returned to Spark and less work for Spark to perform. The connector supports pushing
+both fewer rows returned to Spark and less work for Spark to perform. The MarkLogic Spark connector supports pushing
 down the following operations to MarkLogic:
 
 - `count`
 - `drop` and `select`
 - `filter` and `where`
-- `groupBy` when followed by `count`
+- `groupBy` plus any of `avg`, `count`, `max`, `mean`, `min`, or `sum`
 - `limit`
 - `orderBy` and `sort`
 
-For each of the above operations, the user's Optic query is enhanced to include the associated Optic function.
-Note that if multiple partitions are used to perform the `read` operation, each
-partition will apply the above functions on the rows that it retrieves from MarkLogic. Spark will then merge the results
-from each partition and re-apply the function calls as necessary to ensure that the correct response is returned.
-
-If either `count` or `groupBy` and `count` are pushed down, the connector will make a single request to MarkLogic to 
-resolve the query (thus ignoring the number of partitions and batch size that may have been configured; see below 
-for more information on these options), ensuring that a single count or set of counts is returned to Spark.
+For each of the above operations, the user's Optic query is enhanced to include the associated Optic function. Note 
+that if multiple partitions are used to perform the `read` operation, each partition will apply the above 
+functions on the rows that it retrieves from MarkLogic. Spark will then merge the results from each partition and 
+apply the aggregation to ensure that the correct response is returned. 
 
 In the following example, every operation after `load()` is pushed down to MarkLogic, thereby resulting in far fewer 
 rows being returned to Spark and far less work having to be done by Spark:

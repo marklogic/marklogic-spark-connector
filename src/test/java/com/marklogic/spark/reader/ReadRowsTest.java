@@ -47,7 +47,7 @@ public class ReadRowsTest extends AbstractIntegrationTest {
             assertTrue(id >= 1 && id <= 5, "The citation ID is expected to be the first column value, and based on our " +
                 "test data, it should have a value from 1 to 5; actual value: " + id);
 
-            assertEquals(8, row.size(), "Expecting the row to have 8 columns since the TDE defines 8 columns, and the " +
+            assertEquals(9, row.size(), "Expecting the row to have 9 columns since the TDE defines 9 columns, and the " +
                 "Spark schema is expected to be inferred from the TDE.");
         });
     }

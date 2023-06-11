@@ -17,11 +17,14 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
-import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
-import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
 import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
+import org.apache.spark.sql.connector.expressions.aggregate.Avg;
+import org.apache.spark.sql.connector.expressions.aggregate.Count;
 import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
+import org.apache.spark.sql.connector.expressions.aggregate.Max;
+import org.apache.spark.sql.connector.expressions.aggregate.Min;
+import org.apache.spark.sql.connector.expressions.aggregate.Sum;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.read.SupportsPushDownAggregates;
@@ -36,7 +39,10 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Stream;
 
 public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
     SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
@@ -45,6 +51,15 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     private ReadContext readContext;
     private List<Filter> pushedFilters;
+
+    private final static Set<Class> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet() {{
+        add(Avg.class);
+        add(Count.class);
+        add(CountStar.class);
+        add(Max.class);
+        add(Min.class);
+        add(Sum.class);
+    }};
 
     public MarkLogicScanBuilder(ReadContext readContext) {
         this.readContext = readContext;
@@ -138,38 +153,46 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         return readContext.getBucketCount() > 1;
     }
 
-    @Override
-    public boolean pushAggregation(Aggregation aggregation) {
-        if (readContext.planAnalysisFoundNoRows()) {
-            return false;
-        }
-        if (supportCompletePushDown(aggregation)) {
-            if (aggregation.groupByExpressions().length > 0) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Pushing down groupBy + count on: {}", Arrays.asList(aggregation.groupByExpressions()));
-                }
-                readContext.pushDownGroupByCount(aggregation.groupByExpressions());
-            } else {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Pushing down count()");
-                }
-                readContext.pushDownCount();
-            }
-            return true;
-        }
-        return false;
-    }
-
+    /**
+     * Per the Spark javadocs, this should return true if we can push down the entire aggregation. This is only
+     * possible if every aggregation function is supported and if only one request will be made to MarkLogic. If
+     * multiple requests are made to MarkLogic (based on the user-defined partition count and batch size), then
+     * Spark has to apply the aggregation against the combined set of rows returned from all requests to MarkLogic.
+     *
+     * @param aggregation
+     * @return
+     */
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
         if (readContext.planAnalysisFoundNoRows()) {
             return false;
         }
-        AggregateFunc[] expressions = aggregation.aggregateExpressions();
-        // If a count() is used, it's supported if there's no groupBy - i.e. just doing a count() by itself -
-        // and supported with 1 to many groupBy's - e.g. groupBy("column", "someOtherColumn").count().
-        // Other aggregate functions will be supported in the near future.
-        return expressions.length == 1 && expressions[0] instanceof CountStar;
+
+        if (hasUnsupportedAggregateFunction(aggregation)) {
+            logger.info("Aggregation contains one or more unsupported functions, " +
+                "so not pushing aggregation to MarkLogic: {}", describeAggregation(aggregation));
+            return false;
+        }
+
+        if (readContext.getBucketCount() > 1) {
+            logger.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
+                describeAggregation(aggregation));
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public boolean pushAggregation(Aggregation aggregation) {
+        // For the initial 2.0 release, there aren't any known unsupported aggregate functions that can be called
+        // after a "groupBy". If one is detected though, the aggregation won't be pushed down as it's uncertain if
+        // pushing it down would produce the correct results.
+        if (readContext.planAnalysisFoundNoRows() || hasUnsupportedAggregateFunction(aggregation)) {
+            return false;
+        }
+        logger.info("Pushing down aggregation: {}", describeAggregation(aggregation));
+        readContext.pushDownAggregation(aggregation);
+        return true;
     }
 
     @Override
@@ -188,5 +211,17 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
             }
             readContext.pushDownRequiredSchema(requiredSchema);
         }
+    }
+
+    private boolean hasUnsupportedAggregateFunction(Aggregation aggregation) {
+        return Stream
+            .of(aggregation.aggregateExpressions())
+            .anyMatch(func -> !SUPPORTED_AGGREGATE_FUNCTIONS.contains(func.getClass()));
+    }
+
+    private String describeAggregation(Aggregation aggregation) {
+        return String.format("groupBy: %s; aggregates: %s",
+            Arrays.asList(aggregation.groupByExpressions()),
+            Arrays.asList(aggregation.aggregateExpressions()));
     }
 }
