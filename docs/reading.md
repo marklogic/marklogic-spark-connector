@@ -160,6 +160,13 @@ The following results are returned:
 +-----+-----------+-----+
 ```
 
+### Disabling push down of aggregates
+
+If you run into any issues with aggregates being pushed down to MarkLogic, you can set the 
+`spark.marklogic.read.pushDownAggregates` option to `false`. If doing so results in what appears to be a different and 
+correct result, please [file an issue with this project](https://github.com/marklogic/marklogic-spark-connector/issues).
+
+
 ## Tuning performance
 
 The primary factor affecting how quickly the connector can retrieve rows is MarkLogic's ability to process your Optic 

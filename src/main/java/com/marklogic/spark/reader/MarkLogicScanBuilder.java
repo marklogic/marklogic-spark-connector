@@ -15,9 +15,11 @@
  */
 package com.marklogic.spark.reader;
 
+import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.expressions.SortOrder;
+import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
 import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
 import org.apache.spark.sql.connector.expressions.aggregate.Avg;
 import org.apache.spark.sql.connector.expressions.aggregate.Count;
@@ -49,10 +51,10 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
 
     private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
 
-    private ReadContext readContext;
+    private final ReadContext readContext;
     private List<Filter> pushedFilters;
 
-    private final static Set<Class> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet() {{
+    private final static Set<Class<? extends AggregateFunc>> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet() {{
         add(Avg.class);
         add(Count.class);
         add(CountStar.class);
@@ -164,7 +166,7 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
      */
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
-        if (readContext.planAnalysisFoundNoRows()) {
+        if (readContext.planAnalysisFoundNoRows() || pushDownAggregatesIsDisabled()) {
             return false;
         }
 
@@ -190,6 +192,12 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         if (readContext.planAnalysisFoundNoRows() || hasUnsupportedAggregateFunction(aggregation)) {
             return false;
         }
+
+        if (pushDownAggregatesIsDisabled()) {
+            logger.info("Push down of aggregates is disabled; Spark will handle all aggregations.");
+            return false;
+        }
+
         logger.info("Pushing down aggregation: {}", describeAggregation(aggregation));
         readContext.pushDownAggregation(aggregation);
         return true;
@@ -223,5 +231,9 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         return String.format("groupBy: %s; aggregates: %s",
             Arrays.asList(aggregation.groupByExpressions()),
             Arrays.asList(aggregation.aggregateExpressions()));
+    }
+
+    private boolean pushDownAggregatesIsDisabled() {
+        return "false".equalsIgnoreCase(readContext.getProperties().get(Options.READ_PUSH_DOWN_AGGREGATES));
     }
 }
