@@ -32,6 +32,11 @@
             "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day || 'T' || ../../Journal/JournalIssue/PubDate/Time"
           },
           {
+            "name": "LuckyNumber",
+            "scalarType": "int",
+            "val": "LuckyNumber"
+          },
+          {
             "name": "Base64Value",
             "scalarType": "base64Binary",
             "val": "Base64Value",

@@ -32,6 +32,14 @@ import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
+import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
+import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
+import org.apache.spark.sql.connector.expressions.aggregate.Avg;
+import org.apache.spark.sql.connector.expressions.aggregate.Count;
+import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
+import org.apache.spark.sql.connector.expressions.aggregate.Max;
+import org.apache.spark.sql.connector.expressions.aggregate.Min;
+import org.apache.spark.sql.connector.expressions.aggregate.Sum;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -159,23 +167,45 @@ public class ReadContext extends ContextSupport {
         pushDownLimit(limit);
     }
 
-    void pushDownCount() {
-        addOperatorToPlan(PlanUtil.buildGroupByCount());
-        // As will likely be the case for all aggregations, the schema needs to be modified.
-        this.schema = new StructType().add("count", DataTypes.LongType);
-        modifyPlanAnalysisToUseSingleBucket();
-    }
-
-    void pushDownGroupByCount(Expression[] groupByExpressions) {
-        List<String> columnNames = Stream.of(groupByExpressions)
+    void pushDownAggregation(Aggregation aggregation) {
+        final List<String> groupByColumnNames = Stream.of(aggregation.groupByExpressions())
             .map(groupBy -> PlanUtil.expressionToColumnName(groupBy))
             .collect(Collectors.toList());
 
-        addOperatorToPlan(PlanUtil.buildGroupByCount(columnNames));
+        addOperatorToPlan(PlanUtil.buildGroupByAggregation(groupByColumnNames, aggregation));
 
+        StructType newSchema = buildSchemaWithColumnNames(groupByColumnNames);
+
+        for (AggregateFunc func : aggregation.aggregateExpressions()) {
+            if (func instanceof Avg) {
+                newSchema = newSchema.add(func.toString(), DataTypes.DoubleType);
+            } else if (func instanceof Count) {
+                newSchema = newSchema.add(func.toString(), DataTypes.LongType);
+            } else if (func instanceof CountStar) {
+                newSchema = newSchema.add("count", DataTypes.LongType);
+            } else if (func instanceof Max) {
+                Max max = (Max) func;
+                StructField field = findColumnInSchema(max.column(), PlanUtil.expressionToColumnName(max.column()));
+                newSchema = newSchema.add(func.toString(), field.dataType());
+            } else if (func instanceof Min) {
+                Min min = (Min) func;
+                StructField field = findColumnInSchema(min.column(), PlanUtil.expressionToColumnName(min.column()));
+                newSchema = newSchema.add(func.toString(), field.dataType());
+            } else if (func instanceof Sum) {
+                Sum sum = (Sum) func;
+                StructField field = findColumnInSchema(sum.column(), PlanUtil.expressionToColumnName(sum.column()));
+                newSchema = newSchema.add(func.toString(), field.dataType());
+            } else {
+                logger.info("Unsupported aggregate function: {}", func);
+            }
+        }
+
+        this.schema = newSchema;
+    }
+
+    private StructType buildSchemaWithColumnNames(List<String> groupByColumnNames) {
         StructType newSchema = new StructType();
-
-        for (String columnName : columnNames) {
+        for (String columnName : groupByColumnNames) {
             StructField columnField = null;
             for (StructField field : this.schema.fields()) {
                 if (columnName.equals(field.name())) {
@@ -184,25 +214,20 @@ public class ReadContext extends ContextSupport {
                 }
             }
             if (columnField == null) {
-                throw new IllegalArgumentException("Unable to find groupBy column in schema; column name: " + columnName);
+                throw new IllegalArgumentException("Unable to find column in schema; column name: " + columnName);
             }
             newSchema = newSchema.add(columnField);
         }
-
-        this.schema = newSchema.add("count", DataTypes.LongType);
-        modifyPlanAnalysisToUseSingleBucket();
+        return newSchema;
     }
 
-    /**
-     * Used when the assumption is that MarkLogic can efficiently execute a plan in a single call to /v1/rows. This is
-     * typically done for "count()" operations. In such a scenario, returning 2 or more rows may produce an incorrect
-     * result as well - for example, for a "count()" call, only the first row will be reported as the count.
-     */
-    private void modifyPlanAnalysisToUseSingleBucket() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Modifying plan analysis to use a single bucket");
+    private StructField findColumnInSchema(Expression expression, String columnName) {
+        for (StructField field : this.schema.fields()) {
+            if (columnName.equals(field.name())) {
+                return field;
+            }
         }
-        this.planAnalysis = new PlanAnalysis(this.planAnalysis.boundedPlan);
+        throw new IllegalArgumentException("Unable to find column in schema for expression: " + expression.describe());
     }
 
     void pushDownRequiredSchema(StructType requiredSchema) {

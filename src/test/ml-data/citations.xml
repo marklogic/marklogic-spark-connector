@@ -22,19 +22,23 @@
           <Base64Value>c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l</Base64Value>
           <BooleanValue>true</BooleanValue>
           <CalendarInterval>interval 2 years 4 month</CalendarInterval>
+          <LuckyNumber>1</LuckyNumber>
         </Author>
         <Author>
           <LastName>Bernadzki</LastName>
           <ForeName>Cherianne</ForeName>
           <BooleanValue>false</BooleanValue>
+          <LuckyNumber>2</LuckyNumber>
         </Author>
         <Author>
           <LastName>Canham</LastName>
           <ForeName>Tybie</ForeName>
+          <LuckyNumber>3</LuckyNumber>
         </Author>
         <Author>
           <LastName>Awton</LastName>
           <ForeName>Finlay</ForeName>
+          <LuckyNumber>4</LuckyNumber>
         </Author>
       </AuthorList>
     </Article>
@@ -59,18 +63,22 @@
         <Author>
           <LastName>Tonnesen</LastName>
           <ForeName>Rani</ForeName>
+          <LuckyNumber>5</LuckyNumber>
         </Author>
         <Author>
           <LastName>Bau</LastName>
           <ForeName>Christiano</ForeName>
+          <LuckyNumber>6</LuckyNumber>
         </Author>
         <Author>
           <LastName>Pulhoster</LastName>
           <ForeName>Misty</ForeName>
+          <LuckyNumber>7</LuckyNumber>
         </Author>
         <Author>
           <LastName>Scarsbrick</LastName>
           <ForeName>Fields</ForeName>
+          <LuckyNumber>8</LuckyNumber>
         </Author>
       </AuthorList>
     </Article>
@@ -95,18 +103,22 @@
         <Author>
           <LastName>Edeler</LastName>
           <ForeName>Appolonia</ForeName>
+          <LuckyNumber>9</LuckyNumber>
         </Author>
         <Author>
           <LastName>Shoebotham</LastName>
           <ForeName>Taite</ForeName>
+          <LuckyNumber>10</LuckyNumber>
         </Author>
         <Author>
           <LastName>Cowe</LastName>
           <ForeName>Moria</ForeName>
+          <LuckyNumber>11</LuckyNumber>
         </Author>
         <Author>
           <LastName>Crispe</LastName>
           <ForeName>Teddie</ForeName>
+          <LuckyNumber>12</LuckyNumber>
         </Author>
       </AuthorList>
     </Article>
@@ -131,6 +143,7 @@
         <Author>
           <LastName>Wooles</LastName>
           <ForeName>Vivianne</ForeName>
+          <LuckyNumber>13</LuckyNumber>
         </Author>
       </AuthorList>
     </Article>
@@ -155,10 +168,12 @@
         <Author>
           <LastName>Humbee</LastName>
           <ForeName>Aida</ForeName>
+          <LuckyNumber>14</LuckyNumber>
         </Author>
         <Author>
           <LastName>Dunford</LastName>
           <ForeName>Lyman</ForeName>
+          <LuckyNumber>15</LuckyNumber>
         </Author>
       </AuthorList>
     </Article>

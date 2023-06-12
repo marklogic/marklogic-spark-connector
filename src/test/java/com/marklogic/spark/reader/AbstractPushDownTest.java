@@ -17,8 +17,10 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.BeforeEach;
 
 abstract class AbstractPushDownTest extends AbstractIntegrationTest {
@@ -35,6 +37,14 @@ abstract class AbstractPushDownTest extends AbstractIntegrationTest {
         // faster as MarkLogic is returning fewer rows. A synchronized method is used in case the test uses multiple
         // partitions, as each will run on a separate thread.
         MarkLogicPartitionReader.totalRowCountListener = totalRowCount -> addToRowCount(totalRowCount);
+    }
+
+    protected DataFrameReader newDefaultReader(SparkSession session) {
+        return super.newDefaultReader(session)
+            // Default to a single call to MarkLogic for push down tests to ensure that assertions on row counts are
+            // accurate. Any tests that care about having more than one partition are expected to override this.
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .option(Options.READ_BATCH_SIZE, 0);
     }
 
     private synchronized void addToRowCount(long totalRowCount) {
