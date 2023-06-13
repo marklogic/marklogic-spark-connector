@@ -42,9 +42,9 @@ abstract class AbstractPushDownTest extends AbstractIntegrationTest {
     protected DataFrameReader newDefaultReader(SparkSession session) {
         return super.newDefaultReader(session)
             // Default to a single call to MarkLogic for push down tests to ensure that assertions on row counts are
-            // accurate. Any tests that care about having more than one partition are expected to override this.
-            .option(Options.READ_NUM_PARTITIONS, 1)
-            .option(Options.READ_BATCH_SIZE, 0);
+            // accurate (and via DEVEXP-488, the batch size is expected to be set to zero when an aggregate is pushed
+            // down). Any tests that care about having more than one partition are expected to override this.
+            .option(Options.READ_NUM_PARTITIONS, 1);
     }
 
     private synchronized void addToRowCount(long totalRowCount) {

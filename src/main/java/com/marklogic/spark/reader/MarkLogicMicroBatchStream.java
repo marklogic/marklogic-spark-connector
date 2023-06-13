@@ -71,7 +71,7 @@ class MarkLogicMicroBatchStream implements MicroBatchStream {
         int index = (int) ((LongOffset) end).offset();
         return index >= allBuckets.size() ?
             null :
-            new InputPartition[]{new PlanAnalysis.Partition(index, allBuckets.get(index))};
+            new InputPartition[]{new PlanAnalysis.Partition(index + "", allBuckets.get(index))};
     }
 
     @Override

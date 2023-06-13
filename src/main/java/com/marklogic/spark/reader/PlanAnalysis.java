@@ -42,18 +42,6 @@ class PlanAnalysis implements Serializable {
         this.partitions = partitions;
     }
 
-    /**
-     * Copy constructor for creating a new plan analysis with the given plan and a single bucket. Used for pushing down
-     * aggregate operations that can be efficiently calculated by MarkLogic in a single request.
-     *
-     * @param boundedPlan
-     */
-    PlanAnalysis(JsonNode boundedPlan) {
-        this.boundedPlan = boundedPlan;
-        final String maxUnsignedLong = "18446744073709551615";
-        this.partitions = Arrays.asList(new Partition(0, new Bucket("0", maxUnsignedLong)));
-    }
-
     List<Bucket> getAllBuckets() {
         List<PlanAnalysis.Bucket> allBuckets = new ArrayList<>();
         partitions.forEach(partition -> allBuckets.addAll(partition.buckets));
@@ -95,16 +83,24 @@ class PlanAnalysis implements Serializable {
             }
         }
 
+        Partition(String identifier, Bucket bucket) {
+            this.identifier = identifier;
+            this.buckets = bucket != null ? Arrays.asList(bucket) : new ArrayList<>();
+        }
+
         /**
-         * For micro-batch reading, where each Spark task is intended to process a single bucket, and thus each
-         * partition should contain a single bucket.
+         * Similar to a copy constructor; used to construct a new Partition with a single bucket based on the
+         * buckets in the given Partition.
          *
-         * @param bucketIndex
-         * @param bucket
+         * @return
          */
-        Partition(int bucketIndex, Bucket bucket) {
-            this.identifier = bucketIndex + "";
-            this.buckets = Arrays.asList(bucket);
+        Partition mergeBuckets() {
+            if (buckets == null || buckets.isEmpty()) {
+                return new Partition(identifier, null);
+            }
+            String lowerBound = buckets.get(0).lowerBound;
+            String upperBound = buckets.get(buckets.size() - 1).upperBound;
+            return new Partition(identifier, new Bucket(lowerBound, upperBound));
         }
 
         @Override
