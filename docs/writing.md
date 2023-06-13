@@ -4,8 +4,28 @@ title: Writing Data
 nav_order: 4
 ---
 
-The MarkLogic Spark connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. The sections below
-provide more detail about how this process works and how it can be controlled.
+The MarkLogic Spark connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. 
+The sections below provide more detail about how this process works and how it can be controlled.
+
+## Basic write operation
+
+As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md), a basic write operation will define
+how the connector should connect to MarkLogic, the Spark mode to use, and zero or more other options:
+
+```
+df.write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.collections", "write-test") \
+    .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
+    .option("spark.marklogic.write.uriPrefix", "/write/") \
+    .mode("append") \
+    .save()
+```
+
+In the above example, only `format`, `spark.marklogic.client.uri` (or the other `spark.marklogic.client` options 
+that can be used to define the connection details), and `mode` (which must equal "append") are required; 
+the collections, permissions , and URI prefix are optional, though it is uncommon to write documents without any 
+permissions. 
 
 ## Controlling document content
 

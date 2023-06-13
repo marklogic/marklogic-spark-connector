@@ -250,10 +250,6 @@ public class PushDownFilterTest extends AbstractPushDownTest {
     private Dataset<Row> newDataset() {
         return newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
-            // Use a single call to MarkLogic so it's easier to verify from the logging
-            // that only N rows were returned.
-            .option(Options.READ_NUM_PARTITIONS, 1)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load();
     }
 

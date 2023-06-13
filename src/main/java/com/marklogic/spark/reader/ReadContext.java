@@ -63,7 +63,12 @@ public class ReadContext extends ContextSupport {
     final static long serialVersionUID = 1;
 
     private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
-    private final static long DEFAULT_BATCH_SIZE = 10000;
+
+    // The ideal batch size depends highly on what a user chooses to do after a load() - and of course the user may
+    // choose to perform multiple operations on the dataset, each of which may benefit from a fairly different batch
+    // size. 100k has been chosen as the default batch size to strike a reasonable balance for operations that do need
+    // to collect all the rows, such as writing the dataset to another data source.
+    private final static long DEFAULT_BATCH_SIZE = 100000;
 
     private PlanAnalysis planAnalysis;
     private StructType schema;
@@ -198,6 +203,15 @@ public class ReadContext extends ContextSupport {
             } else {
                 logger.info("Unsupported aggregate function: {}", func);
             }
+        }
+
+        if (!getProperties().containsKey(Options.READ_BATCH_SIZE)) {
+            logger.info("Batch size was not overridden, so modifying each partition to make a single request to improve " +
+                "performance of pushed down aggregation.");
+            List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.partitions.stream()
+                .map(p -> p.mergeBuckets())
+                .collect(Collectors.toList());
+            this.planAnalysis = new PlanAnalysis(planAnalysis.boundedPlan, mergedPartitions);
         }
 
         this.schema = newSchema;

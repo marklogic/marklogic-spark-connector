@@ -42,7 +42,6 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, QUERY_ORDERED_BY_CITATION_ID)
             .option(Options.READ_NUM_PARTITIONS, 2)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load()
             // With 2+ partitions, the rows from each partition reader will be ordered correctly by MarkLogic, but
             // Spark needs to order the merged result. So Spark's orderBy must be called. Interestingly, since no
@@ -80,7 +79,6 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
     void limitWithTwoPartitions() {
         long count = newDefaultReader()
             .option(Options.READ_NUM_PARTITIONS, 2)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load()
             .limit(1)
             .count();
@@ -112,7 +110,6 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             .option(Options.READ_NUM_PARTITIONS, 2)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load()
             .orderBy("CitationID")
             .limit(6)
@@ -133,7 +130,6 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'Authors', '')")
             .option(Options.READ_NUM_PARTITIONS, 2)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load()
             .orderBy(new Column("LastName").desc())
             .limit(3)
@@ -194,7 +190,6 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
             // Force a single request to ensure the orderBy is constructed correctly.
             .option(Options.READ_NUM_PARTITIONS, 1)
-            .option(Options.READ_BATCH_SIZE, 0)
             .load()
             .sort("CitationID", "LastName")
             .limit(8)
