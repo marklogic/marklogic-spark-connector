@@ -22,6 +22,7 @@ public interface Options {
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
+    String READ_PUSH_DOWN_AGGREGATES = "spark.marklogic.read.pushDownAggregates";
 
     String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";

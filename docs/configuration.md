@@ -69,7 +69,7 @@ information on how data is read from MarkLogic.
 | spark.marklogic.read.opticQuery | Required; the Optic DSL query to run for retrieving rows; must use `op.fromView` as the accessor. |
 | spark.marklogic.read.numPartitions | The number of Spark partitions to create; defaults to `spark.default.parallelism` .               |
 | spark.marklogic.read.batchSize | Approximate number of rows to retrieve in each call to MarkLogic; defaults to 10000.              |
-
+| spark.marklogic.read.pushDownAggregates | Whether to push down aggregate operations to MarkLogic; defaults to `true`. Set to `false` to prevent aggregates from being pushed down to MarkLogic. |
 ## Write options
 
 These options control how the connector writes data to MarkLogic. See [the guide on writing](writing.md) for more 
