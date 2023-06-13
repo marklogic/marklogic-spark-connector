@@ -59,6 +59,24 @@ Note that if the username or password contain either a `@` or a `:` character, y
 [percent encoding](https://developer.mozilla.org/en-US/docs/Glossary/percent-encoding) into the correct character 
 triplet. For example, a password of `sp@r:k` must appear in the `spark.marklogic.client.uri` string as `sp%40r%3Ak`. 
 
+### Configuring SSL 
+
+If the MarkLogic app server that the connector will connect to requires SSL, you will need to configure the 
+`spark.marklogic.client.sslProtocol` option. The common approach is to set this to `default`, causing the associated
+JVM's certificate store - typically the `$JAVA_HOME/jre/lib/security/cacerts` file - to be used for establishing an 
+SSL connection. The certificate store should contain the public certificate associated with the SSL certificate template
+used by the MarkLogic app server. 
+
+If you receive an error containing a message of "PKIX path building failed", the most likely issue is that your JVM's
+certificate store does not contain the public certificate associated with the MarkLogic app server, or your Spark
+environment may be using a JVM different from the one you think it is. 
+[This guide](https://www.baeldung.com/jvm-certificate-store-errors) provides some common solutions for solving this
+error. 
+
+If you receive an `javax.net.ssl.SSLPeerUnverifiedException` error, you will need to adjust the 
+`spark.marklogic.client.sslHostnameVerifier` option. A value of `ANY` will disable hostname verification, 
+which may be appropriate in a development or test environment. 
+
 ## Read options
 
 These options control how the connector reads data from MarkLogic. See [the guide on reading](reading.md) for more 
