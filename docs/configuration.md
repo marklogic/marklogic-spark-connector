@@ -26,8 +26,8 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.cloud.apiKey         | Required for MarkLogic `cloud` authentication. |
 | spark.marklogic.client.kerberos.principal | Required for `kerberos` authentication. |
 | spark.marklogic.client.saml.token | Required for `saml` authentication. |
-| spark.marklogic.client.sslProtocol | If `default`, an SSL connection is created using the JVM's default SSL context; else the value is passed to the [SSLContext method](https://docs.oracle.com/javase/8/docs/api/javax/net/ssl/SSLContext.html#getInstance-java.lang.String-) for instantiating an SSL context. |
-| spark.marklogic.client.sslHostnameVerifier | Either `any`, `common`, or `strict`. |
+| spark.marklogic.client.sslEnabled | If 'true', an SSL connection is created using the JVM's default SSL context.
+| spark.marklogic.client.sslHostnameVerifier | Either `any`, `common`, or `strict`; see the [MarkLogic Java Client documentation](https://docs.marklogic.com/javadoc/client/com/marklogic/client/DatabaseClientFactory.SSLHostnameVerifier.html) for more information on these choices. |
 | spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
 
 ### Connecting with a client URI
@@ -61,11 +61,10 @@ triplet. For example, a password of `sp@r:k` must appear in the `spark.marklogic
 
 ### Configuring SSL 
 
-If the MarkLogic app server that the connector will connect to requires SSL, you will need to configure the 
-`spark.marklogic.client.sslProtocol` option. The common approach is to set this to `default`, causing the associated
-JVM's certificate store - typically the `$JAVA_HOME/jre/lib/security/cacerts` file - to be used for establishing an 
-SSL connection. The certificate store should contain the public certificate associated with the SSL certificate template
-used by the MarkLogic app server. 
+If the MarkLogic app server that the connector will connect to requires SSL, the `spark.marklogic.client.sslEnabled` 
+option must be set to 'true'. This causes the associated JVM's certificate store - typically the 
+`$JAVA_HOME/jre/lib/security/cacerts` file - to be used for establishing an SSL connection. The certificate store 
+should contain the public certificate associated with the SSL certificate template used by the MarkLogic app server. 
 
 If you receive an error containing a message of "PKIX path building failed", the most likely issue is that your JVM's
 certificate store does not contain the public certificate associated with the MarkLogic app server, or your Spark
@@ -75,7 +74,9 @@ error.
 
 If you receive an `javax.net.ssl.SSLPeerUnverifiedException` error, you will need to adjust the 
 `spark.marklogic.client.sslHostnameVerifier` option. A value of `ANY` will disable hostname verification, 
-which may be appropriate in a development or test environment. 
+which may be appropriate in a development or test environment. The 
+[MarkLogic Java Client documentation](https://docs.marklogic.com/javadoc/client/com/marklogic/client/DatabaseClientFactory.SSLHostnameVerifier.html)
+describes the other choices for this option.
 
 ## Read options
 

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class BuildConnectionPropertiesTest {
 
@@ -48,4 +49,25 @@ public class BuildConnectionPropertiesTest {
         assertEquals("direct", connectionProps.get(CONNECTION_TYPE));
     }
 
+    @Test
+    void sslEnabled() {
+        properties.put(Options.CLIENT_SSL_ENABLED, "true");
+
+        Map<String, String> connectionProps = new ContextSupport(properties).buildConnectionProperties();
+        assertEquals("default", connectionProps.get("spark.marklogic.client.sslProtocol"),
+            "While the Java Client allows for actual protocol values for the sslProtocol property, the SSLContext " +
+                "that's created still needs an X509TrustManager. But since Spark options only allow for simple values, " +
+                "there's no way for a Spark user to provide a custom X509TrustManager. It appears the only possibility " +
+                "is to use the JVM's default trust manager. Thus, instead of forcing the user to set " +
+                "sslProtocol=default (which implies there are other valid choices), the Spark connector lets a user " +
+                "set sslEnabled=true, which is a shortcut for requesting that the JVM's default trust manager be used.");
+    }
+
+    @Test
+    void sslDisabled() {
+        properties.put(Options.CLIENT_SSL_ENABLED, "false");
+
+        Map<String, String> connectionProps = new ContextSupport(properties).buildConnectionProperties();
+        assertFalse(connectionProps.containsKey("spark.marklogic.client.sslProtocol"));
+    }
 }

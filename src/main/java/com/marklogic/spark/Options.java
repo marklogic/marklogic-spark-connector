@@ -18,6 +18,7 @@ package com.marklogic.spark;
 public interface Options {
 
     String CLIENT_URI = "spark.marklogic.client.uri";
+    String CLIENT_SSL_ENABLED = "spark.marklogic.client.sslEnabled";
 
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";

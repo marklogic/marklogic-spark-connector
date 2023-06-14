@@ -62,6 +62,10 @@ public class ContextSupport implements Serializable {
             parseClientUri(clientUri, connectionProps);
         }
 
+        if ("true".equalsIgnoreCase(properties.get(Options.CLIENT_SSL_ENABLED))) {
+            connectionProps.put("spark.marklogic.client.sslProtocol", "default");
+        }
+
         return connectionProps;
     }
 
