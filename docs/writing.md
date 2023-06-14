@@ -40,7 +40,7 @@ convert the JSON document into an XML document, which then can be further modifi
 
 Parameters can be passed to your REST transform via the `spark.marklogic.write.transformParams` option. The value of 
 this option must be a comma-delimited string of the form `param1,value1,param2,value,etc`. For example, if your 
-transform accepts parameters named "color" and "size", the following option would pass values to the transform for 
+transform accepts parameters named "color" and "size", the following options would pass values to the transform for 
 those parameter names:
 
     .option("spark.marklogic.write.transform", "my-transform")
@@ -57,8 +57,8 @@ the parameter values contains a comma:
 ## Configuring document URIs
 
 By default, the connector will construct a URI for each document beginning with a UUID and ending with `.json`. A 
-prefix can be specified via `spark.marklogic.write.uriPrefix`, and the default suffix of `.json` can be overridden 
-via `spark.marklogic.write.uriSuffix`. For example, the following options would results in URIs of the form 
+prefix can be specified via `spark.marklogic.write.uriPrefix`, and the default suffix of `.json` can be modified 
+via `spark.marklogic.write.uriSuffix`. For example, the following options would result in URIs of the form 
 "/employee/(a random UUID value)/record.json":
 
     .option("spark.marklogic.write.uriPrefix", "/employee/")
@@ -68,7 +68,7 @@ URIs can also be constructed based on column values for a given row. The `spark.
 allows for column names to be referenced via braces when constructing a URI. If this option is used, the 
 above options for setting a prefix and suffix will be ignored, as the template can be used to define the entire URI. 
 
-For example, consider a Spark DataFrame with, among other columns, columns named `organization` and `employee_id`. 
+For example, consider a Spark DataFrame with a set of columns including `organization` and `employee_id`. 
 The following template would construct URIs based on those two columns:
 
     .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{employee_id}.json")
@@ -122,7 +122,7 @@ spark.readStream \
     .format("csv") \
     .schema(StructType([StructField("GivenName", StringType()), StructField("Surname", StringType())])) \
     .option("header", True) \
-    .load("data/csv-files") \
+    .load("examples/getting-started/data/csv-files") \
     .writeStream \
     .format("com.marklogic.spark") \
     .option("checkpointLocation", tempfile.mkdtemp()) \
@@ -143,10 +143,10 @@ sources and writing it directly to MarkLogic.
 ## Error handling
 
 The connector may throw an error during one of two phases of operation - before it begins to write data to MarkLogic, 
-and during the writing of data to MarkLogic. 
+and during the writing of a batch of documents to MarkLogic. 
 
 For the first kind of error, the error will be immediately returned to the user and no data will have been written. 
-Such errors are often due to misconfiguration of the connector options and should be fixable. 
+Such errors are often due to misconfiguration of the connector options. 
 
 For the second kind of error, the connector defaults to logging the error and asking Spark to abort the entire write 
 operation. Any batches of documents that were written successfully prior to the error occurring will still exist in the 
@@ -154,8 +154,7 @@ database. To configure the connector to only log the error and continue writing 
 the `spark.marklogic.write.abortOnFailure` option to a value of `false`. 
 
 Similar to errors with reading data, the connector will strive to provide meaningful context when an error occurs to 
-assist with debugging the cause of the error. Any errors that cannot be fixed via changes to the options passed to the 
-connector should be reported as new issues to this GitHub repository.
+assist with debugging the cause of the error.
 
 ## Tuning performance
 
@@ -163,16 +162,16 @@ The MarkLogic Spark connector uses MarkLogic's
 [Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement) for writing documents to a database. The 
 following options can be set to adjust how the connector performs when writing data:
 
-- `spark.marklogic.write.batchSize` = the number of documents written in one call to MarkLogic; defaults to 100
+- `spark.marklogic.write.batchSize` = the number of documents written in one call to MarkLogic; defaults to 100.
 - `spark.marklogic.write.threadCount` = the number of threads used by each partition to write documents to MarkLogic;
-  defaults to 4
+  defaults to 4.
 
 These options are in addition to the number of partitions within the Spark DataFrame that is being written to 
 MarkLogic. For each partition in the DataFrame, a separate instance of a MarkLogic batch writer is created, each 
 with its own set of threads. 
 
 Optimizing performance will thus involve testing various combinations of partition counts, batch sizes, and thread 
-counts. The [MarkLogic Monitoring tools](https://docs.marklogic.com/guide/monitoring/intro) can help you understand 
+counts. The [MarkLogic Monitoring tool](https://docs.marklogic.com/guide/monitoring/intro) can help you understand 
 resource consumption and throughput from Spark to MarkLogic. 
 
 ## Supported save modes
@@ -182,8 +181,9 @@ Spark supports
 when writing data. The MarkLogic Spark connector requires the `append` mode to be used. Because Spark defaults to 
 the `error` mode, you will need to set this to `append` each time you use the connector to write data. 
 
-`append` is the only supported mode because MarkLogic does not have the concept of a "table" that a document 
-must belong to, and only belong to one of. The Spark save modes give a user control over how data is written based 
-on whether the target table exists. Because no such concept of a table exists in MarkLogic, the differences between 
-the various modes do not apply to MarkLogic. Note that while a collection in MarkLogic has some similarities to a 
-table, it is fundamentally different in that a document can belong to zero to many collections. 
+`append` is the only supported mode due to MarkLogic not having the concept of a single "table" that a document 
+must belong to. The Spark save modes give a user control over how data is written based 
+on whether the target table exists. Because the concept of a rigid table does not exist in MarkLogic, the differences 
+between the various modes do not apply to MarkLogic. Note that while a collection in MarkLogic has some similarities to 
+a table, it is fundamentally different in that a document can belong to zero to many collections and collections do not
+impose any schema constraints. 
