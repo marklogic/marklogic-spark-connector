@@ -46,5 +46,10 @@ jar on your filesystem. You are free to customize the `spark` variable in any ma
 Now that you have an initialized Spark session, you can run any of the examples found in the 
 [guide for using PySpark](pyspark.md).
 
+## Example notebook
 
-
+The [getting-started example project](https://github.com/marklogic/marklogic-spark-connector/tree/master/examples/getting-started)
+includes an 
+[example notebook](https://github.com/marklogic/marklogic-spark-connector/tree/master/examples/getting-started/marklogic-spark-getting-started.ipynb)
+that you can open in Jupyter Notebook. This allows you to try a few examples with a working notebook without having to 
+enter anything in. 

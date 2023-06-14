@@ -5,7 +5,10 @@ nav_order: 1
 ---
 
 The MarkLogic Spark connector is an [Apache Spark 3 connector](https://spark.apache.org/docs/latest/) that supports
-reading data from and writing data to MarkLogic.
+reading data from and writing data to MarkLogic. Within any Spark 3 environment, the connector enables users to easily 
+query for data in MarkLogic, manipulate it using widely-known Spark operations, and then write results back to 
+MarkLogic or disseminate them to another system. Data can also be easily imported into MarkLogic by first reading it 
+from any data source that Spark supports and then writing it to MarkLogic.
 
 The connector has the following system requirements:
 
