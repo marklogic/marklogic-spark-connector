@@ -16,9 +16,8 @@ obtaining the connector and deploying an example application to MarkLogic.
 
 The [PySpark installation guide](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) describes
 how to install PySpark. As noted in that guide, you will need to install Python 3 first if you do not already have it
-installed. [pyenv](https://github.com/pyenv/pyenv#installation) is recommended for doing so, as it simplifies
-installing multiple versions of Python and easily switching between them. You are free though to install Python 3 in
-any manner you wish.
+installed. [pyenv](https://github.com/pyenv/pyenv#installation) is a popular choice for doing so, as it simplifies
+installing and switching between multiple versions of Python.
 
 Once you have installed PySpark, run the following from a command line to ensure PySpark is installed correctly:
 
@@ -43,7 +42,7 @@ When PySpark starts, you should see information like this on how to configure lo
     Setting default log level to "WARN".
     To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
 
-Setting the default log level to "INFO" or "DEBUG" will show logging from the MarkLogic Spark connector. This will also
+Setting the default log level to `INFO` or `DEBUG` will show logging from the MarkLogic Spark connector. This will also
 include potentially significant amounts of log messages from PySpark itself.
 
 ### Reading data with the connector
@@ -81,13 +80,13 @@ The [PySpark docs](https://spark.apache.org/docs/latest/api/python/getting_start
 information on how a Spark DataFrame works along with more commands that you can try on it.
 
 The instructions above can be applied to your own MarkLogic application. You can use the same Spark command above,
-simply adjusting the connection details and the Optic DSL query. Please see 
+simply adjusting the connection details and the Optic query. Please see 
 [the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic.
 
 ### Writing data to the connector
 
 The connector writes the rows in a Spark DataFrame to MarkLogic as new JSON documents, which can also be transformed
-into XML documents if desired. To try this on the DataFrame that was read from MarkLogic in the above section,
+into XML documents. To try this on the DataFrame that was read from MarkLogic in the above section,
 paste the following into PySpark, adjusting the host and password values as needed:
 
 ```
@@ -100,8 +99,9 @@ df.write.format("com.marklogic.spark") \
     .save()
 ```
 
-To examine the results, access your MarkLogic server's qconsole tool again and click on the "Explore" button for the
-`spark-example-content` database. The database should now have 2,000 documents - the 1,000 documents in the
+To examine the results, access your [MarkLogic server's qconsole tool](https://docs.marklogic.com/guide/qconsole/intro) 
+and click on the "Explore" button for the `spark-example-content` database. The database should now have 
+2,000 documents - the 1,000 documents in the
 `employee` collection that were loaded when the application was deployed, and the 1,000 documents in the
 `write-test` collection that were written by the PySpark command above. Each document in the `write-test` collection
 will have field names based on the column names in the Spark DataFrame.

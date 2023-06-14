@@ -5,7 +5,7 @@ nav_order: 3
 ---
 
 The MarkLogic Spark connector allows for data to be retrieved from MarkLogic as rows via an 
-[Optic DSL query](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710). The 
+[Optic query](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710). The 
 sections below provide more detail on configuring how data is retrieved and converted into a Spark DataFrame.
 
 ## Basic read operation
@@ -21,7 +21,7 @@ df = spark.read.format("com.marklogic.spark") \
 ```
 
 As shown above, `format`, `spark.marklogic.client.uri` (or the other `spark.marklogic.client` options
-that can be used to define the connection details), and `spark.marklogic.read.opticQuery` are always required. The 
+that can be used to define the connection details), and `spark.marklogic.read.opticQuery` are required. The 
 following sections provide more details about these and other options that can be set. 
 
 ## Optic query requirements
@@ -120,7 +120,9 @@ to provide meaningful context when an error occurs to assist with debugging the 
 
 In practice, it is expected that most errors will be a result of a misconfiguration. For example, the connection and 
 authentication options may be incorrect, or the Optic query may have a syntax error. Any errors that cannot be 
-fixed via changes to the options passed to the connector should be reported as new issues to this GitHub repository.
+fixed via changes to the options passed to the connector should be 
+[reported as new issues](https://github.com/marklogic/marklogic-spark-connector/issues) in the connector's GitHub
+repository.
 
 ## Pushing down operations
 

@@ -19,7 +19,7 @@ environment's documentation on how to achieve this.
 ## Deploy an example application
 
 The connector allows a user to specify an
-[Optic DSL query](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710) to select rows to retrieve from
+[Optic query](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710) to select rows to retrieve from
 MarkLogic. The query depends on a [MarkLogic view](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_68685) that
 projects data from documents in MarkLogic into rows.
 
@@ -42,14 +42,14 @@ MarkLogic server that includes a
 
 After the deployment finishes, your MarkLogic server will now have the following:
 
-- An app server named `spark-example` listening on port 8020 (or the port you chose if you overrode the `mlPort`
+- An app server named `spark-example` listening on port 8020 (or the port you chose if you modified the `mlPort`
   property).
 - A database named `spark-example-content` that contains 1000 JSON documents in the `employee` collection.
 - A TDE with a schema name of `example` and a view name of `employee`.
-- A user named `spark-example-user` that can be used with the Spark connector and in MarkLogic's qconsole tool.
+- A user named `spark-example-user` that can be used with the Spark connector and [MarkLogic's qconsole tool](https://docs.marklogic.com/guide/qconsole/intro).
 
 To verify that your application was deployed correctly, access your MarkLogic server's qconsole tool - for example,
-if your MarkLogic server is deployed locally, you will go to http://localhost:8000/qconsole . You can authenticate as 
+if your MarkLogic server is deployed locally, you will go to <http://localhost:8000/qconsole> . You can authenticate as 
 the `spark-example-user` user that was created above, as it's generally preferable to test as a non-admin user. 
 After authenticating, perform the following steps:
 

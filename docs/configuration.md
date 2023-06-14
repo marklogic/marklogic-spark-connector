@@ -11,8 +11,8 @@ options. Each set of options is defined in a separate table below.
 
 These options define how the connector connects and authenticates with MarkLogic.
 
-| Option                                      | Description |
-|---------------------------------------------| --- |
+| Option | Description | 
+| --- | --- |
 | spark.marklogic.client.host                 | Required; the host name to connect to; this can be the name of a host in your MarkLogic cluster or the host name of a load balancer. |
 | spark.marklogic.client.port                 | Required; the port of the app server in MarkLogic to connect to. |
 | spark.marklogic.client.basePath             | Base path to prefix on each request to MarkLogic. |
@@ -82,29 +82,30 @@ which may be appropriate in a development or test environment.
 These options control how the connector reads data from MarkLogic. See [the guide on reading](reading.md) for more 
 information on how data is read from MarkLogic.
 
-| Option | Description                                                                                       | 
-| --- |---------------------------------------------------------------------------------------------------|
-| spark.marklogic.read.opticQuery | Required; the Optic DSL query to run for retrieving rows; must use `op.fromView` as the accessor. |
-| spark.marklogic.read.numPartitions | The number of Spark partitions to create; defaults to `spark.default.parallelism`. |
+| Option | Description | 
+| --- | --- |
 | spark.marklogic.read.batchSize | Approximate number of rows to retrieve in each call to MarkLogic; defaults to 100000. |
+| spark.marklogic.read.numPartitions | The number of Spark partitions to create; defaults to `spark.default.parallelism`. |
+| spark.marklogic.read.opticQuery | Required; the Optic DSL query to run for retrieving rows; must use `op.fromView` as the accessor. |
 | spark.marklogic.read.pushDownAggregates | Whether to push down aggregate operations to MarkLogic; defaults to `true`. Set to `false` to prevent aggregates from being pushed down to MarkLogic. |
+
 ## Write options
 
 These options control how the connector writes data to MarkLogic. See [the guide on writing](writing.md) for more 
 information on how data is written to MarkLogic.
 
-| Option | Description                                                                       | 
-| --- |-----------------------------------------------------------------------------------|
+| Option | Description | 
+| --- | --- |
 | spark.marklogic.write.abortOnFailure | Whether the Spark job should abort if a batch fails to be written; defaults to `true`. |
 | spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
-| spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document |
-| spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute |
-| spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to |
+| spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
+| spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
+| spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
 | spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
-| spark.marklogic.write.transform | Name of a REST transform to apply to each document |
-| spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 |
-| spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option |
-| spark.marklogic.write.uriPrefix | String to prepend to each document URI, where the URI defaults to a UUID |
-| spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID |
+| spark.marklogic.write.transform | Name of a REST transform to apply to each document. |
+| spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 . |
+| spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option. |
+| spark.marklogic.write.uriPrefix | String to prepend to each document URI, where the URI defaults to a UUID. |
+| spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
 
