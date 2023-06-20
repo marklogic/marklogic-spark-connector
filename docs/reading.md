@@ -20,9 +20,31 @@ df = spark.read.format("com.marklogic.spark") \
     .load()
 ```
 
-As shown above, `format`, `spark.marklogic.client.uri` (or the other `spark.marklogic.client` options
+As demonstrated above, `format`, `spark.marklogic.client.uri` (or the other `spark.marklogic.client` options
 that can be used to define the connection details), and `spark.marklogic.read.opticQuery` are required. The 
-following sections provide more details about these and other options that can be set. 
+sections below provide more detail about these and other options that can be set. 
+
+Your Optic query can include any of the 
+[different kinds of Optic operations](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_35559) that MarkLogic 
+supports. For example, the following demonstrates how the 
+[powerful MarkLogic CTS API](https://docs.marklogic.com/guide/search-dev/cts_query) can be easily used within an 
+Optic query to constrain the returned rows based on a search query (note that the JavaScript CTS API must be used in 
+the Optic query):
+
+```
+query = "op.fromView('example', 'employee').where(cts.wordQuery('Drive'))"
+
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.opticQuery", query) \
+    .load()
+```
+
+The `where` clause in the example above can include any of the query features supported by MarkLogic, such as 
+[geospatial queries](https://docs.marklogic.com/guide/search-dev/geospatial), 
+[wildcard queries](https://docs.marklogic.com/guide/search-dev/wildcard), and 
+query expansion via [a thesaurus](https://docs.marklogic.com/guide/search-dev/thesaurus) or 
+[spelling correction](https://docs.marklogic.com/guide/search-dev/spelling).
 
 ## Optic query requirements
 
