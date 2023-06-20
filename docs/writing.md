@@ -4,7 +4,7 @@ title: Writing Data
 nav_order: 4
 ---
 
-The MarkLogic Spark connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. 
+The MarkLogic connector allows for writing rows in a Spark DataFrame to MarkLogic as documents. 
 The sections below provide more detail about how this process works and how it can be controlled.
 
 ## Basic write operation
@@ -104,7 +104,7 @@ temporal collection.
 
 ## Streaming support
 
-The MarkLogic Spark connector supports 
+The connector supports 
 [streaming writes](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) to MarkLogic. 
 The connector configuration does not change; instead, different Spark APIs are used to read a stream of data and 
 write that stream to MarkLogic. 
@@ -134,7 +134,7 @@ spark.readStream \
     .processAllAvailable()
 ```
 
-The above example will stream the data in the `./data/csv-files/100-employees.csv` file through the MarkLogic Spark 
+The above example will stream the data in the `./data/csv-files/100-employees.csv` file through the 
 connector and into MarkLogic. This will result 100 new JSON documents in the `streaming-example` collection. 
 
 The ability to stream data into MarkLogic can make Spark an effective tool for obtaining data from a variety of data 
@@ -158,7 +158,7 @@ assist with debugging the cause of the error.
 
 ## Tuning performance
 
-The MarkLogic Spark connector uses MarkLogic's 
+The connector uses MarkLogic's 
 [Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement) for writing documents to a database. The 
 following options can be set to adjust how the connector performs when writing data:
 
@@ -178,7 +178,7 @@ resource consumption and throughput from Spark to MarkLogic.
 
 Spark supports 
 [several save modes](https://spark.apache.org/docs/latest/sql-data-sources-load-save-functions.html#save-modes) 
-when writing data. The MarkLogic Spark connector requires the `append` mode to be used. Because Spark defaults to 
+when writing data. The MarkLogic connector requires the `append` mode to be used. Because Spark defaults to 
 the `error` mode, you will need to set this to `append` each time you use the connector to write data. 
 
 `append` is the only supported mode due to MarkLogic not having the concept of a single "table" that a document 

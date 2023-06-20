@@ -6,7 +6,7 @@ nav_order: 3
 ---
 
 [Project Jupyter](https://jupyter.org/) provides a set of tools for working with notebooks, code, and data. The 
-MarkLogic Spark connector can be easily integrated into these tools to allow users to access and analyze data in 
+MarkLogic connector can be easily integrated into these tools to allow users to access and analyze data in 
 MarkLogic. 
 
 Before going further, be sure you've followed the instructions in the [setup guide](setup.md) for
@@ -28,7 +28,7 @@ corner of the Notebook interface and select "Python 3 (ipykernel)" to create a n
 ## Using the connector
 
 In the first cell in the notebook created above, enter the following to allow Jupyter Notebook to access the MarkLogic 
-Spark connector and also to initialize Spark:
+connector and also to initialize Spark:
 
 ```
 import os

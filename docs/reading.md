@@ -4,7 +4,7 @@ title: Reading Data
 nav_order: 3
 ---
 
-The MarkLogic Spark connector allows for data to be retrieved from MarkLogic as rows via an 
+The MarkLogic connector allows for data to be retrieved from MarkLogic as rows via an 
 [Optic query](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710). The 
 sections below provide more detail on configuring how data is retrieved and converted into a Spark DataFrame.
 
@@ -150,7 +150,7 @@ repository.
 
 The Spark connector framework supports pushing down multiple operations to the connector data source. This can
 often provide a significant performance boost by allowing the data source to perform the operation, which can result in
-both fewer rows returned to Spark and less work for Spark to perform. The MarkLogic Spark connector supports pushing
+both fewer rows returned to Spark and less work for Spark to perform. The MarkLogic connector supports pushing
 down the following operations to MarkLogic:
 
 - `count`

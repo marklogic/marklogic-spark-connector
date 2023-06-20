@@ -10,7 +10,7 @@ environments, as those examples depend on an application being deployed to MarkL
 
 ## Obtaining the connector
 
-The MarkLogic Spark connector can be downloaded from
+The MarkLogic connector can be downloaded from
 [this repository's Releases page](https://github.com/marklogic/marklogic-spark-connector/releases). Each Spark 
 environment should have documentation on how to include third-party connectors; please consult your Spark 
 environment's documentation on how to achieve this.
