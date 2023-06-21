@@ -48,11 +48,21 @@ query expansion via [a thesaurus](https://docs.marklogic.com/guide/search-dev/th
 
 ## Optic query requirements
 
-As of the 2.0 release of the connector, the Optic query must use the 
-[op.fromView](https://docs.marklogic.com/op.fromView) accessor function. The query must also adhere to the 
-restrictions that the 
-[RowBatcher in the Data Movement SDK](https://github.com/marklogic/java-client-api/wiki/Row-Batcher#building-a-plan-for-exporting-the-view)
-adheres to as well. 
+As of the 2.0.0 release of the connector, the Optic query must use the 
+[op.fromView](https://docs.marklogic.com/op.fromView) accessor function. Future releases of both the connector and 
+MarkLogic will strive to relax this requirement. 
+
+In addition, calls to `groupBy`, `orderBy`, `limit`, and `offset` should be performed via Spark instead of within 
+the initial Optic query. A key benefit of Spark and the MarkLogic connector is the ability to execute the query in 
+parallel via multiple Spark partitions. The aforementioned calls, if made in the Optic query, may not produce the 
+expected results if more than one Spark partition is used or if more than one request is made to MarkLogic. The 
+equivalent Spark operations should be called instead, or the connector should be configured to make a single request 
+to MarkLogic. See the "Pushing down operations" and "Tuning performance" sections below for more information.
+
+Finally, the query must adhere to the handful of limitations imposed by the  
+[Optic Query DSL](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710). A good practice in validating a 
+query is to run it in your [MarkLogic server's qconsole tool](https://docs.marklogic.com/guide/qconsole) in a buffer 
+with a query type of "Optic DSL". 
 
 ## Schema inference
 
