@@ -6,8 +6,7 @@ nav_order: 2
 ---
 
 [PySpark](https://spark.apache.org/docs/latest/api/python/index.html) is a Python API for Spark and an excellent choice
-for learning how to use Spark. This guide describes how to install PySpark and use it with the MarkLogic Spark 
-connector. 
+for learning how to use Spark. This guide describes how to install PySpark and use it with the MarkLogic connector. 
 
 Before going further, be sure you've followed the instructions in the [Getting Started](getting-started.md) guide for
 obtaining the connector and deploying an example application to MarkLogic.
@@ -34,7 +33,7 @@ Run PySpark from the directory that you downloaded the connector to per the [set
 
 The `--jars` command line option is PySpark's method for utilizing Spark connectors. Each Spark environment should have
 a similar mechanism for including third party connectors; please see the documentation for your particular Spark
-environment. In the example above, the `--jars` option allows for the MarkLogic Spark connector to be used within
+environment. In the example above, the `--jars` option allows for the connector to be used within
 PySpark.
 
 When PySpark starts, you should see information like this on how to configure logging:
@@ -42,7 +41,7 @@ When PySpark starts, you should see information like this on how to configure lo
     Setting default log level to "WARN".
     To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
 
-Setting the default log level to `INFO` or `DEBUG` will show logging from the MarkLogic Spark connector. This will also
+Setting the default log level to `INFO` or `DEBUG` will show logging from the MarkLogic connector. This will also
 include potentially significant amounts of log messages from PySpark itself.
 
 ### Reading data with the connector

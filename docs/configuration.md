@@ -4,7 +4,7 @@ title: Configuration Reference
 nav_order: 5
 ---
 
-The MarkLogic Spark connector has 3 sets of configuration options - connection options, reading options, and writing 
+The MarkLogic connector has 3 sets of configuration options - connection options, reading options, and writing 
 options. Each set of options is defined in a separate table below.
 
 ## Connection options

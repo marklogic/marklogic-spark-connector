@@ -1,4 +1,4 @@
-title: MarkLogic Spark Connector
+title: MarkLogic Apache Spark Connector
 remote_theme: just-the-docs/just-the-docs
 plugins:
   - jekyll-remote-theme

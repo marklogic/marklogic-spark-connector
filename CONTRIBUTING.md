@@ -3,7 +3,7 @@ have cloned this repository to your local workstation.
 
 # Do this first!
 
-In order to develop and/or test the MarkLogic Spark connector, or to try out the PySpark instructions below, you first 
+In order to develop and/or test the connector, or to try out the PySpark instructions below, you first 
 need to deploy the test application in this project to MarkLogic. You can do so either on your own installation of 
 MarkLogic, or you can use `docker-compose` to install a 3-node MarkLogic cluster with a load balancer in front of it. 
 
@@ -75,7 +75,7 @@ You can then run the tests from within the Docker environment via the following 
 
 The documentation for this project 
 [has instructions on using PySpark](https://marklogic.github.io/marklogic-spark-connector/getting-started-pyspark.html) 
-with the MarkLogic Spark connector. The documentation instructs a user to obtain the connector from this repository's 
+with the connector. The documentation instructs a user to obtain the connector from this repository's 
 releases page. For development and testing, you will most likely want to build the connector yourself by running the 
 following command from the root of this repository:
 

@@ -6,7 +6,7 @@ has_children: true
 permalink: /docs/getting-started
 ---
 
-This guide provides instructions on using the MarkLogic Spark connector with multiple popular Spark environments. 
+This guide provides instructions on using the MarkLogic connector with multiple popular Spark environments. 
 Before trying the connector in any of these environments, please [follow the instructions in the Setup guide](setup.md)
 to obtain the connector and deploy an example application to MarkLogic.
 
