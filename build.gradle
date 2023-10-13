@@ -1,14 +1,14 @@
 plugins {
   id 'java-library'
   id 'net.saliman.properties' version '1.5.2'
-  id 'com.github.johnrengelman.shadow' version '7.1.2'
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
   id "com.marklogic.ml-gradle" version "4.5.2"
   id 'maven-publish'
   id 'signing'
 }
 
 group 'com.marklogic'
-version '2.0-SNAPSHOT'
+version '2.1-SNAPSHOT'
 
 java {
   sourceCompatibility = 1.8
@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
   compileOnly 'org.apache.spark:spark-sql_2.12:' + sparkVersion
-  implementation "com.marklogic:marklogic-client-api:6.2.1"
+  implementation "com.marklogic:marklogic-client-api:6.3.0"
 
   // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
   // See https://github.com/scala/scala-java8-compat for more information
@@ -31,8 +31,8 @@ dependencies {
   }
 
   testImplementation 'org.apache.spark:spark-sql_2.12:' + sparkVersion
-  testImplementation 'com.marklogic:ml-app-deployer:4.5.2'
-  testImplementation 'com.marklogic:marklogic-junit5:1.3.0'
+  testImplementation 'com.marklogic:ml-app-deployer:4.6.0'
+  testImplementation 'com.marklogic:marklogic-junit5:1.4.0'
   testImplementation "ch.qos.logback:logback-classic:1.3.5"
   testImplementation "org.slf4j:jcl-over-slf4j:1.7.36"
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
@@ -67,7 +67,7 @@ shadowJar {
 }
 
 task perfTest(type: JavaExec) {
-  main = "com.marklogic.spark.reader.PerformanceTester"
+  mainClass = "com.marklogic.spark.reader.PerformanceTester"
   classpath = sourceSets.test.runtimeClasspath
   args mlHost
 }
@@ -110,12 +110,12 @@ task dockerPerfTest(type: Exec) {
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-  classifier 'sources'
+  archiveClassifier = "sources"
   from sourceSets.main.allSource
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-  classifier "javadoc"
+  archiveClassifier = "javadoc"
   from javadoc
 }
 javadoc.failOnError = false
@@ -190,6 +190,6 @@ task gettingStartedZip(type: Zip) {
   from "examples/getting-started"
   exclude "build", ".gradle", "gradle-*.properties"
   into "marklogic-spark-getting-started-${version}"
-  archiveName "marklogic-spark-getting-started-${version}.zip"
-  destinationDir(file('build'))
+  archiveFileName = "marklogic-spark-getting-started-${version}.zip"
+  destinationDirectory = file("build")
 }
