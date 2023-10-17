@@ -80,7 +80,8 @@ information on how a Spark DataFrame works along with more commands that you can
 
 The instructions above can be applied to your own MarkLogic application. You can use the same Spark command above,
 simply adjusting the connection details and the Optic query. Please see 
-[the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic.
+[the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic, including via custom 
+JavaScript and XQuery code.
 
 ### Writing data to the connector
 
