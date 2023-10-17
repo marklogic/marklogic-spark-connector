@@ -1,11 +1,11 @@
 {
-  "Medical.Authors.CitationID": 1,
-  "Medical.Authors.LastName": "Golby",
-  "Medical.Authors.ForeName": "Pen",
-  "Medical.Authors.Date": "2022-07-13",
-  "Medical.Authors.DateTime": "2022-07-13 09:00:00",
-  "Medical.Authors.LuckyNumber": 1,
-  "Medical.Authors.Base64Value": "c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l",
-  "Medical.Authors.BooleanValue": true,
-  "Medical.Authors.CalendarInterval": "interval 2 years 4 month"
+  "CitationID": 1,
+  "LastName": "Golby",
+  "ForeName": "Pen",
+  "Date": "2022-07-13",
+  "DateTime": "2022-07-13 09:00:00",
+  "LuckyNumber": 1,
+  "Base64Value": "c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l",
+  "BooleanValue": true,
+  "CalendarInterval": "interval 2 years 4 month"
 }

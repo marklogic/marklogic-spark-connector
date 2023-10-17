@@ -1,11 +1,11 @@
 {
-  "Medical.Authors.CitationID": 2,
-  "Medical.Authors.LastName": "Pulhoster",
-  "Medical.Authors.ForeName": "Misty",
-  "Medical.Authors.Date": "2022-05-11",
-  "Medical.Authors.DateTime": "2022-05-11 10:00:00",
-  "Medical.Authors.LuckyNumber": 7,
-  "Medical.Authors.Base64Value": null,
-  "Medical.Authors.BooleanValue": null,
-  "Medical.Authors.CalendarInterval": null
+  "CitationID": 2,
+  "LastName": "Pulhoster",
+  "ForeName": "Misty",
+  "Date": "2022-05-11",
+  "DateTime": "2022-05-11 10:00:00",
+  "LuckyNumber": 7,
+  "Base64Value": null,
+  "BooleanValue": null,
+  "CalendarInterval": null
 }
