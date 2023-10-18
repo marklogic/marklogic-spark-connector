@@ -216,6 +216,24 @@ your custom code declares an external variable with a different name, you can co
     .save()
 ```
 
+### Custom external variables
+
+You can pass additional external variables to your custom code by configuring one or more options with names starting with
+`spark.marklogic.write.vars.`. The remainder of the option name will be used as the external variable name, and the value
+of the option will be sent as the external variable value. Each external variable will be passed as a string due to
+Spark capturing all option values as strings.
+
+The following demonstrates two custom external variables being configured and used by custom JavaScript code:
+
+```
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.vars.var1", "value1") \
+    .option("spark.marklogic.write.vars.var2", "value2") \
+    .option("spark.marklogic.write.javascript", "var URI, var1, var2; console.log('Received:', URI, var1, var2);") \
+    .load()
+```
+
 ### Custom schema usage
 
 If your dataset has a schema other than the default one expected by the connector - a single column named "URI" of 
