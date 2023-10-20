@@ -37,6 +37,11 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     @Override
+    public boolean useCommitCoordinator() {
+        return BatchWrite.super.useCommitCoordinator();
+    }
+
+    @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         logger.info("Number of partitions: {}", info.numPartitions());
         return new MarkLogicDataWriterFactory(writeContext);
