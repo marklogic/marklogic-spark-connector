@@ -1,11 +1,11 @@
 {
-  "CitationID": 5,
-  "LastName": "Humbee",
-  "ForeName": "Aida",
-  "Date": "2022-07-12",
-  "DateTime": "2022-07-12 13:00:00",
-  "LuckyNumber": 14,
-  "Base64Value": null,
-  "BooleanValue": null,
-  "CalendarInterval": null
+  "Medical.Authors.CitationID": 5,
+  "Medical.Authors.LastName": "Humbee",
+  "Medical.Authors.ForeName": "Aida",
+  "Medical.Authors.Date": "2022-07-12",
+  "Medical.Authors.DateTime": "2022-07-12 13:00:00",
+  "Medical.Authors.LuckyNumber": 14,
+  "Medical.Authors.Base64Value": null,
+  "Medical.Authors.BooleanValue": null,
+  "Medical.Authors.CalendarInterval": null
 }

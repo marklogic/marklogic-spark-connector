@@ -1,11 +1,11 @@
 {
-  "CitationID": 3,
-  "LastName": "Shoebotham",
-  "ForeName": "Taite",
-  "Date": "2022-04-11",
-  "DateTime": "2022-04-11 11:00:00",
-  "LuckyNumber": 10,
-  "Base64Value": null,
-  "BooleanValue": null,
-  "CalendarInterval": null
+  "Medical.Authors.CitationID": 3,
+  "Medical.Authors.LastName": "Shoebotham",
+  "Medical.Authors.ForeName": "Taite",
+  "Medical.Authors.Date": "2022-04-11",
+  "Medical.Authors.DateTime": "2022-04-11 11:00:00",
+  "Medical.Authors.LuckyNumber": 10,
+  "Medical.Authors.Base64Value": null,
+  "Medical.Authors.BooleanValue": null,
+  "Medical.Authors.CalendarInterval": null
 }

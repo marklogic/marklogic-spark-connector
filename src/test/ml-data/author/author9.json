@@ -1,11 +1,11 @@
 {
-  "CitationID": 1,
-  "LastName": "Canham",
-  "ForeName": "Tybie",
-  "Date": "2022-07-13",
-  "DateTime": "2022-07-13 09:00:00",
-  "LuckyNumber": 3,
-  "Base64Value": null,
-  "BooleanValue": null,
-  "CalendarInterval": null
+  "Medical.Authors.CitationID": 1,
+  "Medical.Authors.LastName": "Canham",
+  "Medical.Authors.ForeName": "Tybie",
+  "Medical.Authors.Date": "2022-07-13",
+  "Medical.Authors.DateTime": "2022-07-13 09:00:00",
+  "Medical.Authors.LuckyNumber": 3,
+  "Medical.Authors.Base64Value": null,
+  "Medical.Authors.BooleanValue": null,
+  "Medical.Authors.CalendarInterval": null
 }
