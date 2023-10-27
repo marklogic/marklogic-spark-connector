@@ -2,7 +2,7 @@ plugins {
   id 'java-library'
   id 'net.saliman.properties' version '1.5.2'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
-  id "com.marklogic.ml-gradle" version "4.6.0"
+  id "com.marklogic.ml-gradle" version "4.5.2"
   id 'maven-publish'
   id 'signing'
 }
