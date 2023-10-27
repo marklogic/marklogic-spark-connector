@@ -1,5 +1,5 @@
 version: '3.8'
-name: marklogic_spark
+name: ml_spark
 
 services:
 
@@ -43,7 +43,6 @@ services:
       - MARKLOGIC_ADMIN_USERNAME=admin
       - MARKLOGIC_ADMIN_PASSWORD=admin
     volumes:
-      - marklogic_spark_vol1:/var/opt/MarkLogic
       - ./logs/bootstrap_3n:/var/opt/MarkLogic/Logs
     ports:
       - 8000-8002:8000-8002
@@ -67,7 +66,6 @@ services:
       - MARKLOGIC_JOIN_CLUSTER=true
       - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
     volumes:
-      - marklogic_spark_vol2:/var/opt/MarkLogic
       - ./logs/node2:/var/opt/MarkLogic/Logs
     depends_on:
       - bootstrap_3n
@@ -93,7 +91,6 @@ services:
       - MARKLOGIC_JOIN_CLUSTER=true
       - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
     volumes:
-      - marklogic_spark_vol3:/var/opt/MarkLogic
       - ./logs/node3:/var/opt/MarkLogic/Logs
     depends_on:
       - bootstrap_3n
@@ -149,8 +146,3 @@ networks:
     internal: true
     driver_opts:
       com.docker.network.bridge.enable_icc: "true"
-
-volumes:
-  marklogic_spark_vol1:
-  marklogic_spark_vol2:
-  marklogic_spark_vol3:
