@@ -19,6 +19,7 @@ class CustomCodePartitionReader implements PartitionReader {
 
     public CustomCodePartitionReader(CustomCodeContext customCodeContext) {
         this.serverEvaluationCall = customCodeContext.buildCall(
+            customCodeContext.connectToMarkLogic(),
             Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY
         );
         this.isCustomSchema = customCodeContext.isCustomSchema();

@@ -33,6 +33,11 @@ public interface Options {
     String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
+    String WRITE_INVOKE = "spark.marklogic.write.invoke";
+    String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
+    String WRITE_XQUERY = "spark.marklogic.write.xquery";
+    String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
+
     String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
     String WRITE_TEMPORAL_COLLECTION = "spark.marklogic.write.temporalCollection";
