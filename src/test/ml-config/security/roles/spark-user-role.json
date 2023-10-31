@@ -13,6 +13,16 @@
       "privilege-name": "rest-writer",
       "action": "http://marklogic.com/xdmp/privileges/rest-writer",
       "kind": "execute"
+    },
+    {
+      "privilege-name": "xdbc-invoke",
+      "action": "http://marklogic.com/xdmp/privileges/xdbc-invoke",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "xdbc-eval",
+      "action": "http://marklogic.com/xdmp/privileges/xdbc-eval",
+      "kind": "execute"
     }
   ]
 }

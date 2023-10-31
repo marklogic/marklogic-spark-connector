@@ -30,7 +30,7 @@ services:
   # by this host. Note that each MarkLogic host has its 8000-8002 ports exposed externally so that the apps on those
   # ports can each be accessed if needed.
   bootstrap_3n:
-    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
     platform: linux/amd64
     container_name: bootstrap_3n
     hostname: bootstrap_3n.local
@@ -51,7 +51,7 @@ services:
       - internal_net
 
   node2:
-    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
     platform: linux/amd64
     container_name: node2
     hostname: node2.local
@@ -76,7 +76,7 @@ services:
       - internal_net
 
   node3:
-    image: "marklogicdb/marklogic-db:11.0.2-centos-1.0.2"
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
     platform: linux/amd64
     container_name: node3
     hostname: node3.local

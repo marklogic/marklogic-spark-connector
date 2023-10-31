@@ -18,6 +18,9 @@ package com.marklogic.spark;
 import org.apache.spark.sql.catalyst.json.JSONOptions;
 import scala.collection.immutable.HashMap;
 
+import java.util.Map;
+import java.util.stream.Stream;
+
 public abstract class Util {
 
     public final static JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
@@ -32,5 +35,9 @@ public abstract class Util {
         // for more information.
         "_corrupt_record"
     );
+
+    public final static boolean hasOption(Map<String, String> properties, String... options) {
+        return Stream.of(options).anyMatch(option -> properties.get(option) != null);
+    }
 
 }

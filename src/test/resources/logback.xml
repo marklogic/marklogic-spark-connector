@@ -20,4 +20,8 @@
     <appender-ref ref="STDOUT"/>
   </logger>
 
+  <logger name="org.apache.hadoop" level="ERROR" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
 </configuration>

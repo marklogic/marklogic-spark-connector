@@ -20,6 +20,10 @@ public interface Options {
     String CLIENT_URI = "spark.marklogic.client.uri";
     String CLIENT_SSL_ENABLED = "spark.marklogic.client.sslEnabled";
 
+    String READ_INVOKE = "spark.marklogic.read.invoke";
+    String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
+    String READ_XQUERY = "spark.marklogic.read.xquery";
+
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
