@@ -122,6 +122,15 @@ public class ContextSupport implements Serializable {
         }
     }
 
+    /**
+     * Only intended for "write" use cases; an error on "read" is always expected to be propagated to the user.
+     *
+     * @return
+     */
+    public boolean isAbortOnFailure() {
+        return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
+    }
+
     public Map<String, String> getProperties() {
         return properties;
     }

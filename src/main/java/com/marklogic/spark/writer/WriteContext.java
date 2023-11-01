@@ -86,10 +86,6 @@ public class WriteContext extends ContextSupport {
         return factory.newDocBuilder();
     }
 
-    boolean isAbortOnFailure() {
-        return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
-    }
-
     private void configureRestTransform(WriteBatcher writeBatcher) {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
         if (transformName != null && transformName.trim().length() > 0) {

@@ -15,6 +15,9 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.CustomCodeContext;
+import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
@@ -44,7 +47,9 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         logger.info("Number of partitions: {}", info.numPartitions());
-        return new MarkLogicDataWriterFactory(writeContext);
+        return Util.hasOption(writeContext.getProperties(), Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY) ?
+            new CustomCodeWriterFactory(new CustomCodeContext(writeContext.getProperties(), writeContext.getSchema())) :
+            new MarkLogicDataWriterFactory(writeContext);
     }
 
     @Override
@@ -68,6 +73,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void commit(long epochId, WriterCommitMessage[] messages) {
+        // TODO Look into if this is really a good idea when there are lots of messages.
         logger.info("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
     }
 

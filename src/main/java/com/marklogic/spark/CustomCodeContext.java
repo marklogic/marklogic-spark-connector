@@ -1,5 +1,6 @@
 package com.marklogic.spark;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -25,8 +26,8 @@ public class CustomCodeContext extends ContextSupport {
         return schema;
     }
 
-    public ServerEvaluationCall buildCall(String invokeOption, String javascriptOption, String xqueryOption) {
-        ServerEvaluationCall call = connectToMarkLogic().newServerEval();
+    public ServerEvaluationCall buildCall(DatabaseClient client, String invokeOption, String javascriptOption, String xqueryOption) {
+        ServerEvaluationCall call = client.newServerEval();
         final Map<String, String> properties = getProperties();
         if (optionExists(invokeOption)) {
             return call.modulePath(properties.get(invokeOption));
