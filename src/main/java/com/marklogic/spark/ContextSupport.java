@@ -57,9 +57,8 @@ public class ContextSupport implements Serializable {
         }};
         connectionProps.putAll(this.properties);
 
-        String clientUri = properties.get(Options.CLIENT_URI);
-        if (clientUri != null && clientUri.trim().length() > 0) {
-            parseClientUri(clientUri, connectionProps);
+        if (optionExists(Options.CLIENT_URI)) {
+            parseClientUri(properties.get(Options.CLIENT_URI), connectionProps);
         }
 
         if ("true".equalsIgnoreCase(properties.get(Options.CLIENT_SSL_ENABLED))) {
@@ -67,6 +66,11 @@ public class ContextSupport implements Serializable {
         }
 
         return connectionProps;
+    }
+
+    public final boolean optionExists(String option) {
+        String value = properties.get(option);
+        return value != null && value.trim().length() > 0;
     }
 
     private void parseClientUri(String clientUri, Map<String, String> connectionProps) {

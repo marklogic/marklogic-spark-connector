@@ -23,6 +23,7 @@ import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
@@ -47,6 +48,11 @@ public class DefaultSource implements TableProvider {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> caseSensitiveOptions = options.asCaseSensitiveMap();
+
+        if (isReadWithCustomCodeOperation(caseSensitiveOptions)) {
+            return new StructType().add("URI", DataTypes.StringType);
+        }
+
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
             throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
@@ -88,6 +94,10 @@ public class DefaultSource implements TableProvider {
     }
 
     private boolean isReadOperation(Map<String, String> properties) {
-        return properties.containsKey(Options.READ_OPTIC_QUERY);
+        return properties.get(Options.READ_OPTIC_QUERY) != null || isReadWithCustomCodeOperation(properties);
+    }
+
+    private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
+        return Util.hasOption(properties, Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT);
     }
 }
