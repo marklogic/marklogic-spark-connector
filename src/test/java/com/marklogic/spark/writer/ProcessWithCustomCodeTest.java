@@ -94,6 +94,20 @@ public class ProcessWithCustomCodeTest extends AbstractWriteTest {
     }
 
     @Test
+    void userDefinedVariables() {
+        newWriterWithDefaultConfig("three-uris.csv", 2)
+            .option(Options.WRITE_JAVASCRIPT, "declareUpdate(); var URI; var keyName; var keyValue;" +
+                "const doc = {}; doc[keyName] = keyValue; " +
+                "xdmp.documentInsert(URI + '.json', doc, " +
+                "{\"permissions\": [xdmp.permission(\"spark-user-role\", \"read\"), xdmp.permission(\"spark-user-role\", \"update\")]});")
+            .option(Options.WRITE_VARS_PREFIX + "keyName", "hello")
+            .option(Options.WRITE_VARS_PREFIX + "keyValue", "world")
+            .save();
+
+        verifyThreeJsonDocumentsWereWritten();
+    }
+
+    @Test
     void abortOnFailure() {
         SparkException ex = assertThrows(SparkException.class, () ->
             newWriterWithDefaultConfig("three-uris.csv", 2)

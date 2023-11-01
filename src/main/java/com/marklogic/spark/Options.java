@@ -23,6 +23,7 @@ public interface Options {
     String READ_INVOKE = "spark.marklogic.read.invoke";
     String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
     String READ_XQUERY = "spark.marklogic.read.xquery";
+    String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
 
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
@@ -37,6 +38,7 @@ public interface Options {
     String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
     String WRITE_XQUERY = "spark.marklogic.write.xquery";
     String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
+    String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
     String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";

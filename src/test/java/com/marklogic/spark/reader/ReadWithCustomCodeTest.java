@@ -78,6 +78,23 @@ public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
         assertEquals("John", rows.get(1).getString(1));
     }
 
+    @Test
+    void userDefinedVariables() {
+        List<Row> rows = newSparkSession()
+            .read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_JAVASCRIPT, "Sequence.from([firstValue, secondValue])")
+            .option(Options.READ_VARS_PREFIX + "firstValue", "the first value")
+            .option(Options.READ_VARS_PREFIX + "secondValue", "the second value")
+            .load()
+            .collectAsList();
+
+        assertEquals(2, rows.size());
+        assertEquals("the first value", rows.get(0).getString(0));
+        assertEquals("the second value", rows.get(1).getString(0));
+    }
+
     private List<Row> readRows(String option, String value) {
         return startRead()
             .option(option, value)
