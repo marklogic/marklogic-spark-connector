@@ -177,7 +177,7 @@ public class WriteRowsTest extends AbstractWriteTest {
 
         Throwable cause = getCauseFromWriterException(ex);
         assertTrue(cause instanceof IllegalArgumentException);
-        assertEquals("Unable to parse permissions string, which must be a comma-separated list of role names and " +
+        assertEquals("Unable to parse permissions string, which must be a comma-delimited list of role names and " +
             "capabilities - i.e. role1,read,role2,update,role3,execute; " +
             "string: rest-reader,read,rest-writer", cause.getMessage());
     }
