@@ -248,10 +248,10 @@ value greater than one, then the values will be sent in the following manner:
 
 1. If a custom schema is used, then the JSON objects representing the set of rows in the batch will first be added to a 
 JSON array, and then the array will be set to the external variable. 
-2. Otherwise, the row values from the "URI" column will be concatenated together with a semicolon as a delimiter.
+2. Otherwise, the row values from the "URI" column will be concatenated together with a comma as a delimiter.
 
 For approach #2, an alternate delimiter can be configured via `spark.marklogic.write.externalVariableDelimiter`. This
-would be needed in case your "URI" values may have semicolons in them. 
+would be needed in case your "URI" values may have commas in them. 
 
 
 ## Error handling

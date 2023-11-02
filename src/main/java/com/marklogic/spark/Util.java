@@ -37,7 +37,8 @@ public abstract class Util {
     );
 
     public final static boolean hasOption(Map<String, String> properties, String... options) {
-        return Stream.of(options).anyMatch(option -> properties.get(option) != null);
+        return Stream.of(options)
+            .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
     }
 
 }

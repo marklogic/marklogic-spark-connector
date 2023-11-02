@@ -1,9 +1,14 @@
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -15,66 +20,53 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class CustomCodeWriter implements DataWriter<InternalRow> {
+class CustomCodeWriter implements DataWriter<InternalRow> {
 
     private final static Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
 
     private final DatabaseClient databaseClient;
     private final CustomCodeContext customCodeContext;
 
-    public CustomCodeWriter(CustomCodeContext customCodeContext) {
+    private final int batchSize;
+    private final List<String> currentBatch = new ArrayList<>();
+    private final String externalVariableDelimiter;
+    private ObjectMapper objectMapper;
+
+    CustomCodeWriter(CustomCodeContext customCodeContext) {
         this.customCodeContext = customCodeContext;
         this.databaseClient = customCodeContext.connectToMarkLogic();
+
+        this.batchSize = customCodeContext.optionExists(Options.WRITE_BATCH_SIZE) ?
+            Integer.parseInt(customCodeContext.getProperties().get(Options.WRITE_BATCH_SIZE)) : 1;
+
+        this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
+            customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
+
+        if (this.customCodeContext.isCustomSchema() && this.batchSize > 1) {
+            this.objectMapper = new ObjectMapper();
+        }
     }
 
     @Override
     public void write(InternalRow record) {
-        ServerEvaluationCall call = customCodeContext.buildCall(
-            this.databaseClient,
-            new CustomCodeContext.CallInputs(
-                Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY, Options.WRITE_VARS_PREFIX
-            )
-        );
-        
-        try {
-            addVariableToCall(record, call);
-            call.evalAs(String.class);
-        } catch (RuntimeException ex) {
-            if (customCodeContext.isAbortOnFailure()) {
-                throw ex;
-            }
-            logger.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
+        String rowValue = customCodeContext.isCustomSchema() ?
+            convertRowToJSONString(record) :
+            record.getString(0);
+
+        this.currentBatch.add(rowValue);
+
+        if (this.currentBatch.size() >= this.batchSize) {
+            flush();
         }
-    }
-
-    private void addVariableToCall(InternalRow record, ServerEvaluationCall call) {
-        final String variableName = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_NAME) ?
-            customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_NAME) : "URI";
-
-        if (customCodeContext.isCustomSchema()) {
-            String jsonObject = convertRowToJSONString(record);
-            call.addVariable(variableName, new StringHandle(jsonObject).withFormat(Format.JSON));
-        } else {
-            String uriValue = record.getString(0);
-            call.addVariable(variableName, new StringHandle(uriValue).withFormat(Format.TEXT));
-        }
-    }
-
-    private String convertRowToJSONString(InternalRow record) {
-        StringWriter jsonObjectWriter = new StringWriter();
-        JacksonGenerator jacksonGenerator = new JacksonGenerator(
-            this.customCodeContext.getSchema(),
-            jsonObjectWriter,
-            Util.DEFAULT_JSON_OPTIONS
-        );
-        jacksonGenerator.write(record);
-        jacksonGenerator.flush();
-        return jsonObjectWriter.toString();
     }
 
     @Override
     public WriterCommitMessage commit() {
+        flush();
         // TODO Capture responses from each eval call?
         return null;
     }
@@ -89,6 +81,80 @@ public class CustomCodeWriter implements DataWriter<InternalRow> {
         logger.info("Close called; stopping job");
         if (databaseClient != null) {
             databaseClient.release();
+        }
+    }
+
+    /**
+     * Handles making a call to MarkLogic once the current batch is full, or when Spark calls commit(), which ensures
+     * that any partial batch is still processed.
+     */
+    private void flush() {
+        if (currentBatch.isEmpty()) {
+            return;
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Calling custom code in MarkLogic");
+        }
+        ServerEvaluationCall call = customCodeContext.buildCall(
+            this.databaseClient,
+            new CustomCodeContext.CallOptions(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)
+        );
+        call.addVariable(determineExternalVariableName(), makeVariableValue());
+        currentBatch.clear();
+        executeCall(call);
+    }
+
+    private String determineExternalVariableName() {
+        return customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_NAME) ?
+            customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_NAME) :
+            "URI";
+    }
+
+    private AbstractWriteHandle makeVariableValue() {
+        if (customCodeContext.isCustomSchema()) {
+            return this.batchSize == 1 ?
+                new StringHandle(currentBatch.get(0)).withFormat(Format.JSON) :
+                new JacksonHandle(makeArrayFromCurrentBatch());
+        }
+        // This works fine regardless of the batch size.
+        final String uriValue = currentBatch.stream().collect(Collectors.joining(externalVariableDelimiter));
+        return new StringHandle(uriValue).withFormat(Format.TEXT);
+    }
+
+    private ArrayNode makeArrayFromCurrentBatch() {
+        ArrayNode array = this.objectMapper.createArrayNode();
+        for (String jsonObjectString : currentBatch) {
+            try {
+                array.add(this.objectMapper.readTree(jsonObjectString));
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(String.format("Unable to read JSON string while constructing call " +
+                    "for multiple rows with a custom schema; JSON: %s", jsonObjectString), e);
+            }
+        }
+        return array;
+    }
+
+    private String convertRowToJSONString(InternalRow record) {
+        StringWriter jsonObjectWriter = new StringWriter();
+        JacksonGenerator jacksonGenerator = new JacksonGenerator(
+            this.customCodeContext.getSchema(),
+            jsonObjectWriter,
+            Util.DEFAULT_JSON_OPTIONS
+        );
+        jacksonGenerator.write(record);
+        jacksonGenerator.flush();
+        return jsonObjectWriter.toString();
+    }
+
+    private void executeCall(ServerEvaluationCall call) {
+        try {
+            call.evalAs(String.class);
+        } catch (RuntimeException ex) {
+            if (customCodeContext.isAbortOnFailure()) {
+                throw ex;
+            }
+            logger.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
         }
     }
 }

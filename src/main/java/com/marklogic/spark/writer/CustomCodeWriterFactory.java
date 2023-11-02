@@ -5,7 +5,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 
-public class CustomCodeWriterFactory implements DataWriterFactory {
+class CustomCodeWriterFactory implements DataWriterFactory {
 
     private CustomCodeContext customCodeContext;
 
