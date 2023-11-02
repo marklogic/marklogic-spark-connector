@@ -26,22 +26,50 @@ public class CustomCodeContext extends ContextSupport {
         return schema;
     }
 
-    public ServerEvaluationCall buildCall(DatabaseClient client, String invokeOption, String javascriptOption, String xqueryOption) {
+    public ServerEvaluationCall buildCall(DatabaseClient client, CallInputs callInputs) {
         ServerEvaluationCall call = client.newServerEval();
         final Map<String, String> properties = getProperties();
-        if (optionExists(invokeOption)) {
-            return call.modulePath(properties.get(invokeOption));
-        } else if (optionExists(javascriptOption)) {
-            return call.javascript(properties.get(javascriptOption));
-        } else if (optionExists(xqueryOption)) {
-            return call.xquery(properties.get(xqueryOption));
+        if (optionExists(callInputs.invokeOptionName)) {
+            call.modulePath(properties.get(callInputs.invokeOptionName));
+        } else if (optionExists(callInputs.javascriptOptionName)) {
+            call.javascript(properties.get(callInputs.javascriptOptionName));
+        } else if (optionExists(callInputs.xqueryOptionName)) {
+            call.xquery(properties.get(callInputs.xqueryOptionName));
+        } else {
+            throw new RuntimeException("Must specify one of the following options: " + Arrays.asList(
+                callInputs.invokeOptionName, callInputs.javascriptOptionName, callInputs.xqueryOptionName
+            ));
         }
-        throw new RuntimeException("Must specify one of the following options: " + Arrays.asList(
-            invokeOption, javascriptOption, xqueryOption
-        ));
+
+        addUserDefinedVariables(call, callInputs);
+        return call;
+    }
+
+    private void addUserDefinedVariables(ServerEvaluationCall call, CallInputs callInputs) {
+        final Map<String, String> properties = getProperties();
+        properties.keySet().forEach(propertyName -> {
+            if (propertyName.startsWith(callInputs.varsPrefix)) {
+                String varName = propertyName.substring(callInputs.varsPrefix.length());
+                call.addVariable(varName, properties.get(propertyName));
+            }
+        });
     }
 
     public boolean isCustomSchema() {
         return customSchema;
+    }
+
+    public static class CallInputs {
+        private final String invokeOptionName;
+        private final String javascriptOptionName;
+        private final String xqueryOptionName;
+        private final String varsPrefix;
+
+        public CallInputs(String invokeOptionName, String javascriptOptionName, String xqueryOptionName, String varsPrefix) {
+            this.javascriptOptionName = javascriptOptionName;
+            this.xqueryOptionName = xqueryOptionName;
+            this.invokeOptionName = invokeOptionName;
+            this.varsPrefix = varsPrefix;
+        }
     }
 }

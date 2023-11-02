@@ -20,7 +20,9 @@ class CustomCodePartitionReader implements PartitionReader {
     public CustomCodePartitionReader(CustomCodeContext customCodeContext) {
         this.serverEvaluationCall = customCodeContext.buildCall(
             customCodeContext.connectToMarkLogic(),
-            Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY
+            new CustomCodeContext.CallInputs(
+                Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY, Options.READ_VARS_PREFIX
+            )
         );
         this.isCustomSchema = customCodeContext.isCustomSchema();
         this.jsonRowDeserializer = new JsonRowDeserializer(customCodeContext.getSchema());
@@ -45,6 +47,8 @@ class CustomCodePartitionReader implements PartitionReader {
 
     @Override
     public void close() {
-        this.evalResultIterator.close();
+        if (this.evalResultIterator != null) {
+            this.evalResultIterator.close();
+        }
     }
 }

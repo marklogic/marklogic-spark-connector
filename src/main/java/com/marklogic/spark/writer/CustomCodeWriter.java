@@ -31,8 +31,12 @@ public class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow record) {
         ServerEvaluationCall call = customCodeContext.buildCall(
-            this.databaseClient, Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY
+            this.databaseClient,
+            new CustomCodeContext.CallInputs(
+                Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY, Options.WRITE_VARS_PREFIX
+            )
         );
+        
         try {
             addVariableToCall(record, call);
             call.evalAs(String.class);
@@ -77,12 +81,12 @@ public class CustomCodeWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        // Nothing to do here, the client will be released when Spark calls close().
+        logger.warn("Abort called; stopping job");
     }
 
     @Override
     public void close() {
-        logger.warn("CLOSE!");
+        logger.info("Close called; stopping job");
         if (databaseClient != null) {
             databaseClient.release();
         }
