@@ -13,10 +13,10 @@ the data into MarkLogic is a key feature to leverage these advantages.
 
 To try out this example, you will need [Docker](https://www.docker.com/get-started/) installed. Docker is used to 
 create an instance of MarkLogic, a PostgreSQL (referred to in this document as "Postgres") 
-relational database, and [pgadmin](https://www.pgadmin.org/). You will also need Java 8 or higher, and if you are already running an 
+relational database, and [pgadmin](https://www.pgadmin.org/). You will also need Java 8 or Java 11, and if you are already running an 
 instance of MarkLogic locally, it is recommended to stop that instance first. Note that the pgadmin instance is included
 solely for users wishing to use it to explore the Postgres database; using pgadmin is outside the scope of this 
-document.
+document. If you do wish to use it, please see the [docker-compose.yml] file in this directory for login information.
 
 ## Setting up the Docker containers
 
