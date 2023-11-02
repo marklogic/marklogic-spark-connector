@@ -57,15 +57,15 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            logger.info("Commit messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
+            logger.debug("Commit messages received: {}", Arrays.asList(messages));
         }
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            logger.error("Abort messages received: {}", Arrays.asList(messages));
+            logger.warn("Abort messages received: {}", Arrays.asList(messages));
         }
     }
 
@@ -76,12 +76,15 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void commit(long epochId, WriterCommitMessage[] messages) {
-        // TODO Look into if this is really a good idea when there are lots of messages.
-        logger.info("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
+            logger.debug("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        }
     }
 
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
-        logger.info("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        if (messages != null && messages.length > 0) {
+            logger.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        }
     }
 }
