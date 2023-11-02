@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-class MarkLogicPartitionReader implements PartitionReader {
+class OpticPartitionReader implements PartitionReader {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicPartitionReader.class);
+    private final static Logger logger = LoggerFactory.getLogger(OpticPartitionReader.class);
 
     private final ReadContext readContext;
     private final PlanAnalysis.Partition partition;
@@ -51,7 +51,7 @@ class MarkLogicPartitionReader implements PartitionReader {
     // are working correctly.
     static Consumer<Long> totalRowCountListener;
 
-    MarkLogicPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
+    OpticPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
         this.readContext = readContext;
         this.partition = partition;
         this.rowManager = readContext.connectToMarkLogic().newRowManager();

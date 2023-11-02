@@ -32,9 +32,12 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.concurrent.atomic.AtomicReference;
 
-class MarkLogicDataWriter implements DataWriter<InternalRow> {
+/**
+ * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
+ */
+class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicDataWriter.class);
+    private final static Logger logger = LoggerFactory.getLogger(WriteBatcherDataWriter.class);
 
     private final WriteContext writeContext;
     private final DatabaseClient databaseClient;
@@ -50,7 +53,7 @@ class MarkLogicDataWriter implements DataWriter<InternalRow> {
 
     private int docCount;
 
-    MarkLogicDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
+    WriteBatcherDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
         this.writeContext = writeContext;
         this.partitionId = partitionId;
         this.taskId = taskId;

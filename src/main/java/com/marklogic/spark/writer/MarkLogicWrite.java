@@ -52,7 +52,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
             );
             return new CustomCodeWriterFactory(context);
         }
-        return new MarkLogicDataWriterFactory(writeContext);
+        return new WriteBatcherDataWriterFactory(writeContext);
     }
 
     @Override
@@ -71,7 +71,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public StreamingDataWriterFactory createStreamingWriterFactory(PhysicalWriteInfo info) {
-        return new MarkLogicDataWriterFactory(writeContext);
+        return new WriteBatcherDataWriterFactory(writeContext);
     }
 
     @Override

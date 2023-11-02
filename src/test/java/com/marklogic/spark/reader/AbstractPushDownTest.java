@@ -36,7 +36,7 @@ abstract class AbstractPushDownTest extends AbstractIntegrationTest {
         // correctly pushed down to MarkLogic as opposed to being handled by Spark, which should make operations
         // faster as MarkLogic is returning fewer rows. A synchronized method is used in case the test uses multiple
         // partitions, as each will run on a separate thread.
-        MarkLogicPartitionReader.totalRowCountListener = totalRowCount -> addToRowCount(totalRowCount);
+        OpticPartitionReader.totalRowCountListener = totalRowCount -> addToRowCount(totalRowCount);
     }
 
     protected DataFrameReader newDefaultReader(SparkSession session) {
