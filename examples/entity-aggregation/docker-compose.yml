@@ -1,0 +1,41 @@
+version: '3.8'
+
+name: entity_aggregation
+
+services:
+
+  marklogic:
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    platform: linux/amd64
+    restart: always
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+    volumes:
+      - ./docker/marklogic/logs:/var/opt/MarkLogic/Logs
+    ports:
+      - 8000-8002:8000-8002
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      # Simplifies restoring the dvdrental.tar into Postgres.
+      - ./docker/postgres:/opt
+    ports:
+      - "5432:5432"
+
+  # Included solely for users that wish to explore the Postgres database.
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    environment:
+      PGADMIN_DEFAULT_EMAIL: postgres@pgadmin.com
+      PGADMIN_DEFAULT_PASSWORD: postgres
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - 15432:80
+    depends_on:
+      - postgres
