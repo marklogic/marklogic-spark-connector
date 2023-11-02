@@ -38,6 +38,7 @@ public interface Options {
     String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
     String WRITE_XQUERY = "spark.marklogic.write.xquery";
     String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
+    String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
     String WRITE_COLLECTIONS = "spark.marklogic.write.collections";

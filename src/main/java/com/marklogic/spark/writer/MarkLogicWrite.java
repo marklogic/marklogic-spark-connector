@@ -17,7 +17,6 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
@@ -47,9 +46,13 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         logger.info("Number of partitions: {}", info.numPartitions());
-        return Util.hasOption(writeContext.getProperties(), Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY) ?
-            new CustomCodeWriterFactory(new CustomCodeContext(writeContext.getProperties(), writeContext.getSchema())) :
-            new MarkLogicDataWriterFactory(writeContext);
+        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)) {
+            CustomCodeContext context = new CustomCodeContext(
+                writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
+            );
+            return new CustomCodeWriterFactory(context);
+        }
+        return new MarkLogicDataWriterFactory(writeContext);
     }
 
     @Override

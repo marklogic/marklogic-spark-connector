@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.spark.CustomCodeContext;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.types.StructType;
@@ -12,7 +13,7 @@ public class CustomCodeScanBuilder implements ScanBuilder {
     private CustomCodeContext context;
 
     public CustomCodeScanBuilder(Map<String, String> properties, StructType schema) {
-        this.context = new CustomCodeContext(properties, schema);
+        this.context = new CustomCodeContext(properties, schema, Options.READ_VARS_PREFIX);
     }
 
     @Override

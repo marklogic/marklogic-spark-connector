@@ -127,8 +127,12 @@ public class ContextSupport implements Serializable {
      *
      * @return
      */
-    public boolean isAbortOnFailure() {
+    public final boolean isAbortOnFailure() {
         return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
+    }
+
+    public final boolean hasOption(String... options) {
+        return Util.hasOption(this.properties, options);
     }
 
     public Map<String, String> getProperties() {
