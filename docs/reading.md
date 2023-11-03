@@ -323,9 +323,6 @@ If your custom code needs to return a different sequence of values, you can spec
 and the connector will use it instead. For example, the following expects that the `/path/to/module.sjs` will return
 JSON objects with columns that conform to the given schema:
 
-(TODO Assumption is that we can use the technique currently in use for converting a JSON object into a Spark row via
-Spark's JacksonParser.)
-
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
@@ -355,6 +352,65 @@ df = spark.read.format("com.marklogic.spark") \
     .load()
 ```
 
+### Streaming with custom code
+
+Spark's support for [streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) 
+from MarkLogic can be useful when your custom code for reading data may take a long time to execute. Or, based on the
+nature of your custom code, running the query incrementally to produce smaller batches may be a better fit for your 
+use case. 
+
+To stream results from your custom code, the connector must know how batches can be constructed based on the results of
+your custom code. Because the connector does not know anything about your code, the connector needs to run an 
+additional set of custom code that you implement to provide a sequence of "batch identifiers" to the connector. The
+connector will then run your custom once for each of your batch identifiers, with the batch identifier being passed as
+an external variable to your custom code. 
+
+The code to run for providing a sequence of batch identifiers must be defined via one of the following options:
+
+- `spark.marklogic.read.batchIds.invoke` - a JavaScript or XQuery module path to invoke.
+- `spark.marklogic.read.batchIds.javascript` - a JavaScript program to evaluate.
+- `spark.marklogic.read.batchIds.xquery` - an XQuery program to evaluate.
+
+You are free to return any sequence of batch identifiers. For each one, the connector will invoke your regular custom
+code with an external variable named `BATCH_IDENTIFIER` of type `String`. You are then free to use this value to return 
+a set of results associated with the batch.
+
+As an example, consider an application with a collection named "customer" containing hundreds of millions of URIs. 
+Retrieving these URIs in a single query may take too long depending on the MarkLogic cluster resources. A common way
+to constrain a query to return fewer results is to limit it to a single MarkLogic forest. The following 
+JavaScript shows how forest IDs can be used as a sequence of batch identifiers:
+
+```
+.option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('your-database-name'))");
+```
+
+The custom code for querying the "customer" collection using the 
+[cts.uris function](https://docs.marklogic.com/cts.uris) would then look like this:
+
+```
+var BATCH_IDENTIFIER;
+
+cts.uris(null, null, cts.collectionQuery("customer"), null, [BATCH_IDENTIFIER]);
+```
+
+The above query will then be run by the connector once for each forest in your application's database. The results for
+each forest will be converted into a set of rows in a Spark dataset, which will then be streamed immediately to the 
+writer in your Spark program. Spark will repeat this process for each of your batch identifiers. 
+
+For a streaming use case, you may wish to ensure that every query runs 
+[at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to construct
+any batch identifiers you wish, one technique for accomplishing this would be to construct batch identifiers 
+containing both a forest ID and a server timestamp:
+
+```
+const forestIds = xdmp.databaseForests(xdmp.database('your-database-name'))
+const timestamp = xdmp.requestTimestamp()
+Sequence.from(forestIds.toArray().map(forestId => forestId + ":" + timestamp))
+```
+
+In your custom code, you would then parse out the forest ID and server timestamp from each batch identifier and use
+them accordingly in your queries. The MarkLogic documentation in the link above can provide more details and examples
+on how to perform point-in-time queries with server timestamps.
 
 ### Tuning performance
 
