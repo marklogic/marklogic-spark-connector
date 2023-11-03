@@ -46,10 +46,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
+public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
     SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicScanBuilder.class);
+    private final static Logger logger = LoggerFactory.getLogger(OpticScanBuilder.class);
 
     private final ReadContext readContext;
     private List<Filter> pushedFilters;
@@ -63,7 +63,7 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         add(Sum.class);
     }};
 
-    public MarkLogicScanBuilder(ReadContext readContext) {
+    public OpticScanBuilder(ReadContext readContext) {
         this.readContext = readContext;
     }
 
@@ -72,7 +72,7 @@ public class MarkLogicScanBuilder implements ScanBuilder, SupportsPushDownFilter
         if (logger.isDebugEnabled()) {
             logger.debug("Creating new scan");
         }
-        return new MarkLogicScan(readContext);
+        return new OpticScan(readContext);
     }
 
     /**

@@ -34,15 +34,15 @@ import java.util.List;
  * we simply need to know the index of the bucket in the list of all buckets. And thus, an offset is simply the index of
  * a bucket in that list.
  */
-class MarkLogicMicroBatchStream implements MicroBatchStream {
+class OpticMicroBatchStream implements MicroBatchStream {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicMicroBatchStream.class);
+    private final static Logger logger = LoggerFactory.getLogger(OpticMicroBatchStream.class);
 
     private ReadContext readContext;
     private List<PlanAnalysis.Bucket> allBuckets;
     private int bucketIndex;
 
-    MarkLogicMicroBatchStream(ReadContext readContext) {
+    OpticMicroBatchStream(ReadContext readContext) {
         this.readContext = readContext;
         this.allBuckets = this.readContext.getPlanAnalysis().getAllBuckets();
     }
@@ -76,7 +76,7 @@ class MarkLogicMicroBatchStream implements MicroBatchStream {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
-        return new MarkLogicPartitionReaderFactory(this.readContext);
+        return new OpticPartitionReaderFactory(this.readContext);
     }
 
     @Override

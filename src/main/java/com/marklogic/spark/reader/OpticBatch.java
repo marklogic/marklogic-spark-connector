@@ -13,46 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.marklogic.spark.reader;
 
 import org.apache.spark.sql.connector.read.Batch;
-import org.apache.spark.sql.connector.read.Scan;
-import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
-import org.apache.spark.sql.types.StructType;
+import org.apache.spark.sql.connector.read.InputPartition;
+import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MarkLogicScan implements Scan {
+class OpticBatch implements Batch {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicScan.class);
+    private final static Logger logger = LoggerFactory.getLogger(OpticBatch.class);
 
-    private ReadContext readContext;
+    private final ReadContext readContext;
 
-    MarkLogicScan(ReadContext readContext) {
+    OpticBatch(ReadContext readContext) {
         this.readContext = readContext;
     }
 
     @Override
-    public StructType readSchema() {
-        return readContext.getSchema();
+    public InputPartition[] planInputPartitions() {
+        PlanAnalysis planAnalysis = readContext.getPlanAnalysis();
+        return planAnalysis != null ?
+            planAnalysis.getPartitionArray() :
+            new InputPartition[]{};
     }
 
     @Override
-    public String description() {
-        return Scan.super.description();
-    }
-
-    @Override
-    public Batch toBatch() {
+    public PartitionReaderFactory createReaderFactory() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Creating new batch");
+            logger.debug("Creating new partition reader factory");
         }
-        return new MarkLogicBatch(readContext);
-    }
-
-    @Override
-    public MicroBatchStream toMicroBatchStream(String checkpointLocation) {
-        return new MarkLogicMicroBatchStream(readContext);
+        return new OpticPartitionReaderFactory(readContext);
     }
 }

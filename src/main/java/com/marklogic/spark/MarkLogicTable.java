@@ -16,7 +16,7 @@
 package com.marklogic.spark;
 
 import com.marklogic.spark.reader.CustomCodeScanBuilder;
-import com.marklogic.spark.reader.MarkLogicScanBuilder;
+import com.marklogic.spark.reader.OpticScanBuilder;
 import com.marklogic.spark.reader.ReadContext;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;
@@ -86,7 +86,7 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
         if (logger.isDebugEnabled()) {
             logger.debug("Will read rows via Optic query");
         }
-        return new MarkLogicScanBuilder(new ReadContext(readProperties, readSchema));
+        return new OpticScanBuilder(new ReadContext(readProperties, readSchema));
     }
 
     @Override
