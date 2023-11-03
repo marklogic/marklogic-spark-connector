@@ -372,7 +372,7 @@ The code to run for providing a sequence of batch identifiers must be defined vi
 - `spark.marklogic.read.batchIds.xquery` - an XQuery program to evaluate.
 
 You are free to return any sequence of batch identifiers. For each one, the connector will invoke your regular custom
-code with an external variable named `BATCH_IDENTIFIER` of type `String`. You are then free to use this value to return 
+code with an external variable named `BATCH_ID` of type `String`. You are then free to use this value to return 
 a set of results associated with the batch.
 
 As an example, consider an application with a collection named "customer" containing hundreds of millions of URIs. 
@@ -388,9 +388,9 @@ The custom code for querying the "customer" collection using the
 [cts.uris function](https://docs.marklogic.com/cts.uris) would then look like this:
 
 ```
-var BATCH_IDENTIFIER;
+var BATCH_ID;
 
-cts.uris(null, null, cts.collectionQuery("customer"), null, [BATCH_IDENTIFIER]);
+cts.uris(null, null, cts.collectionQuery("customer"), null, [BATCH_ID]);
 ```
 
 The above query will then be run by the connector once for each forest in your application's database. The results for

@@ -4,10 +4,29 @@ import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
 
-/**
- * For now, we cannot create partitions based on user's custom code. Will enhance this in the future if/when we add
- * support for partitions based on host and/or forest names.
- */
 class CustomCodePartition implements InputPartition, Serializable {
+
     final static long serialVersionUID = 1;
+
+    private String batchId;
+
+    /**
+     * Constructor for normal reading, where all rows will be returned in a single call to MarkLogic by a single reader.
+     */
+    public CustomCodePartition() {
+    }
+
+    /**
+     * Constructor used for streaming reads, when a call is made to the reader (and thus to MarkLogic) for the given
+     * batch ID.
+     *
+     * @param batchId
+     */
+    public CustomCodePartition(String batchId) {
+        this.batchId = batchId;
+    }
+
+    public String getBatchId() {
+        return batchId;
+    }
 }
