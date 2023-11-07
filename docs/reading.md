@@ -371,6 +371,9 @@ The code to run for providing a sequence of batch identifiers must be defined vi
 - `spark.marklogic.read.batchIds.javascript` - a JavaScript program to evaluate.
 - `spark.marklogic.read.batchIds.xquery` - an XQuery program to evaluate.
 
+Note that any variables you define via the `spark.marklogic.reads.vars` prefix will also be sent to the above code, 
+in addition to the code you define for reading rows. 
+
 You are free to return any sequence of batch identifiers. For each one, the connector will invoke your regular custom
 code with an external variable named `BATCH_ID` of type `String`. You are then free to use this value to return 
 a set of results associated with the batch.
