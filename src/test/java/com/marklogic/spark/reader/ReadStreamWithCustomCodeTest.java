@@ -17,17 +17,17 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
 
     @Test
-    void javascriptBatchIds(@TempDir Path tempDir) throws Exception {
+    void javascriptBatchIds(@TempDir Path tempDir) {
         verifyFiveDocumentsAreWritten(tempDir, Options.READ_BATCH_IDS_JAVASCRIPT, "Sequence.from([1, 2, 3, 4, 5])");
     }
 
     @Test
-    void xqueryBatchIds(@TempDir Path tempDir) throws Exception {
+    void xqueryBatchIds(@TempDir Path tempDir) {
         verifyFiveDocumentsAreWritten(tempDir, Options.READ_BATCH_IDS_XQUERY, "(1, 2, 3, 4, 5)");
     }
 
     @Test
-    void invokeBatchIds(@TempDir Path tempDir) throws Exception {
+    void invokeBatchIds(@TempDir Path tempDir) {
         verifyFiveDocumentsAreWritten(tempDir, Options.READ_BATCH_IDS_INVOKE, "/getBatchIds.sjs");
     }
 
@@ -54,8 +54,12 @@ public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .schema(new StructType()
                 .add("batchId", DataTypes.StringType)
                 .add("hello", DataTypes.StringType))
+
+            // Example of a user-defined var that isn't used; this is fine, just verifying it doesn't throw an error.
+            .option(Options.READ_VARS_PREFIX + "UNUSED_VAR", "this shouldn't throw an error")
+
             .load()
-            
+
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -79,6 +83,46 @@ public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             JsonNode doc = readJsonDocument("/read-stream/" + i + ".json");
             assertEquals(i, Integer.parseInt(doc.get("batchId").asText()));
             assertEquals("world", doc.get("hello").asText());
+        }
+    }
+
+    /**
+     * Demonstrates that user-defined variables for reading will be sent both to the batch IDs script and to the
+     * read script.
+     */
+    @Test
+    void javascriptBatchIdsWithUserDefinedVariables(@TempDir Path tempDir) throws Exception {
+        newSparkSession()
+            .readStream()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .option(Options.READ_BATCH_IDS_JAVASCRIPT, "var USER_VAR_EXAMPLE; Sequence.from([1, USER_VAR_EXAMPLE])")
+            .option(Options.READ_JAVASCRIPT, "var BATCH_ID; var USER_VAR_EXAMPLE; " +
+                "const row = {\"batchId\": BATCH_ID, \"var\": USER_VAR_EXAMPLE}; " +
+                "Sequence.from([row])")
+            .option(Options.READ_VARS_PREFIX + "USER_VAR_EXAMPLE", "2")
+            .schema(new StructType()
+                .add("batchId", DataTypes.StringType)
+                .add("var", DataTypes.StringType))
+            .load()
+            .writeStream()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "read-stream")
+            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_URI_TEMPLATE, "/read-stream/{batchId}.json")
+            .option(Options.WRITE_URI_PREFIX, "/")
+            .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
+            .start()
+            .processAllAvailable();
+
+        assertCollectionSize("read-stream", 2);
+
+        for (int i = 1; i <= 2; i++) {
+            JsonNode doc = readJsonDocument("/read-stream/" + i + ".json");
+            assertEquals(i, Integer.parseInt(doc.get("batchId").asText()));
+            assertEquals("2", doc.get("var").asText());
         }
     }
 }
