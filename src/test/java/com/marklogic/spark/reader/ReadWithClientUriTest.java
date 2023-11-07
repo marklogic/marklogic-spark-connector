@@ -18,13 +18,16 @@ package com.marklogic.spark.reader;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReadWithClientUriTest extends AbstractIntegrationTest {
 
@@ -50,11 +53,43 @@ public class ReadWithClientUriTest extends AbstractIntegrationTest {
 
     @Test
     void uriWithDatabase() {
-        List<Row> rows = readRowsWithClientUri(String.format(
+        String clientUri = String.format(
             "%s:%s@%s:%d/spark-test-test-content",
             TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort()
-        ));
-        assertEquals(15, rows.size());
+        );
+
+        List<Row> rows = newSparkSession()
+            .read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, clientUri)
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors', '').select([op.col('LastName'), op.col('rowID')])")
+            .schema(new StructType()
+                .add("LastName", DataTypes.StringType)
+                .add("rowid", DataTypes.StringType)
+            )
+            .load()
+            .collectAsList();
+
+        // Find last names that erroneously appear twice in the result set.
+        Map<String, String> lastNamesAndRowIds = new HashMap<>();
+        List<String> duplicateLastNames = new ArrayList<>();
+        rows.forEach(row -> {
+            String lastName = row.getString(0);
+            String rowId = row.getString(1);
+            if (lastNamesAndRowIds.containsKey(lastName)) {
+                duplicateLastNames.add(lastName + "-" + lastNamesAndRowIds.get(lastName));
+                duplicateLastNames.add(lastName + "-" + rowId);
+            } else {
+                lastNamesAndRowIds.put(lastName, rowId);
+            }
+        });
+
+        assertEquals(15, rows.size(),
+            "Expected 15 rows as there are 15 author documents. This is one of a couple dozen tests that " +
+                "will fail when run against the 3-node cluster due to the same row being returned multiple times. " +
+                "This does not happen when running against a single-node cluster. Additionally, if the data is " +
+                "reloaded, the problem will not happen again until the full test suite is run again. " +
+                "List of duplicate last names with their row IDs: " + duplicateLastNames);
     }
 
     @Test

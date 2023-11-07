@@ -37,7 +37,6 @@ services:
     labels:
       logging: "promtail"
       logging_jobname: "containerlogs"
-    restart: always
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin
@@ -58,7 +57,6 @@ services:
     labels:
       logging: "promtail"
       logging_jobname: "containerlogs"
-    restart: always
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin
@@ -83,7 +81,6 @@ services:
     labels:
       logging: "promtail"
       logging_jobname: "containerlogs"
-    restart: always
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin
