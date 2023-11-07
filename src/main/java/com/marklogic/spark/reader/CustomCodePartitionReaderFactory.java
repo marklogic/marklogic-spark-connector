@@ -16,6 +16,6 @@ class CustomCodePartitionReaderFactory implements PartitionReaderFactory {
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
-        return new CustomCodePartitionReader(customCodeContext);
+        return new CustomCodePartitionReader(customCodeContext, ((CustomCodePartition) partition).getBatchId());
     }
 }

@@ -3,6 +3,7 @@ package com.marklogic.spark.reader;
 import com.marklogic.spark.CustomCodeContext;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
+import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.types.StructType;
 
 class CustomCodeScan implements Scan {
@@ -21,5 +22,10 @@ class CustomCodeScan implements Scan {
     @Override
     public Batch toBatch() {
         return new CustomCodeBatch(customCodeContext);
+    }
+
+    @Override
+    public MicroBatchStream toMicroBatchStream(String checkpointLocation) {
+        return new CustomCodeMicroBatchStream(customCodeContext);
     }
 }

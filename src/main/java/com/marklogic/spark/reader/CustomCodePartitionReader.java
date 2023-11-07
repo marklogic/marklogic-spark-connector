@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.CustomCodeContext;
@@ -16,12 +17,20 @@ class CustomCodePartitionReader implements PartitionReader {
 
     private EvalResultIterator evalResultIterator;
     private final JsonRowDeserializer jsonRowDeserializer;
+    private final DatabaseClient databaseClient;
 
-    public CustomCodePartitionReader(CustomCodeContext customCodeContext) {
+    public CustomCodePartitionReader(CustomCodeContext customCodeContext, String batchId) {
+        this.databaseClient = customCodeContext.connectToMarkLogic();
         this.serverEvaluationCall = customCodeContext.buildCall(
-            customCodeContext.connectToMarkLogic(),
+            this.databaseClient,
             new CustomCodeContext.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)
         );
+
+        // For streaming support.
+        if (batchId != null && batchId.trim().length() > 0) {
+            this.serverEvaluationCall.addVariable("BATCH_ID", batchId);
+        }
+
         this.isCustomSchema = customCodeContext.isCustomSchema();
         this.jsonRowDeserializer = new JsonRowDeserializer(customCodeContext.getSchema());
     }
@@ -47,6 +56,9 @@ class CustomCodePartitionReader implements PartitionReader {
     public void close() {
         if (this.evalResultIterator != null) {
             this.evalResultIterator.close();
+        }
+        if (this.databaseClient != null) {
+            this.databaseClient.release();
         }
     }
 }

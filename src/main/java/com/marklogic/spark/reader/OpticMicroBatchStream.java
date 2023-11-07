@@ -52,8 +52,8 @@ class OpticMicroBatchStream implements MicroBatchStream {
         if (bucketIndex >= this.allBuckets.size()) {
             return null;
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Returning latest offset: {}", bucketIndex);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Returning latest offset: {}", bucketIndex);
         }
         return new LongOffset(bucketIndex++);
     }
