@@ -44,6 +44,14 @@ test {
   environment "mlHost", mlHost
 }
 
+task reloadTestData(type: com.marklogic.gradle.task.MarkLogicTask) {
+  description = "Convenience task for clearing the test database and reloading the test data; only intended for a connector developer to use."
+  doLast {
+    new com.marklogic.mgmt.resource.databases.DatabaseManager(getManageClient()).clearDatabase("spark-test-test-content")
+  }
+}
+reloadTestData.finalizedBy mlLoadData
+
 if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
   test {
     // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
