@@ -281,23 +281,23 @@ useful when you need to retrieve data that cannot be easily accessed via Optic, 
 to that of [MarkLogic's CoRB tool](https://github.com/marklogic-community/corb2) for processing data already in 
 MarkLogic. 
 
-Custom code can be written in [JavaScript](https://docs.marklogic.com/guide/getting-started/javascript) by 
+Custom code can be [written in JavaScript](https://docs.marklogic.com/guide/getting-started/javascript) by 
 configuring the `spark.marklogic.read.javascript` option:
 
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.javascript", "cts.uris([], [], cts.collectionQuery('example'))") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'))") \
     .load()
 ```
 
-Or in [XQuery](https://docs.marklogic.com/guide/getting-started/XQueryTutorial) by configuring the 
+Or code can be [written in XQuery](https://docs.marklogic.com/guide/getting-started/XQueryTutorial) by configuring the 
 `spark.marklogic.read.xquery` option:
 
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.xquery", "cts:uris((), (), cts:collection-query('example')") \
+    .option("spark.marklogic.read.xquery", "cts:uris((), (), cts:collection-query('employee'))") \
     .load()
 ```
 
@@ -307,14 +307,14 @@ You can also invoke a JavaScript or XQuery module in your application's modules 
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.invoke", "/path/to/module.sjs") \
+    .option("spark.marklogic.read.invoke", "/read.sjs") \
     .load()
 ```
 
 ### Custom code schemas
 
 While the connector can infer a schema when executing an Optic query, it does not have any way to do so with custom 
-code, which can return any kind of data. As a sensible default - particularly since the most common use case for 
+code, which can return any kind of data. As a sensible default - particularly since a common use case for 
 executing custom code is to return one or more documents URIs - the connector will assume a schema with a single 
 column named "URI" and of type string. The custom code is thus expected to return a sequence of zero or more values,
 each of which will become a string value in a row with a single column named "URI". 
@@ -324,13 +324,11 @@ and the connector will use it instead. For example, the following expects that t
 JSON objects with columns that conform to the given schema:
 
 ```
+from pyspark.sql.types import StructField, StructType, IntegerType, StringType
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.invoke", "/path/to/module.sjs") \
-    .schema(new StructType() \
-        .add("MyValue", DataTypes.StringType) \
-        .add("MyTimestamp", DataTypes.TimestampType) \
-    ) \
+    .option("spark.marklogic.read.invoke", "/read-custom-schema.sjs") \
+    .schema(StructType([StructField("id", IntegerType()), StructField("name", StringType())])) \
     .load()
 ```
 
@@ -346,9 +344,9 @@ The following demonstrates two custom external variables being configured and us
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.vars.var1", "value1") \
-    .option("spark.marklogic.read.vars.var2", "value2") \
-    .option("spark.marklogic.read.javascript", "var var1, var2; cts.search(cts.wordQuery([var1, var2]))") \
+    .option("spark.marklogic.read.vars.var1", "Engineering") \
+    .option("spark.marklogic.read.vars.var2", "Marketing") \
+    .option("spark.marklogic.read.javascript", "var var1, var2; cts.uris(null, null, cts.wordQuery([var1, var2]))") \
     .load()
 ```
 
@@ -378,27 +376,24 @@ You are free to return any sequence of batch identifiers. For each one, the conn
 code with an external variable named `BATCH_ID` of type `String`. You are then free to use this value to return 
 a set of results associated with the batch.
 
-As an example, consider an application with a collection named "customer" containing hundreds of millions of URIs. 
-Retrieving these URIs in a single query may take too long depending on the MarkLogic cluster resources. A common way
-to constrain a query to return fewer results is to limit it to a single MarkLogic forest. The following 
-JavaScript shows how forest IDs can be used as a sequence of batch identifiers:
+The following examples illustrates how the forest IDs for the `spark-example-content` database can be used as batch
+identifiers. The custom code for returning URIs is then constrained to the value of `BATCH_ID` which will be a forest 
+ID. Spark will invoke the custom code once for each batch identifier, with the returned batch of rows being immediately 
+sent to the writer, which in this example are then printed to the console:
 
 ```
-.option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('your-database-name'))");
+stream = spark.readStream \
+    .format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), null, [BATCH_ID]);") \
+    .load() \
+    .writeStream \
+    .format("console") \
+    .start()
+stream.processAllAvailable()
+stream.stop()
 ```
-
-The custom code for querying the "customer" collection using the 
-[cts.uris function](https://docs.marklogic.com/cts.uris) would then look like this:
-
-```
-var BATCH_ID;
-
-cts.uris(null, null, cts.collectionQuery("customer"), null, [BATCH_ID]);
-```
-
-The above query will then be run by the connector once for each forest in your application's database. The results for
-each forest will be converted into a set of rows in a Spark dataset, which will then be streamed immediately to the 
-writer in your Spark program. Spark will repeat this process for each of your batch identifiers. 
 
 For a streaming use case, you may wish to ensure that every query runs 
 [at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to construct
@@ -406,7 +401,7 @@ any batch identifiers you wish, one technique for accomplishing this would be to
 containing both a forest ID and a server timestamp:
 
 ```
-const forestIds = xdmp.databaseForests(xdmp.database('your-database-name'))
+const forestIds = xdmp.databaseForests(xdmp.database('spark-example-content'))
 const timestamp = xdmp.requestTimestamp()
 Sequence.from(forestIds.toArray().map(forestId => forestId + ":" + timestamp))
 ```
@@ -417,11 +412,13 @@ on how to perform point-in-time queries with server timestamps.
 
 ### Tuning performance
 
-A key difference with reading via custom code is that a single call will be made to MarkLogic to execute the custom 
-code. Therefore, the options `spark.marklogic.read.batchSize` and `spark.marklogic.read.numPartitions` will not have 
-any impact on the performance of executing custom code. This behavior matches that of both MarkLogic's CoRB tool and 
-[MarkLogic's Data Hub](https://docs.marklogic.com/datahub/6.0/). You must ensure that you are executing custom code query that can be expected to 
-complete in a single call to MarkLogic without timing out.
+A key difference with reading via custom code is that unless you are using Spark streaming, a single call will be made 
+to MarkLogic to execute the custom code. Therefore, the options `spark.marklogic.read.batchSize` and 
+`spark.marklogic.read.numPartitions` will not have any impact on the performance of executing custom code. 
+You must therefore ensure that your custom code can be expected to complete in a single call to MarkLogic without 
+timing out. The support for Spark streaming described above can help if your query is at risk of timing out, as you can
+effectively break it up into many smaller queries. However, note that Spark streaming sends many datasets to the writer
+instead of a single dataset; this may not be appropriate for your use case.
 
 ## Error handling
 

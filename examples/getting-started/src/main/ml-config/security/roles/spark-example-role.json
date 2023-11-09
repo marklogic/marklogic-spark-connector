@@ -1,0 +1,20 @@
+{
+  "role-name": "spark-example-role",
+  "role": [
+    "rest-reader",
+    "rest-writer",
+    "rest-extension-user"
+  ],
+  "privilege": [
+    {
+      "privilege-name": "xdbc-invoke",
+      "action": "http://marklogic.com/xdmp/privileges/xdbc-invoke",
+      "kind": "execute"
+    },
+    {
+      "privilege-name": "xdbc-eval",
+      "action": "http://marklogic.com/xdmp/privileges/xdbc-eval",
+      "kind": "execute"
+    }
+  ]
+}

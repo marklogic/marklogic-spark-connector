@@ -164,6 +164,23 @@ Optimizing performance will thus involve testing various combinations of partiti
 counts. The [MarkLogic Monitoring tool](https://docs.marklogic.com/guide/monitoring/intro) can help you understand
 resource consumption and throughput from Spark to MarkLogic.
 
+### Error handling
+
+The connector may throw an error during one of two phases of operation - before it begins to write data to MarkLogic,
+and during the writing of a batch of documents to MarkLogic.
+
+For the first kind of error, the error will be immediately returned to the user and no data will have been written.
+Such errors are often due to misconfiguration of the connector options.
+
+For the second kind of error, the connector defaults to logging the error and asking Spark to abort the entire write
+operation. Any batches of documents that were written successfully prior to the error occurring will still exist in the
+database. To configure the connector to only log the error and continue writing batches of documents to MarkLogic, set
+the `spark.marklogic.write.abortOnFailure` option to a value of `false`.
+
+Similar to errors with reading data, the connector will strive to provide meaningful context when an error occurs to
+assist with debugging the cause of the error.
+
+
 ## Processing rows via custom code
 
 Rows can be processed via custom code instead of writing them directly to MarkLogic as documents. A common use case for
@@ -173,32 +190,50 @@ column named "URI" of type string. This matches the convention for reading rows 
 same schema. User-defined custom code is then expected to declare an external variable named "URI".
 
 The following shows an example of reading and processing rows via custom code specified by 
-`spark.marklogic.write.javascript`, where each row is expected to have a single column named "URI":
+`spark.marklogic.write.javascript`, where each row is expected to have a single column named "URI" (the script for
+reading rows only returns the first 10 URIs to make it easier to verify that the correct data is logged; you can
+find the logs in the `8020_ErrorLog.txt` file, either on your filesystem or via the "Logs" tab in the MarkLogic
+Admin web application):
 
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.read.javascript", "cts.uris([], [], cts.collectionQuery('example'))")
-    .load()
-    .write("com.marklogic.spark") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
+    .load() \
+    .write.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.write.javascript", "var URI; console.log('Received URI: ' + URI);") \
+    .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .mode("append") \
     .save()
 ```
 
-Custom code can be written in XQuery and specified via `spark.marklogic.write.xquery`; simply replace the JavaScript
-line in the example above with the following:
+Custom code can be written in XQuery and specified via `spark.marklogic.write.xquery`:
 
 ```
-    .option("spark.marklogic.write.xquery", "declare variable $URI external; xdmp:log('URI:' || $URI)")
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ('limit=10'), cts.collectionQuery('employee'))") \
+    .load() \
+    .write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.xquery", "declare variable $URI external; xdmp:log('Received URI:' || $URI)") \
+    .mode("append") \
+    .save()
 ```
 
 Custom code can also be executed via a reference to a module in your application's modules database. In the example 
 below, the module is expected to declare an external variable named "URI":
 
 ```
-    .option("spark.marklogic.write.invoke", "/path/to/module.sjs")
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
+    .load() \
+    .write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.invoke", "/process-uri.sjs") \
+    .mode("append") \
+    .save()
 ```
 
 ### External variable configuration
@@ -208,9 +243,13 @@ your custom code declares an external variable with a different name, you can co
 `spark.marklogic.write.externalVariableName`:
 
 ```
-    .write("com.marklogic.spark") \
+df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
-    .option("spark.marklogic.write.javascript", "var MY_VAR; console.log('Received: ' + MY_VAR);") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
+    .load() \
+    .write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.write.javascript", "console.log('Received value: ' + MY_VAR);") \
     .option("spark.marklogic.write.externalVariableName", "MY_VAR") \
     .mode("append") \
     .save()
@@ -228,17 +267,29 @@ The following demonstrates two custom external variables being configured and us
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
+    .load() \
+    .write.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
     .option("spark.marklogic.write.vars.var1", "value1") \
     .option("spark.marklogic.write.vars.var2", "value2") \
-    .option("spark.marklogic.write.javascript", "var URI, var1, var2; console.log('Received:', URI, var1, var2);") \
-    .load()
+    .option("spark.marklogic.write.javascript", "console.log('Received:', URI, var1, var2);") \
+    .mode("append") \
+    .save()
 ```
 
 ### Custom schema usage
 
 If your dataset has a schema other than the default one expected by the connector - a single column named "URI" of 
 type string - then the connector will convert the row into a JSON object before sending it to your custom code. 
-The external variable in your custom code will then receive a JSON object as its value. 
+The external variable in your custom code will then receive a JSON node as its value. In your custom code, you 
+will typically use [xdmp.fromJSON](https://docs.marklogic.com/xdmp.fromJSON) to convert the value into a JSON object, 
+allowing you to access its data:
+
+```
+// Assumes that URI is a JSON node because a custom schema is being used. 
+const doc = fn.head(xdmp.fromJSON(URI));
+```
 
 ### Processing multiple rows in a single call
 
@@ -253,22 +304,21 @@ JSON array, and then the array will be set to the external variable.
 For approach #2, an alternate delimiter can be configured via `spark.marklogic.write.externalVariableDelimiter`. This
 would be needed in case your "URI" values may have commas in them. 
 
+When using a custom schema, you will typically use [xdmp.fromJSON](https://docs.marklogic.com/xdmp.fromJSON) to convert
+the value passed to your custom code into a JSON array:
 
-## Error handling
+```
+// Assumes that URI is a JSON array node because a custom schema is being used. 
+const array = fn.head(xdmp.fromJSON(URI));
+```
 
-The connector may throw an error during one of two phases of operation - before it begins to write data to MarkLogic, 
-and during the writing of a batch of documents to MarkLogic. 
+### Error handling
 
-For the first kind of error, the error will be immediately returned to the user and no data will have been written. 
-Such errors are often due to misconfiguration of the connector options. 
-
-For the second kind of error, the connector defaults to logging the error and asking Spark to abort the entire write 
-operation. Any batches of documents that were written successfully prior to the error occurring will still exist in the 
-database. To configure the connector to only log the error and continue writing batches of documents to MarkLogic, set 
-the `spark.marklogic.write.abortOnFailure` option to a value of `false`. 
-
-Similar to errors with reading data, the connector will strive to provide meaningful context when an error occurs to 
-assist with debugging the cause of the error.
+If the connector receives an error from MarkLogic when one or more rows are being processed via your custom code, 
+the connector defaults to logging the error and asking Sparking to abort the entire write operation. To configure the 
+connector to only log the error and continue writing batches of documents to MarkLogic, set the 
+`spark.marklogic.write.abortOnFailure` option to a value of `false`. Similar to errors with reading data, the 
+connector will strive to provide meaningful context when an error occurs to assist with debugging the cause of the error.
 
 ## Supported save modes
 
