@@ -86,13 +86,13 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() throws IOException {
-        MarkLogicCommitMessage commitMessage = new MarkLogicCommitMessage(docCount, partitionId, taskId, epochId);
+        CommitMessage message = new CommitMessage(docCount, partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
-            logger.debug("Committing {}", commitMessage);
+            logger.debug("Committing {}", message);
         }
         this.writeBatcher.flushAndWait();
         throwWriteFailureIfExists();
-        return commitMessage;
+        return message;
     }
 
     @Override
@@ -136,13 +136,13 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
     }
 
-    private static class MarkLogicCommitMessage implements WriterCommitMessage {
+    private static class CommitMessage implements WriterCommitMessage {
         private int docCount;
         private int partitionId;
         private long taskId;
         private long epochId;
 
-        public MarkLogicCommitMessage(int docCount, int partitionId, long taskId, long epochId) {
+        public CommitMessage(int docCount, int partitionId, long taskId, long epochId) {
             this.docCount = docCount;
             this.partitionId = partitionId;
             this.taskId = taskId;
