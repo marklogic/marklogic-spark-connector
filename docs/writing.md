@@ -20,7 +20,7 @@ how the connector should connect to MarkLogic, the Spark mode to use, and zero o
 
 ```
 df.write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.collections", "write-test") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
     .option("spark.marklogic.write.uriPrefix", "/write/") \
@@ -132,7 +132,7 @@ spark.readStream \
     .writeStream \
     .format("com.marklogic.spark") \
     .option("checkpointLocation", tempfile.mkdtemp()) \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.uriPrefix", "/streaming-example/") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
     .option("spark.marklogic.write.collections", "streaming-example") \
@@ -192,16 +192,16 @@ same schema. User-defined custom code is then expected to declare an external va
 The following shows an example of reading and processing rows via custom code specified by 
 `spark.marklogic.write.javascript`, where each row is expected to have a single column named "URI" (the script for
 reading rows only returns the first 10 URIs to make it easier to verify that the correct data is logged; you can
-find the logs in the `8020_ErrorLog.txt` file, either on your filesystem or via the "Logs" tab in the MarkLogic
-Admin web application):
+find the logs in the `docker/marklogic/logs/8003_ErrorLog.txt` file in your project directory, or via the "Logs" tab 
+in the MarkLogic Admin web application):
 
 ```
-df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
     .write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .mode("append") \
     .save()
@@ -210,27 +210,28 @@ df = spark.read.format("com.marklogic.spark") \
 Custom code can be written in XQuery and specified via `spark.marklogic.write.xquery`:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ('limit=10'), cts.collectionQuery('employee'))") \
     .load() \
     .write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.xquery", "declare variable $URI external; xdmp:log('Received URI:' || $URI)") \
     .mode("append") \
     .save()
 ```
 
 Custom code can also be executed via a reference to a module in your application's modules database. In the example 
-below, the module is expected to declare an external variable named "URI":
+below, the module - which was deployed from the `src/main/ml-modules` directory in this project - is expected to 
+declare an external variable named "URI":
 
 ```
-df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
     .write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.invoke", "/process-uri.sjs") \
     .mode("append") \
     .save()
@@ -244,11 +245,11 @@ your custom code declares an external variable with a different name, you can co
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
     .write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received value: ' + MY_VAR);") \
     .option("spark.marklogic.write.externalVariableName", "MY_VAR") \
     .mode("append") \
@@ -265,12 +266,12 @@ Spark capturing all option values as strings.
 The following demonstrates two custom external variables being configured and used by custom JavaScript code:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
     .write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.vars.var1", "value1") \
     .option("spark.marklogic.write.vars.var2", "value2") \
     .option("spark.marklogic.write.javascript", "console.log('Received:', URI, var1, var2);") \
@@ -311,6 +312,36 @@ the value passed to your custom code into a JSON array:
 // Assumes that URI is a JSON array node because a custom schema is being used. 
 const array = fn.head(xdmp.fromJSON(URI));
 ```
+
+### Streaming support
+
+Spark's support for [streaming writes](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html)
+can be useful when you are already reading a stream of rows from MarkLogic because the query to fetch all matching
+rows may take too long to execute. The connector allows you to then process each batch of results via custom code as
+well. 
+
+The following example is a variation of the example in the [reading guide for streaming rows](reading.md). Instead
+of using the connector's support for writing rows as documents, it shows each streamed batch being processed by custom
+code:
+
+```
+import tempfile
+stream = spark.readStream \
+    .format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'), null, [BATCH_ID]);") \
+    .load() \
+    .writeStream \
+    .format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
+    .option("checkpointLocation", tempfile.mkdtemp()) \
+    .start()
+stream.processAllAvailable()
+stream.stop()
+```
+
 
 ### Error handling
 
