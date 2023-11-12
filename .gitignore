@@ -15,3 +15,4 @@ gradle-local.properties
 logs
 .ipynb_checkpoints
 venv
+.venv

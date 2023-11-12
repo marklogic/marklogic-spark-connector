@@ -18,8 +18,8 @@ public class ProcessStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .readStream()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.READ_BATCH_IDS_JAVASCRIPT, "Sequence.from([1, 2, 3])")
-            .option(Options.READ_JAVASCRIPT, "Sequence.from([BATCH_ID])")
+            .option(Options.READ_PARTITIONS_JAVASCRIPT, "Sequence.from([1, 2, 3])")
+            .option(Options.READ_JAVASCRIPT, "Sequence.from([PARTITION])")
             .load()
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
@@ -34,7 +34,7 @@ public class ProcessStreamWithCustomCodeTest extends AbstractIntegrationTest {
 
         assertCollectionSize("process-stream-test", 3);
 
-        // Verify 3 docs were written, one for each batch identifier.
+        // Verify 3 docs were written, one for each partition.
         for (int i = 1; i <= 3; i++) {
             JsonNode doc = readJsonDocument("/process-stream-test" + i + ".json");
             assertEquals("world", doc.get("hello").asText());

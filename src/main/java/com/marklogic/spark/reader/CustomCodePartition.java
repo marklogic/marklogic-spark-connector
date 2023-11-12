@@ -8,25 +8,16 @@ class CustomCodePartition implements InputPartition, Serializable {
 
     final static long serialVersionUID = 1;
 
-    private String batchId;
+    private String partition;
 
-    /**
-     * Constructor for normal reading, where all rows will be returned in a single call to MarkLogic by a single reader.
-     */
     public CustomCodePartition() {
     }
 
-    /**
-     * Constructor used for streaming reads, when a call is made to the reader (and thus to MarkLogic) for the given
-     * batch ID.
-     *
-     * @param batchId
-     */
-    public CustomCodePartition(String batchId) {
-        this.batchId = batchId;
+    public CustomCodePartition(String partition) {
+        this.partition = partition;
     }
 
-    public String getBatchId() {
-        return batchId;
+    public String getPartition() {
+        return partition;
     }
 }

@@ -111,13 +111,13 @@ The following options control how the connector reads rows from MarkLogic via cu
 | spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
 
 If you are using Spark's streaming support with custom code, the following options can also be used to control how
-batch identifiers are defined:
+partitions are defined:
 
 | Option | Description | 
 | --- | --- |
-| spark.marklogic.read.batchIds.invoke | The path to a module to invoke; the module must be in your application's modules database. |
-| spark.marklogic.read.batchIds.javascript | JavaScript code to execute. |
-| spark.marklogic.read.batchIds.xquery | XQuery code to execute. |
+| spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
+| spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
+| spark.marklogic.read.partitions.xquery | XQuery code to execute. |
 
 ## Write options
 

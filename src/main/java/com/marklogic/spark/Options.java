@@ -25,9 +25,9 @@ public interface Options {
     String READ_XQUERY = "spark.marklogic.read.xquery";
     String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
 
-    String READ_BATCH_IDS_INVOKE = "spark.marklogic.read.batchIds.invoke";
-    String READ_BATCH_IDS_JAVASCRIPT = "spark.marklogic.read.batchIds.javascript";
-    String READ_BATCH_IDS_XQUERY = "spark.marklogic.read.batchIds.xquery";
+    String READ_PARTITIONS_INVOKE = "spark.marklogic.read.partitions.invoke";
+    String READ_PARTITIONS_JAVASCRIPT = "spark.marklogic.read.partitions.javascript";
+    String READ_PARTITIONS_XQUERY = "spark.marklogic.read.partitions.xquery";
 
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";

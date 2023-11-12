@@ -19,16 +19,15 @@ class CustomCodePartitionReader implements PartitionReader {
     private final JsonRowDeserializer jsonRowDeserializer;
     private final DatabaseClient databaseClient;
 
-    public CustomCodePartitionReader(CustomCodeContext customCodeContext, String batchId) {
+    public CustomCodePartitionReader(CustomCodeContext customCodeContext, String partition) {
         this.databaseClient = customCodeContext.connectToMarkLogic();
         this.serverEvaluationCall = customCodeContext.buildCall(
             this.databaseClient,
             new CustomCodeContext.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)
         );
 
-        // For streaming support.
-        if (batchId != null && batchId.trim().length() > 0) {
-            this.serverEvaluationCall.addVariable("BATCH_ID", batchId);
+        if (partition != null) {
+            this.serverEvaluationCall.addVariable("PARTITION", partition);
         }
 
         this.isCustomSchema = customCodeContext.isCustomSchema();
