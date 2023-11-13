@@ -36,8 +36,17 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
 
-    CustomCodeWriter(CustomCodeContext customCodeContext) {
+    // Only used for commit messages
+    private final int partitionId;
+    private final long taskId;
+    private final long epochId;
+
+    CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId, long epochId) {
         this.customCodeContext = customCodeContext;
+        this.partitionId = partitionId;
+        this.taskId = taskId;
+        this.epochId = epochId;
+
         this.databaseClient = customCodeContext.connectToMarkLogic();
 
         this.batchSize = customCodeContext.optionExists(Options.WRITE_BATCH_SIZE) ?
@@ -67,8 +76,11 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        // TODO Capture responses from each eval call?
-        return null;
+        CommitMessage message = new CommitMessage(partitionId, taskId, epochId);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Committing {}", message);
+        }
+        return message;
     }
 
     @Override
@@ -155,6 +167,25 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
                 throw ex;
             }
             logger.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
+        }
+    }
+
+    private static class CommitMessage implements WriterCommitMessage {
+        private int partitionId;
+        private long taskId;
+        private long epochId;
+
+        public CommitMessage(int partitionId, long taskId, long epochId) {
+            this.partitionId = partitionId;
+            this.taskId = taskId;
+            this.epochId = epochId;
+        }
+
+        @Override
+        public String toString() {
+            return epochId != 0L ?
+                String.format("[partitionId: %d; taskId: %d; epochId: %d]", partitionId, taskId, epochId) :
+                String.format("[partitionId: %d; taskId: %d]", partitionId, taskId);
         }
     }
 }

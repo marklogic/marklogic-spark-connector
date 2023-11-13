@@ -41,7 +41,6 @@ public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .readStream()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.READ_NUM_PARTITIONS, 1)
 
             // Defines the approach for retrieving batch IDs.
             .option(batchIdsOption, batchIdsValue)
@@ -96,7 +95,6 @@ public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .readStream()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_BATCH_IDS_JAVASCRIPT, "var USER_VAR_EXAMPLE; Sequence.from([1, USER_VAR_EXAMPLE])")
             .option(Options.READ_JAVASCRIPT, "var BATCH_ID; var USER_VAR_EXAMPLE; " +
                 "const row = {\"batchId\": BATCH_ID, \"var\": USER_VAR_EXAMPLE}; " +

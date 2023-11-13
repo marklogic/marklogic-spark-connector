@@ -46,19 +46,13 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         logger.info("Number of partitions: {}", info.numPartitions());
-        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)) {
-            CustomCodeContext context = new CustomCodeContext(
-                writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
-            );
-            return new CustomCodeWriterFactory(context);
-        }
-        return new WriteBatcherDataWriterFactory(writeContext);
+        return (DataWriterFactory) determineWriterFactory();
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
-            logger.debug("Commit messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && logger.isInfoEnabled()) {
+            logger.info("Commit messages received: {}", Arrays.asList(messages));
         }
     }
 
@@ -71,7 +65,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public StreamingDataWriterFactory createStreamingWriterFactory(PhysicalWriteInfo info) {
-        return new WriteBatcherDataWriterFactory(writeContext);
+        return (StreamingDataWriterFactory) determineWriterFactory();
     }
 
     @Override
@@ -86,5 +80,15 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
         if (messages != null && messages.length > 0) {
             logger.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
         }
+    }
+
+    private Object determineWriterFactory() {
+        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)) {
+            CustomCodeContext context = new CustomCodeContext(
+                writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
+            );
+            return new CustomCodeWriterFactory(context);
+        }
+        return new WriteBatcherDataWriterFactory(writeContext);
     }
 }
