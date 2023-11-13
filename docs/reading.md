@@ -22,7 +22,7 @@ see the next section for more information), and zero or more other options:
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
@@ -42,7 +42,7 @@ the Optic query):
 query = "op.fromView('example', 'employee').where(cts.wordQuery('Drive'))"
 
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", query) \
     .load()
 ```
@@ -85,7 +85,7 @@ be provided within PySpark; this assumes that you have deployed the application 
 from pyspark.sql.types import StructField, StructType, StringType
 df = spark.read.format("com.marklogic.spark") \
     .schema(StructType([StructField("example.employee.GivenName", StringType()), StructField("example.employee.Surname", StringType())])) \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
@@ -105,7 +105,7 @@ op.fromView('example', 'employee', '', joinCol) \
   .select('doc')"
 
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", query) \
     .load()
 ```
@@ -128,7 +128,7 @@ deployed in the [Getting Started with PySpark guide](getting-started/pyspark.md)
 ```
 stream = spark.readStream \
     .format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.numPartitions", 2) \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load() \
@@ -173,7 +173,7 @@ rows being returned to Spark and far less work having to be done by Spark:
 
 ```
 spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee', '')") \
     .load() \
     .filter("HiredDate < '2020-01-01'") \
@@ -286,7 +286,7 @@ configuring the `spark.marklogic.read.javascript` option:
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'))") \
     .load()
 ```
@@ -296,7 +296,7 @@ Or code can be [written in XQuery](https://docs.marklogic.com/guide/getting-star
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.xquery", "cts:uris((), (), cts:collection-query('employee'))") \
     .load()
 ```
@@ -306,7 +306,7 @@ You can also invoke a JavaScript or XQuery module in your application's modules 
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.invoke", "/read.sjs") \
     .load()
 ```
@@ -326,7 +326,7 @@ JSON objects with columns that conform to the given schema:
 ```
 from pyspark.sql.types import StructField, StructType, IntegerType, StringType
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.invoke", "/read-custom-schema.sjs") \
     .schema(StructType([StructField("id", IntegerType()), StructField("name", StringType())])) \
     .load()
@@ -343,14 +343,14 @@ The following demonstrates two custom external variables being configured and us
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.vars.var1", "Engineering") \
     .option("spark.marklogic.read.vars.var2", "Marketing") \
     .option("spark.marklogic.read.javascript", "var var1, var2; cts.uris(null, null, cts.wordQuery([var1, var2]))") \
     .load()
 ```
 
-### Streaming with custom code
+### Streaming support
 
 Spark's support for [streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) 
 from MarkLogic can be useful when your custom code for reading data may take a long time to execute. Or, based on the
@@ -384,7 +384,7 @@ sent to the writer, which in this example are then printed to the console:
 ```
 stream = spark.readStream \
     .format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), null, [BATCH_ID]);") \
     .load() \
