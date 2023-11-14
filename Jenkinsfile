@@ -72,22 +72,10 @@ pipeline{
             runtests('Latest','11','JAVA11_HOME_DIR')
           }
         }
-        stage('11-nightly-java17'){
-          agent {label 'devExpLinuxPool'}
-          steps{
-            runtests('Latest','11','JAVA17_HOME_DIR')
-          }
-        }
         stage('10.0-9.5-java11'){
           agent {label 'devExpLinuxPool'}
           steps{
             runtests('Release','10.0-9.5','JAVA11_HOME_DIR')
-          }
-        }
-        stage('10.0-9.5-nightly-java17'){
-          agent {label 'devExpLinuxPool'}
-          steps{
-            runtests('Release','10.0-9.5','JAVA17_HOME_DIR')
           }
         }
         stage('11.0.2-java8-spark3.4'){
