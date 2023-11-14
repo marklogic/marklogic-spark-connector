@@ -25,6 +25,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
+df.show()
 ```
 
 As demonstrated above, `format`, `spark.marklogic.client.uri` (or the other `spark.marklogic.client` options
@@ -45,6 +46,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", query) \
     .load()
+df.show()
 ```
 
 The `where` clause in the example above can include any of the query features supported by MarkLogic, such as 
@@ -88,6 +90,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
+df.show()
 ```
 
 ### Accessing documents 
@@ -289,6 +292,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'))") \
     .load()
+df.show()
 ```
 
 Or code can be [written in XQuery](https://docs.marklogic.com/guide/getting-started/XQueryTutorial) by configuring the 
@@ -299,6 +303,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.xquery", "cts:uris((), (), cts:collection-query('employee'))") \
     .load()
+df.show()
 ```
 
 You can also invoke a JavaScript or XQuery module in your application's modules database via the 
@@ -309,6 +314,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.invoke", "/read.sjs") \
     .load()
+df.show()
 ```
 
 ### Custom code schemas
@@ -330,6 +336,7 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.read.invoke", "/read-custom-schema.sjs") \
     .schema(StructType([StructField("id", IntegerType()), StructField("name", StringType())])) \
     .load()
+df.show()
 ```
 
 ### Custom external variables
@@ -348,46 +355,77 @@ df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.read.vars.var2", "Marketing") \
     .option("spark.marklogic.read.javascript", "var var1, var2; cts.uris(null, null, cts.wordQuery([var1, var2]))") \
     .load()
+df.show()
 ```
+
+### Defining partitions for custom code
+
+By default, the connector will send a single request to MarkLogic to execute custom code for reading rows. If your
+custom code returns a large amount of data and is at risk of timing out, or if you seek better performance by breaking
+your query into many smaller queries, you can use one of the following options to define partitions for your custom code:
+
+- `spark.marklogic.read.partitions.invoke`
+- `spark.marklogic.read.partitions.javascript`
+- `spark.marklogic.read.partitions.xquery`
+
+If one of the above options is defined, the connector will execute the code associated with the option and expect a 
+sequence of values to be returned. You can return any values you want to define partitions; the connector does not care
+what the values represent. The connector will then execute your custom code - defined by `spark.marklogic.read.invoke`, 
+`spark.marklogic.read.javascript`, or `spark.marklogic.read.xquery` - once for each partition value. The partition value
+will be defined in an external variable named `PARTITION`. Note as well that any external variables you define via the 
+`spark.marklogic.read.vars` prefix will also be sent to the code for returning partitions.
+
+The following example shows a common use case for using MarkLogic forest IDs as partitions:
+
+```
+df = spark.read.format("com.marklogic.spark") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database())") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), 0, [PARTITION])") \
+    .load()
+df.show()
+```
+
+In the example application used by this documentation the "spark-example-content" database has 3 forests. Thus, the
+partitions code above will return a sequence of 3 forest IDs. The connector will then invoke the custom 
+JavaScript code 3 times, once for each forest ID, with the `PARTITION` variable populated with a forest ID. 
+
+For the above scenario, it is common to run these queries 
+[at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to return
+any partition values you wish, one technique for this scenario would be to construct partitions containing both a 
+forest ID and a server timestamp:
+
+```
+const forestIds = xdmp.databaseForests(xdmp.database())
+const timestamp = xdmp.requestTimestamp()
+Sequence.from(forestIds.toArray().map(forestId => forestId + ":" + timestamp))
+```
+
+In the custom code for returning rows, you can then obtain both a forest ID and a server timestamp from the partition
+value and use them to ensure each of your queries runs at the same point in time. 
 
 ### Streaming support
 
-Spark's support for [streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) 
-from MarkLogic can be useful when your custom code for reading data may take a long time to execute. Or, based on the
-nature of your custom code, running the query incrementally to produce smaller batches may be a better fit for your 
-use case. 
+Just like for reading rows with Optic, the connector supports 
+[streaming reads](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html) 
+from MarkLogic via micro-batches. The connector configuration does not change; instead, different Spark APIs are used 
+to read a stream of data from MarkLogic. This can be useful for when you wish to obtain a batch of results from 
+MarkLogic and immediately send them to a Spark writer. 
 
-(TODO This needs to be rewritten, will do so in a follow up PR.)
+When streaming results from your custom code, you will need to set one of the options described above - either
+`spark.marklogic.read.partitions.invoke`, `spark.marklogic.read.partitions.javascript`, or 
+`spark.marklogic.read.partitions.xquery` - for defining partitions. 
 
-To stream results from your custom code, the connector must know how batches can be constructed based on the results of
-your custom code. Because the connector does not know anything about your code, the connector needs to run an 
-additional set of custom code that you implement to provide a sequence of partitions to the connector. The
-connector will then run your custom once for each of your partitions, with the partition being passed as
-an external variable to your custom code. 
-
-The code to run for providing a sequence of partitions must be defined via one of the following options:
-
-- `spark.marklogic.read.partitions.invoke` - a JavaScript or XQuery module path to invoke.
-- `spark.marklogic.read.partitions.javascript` - a JavaScript program to evaluate.
-- `spark.marklogic.read.partitions.xquery` - an XQuery program to evaluate.
-
-Note that any variables you define via the `spark.marklogic.reads.vars` prefix will also be sent to the above code, 
-in addition to the code you define for reading rows. 
-
-You are free to return any sequence of partitions. For each one, the connector will invoke your regular custom
-code with an external variable named `PARTITION` of type `String`. You are then free to use this value to return 
-a set of results associated with the partition.
-
-The following examples illustrates how the forest IDs for the `spark-example-content` database can be used as batch
-identifiers. The custom code for returning URIs is then constrained to the value of `PARTITION` which will be a forest 
-ID. Spark will invoke the custom code once for each partition, with the returned batch of rows being immediately 
-sent to the writer, which in this example are then printed to the console:
+The following example shows how the same connector configuration can be used for defining partitions and the custom
+code for returning rows, just with different Spark APIs. In this example, Spark will invoke the custom code once
+for each partition, with the returned batch of rows being immediately streamed to the writer, which prints the
+batch of rows to the console:
 
 ```
 stream = spark.readStream \
     .format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
-    .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
+    .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database())") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), null, [PARTITION]);") \
     .load() \
     .writeStream \
@@ -396,21 +434,6 @@ stream = spark.readStream \
 stream.processAllAvailable()
 stream.stop()
 ```
-
-For a streaming use case, you may wish to ensure that every query runs 
-[at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to return
-any partitions you wish, one technique for accomplishing this would be to construct partitions
-containing both a forest ID and a server timestamp:
-
-```
-const forestIds = xdmp.databaseForests(xdmp.database('spark-example-content'))
-const timestamp = xdmp.requestTimestamp()
-Sequence.from(forestIds.toArray().map(forestId => forestId + ":" + timestamp))
-```
-
-In your custom code, you would then parse out the forest ID and server timestamp from each partition and use
-them accordingly in your queries. The MarkLogic documentation in the link above can provide more details and examples
-on how to perform point-in-time queries with server timestamps.
 
 ### Tuning performance
 

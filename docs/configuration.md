@@ -110,8 +110,8 @@ The following options control how the connector reads rows from MarkLogic via cu
 | spark.marklogic.read.xquery | XQuery code to execute. |
 | spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
 
-If you are using Spark's streaming support with custom code, the following options can also be used to control how
-partitions are defined:
+If you are using Spark's streaming support with custom code, or you need to break up your custom code query into 
+multiple queries, the following options can also be used to control how partitions are defined:
 
 | Option | Description | 
 | --- | --- |
