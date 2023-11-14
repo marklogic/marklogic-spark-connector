@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader;
 
+import com.marklogic.client.FailedRequestException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
@@ -10,8 +11,9 @@ import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
 
@@ -95,6 +97,39 @@ public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
         assertEquals("the second value", rows.get(1).getString(0));
     }
 
+    @Test
+    void partitionsFromJavaScript() {
+        verifyRowsAreReadFromEachForest(
+            Options.READ_PARTITIONS_JAVASCRIPT, "xdmp.databaseForests(xdmp.database())"
+        );
+    }
+
+    @Test
+    void partitionsFromXQuery() {
+        verifyRowsAreReadFromEachForest(
+            Options.READ_PARTITIONS_XQUERY, "xdmp:database-forests(xdmp:database())"
+        );
+    }
+
+    @Test
+    void partitionsFromInvoke() {
+        verifyRowsAreReadFromEachForest(
+            Options.READ_PARTITIONS_INVOKE, "/getForests.sjs"
+        );
+    }
+
+    @Test
+    void badJavascriptForPartitions() {
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> startRead()
+            .option(Options.READ_PARTITIONS_JAVASCRIPT, "this is invalid javascript")
+            .option(Options.READ_JAVASCRIPT, "const forestId = PARTITION; cts.uris(null, [], cts.collectionQuery('author'), 0, [forestId])")
+            .load()
+            .collectAsList());
+
+        assertEquals("Unable to retrieve partitions", ex.getMessage());
+        assertTrue(ex.getCause() instanceof FailedRequestException, "Unexpected cause: " + ex.getCause());
+    }
+
     private List<Row> readRows(String option, String value) {
         return startRead()
             .option(option, value)
@@ -117,6 +152,24 @@ public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
             assertEquals("URI", field.name());
             assertEquals(DataTypes.StringType, field.dataType());
         });
+    }
+
+    private void verifyRowsAreReadFromEachForest(String partitionsOption, String partitionsValue) {
+        List<Row> rows = startRead()
+            .option(partitionsOption, partitionsValue)
+            .option(Options.READ_JAVASCRIPT, "const forestId = PARTITION; cts.uris(null, [], cts.collectionQuery('author'), 0, [forestId])")
+            .load()
+            .collectAsList();
+
+        assertEquals(15, rows.size(), "Expecting all 15 author URIs to be returned across all forests, " +
+            "as each forest was used as a partition.");
+
+        final List<String> uris = rows.stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        for (int i = 1; i <= 15; i++) {
+            String expectedUri = String.format("/author/author%d.json", i);
+            assertTrue(uris.contains(expectedUri), String.format("Did not find %s in %s", expectedUri, uris));
+        }
+        verifyUriSchemaIsUsed(rows);
     }
 }
 

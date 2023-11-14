@@ -5,20 +5,30 @@ import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 
+import java.util.List;
+
 class CustomCodeBatch implements Batch {
 
     private CustomCodeContext customCodeContext;
+    private List<String> partitions;
 
-    public CustomCodeBatch(CustomCodeContext customCodeContext) {
+    public CustomCodeBatch(CustomCodeContext customCodeContext, List<String> partitions) {
         this.customCodeContext = customCodeContext;
+        this.partitions = partitions;
     }
 
     @Override
     public InputPartition[] planInputPartitions() {
-        // We don't yet support partitioning a user's custom code. In the future, we may support this by passing along
-        // e.g. host and/or forest names, though the burden would then be on the user to utilize those correctly in
-        // their custom code.
-        return new InputPartition[]{new CustomCodePartition()};
+        InputPartition[] inputPartitions;
+        if (partitions != null && partitions.size() > 1) {
+            inputPartitions = new InputPartition[partitions.size()];
+            for (int i = 0; i < partitions.size(); i++) {
+                inputPartitions[i] = new CustomCodePartition(partitions.get(i));
+            }
+        } else {
+            inputPartitions = new InputPartition[]{new CustomCodePartition()};
+        }
+        return inputPartitions;
     }
 
     @Override

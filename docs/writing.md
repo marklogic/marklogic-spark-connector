@@ -329,8 +329,8 @@ import tempfile
 stream = spark.readStream \
     .format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
-    .option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
-    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'), null, [BATCH_ID]);") \
+    .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'), null, [PARTITION]);") \
     .load() \
     .writeStream \
     .format("com.marklogic.spark") \

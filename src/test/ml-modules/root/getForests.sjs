@@ -1,0 +1,1 @@
+xdmp.databaseForests(xdmp.database())

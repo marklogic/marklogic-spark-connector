@@ -357,36 +357,38 @@ from MarkLogic can be useful when your custom code for reading data may take a l
 nature of your custom code, running the query incrementally to produce smaller batches may be a better fit for your 
 use case. 
 
+(TODO This needs to be rewritten, will do so in a follow up PR.)
+
 To stream results from your custom code, the connector must know how batches can be constructed based on the results of
 your custom code. Because the connector does not know anything about your code, the connector needs to run an 
-additional set of custom code that you implement to provide a sequence of "batch identifiers" to the connector. The
-connector will then run your custom once for each of your batch identifiers, with the batch identifier being passed as
+additional set of custom code that you implement to provide a sequence of partitions to the connector. The
+connector will then run your custom once for each of your partitions, with the partition being passed as
 an external variable to your custom code. 
 
-The code to run for providing a sequence of batch identifiers must be defined via one of the following options:
+The code to run for providing a sequence of partitions must be defined via one of the following options:
 
-- `spark.marklogic.read.batchIds.invoke` - a JavaScript or XQuery module path to invoke.
-- `spark.marklogic.read.batchIds.javascript` - a JavaScript program to evaluate.
-- `spark.marklogic.read.batchIds.xquery` - an XQuery program to evaluate.
+- `spark.marklogic.read.partitions.invoke` - a JavaScript or XQuery module path to invoke.
+- `spark.marklogic.read.partitions.javascript` - a JavaScript program to evaluate.
+- `spark.marklogic.read.partitions.xquery` - an XQuery program to evaluate.
 
 Note that any variables you define via the `spark.marklogic.reads.vars` prefix will also be sent to the above code, 
 in addition to the code you define for reading rows. 
 
-You are free to return any sequence of batch identifiers. For each one, the connector will invoke your regular custom
-code with an external variable named `BATCH_ID` of type `String`. You are then free to use this value to return 
-a set of results associated with the batch.
+You are free to return any sequence of partitions. For each one, the connector will invoke your regular custom
+code with an external variable named `PARTITION` of type `String`. You are then free to use this value to return 
+a set of results associated with the partition.
 
 The following examples illustrates how the forest IDs for the `spark-example-content` database can be used as batch
-identifiers. The custom code for returning URIs is then constrained to the value of `BATCH_ID` which will be a forest 
-ID. Spark will invoke the custom code once for each batch identifier, with the returned batch of rows being immediately 
+identifiers. The custom code for returning URIs is then constrained to the value of `PARTITION` which will be a forest 
+ID. Spark will invoke the custom code once for each partition, with the returned batch of rows being immediately 
 sent to the writer, which in this example are then printed to the console:
 
 ```
 stream = spark.readStream \
     .format("com.marklogic.spark") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
-    .option("spark.marklogic.read.batchIds.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
-    .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), null, [BATCH_ID]);") \
+    .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
+    .option("spark.marklogic.read.javascript", "cts.uris(null, null, cts.collectionQuery('employee'), null, [PARTITION]);") \
     .load() \
     .writeStream \
     .format("console") \
@@ -396,8 +398,8 @@ stream.stop()
 ```
 
 For a streaming use case, you may wish to ensure that every query runs 
-[at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to construct
-any batch identifiers you wish, one technique for accomplishing this would be to construct batch identifiers 
+[at the same point in time](https://docs.marklogic.com/guide/app-dev/point_in_time). Because you are free to return
+any partitions you wish, one technique for accomplishing this would be to construct partitions
 containing both a forest ID and a server timestamp:
 
 ```
@@ -406,7 +408,7 @@ const timestamp = xdmp.requestTimestamp()
 Sequence.from(forestIds.toArray().map(forestId => forestId + ":" + timestamp))
 ```
 
-In your custom code, you would then parse out the forest ID and server timestamp from each batch identifier and use
+In your custom code, you would then parse out the forest ID and server timestamp from each partition and use
 them accordingly in your queries. The MarkLogic documentation in the link above can provide more details and examples
 on how to perform point-in-time queries with server timestamps.
 
