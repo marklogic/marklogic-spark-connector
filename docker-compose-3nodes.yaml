@@ -1,0 +1,145 @@
+version: '3.8'
+name: marklogic_spark_3nodes
+
+services:
+
+  # See https://caddyserver.com/docs/quick-starts/reverse-proxy for more information on using Caddy as a reverse proxy
+  # and load balancer.
+  caddy-load-balancer:
+    image: caddy:2-alpine
+    volumes:
+      - ./caddy/data:/data
+      - ./caddy/config/Caddyfile:/etc/caddy/Caddyfile
+    depends_on:
+      - bootstrap_3n
+      - node2
+      - node3
+    ports:
+      # For running marklogic-spark-connector tests against the 3-node cluster
+      - 8016:8816
+      - 8015:8815
+      # For running performance tests against quick-table data
+      - 8009:8809
+      # For the getting-started project
+      - 8020:8820
+    networks:
+      - external_net
+      - internal_net
+
+  # Named "bootstrap" as it's the first MarkLogic host created. Other MarkLogic hosts will then join the cluster created
+  # by this host. Note that each MarkLogic host has its 8000-8002 ports exposed externally so that the apps on those
+  # ports can each be accessed if needed.
+  bootstrap_3n:
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    platform: linux/amd64
+    container_name: bootstrap_3n
+    hostname: bootstrap_3n.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+    volumes:
+      - ./docker/marklogic/logs/bootstrap_3n:/var/opt/MarkLogic/Logs
+    ports:
+      - 8000-8002:8000-8002
+    networks:
+      - external_net
+      - internal_net
+
+  node2:
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    platform: linux/amd64
+    container_name: node2
+    hostname: node2.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+      - MARKLOGIC_JOIN_CLUSTER=true
+      - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
+    volumes:
+      - ./docker/marklogic/logs/node2:/var/opt/MarkLogic/Logs
+    depends_on:
+      - bootstrap_3n
+    ports:
+      - 8100-8102:8000-8002
+    networks:
+      - external_net
+      - internal_net
+
+  node3:
+    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    platform: linux/amd64
+    container_name: node3
+    hostname: node3.local
+    labels:
+      logging: "promtail"
+      logging_jobname: "containerlogs"
+    environment:
+      - MARKLOGIC_INIT=true
+      - MARKLOGIC_ADMIN_USERNAME=admin
+      - MARKLOGIC_ADMIN_PASSWORD=admin
+      - MARKLOGIC_JOIN_CLUSTER=true
+      - MARKLOGIC_BOOTSTRAP_HOST=bootstrap_3n.local
+    volumes:
+      - ./docker/marklogic/logs/node3:/var/opt/MarkLogic/Logs
+    depends_on:
+      - bootstrap_3n
+    ports:
+      - 8200-8202:8000-8002
+    networks:
+      - external_net
+      - internal_net
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./config/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yaml
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    networks:
+      - external_net
+      - internal_net
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - 3100:3100
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - external_net
+      - internal_net
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./config/promtail.yaml:/etc/promtail/docker-config.yaml
+      - ./docker/marklogic/logs:/var/log/marklogic
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    command: -config.file=/etc/promtail/docker-config.yaml
+    depends_on:
+      - loki
+      - bootstrap_3n
+      - node2
+      - node3
+    networks:
+      - internal_net
+
+networks:
+  external_net: { }
+  internal_net:
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.enable_icc: "true"

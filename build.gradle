@@ -98,11 +98,6 @@ task perfTest(type: JavaExec) {
   args mlHost
 }
 
-task dockerUp(type: Exec) {
-  description = "Creates and starts a 3 node MarkLogic cluster."
-  commandLine "docker-compose", "up", "-d", "--build"
-}
-
 task dockerBuildCache(type: Exec) {
   description = "Creates an image named 'marklogic-spark-cache' containing a cache of the Gradle dependencies."
   commandLine 'docker', 'build', '--no-cache', '-t', 'marklogic-spark-cache', '.'
