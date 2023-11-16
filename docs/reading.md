@@ -284,6 +284,10 @@ useful when you need to retrieve data that cannot be easily accessed via Optic, 
 to that of [MarkLogic's CoRB tool](https://github.com/marklogic-community/corb2) for processing data already in 
 MarkLogic. 
 
+When using this feature, please ensure that your MarkLogic user has the required privileges for the 
+MarkLogic REST [eval endpoint](https://docs.marklogic.com/REST/POST/v1/eval) and 
+[invoke endpoint](https://docs.marklogic.com/REST/POST/v1/invoke).
+
 Custom code can be [written in JavaScript](https://docs.marklogic.com/guide/getting-started/javascript) by 
 configuring the `spark.marklogic.read.javascript` option:
 

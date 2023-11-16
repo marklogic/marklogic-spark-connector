@@ -189,6 +189,10 @@ To easily support that use case, the connector defaults to assuming that each ro
 column named "URI" of type string. This matches the convention for reading rows via custom code, which defaults to the
 same schema. User-defined custom code is then expected to declare an external variable named "URI".
 
+When using this feature, please ensure that your MarkLogic user has the required privileges for the
+MarkLogic REST [eval endpoint](https://docs.marklogic.com/REST/POST/v1/eval) and
+[invoke endpoint](https://docs.marklogic.com/REST/POST/v1/invoke).
+
 The following shows an example of reading and processing rows via custom code specified by 
 `spark.marklogic.write.javascript`, where each row is expected to have a single column named "URI" (the script for
 reading rows only returns the first 10 URIs to make it easier to verify that the correct data is logged; you can
