@@ -85,7 +85,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-2.0-SNAPSHOT.jar
+    pyspark --jars build/libs/marklogic-spark-connector-2.1-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -114,3 +114,7 @@ more commands you can try out.
 
 See the section with the same name in the 
 [MarkLogic Koop contributing guide](https://github.com/koopjs/koop-provider-marklogic/blob/master/CONTRIBUTING.md).
+
+If you are looking to test the examples in the documentation, please be sure to follow the instructions in the 
+"Getting Started" guide. That involves creating an application in MarkLogic that has an app server listening on port
+8003. You will use that app server instead of the test-app server on port 8016. 
