@@ -16,7 +16,7 @@ public class App {
             List<Row> rows = session
                 .read()
                 .format("com.marklogic.spark")
-                .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020")
+                .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003")
                 .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee', '')")
                 .load()
                 .filter("City == 'San Diego'")
