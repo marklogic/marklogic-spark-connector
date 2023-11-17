@@ -29,7 +29,7 @@ public class PushDownCountTest extends AbstractPushDownTest {
             .count();
 
         assertEquals(15, count, "Expecting all 15 authors to be counted");
-        assertEquals(1, countOfRowsReadFromMarkLogic);
+        assertRowsReadFromMarkLogic(1);
     }
 
     @Test
@@ -40,7 +40,7 @@ public class PushDownCountTest extends AbstractPushDownTest {
             .count();
 
         assertEquals(0, count);
-        assertEquals(0, countOfRowsReadFromMarkLogic, "When no rows exist, neither the count() operation nor the " +
+        assertRowsReadFromMarkLogic(0, "When no rows exist, neither the count() operation nor the " +
             "pruneColumns() operation should be pushed down since there's no optimization to be done.");
     }
 }

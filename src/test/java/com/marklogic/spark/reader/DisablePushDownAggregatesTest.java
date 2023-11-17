@@ -22,7 +22,7 @@ public class DisablePushDownAggregatesTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(5, rows.size());
-        assertEquals(15, countOfRowsReadFromMarkLogic, "Because push down of aggregates is disabled, all 15 author " +
+        assertRowsReadFromMarkLogic(15, "Because push down of aggregates is disabled, all 15 author " +
             "rows should have been read from MarkLogic.");
 
         // Averages should still be calculated correctly by Spark.

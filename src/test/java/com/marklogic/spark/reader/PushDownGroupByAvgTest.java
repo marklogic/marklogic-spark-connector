@@ -9,7 +9,6 @@ import java.util.List;
 
 import static org.apache.spark.sql.functions.avg;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class PushDownGroupByAvgTest extends AbstractPushDownTest {
 
@@ -43,11 +42,10 @@ public class PushDownGroupByAvgTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(5, rows.size());
-        assertTrue(countOfRowsReadFromMarkLogic > 5 && countOfRowsReadFromMarkLogic < 11,
+        assertRowsReadFromMarkLogicBetween(5, 11,
             "Because two partitions are used, the count of rows from MarkLogic is expected to be more than 5 but not " +
                 "more than 10, as each request to MarkLogic should return at least one row but not more than 5. " +
-                "There is a remote chance that all rows occurred in one partition and this assertion will fail. " +
-                "Actual count: " + countOfRowsReadFromMarkLogic);
+                "There is a remote chance that all rows occurred in one partition and this assertion will fail. ");
         verifyRowsHaveCorrectValues(rows, "avg(LuckyNumber)");
     }
 
@@ -78,7 +76,7 @@ public class PushDownGroupByAvgTest extends AbstractPushDownTest {
 
     private void verifyRows(String columnName, Dataset<Row> dataset) {
         List<Row> rows = dataset.collectAsList();
-        assertEquals(5, countOfRowsReadFromMarkLogic, "Expecting one row read back for each CitationID value");
+        assertRowsReadFromMarkLogic(5, "Expecting one row read back for each CitationID value");
         verifyRowsHaveCorrectValues(rows, columnName);
     }
 
