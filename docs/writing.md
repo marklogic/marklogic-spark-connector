@@ -241,6 +241,46 @@ spark.read.format("com.marklogic.spark") \
     .save()
 ```
 
+### Processing multiple rows in a single call
+
+By default, a single row is sent by the connector to your custom code. In many use cases, particularly when writing
+documents, you will achieve far better performance when configuring the connector to send many rows in a single
+call to your custom code.
+
+The configuration option `spark.marklogic.write.batchSize` controls the number of row values sent to the custom code. 
+If not specified, this defaults to 1 (as opposed to 100 when writing rows as documents). If set to a
+value greater than one, then the values will be sent in the following manner:
+
+1. If a custom schema is used, then the JSON objects representing the set of rows in the batch will first be added to a
+   JSON array, and then the array will be set to the external variable.
+2. Otherwise, the row values from the "URI" column will be concatenated together with a comma as a delimiter.
+
+
+For approach #2, an alternate delimiter can be configured via `spark.marklogic.write.externalVariableDelimiter`. This
+would be needed in case your "URI" values may have commas in them. Regardless of the delimiter value, you will 
+typically use code like that shown below for splitting the "URI" value into many values:
+
+```
+for (var uri of URI.split(',')) {
+  // Process each row value here. 
+}
+```
+
+When using a custom schema, you will typically use [xdmp.fromJSON](https://docs.marklogic.com/xdmp.fromJSON) to convert
+the value passed to your custom code into a JSON array:
+
+```
+// Assumes that URI is a JSON array node because a custom schema is being used. 
+const array = fn.head(xdmp.fromJSON(URI));
+```
+
+Processing multiple rows in a single call can have a significant impact on performance by reducing the number of calls
+to MarkLogic. For example, if you are writing documents with your custom code, it is recommended to try a batch size of
+100 or greater to test how much performance improves. The 
+[MarkLogic monitoring dashboard](https://docs.marklogic.com/guide/monitoring/dashboard) is a very useful tool for 
+examining how many requests are being sent by the connector to MarkLogic and how quickly each request is processed, 
+along with overall resource consumption.
+
 ### External variable configuration
 
 As shown in the examples above, the custom code for processing a row must have an external variable named "URI". If 
@@ -294,27 +334,6 @@ allowing you to access its data:
 ```
 // Assumes that URI is a JSON node because a custom schema is being used. 
 const doc = fn.head(xdmp.fromJSON(URI));
-```
-
-### Processing multiple rows in a single call
-
-The configuration option `spark.marklogic.write.batchSize` controls the number of row values sent to the custom code
-in a single call. If not specified, this defaults to 1 (as opposed to 100 when writing rows as documents). If set to a
-value greater than one, then the values will be sent in the following manner:
-
-1. If a custom schema is used, then the JSON objects representing the set of rows in the batch will first be added to a 
-JSON array, and then the array will be set to the external variable. 
-2. Otherwise, the row values from the "URI" column will be concatenated together with a comma as a delimiter.
-
-For approach #2, an alternate delimiter can be configured via `spark.marklogic.write.externalVariableDelimiter`. This
-would be needed in case your "URI" values may have commas in them. 
-
-When using a custom schema, you will typically use [xdmp.fromJSON](https://docs.marklogic.com/xdmp.fromJSON) to convert
-the value passed to your custom code into a JSON array:
-
-```
-// Assumes that URI is a JSON array node because a custom schema is being used. 
-const array = fn.head(xdmp.fromJSON(URI));
 ```
 
 ### Streaming support
