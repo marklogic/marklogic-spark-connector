@@ -22,20 +22,20 @@ import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class MarkLogicPartitionReaderFactory implements PartitionReaderFactory {
+class OpticPartitionReaderFactory implements PartitionReaderFactory {
 
     final static long serialVersionUID = 1;
 
-    private final Logger logger = LoggerFactory.getLogger(MarkLogicPartitionReaderFactory.class);
+    private final Logger logger = LoggerFactory.getLogger(OpticPartitionReaderFactory.class);
     private final ReadContext readContext;
 
-    MarkLogicPartitionReaderFactory(ReadContext readContext) {
+    OpticPartitionReaderFactory(ReadContext readContext) {
         this.readContext = readContext;
     }
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         logger.info("Creating reader for partition: {}", partition);
-        return new MarkLogicPartitionReader(this.readContext, (PlanAnalysis.Partition) partition);
+        return new OpticPartitionReader(this.readContext, (PlanAnalysis.Partition) partition);
     }
 }

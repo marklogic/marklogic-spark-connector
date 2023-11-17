@@ -15,6 +15,8 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.CustomCodeContext;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
@@ -37,14 +39,19 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     @Override
+    public boolean useCommitCoordinator() {
+        return BatchWrite.super.useCommitCoordinator();
+    }
+
+    @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         logger.info("Number of partitions: {}", info.numPartitions());
-        return new MarkLogicDataWriterFactory(writeContext);
+        return (DataWriterFactory) determineWriterFactory();
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
+        if (messages != null && messages.length > 0 && logger.isInfoEnabled()) {
             logger.info("Commit messages received: {}", Arrays.asList(messages));
         }
     }
@@ -52,22 +59,36 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void abort(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            logger.error("Abort messages received: {}", Arrays.asList(messages));
+            logger.warn("Abort messages received: {}", Arrays.asList(messages));
         }
     }
 
     @Override
     public StreamingDataWriterFactory createStreamingWriterFactory(PhysicalWriteInfo info) {
-        return new MarkLogicDataWriterFactory(writeContext);
+        return (StreamingDataWriterFactory) determineWriterFactory();
     }
 
     @Override
     public void commit(long epochId, WriterCommitMessage[] messages) {
-        logger.info("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
+            logger.debug("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        }
     }
 
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
-        logger.info("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        if (messages != null && messages.length > 0) {
+            logger.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+        }
+    }
+
+    private Object determineWriterFactory() {
+        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)) {
+            CustomCodeContext context = new CustomCodeContext(
+                writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
+            );
+            return new CustomCodeWriterFactory(context);
+        }
+        return new WriteBatcherDataWriterFactory(writeContext);
     }
 }

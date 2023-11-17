@@ -1,0 +1,6 @@
+docker/MarkLogic
+.gradle
+build
+out
+gradle-local.properties
+.venv

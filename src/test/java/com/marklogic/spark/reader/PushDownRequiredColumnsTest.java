@@ -57,7 +57,7 @@ public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(0, rows.size());
-        assertEquals(0, countOfRowsReadFromMarkLogic);
+        assertRowsReadFromMarkLogic(0);
     }
 
     @Test

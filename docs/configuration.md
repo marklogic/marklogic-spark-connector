@@ -5,7 +5,13 @@ nav_order: 5
 ---
 
 The MarkLogic connector has 3 sets of configuration options - connection options, reading options, and writing 
-options. Each set of options is defined in a separate table below.
+options. Each set of options is defined below.
+
+## Table of contents
+{: .no_toc .text-delta }
+
+- TOC
+{:toc}
 
 ## Connection options
 
@@ -50,7 +56,7 @@ Using this convenience can provide a much more succinct set of options - for exa
 
 ```
 df = spark.read.format("com.marklogic.spark")\
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020")\
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003")\
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')")\
     .load()
 ```
@@ -80,8 +86,11 @@ describes the other choices for this option.
 
 ## Read options
 
-These options control how the connector reads data from MarkLogic. See [the guide on reading](reading.md) for more 
-information on how data is read from MarkLogic.
+See [the guide on reading](reading.md) for more information on how data is read from MarkLogic.
+
+### Read options for Optic queries
+
+The following options control how the connector reads rows from MarkLogic via an Optic query:
 
 | Option | Description | 
 | --- | --- |
@@ -90,10 +99,33 @@ information on how data is read from MarkLogic.
 | spark.marklogic.read.opticQuery | Required; the Optic DSL query to run for retrieving rows; must use `op.fromView` as the accessor. |
 | spark.marklogic.read.pushDownAggregates | Whether to push down aggregate operations to MarkLogic; defaults to `true`. Set to `false` to prevent aggregates from being pushed down to MarkLogic. |
 
+### Read options for custom code
+
+The following options control how the connector reads rows from MarkLogic via custom code:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.invoke | The path to a module to invoke; the module must be in your application's modules database. |
+| spark.marklogic.read.javascript | JavaScript code to execute. |
+| spark.marklogic.read.xquery | XQuery code to execute. |
+| spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
+
+If you are using Spark's streaming support with custom code, or you need to break up your custom code query into 
+multiple queries, the following options can also be used to control how partitions are defined:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
+| spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
+| spark.marklogic.read.partitions.xquery | XQuery code to execute. |
+
 ## Write options
 
-These options control how the connector writes data to MarkLogic. See [the guide on writing](writing.md) for more 
-information on how data is written to MarkLogic.
+See [the guide on writing](writing.md) for more information on how data is written to MarkLogic.
+
+### Writing rows as documents to MarkLogic
+
+The following options control how the connector writes rows as documents to MarkLogic:
 
 | Option | Description | 
 | --- | --- |
@@ -110,3 +142,17 @@ information on how data is written to MarkLogic.
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
 
+### Processing rows via custom code
+
+The following options control how rows can be processed with custom code in MarkLogic:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.write.abortOnFailure | Whether the Spark job should abort if a batch fails to be written; defaults to `true`. |
+| spark.marklogic.write.batchSize | The number of rows sent in a call to MarkLogic; defaults to 1. |
+| spark.marklogic.write.invoke | The path to a module to invoke; the module must be in your application's modules database. |
+| spark.marklogic.write.javascript | JavaScript code to execute. |
+| spark.marklogic.write.xquery | XQuery code to execute. |
+| spark.marklogic.write.externalVariableName | Name of the external variable in custom code that is populated with row values; defaults to `URI`. |
+| spark.marklogic.write.externalVariableDelimiter | Delimiter used when multiple row values are sent in a single call; defaults to a comma. |
+| spark.marklogic.write.vars. | Prefix for user-defined variables to be sent to the custom code. |

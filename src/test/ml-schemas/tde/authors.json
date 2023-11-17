@@ -1,6 +1,7 @@
 {
   "template": {
-    "context": "/Citations/Citation/Article/AuthorList/Author",
+    "context": "/",
+    "collections": ["author"],
     "rows": [
       {
         "schemaName": "Medical",
@@ -9,7 +10,7 @@
           {
             "name": "CitationID",
             "scalarType": "long",
-            "val": "../../../ID"
+            "val": "CitationID"
           },
           {
             "name": "LastName",
@@ -24,12 +25,12 @@
           {
             "name": "Date",
             "scalarType": "date",
-            "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day"
+            "val": "Date"
           },
           {
             "name": "DateTime",
             "scalarType": "dateTime",
-            "val": "../../Journal/JournalIssue/PubDate/Year || '-' || ../../Journal/JournalIssue/PubDate/Month || '-' || ../../Journal/JournalIssue/PubDate/Day || 'T' || ../../Journal/JournalIssue/PubDate/Time"
+            "val": "DateTime"
           },
           {
             "name": "LuckyNumber",

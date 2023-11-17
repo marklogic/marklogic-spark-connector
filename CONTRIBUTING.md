@@ -5,18 +5,22 @@ have cloned this repository to your local workstation.
 
 In order to develop and/or test the connector, or to try out the PySpark instructions below, you first 
 need to deploy the test application in this project to MarkLogic. You can do so either on your own installation of 
-MarkLogic, or you can use `docker-compose` to install a 3-node MarkLogic cluster with a load balancer in front of it. 
+MarkLogic, or you can use `docker-compose` to install MarkLogic, optionally as a 3-node cluster with a load balancer
+in front of it.
 
-## Installing a 3-node cluster with docker-compose
+## Installing MarkLogic with docker-compose
 
 If you wish to use `docker-compose`, perform the following steps before deploying the test application.
 
 1. [Install Docker](https://docs.docker.com/get-docker/).
 2. Ensure that you don't have a MarkLogic instance running locally (if you do, you may run into port conflicts in 
    the next step).
-3. Run `./gradlew dockerUp` (Gradle tasks are included as shortcuts for running Docker commands). This will start up
-   a 3-node cluster with a load balancer in front of it. Additionally, the 8000/8001/8002 ports are available on the 
-   "bootstrap" node of the cluster for accessing the out-of-the-box MarkLogic applications.
+3. Run `docker-compose up -d --build`.
+
+The above will result in a new MarkLogic instance with a single node. 
+
+Alternatively, if you would like to test against a 3-node MarkLogic cluster with a load balancer in front of it, 
+run `docker-compose -f docker-compose-3nodes.yaml up -d --build`.
 
 ### Accessing MarkLogic logs in Grafana
 
@@ -85,7 +89,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-2.0-SNAPSHOT.jar
+    pyspark --jars build/libs/marklogic-spark-connector-2.1.0.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -114,3 +118,7 @@ more commands you can try out.
 
 See the section with the same name in the 
 [MarkLogic Koop contributing guide](https://github.com/koopjs/koop-provider-marklogic/blob/master/CONTRIBUTING.md).
+
+If you are looking to test the examples in the documentation, please be sure to follow the instructions in the 
+"Getting Started" guide. That involves creating an application in MarkLogic that has an app server listening on port
+8003. You will use that app server instead of the test-app server on port 8016. 

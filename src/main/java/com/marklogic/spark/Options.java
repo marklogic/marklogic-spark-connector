@@ -20,6 +20,15 @@ public interface Options {
     String CLIENT_URI = "spark.marklogic.client.uri";
     String CLIENT_SSL_ENABLED = "spark.marklogic.client.sslEnabled";
 
+    String READ_INVOKE = "spark.marklogic.read.invoke";
+    String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
+    String READ_XQUERY = "spark.marklogic.read.xquery";
+    String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
+
+    String READ_PARTITIONS_INVOKE = "spark.marklogic.read.partitions.invoke";
+    String READ_PARTITIONS_JAVASCRIPT = "spark.marklogic.read.partitions.javascript";
+    String READ_PARTITIONS_XQUERY = "spark.marklogic.read.partitions.xquery";
+
     String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
@@ -28,6 +37,13 @@ public interface Options {
     String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
+
+    String WRITE_INVOKE = "spark.marklogic.write.invoke";
+    String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
+    String WRITE_XQUERY = "spark.marklogic.write.xquery";
+    String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
+    String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
+    String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
     String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";

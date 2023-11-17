@@ -71,7 +71,8 @@ public class WriteContext extends ContextSupport {
         if (uriTemplate != null && uriTemplate.trim().length() > 0) {
             factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
             Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX).forEach(option -> {
-                if (getProperties().containsKey(option)) {
+                String value = getProperties().get(option);
+                if (value != null && value.trim().length() > 0) {
                     logger.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
                 }
             });
@@ -83,10 +84,6 @@ public class WriteContext extends ContextSupport {
         }
 
         return factory.newDocBuilder();
-    }
-
-    boolean isAbortOnFailure() {
-        return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
     }
 
     private void configureRestTransform(WriteBatcher writeBatcher) {

@@ -20,21 +20,21 @@ import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
 
-class MarkLogicDataWriterFactory implements DataWriterFactory, StreamingDataWriterFactory {
+class WriteBatcherDataWriterFactory implements DataWriterFactory, StreamingDataWriterFactory {
 
     private WriteContext writeContext;
 
-    MarkLogicDataWriterFactory(WriteContext writeContext) {
+    WriteBatcherDataWriterFactory(WriteContext writeContext) {
         this.writeContext = writeContext;
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-        return new MarkLogicDataWriter(writeContext, partitionId, taskId, 0L);
+        return new WriteBatcherDataWriter(writeContext, partitionId, taskId, 0L);
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId, long epochId) {
-        return new MarkLogicDataWriter(writeContext, partitionId, taskId, epochId);
+        return new WriteBatcherDataWriter(writeContext, partitionId, taskId, epochId);
     }
 }

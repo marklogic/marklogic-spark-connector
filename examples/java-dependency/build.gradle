@@ -7,8 +7,8 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.apache.spark:spark-sql_2.12:3.3.2'
-  implementation 'com.marklogic:marklogic-spark-connector:2.0.0'
+  implementation 'org.apache.spark:spark-sql_2.12:3.4.1'
+  implementation 'com.marklogic:marklogic-spark-connector:2.1.0'
 }
 
 task runApp(type: JavaExec) {

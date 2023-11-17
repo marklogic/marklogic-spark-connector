@@ -12,8 +12,7 @@ from any data source that Spark supports and then writing it to MarkLogic.
 
 The connector has the following system requirements:
 
-* Apache Spark 3.3.0 or higher; Spark 3.3.2 and Spark 3.4.0 are recommended to better leverage the connector's support 
-  for pushing operations down when reading data.
+* Apache Spark 3.3.0 or higher. The connector has been tested with the latest versions of Spark 3.3.x of 3.4.x.
 * For writing data, MarkLogic 9.0-9 or higher.
 * For reading data, MarkLogic 10.0-9 or higher.
 

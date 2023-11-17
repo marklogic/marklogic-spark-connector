@@ -18,6 +18,7 @@ package com.marklogic.spark;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.util.VersionUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -26,6 +27,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -129,5 +132,10 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         int major = VersionUtils.majorVersion(version);
         int minor = VersionUtils.minorVersion(version);
         return major > 3 || (major == 3 && minor >= 4);
+    }
+
+    protected final String rowsToString(List<Row> rows) {
+        // Used for debugging and in some assertions.
+        return rows.stream().map(row -> row.prettyJson()).collect(Collectors.joining());
     }
 }

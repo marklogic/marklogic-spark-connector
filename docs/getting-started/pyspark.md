@@ -29,7 +29,7 @@ shell by pressing `ctrl-D`.
 
 Run PySpark from the directory that you downloaded the connector to per the [setup instructions](setup.md):
 
-    pyspark --jars marklogic-spark-connector-2.0.0.jar
+    pyspark --jars marklogic-spark-connector-2.1.0.jar
 
 The `--jars` command line option is PySpark's method for utilizing Spark connectors. Each Spark environment should have
 a similar mechanism for including third party connectors; please see the documentation for your particular Spark
@@ -52,7 +52,7 @@ paste the following Python statement into PySpark, adjusting the host and passwo
 ```
 df = spark.read.format("com.marklogic.spark") \
     .option("spark.marklogic.client.host", "localhost") \
-    .option("spark.marklogic.client.port", "8020") \
+    .option("spark.marklogic.client.port", "8003") \
     .option("spark.marklogic.client.username", "spark-example-user") \
     .option("spark.marklogic.client.password", "password") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
@@ -64,7 +64,7 @@ client options in one option:
 
 ```
 df = spark.read.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
 ```
@@ -80,7 +80,8 @@ information on how a Spark DataFrame works along with more commands that you can
 
 The instructions above can be applied to your own MarkLogic application. You can use the same Spark command above,
 simply adjusting the connection details and the Optic query. Please see 
-[the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic.
+[the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic, including via custom 
+JavaScript and XQuery code.
 
 ### Writing data to the connector
 
@@ -90,7 +91,7 @@ paste the following into PySpark, adjusting the host and password values as need
 
 ```
 df.write.format("com.marklogic.spark") \
-    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8020") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.collections", "write-test") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
     .option("spark.marklogic.write.uriPrefix", "/write/") \

@@ -34,7 +34,7 @@ public class PushDownGroupByManyAggregatesTest extends AbstractPushDownTest {
                 .collectAsList();
 
         assertEquals(5, rows.size());
-        assertEquals(5, countOfRowsReadFromMarkLogic);
+        assertRowsReadFromMarkLogic(5);
 
         String column = "sum(LuckyNumber)";
         assertEquals(10, (long) rows.get(0).getAs(column));

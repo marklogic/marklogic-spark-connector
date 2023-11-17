@@ -35,7 +35,7 @@ class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
 
     private String uriTemplate;
 
-    // The matcher can be reused as this class is not expected to be thread-safe, as each MarkLogicDataWriter creates
+    // The matcher can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
     // its own and never has multiple threads trying to access it at the same time.
     private Matcher matcher;
 

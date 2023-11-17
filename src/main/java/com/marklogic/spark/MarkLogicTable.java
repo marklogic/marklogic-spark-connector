@@ -15,7 +15,8 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.MarkLogicScanBuilder;
+import com.marklogic.spark.reader.CustomCodeScanBuilder;
+import com.marklogic.spark.reader.OpticScanBuilder;
 import com.marklogic.spark.reader.ReadContext;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;
@@ -62,7 +63,6 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
         this.writeContext = writeContext;
     }
 
-
     /**
      * We ignore the {@code options} map per the class's Javadocs, which note that it's intended to provide
      * options for v2 implementations which expect case-insensitive keys. The map of properties provided by the
@@ -74,12 +74,19 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
      */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new scan builder");
+        if (Util.hasOption(readProperties, Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Will read rows via custom code");
+            }
+            return new CustomCodeScanBuilder(readProperties, readSchema);
         }
+
         // A ReadContext is created at this point, as a new ScanBuilder is created each time the user invokes a
         // function that requires a result, such as "count()".
-        return new MarkLogicScanBuilder(new ReadContext(readProperties, readSchema));
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will read rows via Optic query");
+        }
+        return new OpticScanBuilder(new ReadContext(readProperties, readSchema));
     }
 
     @Override
