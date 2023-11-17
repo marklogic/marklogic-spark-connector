@@ -69,7 +69,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(0, rows.size());
-        assertEquals(0, countOfRowsReadFromMarkLogic);
+        assertRowsReadFromMarkLogic(0);
     }
 
     @Test
@@ -130,7 +130,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(4, rows.size());
-        assertEquals(4, countOfRowsReadFromMarkLogic);
+        assertRowsReadFromMarkLogic(4);
         assertEquals(4l, (long) rows.get(0).getAs("CitationID"));
         assertEquals(1l, (long) rows.get(0).getAs("count"));
     }
@@ -151,9 +151,9 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
 
         assertEquals(4, rows.size());
         if (isSpark340OrHigher()) {
-            assertEquals(4, countOfRowsReadFromMarkLogic);
+            assertRowsReadFromMarkLogic(4);
         } else {
-            assertEquals(5, countOfRowsReadFromMarkLogic, "With Spark 3.3.x, the limit is not pushed down, perhaps " +
+            assertRowsReadFromMarkLogic(5, "With Spark 3.3.x, the limit is not pushed down, perhaps " +
                 "when groupBy is called as well. Spark 3.4.0 fixes this so that the limit is pushed down. So for 3.3.x, " +
                 "we expect all 5 rows - one per CitationID.");
         }
@@ -169,7 +169,7 @@ public class PushDownGroupByCountTest extends AbstractPushDownTest {
          * bugfix release to ensure we're in sync with that and not writing test assertions against what's considered
          * buggy behavior in 3.3.0.
          */
-        assertEquals(5, countOfRowsReadFromMarkLogic, "groupBy should be pushed down to MarkLogic when used with " +
+        assertRowsReadFromMarkLogic(5, "groupBy should be pushed down to MarkLogic when used with " +
             "count, and since there are 5 CitationID values, 5 rows should be returned.");
 
         assertEquals(4, (long) rows.get(0).getAs("count"));

@@ -38,10 +38,10 @@ public class PushDownGroupByMaxTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(5, rows.size());
-        assertTrue(countOfRowsReadFromMarkLogic > 5, "Because 2 partitions exist, it is expected that more than " +
+        assertRowsReadFromMarkLogicGreaterThan(5, "Because 2 partitions exist, it is expected that more than " +
             "5 rows in total are ready by the two partition readers, and then Spark will apply the aggregation on the " +
             "two sets of rows returned by the partition readers. There's a slight chance this assertion will fail in " +
-            "the event that all 15 rows are in one partition. Actual count: " + countOfRowsReadFromMarkLogic);
+            "the event that all 15 rows are in one partition");
         verifyRowsHaveCorrectValues(rows, "max(LuckyNumber)");
     }
 
@@ -58,12 +58,12 @@ public class PushDownGroupByMaxTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(5, rows.size());
-        assertTrue(countOfRowsReadFromMarkLogic > 5, "If the user specifies a batch size, then the connector should " +
+        assertRowsReadFromMarkLogicGreaterThan(5, "If the user specifies a batch size, then the connector should " +
             "not default it to zero when an aggregate is pushed down; the assumption is that the user has a good " +
             "reason for specifying a batch size. With 1 partition and 15 matching rows and a batch size of 5, 3 " +
             "requests should be made to MarkLogic, and it's expected that more than 5 rows are returned across " +
             "those 3 requests (unless each of the 5 CitationID values have their rows in the same partition, which " +
-            "is very unlikely). Actual count: " + countOfRowsReadFromMarkLogic);
+            "is very unlikely)");
         verifyRowsHaveCorrectValues(rows, "max(LuckyNumber)");
     }
 
@@ -95,7 +95,7 @@ public class PushDownGroupByMaxTest extends AbstractPushDownTest {
     private void verifyRows(String columnName, Dataset<Row> dataset) {
         List<Row> rows = dataset.collectAsList();
         assertEquals(5, rows.size());
-        assertEquals(5, countOfRowsReadFromMarkLogic, "Expecting one row read back for each CitationID value");
+        assertRowsReadFromMarkLogic(5, "Expecting one row read back for each CitationID value");
         verifyRowsHaveCorrectValues(rows, columnName);
     }
 

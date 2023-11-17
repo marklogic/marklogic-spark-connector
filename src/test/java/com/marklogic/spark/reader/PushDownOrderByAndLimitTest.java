@@ -66,7 +66,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .count();
 
         assertEquals(1, count);
-        assertEquals(1, countOfRowsReadFromMarkLogic, "The batch size of 5 should cause 3 requests to be made to " +
+        assertRowsReadFromMarkLogic(1, "The batch size of 5 should cause 3 requests to be made to " +
             "MarkLogic, since there are 15 matching rows. With 1 partition, those 3 requests would be made by the " +
             "same partition reader. But since the first partition reader will most likely read at least 1 row, " +
             "Spark will stop calling the partition reader once it gets that 1 row in the first request to " +
@@ -83,7 +83,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .limit(1)
             .count();
         assertEquals(1, count);
-        assertEquals(2, countOfRowsReadFromMarkLogic, "This test is intended to show that when 'limit' is used with " +
+        assertRowsReadFromMarkLogic(2, "This test is intended to show that when 'limit' is used with " +
             "2 or more partitions, the limit will be applied to each partition reader. And that will result in more " +
             "rows than 'limit' being read from MarkLogic. Spark will still apply the 'limit' and only return 1 row " +
             "to the user, but the call won't be quite as efficient since more rows are being read than desired. Note " +
@@ -98,7 +98,7 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(6, rows.size());
-        assertEquals(6, countOfRowsReadFromMarkLogic, "Because there's only one bucket, only 6 rows should be " +
+        assertRowsReadFromMarkLogic(6, "Because there's only one bucket, only 6 rows should be " +
             "returned from MarkLogic. And there's no need for the user to call Spark's orderBy, since the single " +
             "partition will returned ordered rows.");
 
@@ -116,11 +116,11 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(6, rows.size());
-        assertTrue(countOfRowsReadFromMarkLogic > 6, "Expecting each partition to read back up to 6 ordered rows, " +
+        assertRowsReadFromMarkLogicGreaterThan(6, "Expecting each partition to read back up to 6 ordered rows, " +
             "as both the limit and the orderBy should have been pushed down to MarkLogic. Spark is then expected to " +
             "merge the rows together and re-apply the order/limit so that the user gets the expected response. There " +
             "is a slight chance this assertion will fail if all 15 author rows are randomly assigned to the same " +
-            "partition. Unexpected count: " + countOfRowsReadFromMarkLogic);
+            "partition");
 
         verifyRowsAreOrderedByCitationID(rows);
     }
@@ -136,10 +136,10 @@ public class PushDownOrderByAndLimitTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(3, rows.size());
-        assertTrue(countOfRowsReadFromMarkLogic > 3, "Because two partitions were used with a limit of 3, it's " +
+        assertRowsReadFromMarkLogicGreaterThan(3, "Because two partitions were used with a limit of 3, it's " +
             "expected that each partition reader will read at least 1 row (and up to 3 rows) from MarkLogic. There " +
             "is a slight chance this assertion will fail if all 15 author rows are randomly assigned to the same " +
-            "partition. Unexpected count: " + countOfRowsReadFromMarkLogic);
+            "partition");
 
         assertEquals("Wooles", rows.get(0).getAs("LastName"));
         assertEquals("Tonnesen", rows.get(1).getAs("LastName"));

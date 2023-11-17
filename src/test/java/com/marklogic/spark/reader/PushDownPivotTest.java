@@ -27,7 +27,7 @@ public class PushDownPivotTest extends AbstractPushDownTest {
             .collectAsList();
 
         assertEquals(5, rows.size());
-        assertEquals(10, countOfRowsReadFromMarkLogic, "Spark should have read 5 rows in the first job, when it " +
+        assertRowsReadFromMarkLogic(10, "Spark should have read 5 rows in the first job, when it " +
             "retrieved the 5 unique Date values. It should then have read 5 more rows in the second job, when it did " +
             "a groupBy on CitationID + Date.");
 

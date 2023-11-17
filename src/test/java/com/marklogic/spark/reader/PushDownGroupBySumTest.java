@@ -52,7 +52,7 @@ public class PushDownGroupBySumTest extends AbstractPushDownTest {
 
     private void verifyRows(String columnName, Dataset<Row> dataset) {
         List<Row> rows = dataset.collectAsList();
-        assertEquals(5, countOfRowsReadFromMarkLogic, "Expecting one row read back for each CitationID value");
+        assertRowsReadFromMarkLogic(5, "Expecting one row read back for each CitationID value");
 
         assertEquals(10, (long) rows.get(0).getAs(columnName));
         assertEquals(26, (long) rows.get(1).getAs(columnName));
