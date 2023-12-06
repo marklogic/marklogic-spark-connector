@@ -30,7 +30,6 @@ pipeline{
   environment{
     JAVA8_HOME_DIR="/home/builder/java/openjdk-1.8.0-262"
     JAVA11_HOME_DIR="/home/builder/java/jdk-11.0.2"
-    JAVA17_HOME_DIR="/home/builder/java/jdk-17.0.2"
     GRADLE_DIR   =".gradle"
     DMC_USER     = credentials('MLBUILD_USER')
     DMC_PASSWORD = credentials('MLBUILD_PASSWORD')
@@ -39,7 +38,7 @@ pipeline{
     stage('tests'){
       agent {label 'devExpLinuxPool'}
       steps{
-        runtests('Latest','11','JAVA8_HOME_DIR')
+        runtests('Latest','11','JAVA11_HOME_DIR')
       }
     }
     stage('publish'){
@@ -76,23 +75,6 @@ pipeline{
           agent {label 'devExpLinuxPool'}
           steps{
             runtests('Release','10.0-9.5','JAVA11_HOME_DIR')
-          }
-        }
-        stage('11.0.2-java8-spark3.4'){
-          agent {label 'devExpLinuxPool'}
-          steps{
-            copyRPM 'Release','11.0.2'
-            setUpML '$WORKSPACE/xdmp/src/Mark*.rpm'
-            sh label:'test', script: '''#!/bin/bash
-              export JAVA_HOME=$JAVA8_HOME_DIR
-              export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
-              export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
-              cd marklogic-spark-connector
-              echo "mlPassword=admin" > gradle-local.properties
-              ./gradlew -i mlDeploy
-              ./gradlew test -PsparkVersion="3.4.0" || true
-            '''
-            junit '**/build/**/*.xml'
           }
         }
       }

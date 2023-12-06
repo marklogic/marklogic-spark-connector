@@ -5,6 +5,8 @@ plugins {
   id "com.marklogic.ml-gradle" version "4.6.0"
   id 'maven-publish'
   id 'signing'
+  id "jacoco"
+  id "org.sonarqube" version "4.4.1.3373"
 }
 
 group 'com.marklogic'
@@ -61,8 +63,23 @@ dependencies {
 
 test {
   useJUnitPlatform()
+  finalizedBy jacocoTestReport
   // Allows mlHost to override the value in gradle.properties, which the test plumbing will default to.
   environment "mlHost", mlHost
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
+
+sonar {
+  properties {
+    property "sonar.projectKey", "marklogic-spark"
+    property "sonar.host.url", "http://localhost:9000"
+  }
 }
 
 task reloadTestData(type: com.marklogic.gradle.task.MarkLogicTask) {
