@@ -18,6 +18,7 @@ package com.marklogic.spark.reader;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.spark.ConnectorException;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -29,42 +30,45 @@ import java.util.Map;
 
 public abstract class SchemaInferrer {
 
-    private final static Logger logger = LoggerFactory.getLogger(SchemaInferrer.class);
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(SchemaInferrer.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // "Column info types" = the possible set of types returned by the columnInfo call to /v1/rows. Note that this is
     // not equivalent to the set of TDE types; for example, /v1/rows returns "none" as a column type for several TDE types.
-    private final static Map<String, DataType> COLUMN_INFO_TYPES_TO_SPARK_TYPES = new HashMap() {{
-        put("int", DataTypes.IntegerType);
+    private static final Map<String, DataType> COLUMN_INFO_TYPES_TO_SPARK_TYPES = new HashMap<>();
+    static {
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("int", DataTypes.IntegerType);
         // Including "short" here, but a TDE column of type "short" reports "int" as its type in column info. So not
         // yet able to test this, but including it here in case the server does report "short" in the future.
-        put("short", DataTypes.ShortType);
-        put("unsignedInt", DataTypes.IntegerType);
-        put("long", DataTypes.LongType);
-        put("unsignedLong", DataTypes.LongType);
-        put("float", DataTypes.FloatType);
-        put("double", DataTypes.DoubleType);
-        put("decimal", DataTypes.DoubleType);
-        put("dateTime", DataTypes.TimestampType);
-        put("date", DataTypes.DateType);
-        put("gYearMonth", DataTypes.StringType);
-        put("gYear", DataTypes.StringType);
-        put("gMonth", DataTypes.StringType);
-        put("gDay", DataTypes.StringType);
-        put("yearMonthDuration", DataTypes.StringType);
-        put("dayTimeDuration", DataTypes.StringType);
-        put("string", DataTypes.StringType);
-        put("anyUri", DataTypes.StringType);
-        put("point", DataTypes.StringType);
-        put("boolean", DataTypes.BooleanType);
-        put("none", DataTypes.StringType); // See DBQ-296, this is intentional for some column types.
-        put ("value", DataTypes.StringType); // In MarkLogic 10, "value" is returned for a column containing a JSON object.
-        put("integer", DataTypes.IntegerType);
-        put("unsignedInt", DataTypes.IntegerType);
-        put("iri", DataTypes.StringType);
-        put("time", DataTypes.StringType);
-        put("unknown", DataTypes.StringType);
-    }};
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("short", DataTypes.ShortType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedInt", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("long", DataTypes.LongType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedLong", DataTypes.LongType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("float", DataTypes.FloatType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("double", DataTypes.DoubleType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("decimal", DataTypes.DoubleType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("dateTime", DataTypes.TimestampType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("date", DataTypes.DateType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("gYearMonth", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("gYear", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("gMonth", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("gDay", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("yearMonthDuration", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("dayTimeDuration", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("string", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("anyUri", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("point", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("boolean", DataTypes.BooleanType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("none", DataTypes.StringType); // See DBQ-296, this is intentional for some column types.
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put ("value", DataTypes.StringType); // In MarkLogic 10, "value" is returned for a column containing a JSON object.
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("integer", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedInt", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("iri", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("time", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unknown", DataTypes.StringType);
+    }
+
+    private SchemaInferrer() {}
 
     /**
      * @param columnInfoResponse the String response from a call to /v1/rows with output=columnInfo; the endpoint
@@ -81,7 +85,7 @@ public abstract class SchemaInferrer {
                 }
                 schema = schema.add(makeColumnName(column), determineSparkType(column), isColumnNullable(column));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(String.format("Unable to parse JSON: %s; cause: %s", columnInfo, e.getMessage()), e);
+                throw new ConnectorException(String.format("Unable to parse JSON: %s; cause: %s", columnInfo, e.getMessage()), e);
             }
         }
         return schema;
@@ -123,6 +127,6 @@ public abstract class SchemaInferrer {
     }
 
     private static boolean isColumnNullable(JsonNode column) {
-        return column.has("nullable") ? column.get("nullable").asBoolean() : true;
+        return column.has("nullable") && column.get("nullable").asBoolean();
     }
 }

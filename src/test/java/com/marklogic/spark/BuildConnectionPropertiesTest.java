@@ -23,10 +23,10 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-public class BuildConnectionPropertiesTest {
+class BuildConnectionPropertiesTest {
 
-    private final static String AUTH_TYPE = "spark.marklogic.client.authType";
-    private final static String CONNECTION_TYPE = "spark.marklogic.client.connectionType";
+    private static final String AUTH_TYPE = "spark.marklogic.client.authType";
+    private static final String CONNECTION_TYPE = "spark.marklogic.client.connectionType";
 
     private Map<String, String> properties = new HashMap<>();
 

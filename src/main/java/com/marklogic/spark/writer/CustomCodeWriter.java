@@ -9,6 +9,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 
 class CustomCodeWriter implements DataWriter<InternalRow> {
 
-    private final static Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
 
     private final DatabaseClient databaseClient;
     private final CustomCodeContext customCodeContext;
@@ -61,10 +62,10 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     }
 
     @Override
-    public void write(InternalRow record) {
+    public void write(InternalRow row) {
         String rowValue = customCodeContext.isCustomSchema() ?
-            convertRowToJSONString(record) :
-            record.getString(0);
+            convertRowToJSONString(row) :
+            row.getString(0);
 
         this.currentBatch.add(rowValue);
 
@@ -140,21 +141,21 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             try {
                 array.add(this.objectMapper.readTree(jsonObjectString));
             } catch (JsonProcessingException e) {
-                throw new RuntimeException(String.format("Unable to read JSON string while constructing call " +
+                throw new ConnectorException(String.format("Unable to read JSON string while constructing call " +
                     "for multiple rows with a custom schema; JSON: %s", jsonObjectString), e);
             }
         }
         return array;
     }
 
-    private String convertRowToJSONString(InternalRow record) {
+    private String convertRowToJSONString(InternalRow row) {
         StringWriter jsonObjectWriter = new StringWriter();
         JacksonGenerator jacksonGenerator = new JacksonGenerator(
             this.customCodeContext.getSchema(),
             jsonObjectWriter,
             Util.DEFAULT_JSON_OPTIONS
         );
-        jacksonGenerator.write(record);
+        jacksonGenerator.write(row);
         jacksonGenerator.flush();
         return jsonObjectWriter.toString();
     }

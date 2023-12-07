@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownPivotTest extends AbstractPushDownTest {
+class PushDownPivotTest extends AbstractPushDownTest {
 
     /**
      * A pivot call results in Spark running two separate jobs. First, Spark will do a groupBy on Date via the pivot()

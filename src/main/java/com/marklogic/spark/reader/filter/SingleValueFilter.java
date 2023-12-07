@@ -27,11 +27,15 @@ import java.util.UUID;
  */
 class SingleValueFilter implements OpticFilter {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private final String paramName;
     private final String functionName;
     private final String columnName;
+
+    // This warning about the value not being serializable is ignored, as we trust Spark to only ever have
+    // serializable values in its filters.
+    @SuppressWarnings("java:S1948")
     private final Object value;
 
     SingleValueFilter(String functionName, String columnName, Object value) {

@@ -28,9 +28,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-class OpticPartitionReader implements PartitionReader {
+class OpticPartitionReader implements PartitionReader<InternalRow> {
 
-    private final static Logger logger = LoggerFactory.getLogger(OpticPartitionReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReader.class);
 
     private final ReadContext readContext;
     private final PlanAnalysis.Partition partition;
@@ -69,7 +69,7 @@ class OpticPartitionReader implements PartitionReader {
             } else {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Count of rows for partition {} and bucket {}: {}", this.partition,
-                        this.partition.buckets.get(nextBucketIndex - 1), currentBucketRowCount);
+                        this.partition.getBuckets().get(nextBucketIndex - 1), currentBucketRowCount);
                 }
                 currentBucketRowCount = 0;
             }
@@ -77,12 +77,12 @@ class OpticPartitionReader implements PartitionReader {
 
         // Iterate through buckets until we find one with at least one row.
         while (true) {
-            boolean noBucketsLeftToQuery = nextBucketIndex == partition.buckets.size();
+            boolean noBucketsLeftToQuery = nextBucketIndex == partition.getBuckets().size();
             if (noBucketsLeftToQuery) {
                 return false;
             }
 
-            PlanAnalysis.Bucket bucket = partition.buckets.get(nextBucketIndex);
+            PlanAnalysis.Bucket bucket = partition.getBuckets().get(nextBucketIndex);
             nextBucketIndex++;
             long start = System.currentTimeMillis();
             this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
@@ -116,10 +116,10 @@ class OpticPartitionReader implements PartitionReader {
 
     private void logMetrics() {
         if (logger.isDebugEnabled()) {
-            double rowsPerSecond = totalRowCount > 0 ? (double) totalRowCount / ((double) totalDuration / 1000) : 0;
+            double rowsPerSecond = totalRowCount > 0 ? totalRowCount / ((double) totalDuration / 1000) : 0;
             ObjectNode metrics = new ObjectMapper().createObjectNode()
-                .put("partitionId", this.partition.identifier)
-                .put("totalRequests", this.partition.buckets.size())
+                .put("partitionId", this.partition.getIdentifier())
+                .put("totalRequests", this.partition.getBuckets().size())
                 .put("totalRowCount", this.totalRowCount)
                 .put("totalDuration", this.totalDuration)
                 .put("rowsPerSecond", String.format("%.2f", rowsPerSecond));

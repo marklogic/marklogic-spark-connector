@@ -29,7 +29,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ReadWithClientUriTest extends AbstractIntegrationTest {
+class ReadWithClientUriTest extends AbstractIntegrationTest {
 
     @Test
     void validUri() {
@@ -94,11 +94,12 @@ public class ReadWithClientUriTest extends AbstractIntegrationTest {
 
     @Test
     void uriWithInvalidDatabase() {
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> readRowsWithClientUri(String.format(
+        String uri = String.format(
             "%s:%s@%s:%d/database-doesnt-exist",
             TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort()
-        )));
+        );
 
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> readRowsWithClientUri(uri));
         assertTrue(ex.getMessage().contains("XDMP-NOSUCHDB: No such database database-doesnt-exist"),
             "Unexpected error: " + ex.getMessage());
     }

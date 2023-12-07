@@ -31,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * was called correctly. To further verify that, run these tests with a debugger and checking the logic in
  * SingleValueFilter to see which bindParam method is actually called.
  */
-public class PushDownFilterValueTypesTest extends AbstractIntegrationTest {
+class PushDownFilterValueTypesTest extends AbstractIntegrationTest {
 
     @Test
     void doubleValue() {

@@ -22,7 +22,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class InferSchemaTest extends AbstractIntegrationTest {
+class InferSchemaTest extends AbstractIntegrationTest {
 
     /**
      * Verifies that the Spark schema constructed by a columnInfo response (which contains an element

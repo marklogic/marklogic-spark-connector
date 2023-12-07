@@ -33,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WriteStreamOfRowsTest extends AbstractWriteTest {
+class WriteStreamOfRowsTest extends AbstractWriteTest {
 
-    private final static StructType SCHEMA = new StructType()
+    private static final StructType SCHEMA = new StructType()
         .add("Name", DataTypes.StringType)
         .add("House", DataTypes.StringType);
 

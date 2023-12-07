@@ -4,6 +4,7 @@ import com.marklogic.client.FailedRequestException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
+class ReadWithCustomCodeTest extends AbstractIntegrationTest {
 
     @Test
     void evalJavaScript() {
@@ -120,12 +121,12 @@ public class ReadWithCustomCodeTest extends AbstractIntegrationTest {
 
     @Test
     void badJavascriptForPartitions() {
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> startRead()
+        Dataset<Row> dataset = startRead()
             .option(Options.READ_PARTITIONS_JAVASCRIPT, "this is invalid javascript")
             .option(Options.READ_JAVASCRIPT, "const forestId = PARTITION; cts.uris(null, [], cts.collectionQuery('author'), 0, [forestId])")
-            .load()
-            .collectAsList());
+            .load();
 
+        RuntimeException ex = assertThrows(RuntimeException.class, () -> dataset.collectAsList());
         assertEquals("Unable to retrieve partitions", ex.getMessage());
         assertTrue(ex.getCause() instanceof FailedRequestException, "Unexpected cause: " + ex.getCause());
     }

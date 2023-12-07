@@ -22,7 +22,7 @@ import org.apache.spark.sql.SaveMode;
 
 abstract class AbstractWriteTest extends AbstractIntegrationTest {
 
-    protected final static String COLLECTION = "write-test";
+    protected static final String COLLECTION = "write-test";
 
     protected DataFrameWriter newWriter() {
         return newWriter(1);

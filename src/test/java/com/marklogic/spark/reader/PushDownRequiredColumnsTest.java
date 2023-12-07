@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * So this test verifies that "select" works in various scenarios, but really need to check the logging to verify that
  * MarkLogic is only returning the selected columns.
  */
-public class PushDownRequiredColumnsTest extends AbstractPushDownTest {
+class PushDownRequiredColumnsTest extends AbstractPushDownTest {
 
     @Test
     void withNoQualifier() {

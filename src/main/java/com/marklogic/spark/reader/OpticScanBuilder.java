@@ -19,49 +19,34 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.expressions.SortOrder;
-import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
-import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
-import org.apache.spark.sql.connector.expressions.aggregate.Avg;
-import org.apache.spark.sql.connector.expressions.aggregate.Count;
-import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
-import org.apache.spark.sql.connector.expressions.aggregate.Max;
-import org.apache.spark.sql.connector.expressions.aggregate.Min;
-import org.apache.spark.sql.connector.expressions.aggregate.Sum;
-import org.apache.spark.sql.connector.read.Scan;
-import org.apache.spark.sql.connector.read.ScanBuilder;
-import org.apache.spark.sql.connector.read.SupportsPushDownAggregates;
-import org.apache.spark.sql.connector.read.SupportsPushDownFilters;
-import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
-import org.apache.spark.sql.connector.read.SupportsPushDownRequiredColumns;
-import org.apache.spark.sql.connector.read.SupportsPushDownTopN;
+import org.apache.spark.sql.connector.expressions.aggregate.*;
+import org.apache.spark.sql.connector.read.*;
 import org.apache.spark.sql.sources.Filter;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
     SupportsPushDownTopN, SupportsPushDownAggregates, SupportsPushDownRequiredColumns {
 
-    private final static Logger logger = LoggerFactory.getLogger(OpticScanBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticScanBuilder.class);
 
     private final ReadContext readContext;
     private List<Filter> pushedFilters;
 
-    private final static Set<Class<? extends AggregateFunc>> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet() {{
-        add(Avg.class);
-        add(Count.class);
-        add(CountStar.class);
-        add(Max.class);
-        add(Min.class);
-        add(Sum.class);
-    }};
+    private static final Set<Class<? extends AggregateFunc>> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet<>();
+
+    static {
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(Avg.class);
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(Count.class);
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(CountStar.class);
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(Max.class);
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(Min.class);
+        SUPPORTED_AGGREGATE_FUNCTIONS.add(Sum.class);
+    }
 
     public OpticScanBuilder(ReadContext readContext) {
         this.readContext = readContext;
@@ -171,14 +156,18 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         }
 
         if (hasUnsupportedAggregateFunction(aggregation)) {
-            logger.info("Aggregation contains one or more unsupported functions, " +
-                "so not pushing aggregation to MarkLogic: {}", describeAggregation(aggregation));
+            if (logger.isInfoEnabled()) {
+                logger.info("Aggregation contains one or more unsupported functions, " +
+                    "so not pushing aggregation to MarkLogic: {}", describeAggregation(aggregation));
+            }
             return false;
         }
 
         if (readContext.getBucketCount() > 1) {
-            logger.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
-                describeAggregation(aggregation));
+            if (logger.isInfoEnabled()) {
+                logger.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
+                    describeAggregation(aggregation));
+            }
             return false;
         }
         return true;
@@ -198,7 +187,9 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             return false;
         }
 
-        logger.info("Pushing down aggregation: {}", describeAggregation(aggregation));
+        if (logger.isInfoEnabled()) {
+            logger.info("Pushing down aggregation: {}", describeAggregation(aggregation));
+        }
         readContext.pushDownAggregation(aggregation);
         return true;
     }

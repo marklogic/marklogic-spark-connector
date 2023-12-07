@@ -13,7 +13,7 @@ import java.util.List;
 
 class CustomCodeMicroBatchStream implements MicroBatchStream {
 
-    private final static Logger logger = LoggerFactory.getLogger(CustomCodeMicroBatchStream.class);
+    private static final Logger logger = LoggerFactory.getLogger(CustomCodeMicroBatchStream.class);
 
     private final CustomCodeContext customCodeContext;
     private final List<String> partitions;

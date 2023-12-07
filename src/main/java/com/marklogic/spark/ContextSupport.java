@@ -28,7 +28,7 @@ import java.util.Map;
 
 public class ContextSupport implements Serializable {
 
-    protected final static Logger logger = LoggerFactory.getLogger(ContextSupport.class);
+    protected static final Logger logger = LoggerFactory.getLogger(ContextSupport.class);
     private final Map<String, String> properties;
 
     protected ContextSupport(Map<String, String> properties) {
@@ -41,20 +41,19 @@ public class ContextSupport implements Serializable {
         try {
             client = DatabaseClientFactory.newClient(propertyName -> connectionProps.get("spark." + propertyName));
         } catch (Exception e) {
-            throw new RuntimeException(String.format("Unable to connect to MarkLogic; cause: %s", e.getMessage()), e);
+            throw new ConnectorException(String.format("Unable to connect to MarkLogic; cause: %s", e.getMessage()), e);
         }
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
-            throw new RuntimeException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
+            throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
         }
         return client;
     }
 
     protected final Map<String, String> buildConnectionProperties() {
-        Map<String, String> connectionProps = new HashMap() {{
-            put("spark.marklogic.client.authType", "digest");
-            put("spark.marklogic.client.connectionType", "gateway");
-        }};
+        Map<String, String> connectionProps = new HashMap<>();
+        connectionProps.put("spark.marklogic.client.authType", "digest");
+        connectionProps.put("spark.marklogic.client.connectionType", "gateway");
         connectionProps.putAll(this.properties);
 
         if (optionExists(Options.CLIENT_URI)) {
@@ -104,7 +103,7 @@ public class ContextSupport implements Serializable {
         try {
             return URLDecoder.decode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(String.format("Unable to decode %s; cause: %s", label, value));
+            throw new ConnectorException(String.format("Unable to decode %s; cause: %s", label, value));
         }
     }
 

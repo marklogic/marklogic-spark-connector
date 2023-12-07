@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class DisablePushDownAggregatesTest extends AbstractPushDownTest {
+class DisablePushDownAggregatesTest extends AbstractPushDownTest {
 
     @Test
     void disabled() {

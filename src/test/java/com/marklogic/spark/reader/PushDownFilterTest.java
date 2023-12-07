@@ -25,7 +25,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownFilterTest extends AbstractPushDownTest {
+class PushDownFilterTest extends AbstractPushDownTest {
 
     /**
      * equalTo has several tests to verify that filter/where work the same (or at least appear to) and they can be

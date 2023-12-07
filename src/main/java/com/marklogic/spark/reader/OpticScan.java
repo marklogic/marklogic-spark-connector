@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 
 class OpticScan implements Scan {
 
-    private final static Logger logger = LoggerFactory.getLogger(OpticScan.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticScan.class);
 
     private ReadContext readContext;
 

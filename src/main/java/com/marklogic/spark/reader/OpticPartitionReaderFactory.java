@@ -24,9 +24,9 @@ import org.slf4j.LoggerFactory;
 
 class OpticPartitionReaderFactory implements PartitionReaderFactory {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
-    private final Logger logger = LoggerFactory.getLogger(OpticPartitionReaderFactory.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReaderFactory.class);
     private final ReadContext readContext;
 
     OpticPartitionReaderFactory(ReadContext readContext) {

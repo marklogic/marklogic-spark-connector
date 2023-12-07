@@ -29,7 +29,7 @@ import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private final StructType schema;
 

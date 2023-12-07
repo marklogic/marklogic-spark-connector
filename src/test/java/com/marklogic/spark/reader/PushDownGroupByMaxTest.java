@@ -11,7 +11,7 @@ import static org.apache.spark.sql.functions.max;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class PushDownGroupByMaxTest extends AbstractPushDownTest {
+class PushDownGroupByMaxTest extends AbstractPushDownTest {
 
     @Test
     void groupByMax() {

@@ -10,7 +10,7 @@ import java.util.List;
 import static org.apache.spark.sql.functions.avg;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownGroupByAvgTest extends AbstractPushDownTest {
+class PushDownGroupByAvgTest extends AbstractPushDownTest {
 
     @Test
     void groupByAvg() {

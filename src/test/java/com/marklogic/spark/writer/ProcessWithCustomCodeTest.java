@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ProcessWithCustomCodeTest extends AbstractWriteTest {
+class ProcessWithCustomCodeTest extends AbstractWriteTest {
 
     @Test
     void invokeJavaScript() {
@@ -120,6 +120,7 @@ public class ProcessWithCustomCodeTest extends AbstractWriteTest {
                 "Unexpected error message: " + ex.getMessage());
     }
 
+    @SuppressWarnings("java:S2699") // The absence of an assertion is fine for this test.
     @Test
     void dontAbortOnFailure() {
         // The lack of an error here indicates that the job did not abort. The connector is expected to have logged

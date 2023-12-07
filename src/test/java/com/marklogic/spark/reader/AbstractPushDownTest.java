@@ -28,8 +28,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 abstract class AbstractPushDownTest extends AbstractIntegrationTest {
 
-    final static String QUERY_WITH_NO_QUALIFIER = "op.fromView('Medical', 'Authors', '')";
-    final static String QUERY_ORDERED_BY_CITATION_ID = "op.fromView('Medical', 'Authors', '').orderBy(op.col('CitationID'))";
+    static final String QUERY_WITH_NO_QUALIFIER = "op.fromView('Medical', 'Authors', '')";
+    static final String QUERY_ORDERED_BY_CITATION_ID = "op.fromView('Medical', 'Authors', '').orderBy(op.col('CitationID'))";
 
     private long countOfRowsReadFromMarkLogic;
 

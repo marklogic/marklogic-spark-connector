@@ -30,7 +30,7 @@ import java.util.Arrays;
 
 class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
+    private static final Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
 
     private WriteContext writeContext;
 

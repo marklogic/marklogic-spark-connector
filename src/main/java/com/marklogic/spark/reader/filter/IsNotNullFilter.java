@@ -22,7 +22,7 @@ import org.apache.spark.sql.sources.IsNotNull;
 
 class IsNotNullFilter implements OpticFilter {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private IsNotNull filter;
 
