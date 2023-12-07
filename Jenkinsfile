@@ -15,6 +15,16 @@ def runtests(String mlVersionType, String mlVersion, String javaVersion){
   junit '**/build/**/*.xml'
 }
 
+def runSonarScan(String javaVersion){
+    sh label:'test', script: '''#!/bin/bash
+      export JAVA_HOME=$'''+javaVersion+'''
+      export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
+      export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
+      cd marklogic-spark-connector
+     ./gradlew sonar -Dsonar.projectKey='marklogic_marklogic-spark-connector_AYxF-ciuhXuvzhhRmJ3v' -Dsonar.projectName='ADP-ML-DevExp-marklogic-spark-connector' || true
+    '''
+}
+
 pipeline{
   agent none
   triggers{
@@ -36,9 +46,15 @@ pipeline{
   }
   stages{
     stage('tests'){
+      environment{
+        scannerHome = tool 'SONAR_Progress'
+      }
       agent {label 'devExpLinuxPool'}
       steps{
         runtests('Latest','11','JAVA11_HOME_DIR')
+        withSonarQubeEnv('SONAR_Progress') {
+          runSonarScan('JAVA11_HOME_DIR')
+        }
       }
     }
     stage('publish'){
