@@ -1,12 +1,12 @@
-This is an evolving guide for developers interested in developing and testing this project. This guide assumes that you
-have cloned this repository to your local workstation. 
+This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
+workstation.
 
-# Do this first!
+Due to the use of the Sonar plugin for Gradle, you must use Java 11 or higher for developing and testing the project. 
+The `build.gradle` file for this project ensures that the connector is built to run on Java 8 or higher. 
 
-In order to develop and/or test the connector, or to try out the PySpark instructions below, you first 
-need to deploy the test application in this project to MarkLogic. You can do so either on your own installation of 
-MarkLogic, or you can use `docker-compose` to install MarkLogic, optionally as a 3-node cluster with a load balancer
-in front of it.
+To begin, you need to deploy the test application in this project to MarkLogic. You can do so either on your own 
+installation of MarkLogic, or you can use `docker-compose` to install MarkLogic, optionally as a 3-node cluster with 
+a load balancer in front of it.
 
 ## Installing MarkLogic with docker-compose
 
@@ -74,6 +74,42 @@ You can then run the tests from within the Docker environment via the following 
 
     ./gradlew dockerTest
 
+
+## Generating code quality reports with SonarQube
+
+In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file and you must
+have the services in that file running.
+
+To configure the SonarQube service, perform the following steps:
+
+1. Go to http://localhost:9000 .
+2. Login as admin/admin. SonarQube will ask you to change this password; you can choose whatever you want ("password" works).
+3. Click on "Create project manually".
+4. Enter "marklogic-spark" for the Project Name; use that as the Project Key too.
+5. Enter "develop" as the main branch name.
+6. Click on "Next".
+7. Click on "Use the global setting" and then "Create project".
+8. On the "Analysis Method" page, click on "Locally".
+9. In the "Provide a token" panel, click on "Generate". Copy the token to a safe place (you can always generate a new one).
+
+One place to paste your Sonar token would be in `gradle-local.properties`, as that file is gitignore'd. You'll still 
+need to paste it in the command shown next though.
+
+To run SonarQube, run the following Gradle tasks, which will run all of the tests with code coverage and then generate
+a quality report with SonarQube:
+
+    ./gradlew test sonar -Dsonar.token=paste your token here
+
+When that completes, you will see a line like this near the end of the logging:
+
+    ANALYSIS SUCCESSFUL, you can find the results at: http://localhost:9000/dashboard?id=marklogic-spark
+
+Click on that link. If it's the first time you've run the report, you'll see all issues. If you've run the report
+before, then SonarQube will show "New Code" by default. That's handy, as you can use that to quickly see any issues
+you've introduced on the feature branch you're working on. You can then click on "Overall Code" to see all issues.
+
+Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar -Dsonar:token`
+without having to re-run the tests.
 
 # Testing with PySpark
 
