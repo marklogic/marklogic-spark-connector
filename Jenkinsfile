@@ -64,7 +64,7 @@ pipeline{
       }
       steps{
       	sh label:'publish', script: '''#!/bin/bash
-          export JAVA_HOME=$JAVA_HOME_DIR
+          export JAVA_HOME=$JAVA11_HOME_DIR
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
           export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
           cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
