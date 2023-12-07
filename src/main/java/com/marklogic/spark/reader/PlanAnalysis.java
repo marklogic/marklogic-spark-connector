@@ -15,7 +15,7 @@
  */
 package com.marklogic.spark.reader;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
@@ -32,14 +32,22 @@ import java.util.List;
  */
 class PlanAnalysis implements Serializable {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
-    final JsonNode boundedPlan;
-    final List<Partition> partitions;
+    private final ObjectNode boundedPlan;
+    private final List<Partition> partitions;
 
-    PlanAnalysis(JsonNode boundedPlan, List<Partition> partitions) {
+    PlanAnalysis(ObjectNode boundedPlan, List<Partition> partitions) {
         this.boundedPlan = boundedPlan;
         this.partitions = partitions;
+    }
+
+    public ObjectNode getBoundedPlan() {
+        return boundedPlan;
+    }
+
+    public List<Partition> getPartitions() {
+        return partitions;
     }
 
     List<Bucket> getAllBuckets() {
@@ -58,10 +66,10 @@ class PlanAnalysis implements Serializable {
      */
     static class Partition implements InputPartition, Serializable {
 
-        final static long serialVersionUID = 1;
+        static final long serialVersionUID = 1;
 
-        final String identifier; // used solely for logging purposes
-        final List<Bucket> buckets;
+        private final String identifier; // used solely for logging purposes
+        private final List<Bucket> buckets;
 
         Partition(int number, long lowerBound, long upperBound, long bucketCount, long partitionSize) {
             this.identifier = String.format("[number: %d; lower bound: %s; upper bound: %s]",
@@ -103,6 +111,14 @@ class PlanAnalysis implements Serializable {
             return new Partition(identifier, new Bucket(lowerBound, upperBound));
         }
 
+        public String getIdentifier() {
+            return identifier;
+        }
+
+        public List<Bucket> getBuckets() {
+            return buckets;
+        }
+
         @Override
         public String toString() {
             return this.identifier;
@@ -115,7 +131,7 @@ class PlanAnalysis implements Serializable {
      */
     static class Bucket implements Serializable {
 
-        final static long serialVersionUID = 1;
+        static final long serialVersionUID = 1;
 
         final String lowerBound;
         final String upperBound;

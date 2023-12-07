@@ -21,9 +21,9 @@ import scala.collection.immutable.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public abstract class Util {
+public interface Util {
 
-    public final static JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
+    JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
         new HashMap<>(),
 
         // As verified via tests, this default timezone ID is overridden by a user via the spark.sql.session.timeZone option.
@@ -36,7 +36,7 @@ public abstract class Util {
         "_corrupt_record"
     );
 
-    public final static boolean hasOption(Map<String, String> properties, String... options) {
+    static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
             .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
     }

@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
-    private final static Logger logger = LoggerFactory.getLogger(WriteBatcherDataWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(WriteBatcherDataWriter.class);
 
     private final WriteContext writeContext;
     private final DatabaseClient databaseClient;
@@ -66,19 +66,19 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         if (writeContext.isAbortOnFailure()) {
-            this.writeBatcher.onBatchFailure((batch, failure) -> {
+            this.writeBatcher.onBatchFailure((batch, failure) ->
                 // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
-                this.writeFailure.compareAndSet(null, failure);
-            });
+                this.writeFailure.compareAndSet(null, failure)
+            );
         }
         this.dataMovementManager.startJob(this.writeBatcher);
     }
 
     @Override
-    public void write(InternalRow record) throws IOException {
+    public void write(InternalRow row) throws IOException {
         throwWriteFailureIfExists();
 
-        String json = convertRowToJSONString(record);
+        String json = convertRowToJSONString(row);
         StringHandle content = new StringHandle(json).withFormat(Format.JSON);
         this.writeBatcher.add(this.docBuilder.build(content));
         this.docCount++;
@@ -107,14 +107,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         stopJobAndRelease();
     }
 
-    private String convertRowToJSONString(InternalRow record) {
+    private String convertRowToJSONString(InternalRow row) {
         StringWriter jsonObjectWriter = new StringWriter();
         JacksonGenerator jacksonGenerator = new JacksonGenerator(
             this.writeContext.getSchema(),
             jsonObjectWriter,
             Util.DEFAULT_JSON_OPTIONS
         );
-        jacksonGenerator.write(record);
+        jacksonGenerator.write(row);
         jacksonGenerator.flush();
         return jsonObjectWriter.toString();
     }

@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
+class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
 
     /**
      * Log statements are included here so it's easy to see what classes get created based on different Spark API calls.

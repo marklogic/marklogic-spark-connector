@@ -29,9 +29,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
-public class WriteRowsTest extends AbstractWriteTest {
+class WriteRowsTest extends AbstractWriteTest {
 
-    private final static String TEMPORAL_COLLECTION = "temporal-collection";
+    private static final String TEMPORAL_COLLECTION = "temporal-collection";
 
     @Test
     void defaultBatchSizeAndThreadCount() {

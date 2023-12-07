@@ -10,7 +10,7 @@ import java.util.List;
 import static org.apache.spark.sql.functions.sum;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownGroupBySumTest extends AbstractPushDownTest {
+class PushDownGroupBySumTest extends AbstractPushDownTest {
 
     @Test
     void groupBySum() {

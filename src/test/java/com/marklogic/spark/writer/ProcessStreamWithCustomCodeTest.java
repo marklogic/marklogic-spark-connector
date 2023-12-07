@@ -10,7 +10,7 @@ import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ProcessStreamWithCustomCodeTest extends AbstractIntegrationTest {
+class ProcessStreamWithCustomCodeTest extends AbstractIntegrationTest {
 
     @Test
     void test(@TempDir Path tempDir) throws Exception {

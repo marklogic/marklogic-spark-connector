@@ -24,13 +24,13 @@ import org.apache.commons.lang3.StringUtils;
  *
  * This is duplicated from java-client-api and could be a good addition to marklogic-client-api.
  */
-public class MarkLogicVersion {
+class MarkLogicVersion {
 
     private int major;
     private Integer minor;
     private boolean nightly;
 
-    private final static String VERSION_WITH_PATCH_PATTERN = "^.*-(.+)\\..*";
+    private static final String VERSION_WITH_PATCH_PATTERN = "^.*-(.+)\\..*";
 
     public MarkLogicVersion(String version) {
         int major = Integer.parseInt(version.replaceAll("([^.]+)\\..*", "$1"));

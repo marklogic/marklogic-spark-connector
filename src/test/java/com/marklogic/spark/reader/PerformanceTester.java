@@ -27,9 +27,9 @@ import org.slf4j.LoggerFactory;
  * configuration in the quick-table project. Feel free to adjust the parameters in this for any ML app and TDE view to
  * do some manual ad hoc testing.
  */
-public class PerformanceTester {
+class PerformanceTester {
 
-    private final static Logger logger = LoggerFactory.getLogger(PerformanceTester.class);
+    private static final Logger logger = LoggerFactory.getLogger(PerformanceTester.class);
 
     public static void main(String[] args) {
         final int sparkConcurrentTaskCount = 16;

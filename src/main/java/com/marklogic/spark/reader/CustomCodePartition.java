@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 class CustomCodePartition implements InputPartition, Serializable {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private String partition;
 

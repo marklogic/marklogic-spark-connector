@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public class DefaultSource implements TableProvider {
 
-    private final static Logger logger = LoggerFactory.getLogger(DefaultSource.class);
+    private static final Logger logger = LoggerFactory.getLogger(DefaultSource.class);
 
     /**
      * If no schema is provided when reading data, Spark invokes this before getTable is invoked.
@@ -64,7 +64,7 @@ public class DefaultSource implements TableProvider {
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
             return SchemaInferrer.inferSchema(columnInfoHandle.get());
         } catch (Exception ex) {
-            throw new RuntimeException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 

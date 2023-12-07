@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
+class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
 
     @Test
     void javascriptBatchIds(@TempDir Path tempDir) {

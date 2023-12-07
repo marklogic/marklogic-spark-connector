@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  */
 class ParentFilter implements OpticFilter {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private String functionName;
     private List<OpticFilter> filters;

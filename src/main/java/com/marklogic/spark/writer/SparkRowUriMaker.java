@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 
 import java.util.regex.Matcher;
@@ -31,7 +32,7 @@ import java.util.regex.Pattern;
  */
 class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private String uriTemplate;
 
@@ -101,13 +102,13 @@ class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
         try {
             return objectMapper.readTree(json);
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(String.format("Unable to read JSON; cause: %s; JSON: %s", e.getMessage(), json));
+            throw new ConnectorException(String.format("Unable to read JSON; cause: %s; JSON: %s", e.getMessage(), json));
         }
     }
 
     private String getColumnValue(JsonNode row, String columnName) {
         if (!row.has(columnName)) {
-            throw new RuntimeException(
+            throw new ConnectorException(
                 String.format("Did not find column '%s' in row: %s; column is required by URI template: %s",
                     columnName, row, uriTemplate
                 ));
@@ -115,7 +116,7 @@ class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
 
         String text = row.get(columnName).asText();
         if (text.trim().length() == 0) {
-            throw new RuntimeException(
+            throw new ConnectorException(
                 String.format("Column '%s' is empty in row: %s; column is required by URI template: %s",
                     columnName, row, uriTemplate
                 ));

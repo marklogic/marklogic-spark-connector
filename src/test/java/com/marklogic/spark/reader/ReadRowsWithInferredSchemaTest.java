@@ -23,16 +23,15 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 // Getting some odd behavior with this class where if it runs in a suite after any of the "write" tests, then the
 // queries involving sparkTest.allTypes will not return any data. Have not figured out why that is. Running this test
 // first or by itself produces a successful test.
 @Order(1)
-public class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
+class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
 
+    @SuppressWarnings("java:S5961") // This method is easy to understand despite the number of assertions.
     @Test
     void allTypes() {
         if (isMarkLogic10()) {

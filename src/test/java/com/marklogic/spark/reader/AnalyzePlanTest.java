@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class AnalyzePlanTest extends AbstractIntegrationTest {
+class AnalyzePlanTest extends AbstractIntegrationTest {
 
     private RowManager rowManager;
 
@@ -70,7 +70,7 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
         PlanAnalysis planAnalysis = partitioner.analyzePlan(userPlan.getHandle(), partitionCount, batchSize);
 //        System.out.println("BUCKET COUNT: " + planAnalysis.getAllBuckets().size());
 //        System.out.println(planAnalysis.boundedPlan.toPrettyString());
-        assertEquals(partitionCount, planAnalysis.partitions.size());
+        assertEquals(partitionCount, planAnalysis.getPartitions().size());
         return planAnalysis;
     }
 
@@ -104,7 +104,7 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
     private void verifyAllFifteenAuthorsAreReturned(PlanAnalysis planAnalysis) {
         // Run the first bucket plan to get the serverTimestamp
         JacksonHandle initialHandle = new JacksonHandle();
-        runPlan(planAnalysis, planAnalysis.partitions.get(0).buckets.get(0), initialHandle);
+        runPlan(planAnalysis, planAnalysis.getPartitions().get(0).getBuckets().get(0), initialHandle);
         final long serverTimestamp = initialHandle.getServerTimestamp();
 //        System.out.println("ST: " + serverTimestamp);
         // Now run the plan on each bucket and keep track of the total number of rows returned.
@@ -113,8 +113,8 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
         List<Future<?>> futures = new ArrayList<>();
         AtomicInteger returnedRowCount = new AtomicInteger();
         List<String> names = new ArrayList<>();
-        for (PlanAnalysis.Partition partition : planAnalysis.partitions) {
-            for (PlanAnalysis.Bucket bucket : partition.buckets) {
+        for (PlanAnalysis.Partition partition : planAnalysis.getPartitions()) {
+            for (PlanAnalysis.Bucket bucket : partition.getBuckets()) {
                 List<String> bucketNames = new ArrayList<>();
                 futures.add(executor.submit(() -> {
                     JacksonHandle resultHandle = new JacksonHandle();
@@ -155,7 +155,7 @@ public class AnalyzePlanTest extends AbstractIntegrationTest {
 
     private JsonNode runPlan(PlanAnalysis plan, PlanAnalysis.Bucket bucket, JacksonHandle resultHandle) {
         return rowManager.resultDoc(
-            rowManager.newRawPlanDefinition(new JacksonHandle(plan.boundedPlan))
+            rowManager.newRawPlanDefinition(new JacksonHandle(plan.getBoundedPlan()))
                 .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
                 .bindParam("ML_UPPER_BOUND", bucket.upperBound),
             resultHandle

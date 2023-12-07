@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ProcessMultipleRowsWithCustomCodeTest extends AbstractWriteTest {
+class ProcessMultipleRowsWithCustomCodeTest extends AbstractWriteTest {
 
     @Test
     void multipleItems() {

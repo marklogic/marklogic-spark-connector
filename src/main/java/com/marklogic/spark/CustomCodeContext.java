@@ -27,7 +27,7 @@ public class CustomCodeContext extends ContextSupport {
             .filter(key -> key.startsWith(userDefinedVariablesPrefix))
             .collect(Collectors.toMap(
                 key -> key.substring(userDefinedVariablesPrefix.length()),
-                key -> properties.get(key)
+                properties::get
             ));
     }
 
@@ -45,12 +45,12 @@ public class CustomCodeContext extends ContextSupport {
         } else if (optionExists(callOptions.xqueryOptionName)) {
             call.xquery(properties.get(callOptions.xqueryOptionName));
         } else {
-            throw new RuntimeException("Must specify one of the following options: " + Arrays.asList(
+            throw new ConnectorException("Must specify one of the following options: " + Arrays.asList(
                 callOptions.invokeOptionName, callOptions.javascriptOptionName, callOptions.xqueryOptionName
             ));
         }
 
-        this.userDefinedVariables.forEach((key, value) -> call.addVariable(key, value));
+        this.userDefinedVariables.forEach(call::addVariable);
         return call;
     }
 

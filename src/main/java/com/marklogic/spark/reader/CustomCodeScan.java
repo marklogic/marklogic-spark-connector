@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.read.Batch;
@@ -30,7 +31,7 @@ class CustomCodeScan implements Scan {
                     .eval()
                     .forEach(result -> this.partitions.add(result.getString()));
             } catch (Exception ex) {
-                throw new RuntimeException("Unable to retrieve partitions", ex);
+                throw new ConnectorException("Unable to retrieve partitions", ex);
             } finally {
                 client.release();
             }

@@ -10,7 +10,7 @@ import java.util.List;
 import static org.apache.spark.sql.functions.min;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownGroupByMinTest extends AbstractPushDownTest {
+class PushDownGroupByMinTest extends AbstractPushDownTest {
 
     @Test
     void groupByMin() {

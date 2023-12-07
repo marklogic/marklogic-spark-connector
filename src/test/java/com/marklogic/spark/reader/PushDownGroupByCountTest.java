@@ -24,7 +24,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class PushDownGroupByCountTest extends AbstractPushDownTest {
+class PushDownGroupByCountTest extends AbstractPushDownTest {
 
     @Test
     void groupByWithNoQualifier() {

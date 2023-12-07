@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * In Spark, avg == mean, so no new code needed, just ensuring that "mean" behaves the same as "avg".
  */
-public class PushDownGroupByMeanTest extends AbstractPushDownTest {
+class PushDownGroupByMeanTest extends AbstractPushDownTest {
 
     @Test
     void groupByMean() {

@@ -26,7 +26,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReadWithJoinDocTest extends AbstractIntegrationTest {
+class ReadWithJoinDocTest extends AbstractIntegrationTest {
 
     @Test
     void jsonDocuments() throws Exception {

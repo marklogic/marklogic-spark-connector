@@ -37,7 +37,7 @@ import java.util.Set;
 
 public class MarkLogicTable implements SupportsRead, SupportsWrite {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
+    private static final Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
 
     private static Set<TableCapability> capabilities;
 
@@ -99,7 +99,10 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
         return "MarkLogicTable()";
     }
 
-    // This is marked as deprecated in the Table interface.
+    /**
+     * @deprecated Marked as deprecated in the Table interface.
+     */
+    @SuppressWarnings("java:S1133")
     @Deprecated
     @Override
     public StructType schema() {

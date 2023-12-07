@@ -36,7 +36,7 @@ import java.util.List;
  */
 class OpticMicroBatchStream implements MicroBatchStream {
 
-    private final static Logger logger = LoggerFactory.getLogger(OpticMicroBatchStream.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticMicroBatchStream.class);
 
     private ReadContext readContext;
     private List<PlanAnalysis.Bucket> allBuckets;

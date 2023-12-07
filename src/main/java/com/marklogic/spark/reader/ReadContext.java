@@ -26,6 +26,7 @@ import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.OpticFilter;
@@ -60,15 +61,15 @@ import java.util.stream.Stream;
  */
 public class ReadContext extends ContextSupport {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
-    private final static Logger logger = LoggerFactory.getLogger(ReadContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(ReadContext.class);
 
     // The ideal batch size depends highly on what a user chooses to do after a load() - and of course the user may
     // choose to perform multiple operations on the dataset, each of which may benefit from a fairly different batch
     // size. 100k has been chosen as the default batch size to strike a reasonable balance for operations that do need
     // to collect all the rows, such as writing the dataset to another data source.
-    private final static long DEFAULT_BATCH_SIZE = 100000;
+    private static final long DEFAULT_BATCH_SIZE = 100000;
 
     private PlanAnalysis planAnalysis;
     private StructType schema;
@@ -100,7 +101,7 @@ public class ReadContext extends ContextSupport {
         if (this.planAnalysis != null) {
             if (logger.isInfoEnabled()) {
                 logger.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
-                    this.planAnalysis.partitions.size(), this.planAnalysis.getAllBuckets().size());
+                    this.planAnalysis.getPartitions().size(), this.planAnalysis.getAllBuckets().size());
             }
             // Calling this to establish a server timestamp.
             StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
@@ -116,7 +117,7 @@ public class ReadContext extends ContextSupport {
         if (ex.getMessage().contains(indicatorOfNoRowsExisting)) {
             logger.info("No rows were found, so will not create any partitions.");
         } else {
-            throw new RuntimeException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 
@@ -129,7 +130,7 @@ public class ReadContext extends ContextSupport {
         // server timestamp being captured. But if it were somehow to occur, we should error out as the row-ID-based
         // partitions are not reliable without a consistent server timestamp.
         if (serverTimestamp < 1) {
-            throw new RuntimeException(String.format("Unable to read rows; invalid server timestamp: %d", serverTimestamp));
+            throw new ConnectorException(String.format("Unable to read rows; invalid server timestamp: %d", serverTimestamp));
         }
 
         PlanBuilder.Plan plan = buildPlanForBucket(rowManager, bucket);
@@ -145,7 +146,7 @@ public class ReadContext extends ContextSupport {
     }
 
     private PlanBuilder.Plan buildPlanForBucket(RowManager rowManager, PlanAnalysis.Bucket bucket) {
-        PlanBuilder.Plan plan = rowManager.newRawPlanDefinition(new JacksonHandle(planAnalysis.boundedPlan))
+        PlanBuilder.Plan plan = rowManager.newRawPlanDefinition(new JacksonHandle(planAnalysis.getBoundedPlan()))
             .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
             .bindParam("ML_UPPER_BOUND", bucket.upperBound);
 
@@ -174,7 +175,7 @@ public class ReadContext extends ContextSupport {
 
     void pushDownAggregation(Aggregation aggregation) {
         final List<String> groupByColumnNames = Stream.of(aggregation.groupByExpressions())
-            .map(groupBy -> PlanUtil.expressionToColumnName(groupBy))
+            .map(PlanUtil::expressionToColumnName)
             .collect(Collectors.toList());
 
         addOperatorToPlan(PlanUtil.buildGroupByAggregation(groupByColumnNames, aggregation));
@@ -208,10 +209,10 @@ public class ReadContext extends ContextSupport {
         if (!getProperties().containsKey(Options.READ_BATCH_SIZE)) {
             logger.info("Batch size was not overridden, so modifying each partition to make a single request to improve " +
                 "performance of pushed down aggregation.");
-            List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.partitions.stream()
+            List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())
                 .collect(Collectors.toList());
-            this.planAnalysis = new PlanAnalysis(planAnalysis.boundedPlan, mergedPartitions);
+            this.planAnalysis = new PlanAnalysis(planAnalysis.getBoundedPlan(), mergedPartitions);
         }
 
         this.schema = newSchema;
@@ -266,7 +267,7 @@ public class ReadContext extends ContextSupport {
         if (logger.isDebugEnabled()) {
             logger.debug("Adding operator to plan: {}", operator);
         }
-        ArrayNode operators = (ArrayNode) planAnalysis.boundedPlan.get("$optic").get("args");
+        ArrayNode operators = (ArrayNode) planAnalysis.getBoundedPlan().get("$optic").get("args");
         operators.insert(operators.size() - 1, operator);
     }
 

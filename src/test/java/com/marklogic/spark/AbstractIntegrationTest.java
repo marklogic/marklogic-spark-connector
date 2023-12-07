@@ -38,13 +38,13 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * <p>
  * Use this as the base class for all tests that need to connect to MarkLogic.
  */
-public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
+public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
     // User credentials for all calls to MarkLogic by the Spark connector
-    protected final static String TEST_USERNAME = "spark-test-user";
-    protected final static String TEST_PASSWORD = "spark";
-    protected final static String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
-    protected final static String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
+    protected static final String TEST_USERNAME = "spark-test-user";
+    protected static final String TEST_PASSWORD = "spark";
+    protected static final String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
+    protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
 
     private static MarkLogicVersion markLogicVersion;
 

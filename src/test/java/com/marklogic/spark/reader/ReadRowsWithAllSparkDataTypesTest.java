@@ -38,7 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>
  * This test does not cover int/string, as those are covered by ReadRowsTest.
  */
-public class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
+class ReadRowsWithAllSparkDataTypesTest extends AbstractIntegrationTest {
 
     private TimeZone defaultTimeZone;
 

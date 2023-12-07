@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 
 class OpticBatch implements Batch {
 
-    private final static Logger logger = LoggerFactory.getLogger(OpticBatch.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticBatch.class);
 
     private final ReadContext readContext;
 

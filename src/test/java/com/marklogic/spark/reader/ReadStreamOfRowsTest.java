@@ -17,6 +17,7 @@ package com.marklogic.spark.reader;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.streaming.DataStreamReader;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
+class ReadStreamOfRowsTest extends AbstractIntegrationTest {
 
     @Test
     void readAndWriteMicroBatches(@TempDir Path tempDir) throws Exception {
@@ -53,7 +54,7 @@ public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void readAndWriteStreamToMemory(@TempDir Path tempDir) throws Exception {
+    void readAndWriteStreamToMemory() throws Exception {
         AtomicInteger microBatchCounter = new AtomicInteger();
         AtomicLong rowCount = new AtomicLong();
 
@@ -82,15 +83,12 @@ public class ReadStreamOfRowsTest extends AbstractIntegrationTest {
 
     @Test
     void readWithNoQuery() {
-        IllegalArgumentException ex = assertThrows(
-            IllegalArgumentException.class,
-            () -> newSparkSession()
-                .readStream()
-                .format(CONNECTOR_IDENTIFIER)
-                .option(Options.CLIENT_URI, makeClientUri())
-                .load()
-        );
+        DataStreamReader reader = newSparkSession()
+            .readStream()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri());
 
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.load());
         assertEquals("No Optic query found; must define spark.marklogic.read.opticQuery", ex.getMessage());
     }
 }

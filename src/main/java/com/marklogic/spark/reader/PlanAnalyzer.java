@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
@@ -42,7 +43,7 @@ class PlanAnalyzer {
 
         long rowCount = viewInfo.get("rowCount").asLong(0);
         List<PlanAnalysis.Partition> partitions = calculatePartitions(rowCount, userPartitionCount, userBatchSize);
-        return new PlanAnalysis(viewInfo.get("modifiedPlan"), partitions);
+        return new PlanAnalysis((ObjectNode) viewInfo.get("modifiedPlan"), partitions);
     }
 
     private List<PlanAnalysis.Partition> calculatePartitions(long rowCount, long userPartitionCount, long userBatchSize) {

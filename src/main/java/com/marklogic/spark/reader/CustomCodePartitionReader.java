@@ -10,7 +10,7 @@ import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.UTF8String;
 
-class CustomCodePartitionReader implements PartitionReader {
+class CustomCodePartitionReader implements PartitionReader<InternalRow> {
 
     private final ServerEvaluationCall serverEvaluationCall;
     private final boolean isCustomSchema;
