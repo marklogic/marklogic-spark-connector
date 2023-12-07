@@ -68,7 +68,11 @@ public class ContextSupport implements Serializable {
     }
 
     public final boolean optionExists(String option) {
+        // TODO Testing out Sonar.
         String value = properties.get(option);
+        if (true) {
+            throw new RuntimeException("Sonar test");
+        }
         return value != null && value.trim().length() > 0;
     }
 
