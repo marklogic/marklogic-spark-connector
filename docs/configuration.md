@@ -34,6 +34,10 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.saml.token | Required for `saml` authentication. |
 | spark.marklogic.client.sslEnabled | If 'true', an SSL connection is created using the JVM's default SSL context.
 | spark.marklogic.client.sslHostnameVerifier | Either `any`, `common`, or `strict`; see the [MarkLogic Java Client documentation](https://docs.marklogic.com/javadoc/client/com/marklogic/client/DatabaseClientFactory.SSLHostnameVerifier.html) for more information on these choices. |
+| spark.marklogic.client.ssl.keystore.path | File path to a Java keystore for 2-way SSL; since 2.1.0. |
+| spark.marklogic.client.ssl.keystore.password | Optional password for a Java keystore for 2-way SSL; since 2.1.0. |
+| spark.marklogic.client.ssl.keystore.type | Java keystore type for 2-way SSL; defaults to "JKS"; since 2.1.0. |
+| spark.marklogic.client.ssl.keystore.algorithm | Java keystore algorithm for 2-way SSL; defaults to "SunX509"; since 2.1.0. |
 | spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
 
 ### Connecting with a client URI
@@ -67,10 +71,15 @@ triplet. For example, a password of `sp@r:k` must appear in the `spark.marklogic
 
 ### Configuring SSL 
 
-If the MarkLogic app server that the connector will connect to requires SSL, the `spark.marklogic.client.sslEnabled` 
-option must be set to 'true'. This causes the associated JVM's certificate store - typically the 
-`$JAVA_HOME/jre/lib/security/cacerts` file - to be used for establishing an SSL connection. The certificate store 
-should contain the public certificate associated with the SSL certificate template used by the MarkLogic app server. 
+If the MarkLogic app server that the connector will connect to requires SSL but does not require that the client
+present a certificate, set the `spark.marklogic.client.sslEnabled` option to 'true'. This causes the associated JVM's certificate store - typically the `$JAVA_HOME/jre/lib/security/cacerts` file - to be used for establishing an SSL connection. The certificate store should contain the public certificate associated with the SSL certificate template 
+used by the MarkLogic app server. 
+
+Starting in 2.1.0, if the MarkLogic app server requires the client to present a certificate, set the 
+`spark.marklogic.client.ssl.keystore.path` option to point to a Java keystore containing the client certificate. 
+Set `spark.marklogic.client.ssl.keystore.password` if the keystore requires a password. The keystore will also be used
+as the truststore so it must also contain the public certificate associated with the SSL certificate template used
+by the MarkLogic app server. A future release of the connector will allow for the truststore to be a separate file.
 
 If you receive an error containing a message of "PKIX path building failed", the most likely issue is that your JVM's
 certificate store does not contain the public certificate associated with the MarkLogic app server, or your Spark
