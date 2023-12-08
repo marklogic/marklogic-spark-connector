@@ -16,11 +16,13 @@
 
 package com.marklogic.spark.reader;
 
+import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -28,6 +30,47 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReadRowsTest extends AbstractIntegrationTest {
+
+    private static final String XML_DIRECTORY = "/xml-split-test/";
+    private static final String XML_COLLECTION = "xml-split-test";
+    private static final String XML_SUFFIX = ".xml";
+    @Test
+    void readXmlTest() {
+        Dataset<Row> dataset = newSparkSession()
+            .read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_XML_FILE, "src/test/resources/employee.xml")
+            .load();
+
+        assertNotNull(dataset);
+        List<Row> rows = dataset.collectAsList();
+        assertEquals(3, rows.size());
+
+        dataset
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .mode(SaveMode.Append)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, XML_COLLECTION)
+            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_URI_PREFIX, XML_DIRECTORY)
+            .option(Options.WRITE_URI_SUFFIX, XML_SUFFIX)
+            .save();
+
+        verifyThreeDocsWereWritten();
+    }
+
+    private void verifyThreeDocsWereWritten() {
+        final int expectedCollectionSize = 3;
+        String uri = getUrisInCollection(XML_COLLECTION, expectedCollectionSize).get(0);
+        assertTrue(uri.startsWith(XML_DIRECTORY), "URI should start with '" + XML_DIRECTORY + "' due to uriPrefix option: " + uri);
+        assertTrue(uri.endsWith(".xml"), "URI should end with '.xml' due to uriSuffix option: " + uri);
+
+        PermissionsTester perms = readDocumentPermissions(uri);
+        perms.assertReadPermissionExists("spark-user-role");
+        perms.assertUpdatePermissionExists("spark-user-role");
+    }
 
     @Test
     void validPartitionCountAndBatchSize() {

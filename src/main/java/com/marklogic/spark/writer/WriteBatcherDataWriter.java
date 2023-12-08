@@ -78,8 +78,13 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void write(InternalRow row) throws IOException {
         throwWriteFailureIfExists();
 
-        String json = convertRowToJSONString(row);
-        StringHandle content = new StringHandle(json).withFormat(Format.JSON);
+        StringHandle content;
+        if ("XML".equals(this.writeContext.getSchema().fieldNames()[0])) {
+            content = new StringHandle(row.getString(0)).withFormat(Format.XML);
+        } else {
+            String json = convertRowToJSONString(row);
+            content = new StringHandle(json).withFormat(Format.JSON);
+        }
         this.writeBatcher.add(this.docBuilder.build(content));
         this.docCount++;
     }

@@ -53,6 +53,10 @@ public class DefaultSource implements TableProvider {
             return new StructType().add("URI", DataTypes.StringType);
         }
 
+        if (isWritingFromXmlFile(caseSensitiveOptions)) {
+            return new StructType().add("XML", DataTypes.StringType);
+        }
+
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
             throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
@@ -75,6 +79,9 @@ public class DefaultSource implements TableProvider {
                 logger.debug("Creating new table for reading");
             }
             return new MarkLogicTable(schema, properties);
+        }
+        if (isWritingFromXmlFile(properties)) {
+            return new XmlTable(schema, properties);
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Creating new table for writing");
@@ -99,5 +106,9 @@ public class DefaultSource implements TableProvider {
 
     private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
         return Util.hasOption(properties, Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT);
+    }
+
+    private boolean isWritingFromXmlFile(Map<String, String> properties) {
+        return Util.hasOption(properties, Options.READ_XML_FILE);
     }
 }

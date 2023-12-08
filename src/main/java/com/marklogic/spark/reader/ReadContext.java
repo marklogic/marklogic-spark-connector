@@ -29,6 +29,7 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.expressions.Expression;
@@ -79,6 +80,9 @@ public class ReadContext extends ContextSupport {
     public ReadContext(Map<String, String> properties, StructType schema) {
         super(properties);
         this.schema = schema;
+        if (Util.hasOption(properties, Options.READ_XML_FILE)) {
+            return;
+        }
 
         final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS,
             SparkSession.active().sparkContext().defaultMinPartitions(), 1);
