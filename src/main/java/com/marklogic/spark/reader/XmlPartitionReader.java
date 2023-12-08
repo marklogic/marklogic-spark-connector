@@ -19,6 +19,7 @@ package com.marklogic.spark.reader;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -92,16 +93,17 @@ class XmlPartitionReader implements PartitionReader<InternalRow> {
             nextBucketIndex++;
             long start = System.currentTimeMillis();
 
-//            this.rowIterator = Files.readAllLines(Paths.get(readContext.getProperties().get("spark.marklogic.read.xmlFile"))).iterator();
+            Map<String, String> readProperties = readContext.getProperties();
             List<String> elementStrings = new ArrayList<>();
             XMLInputFactory xmlInputFactory = XMLInputFactory.newInstance();
             try {
-                XMLEventReader reader = xmlInputFactory.createXMLEventReader(new FileInputStream(readContext.getProperties().get("spark.marklogic.read.xmlFile")));
+                XMLEventReader reader = xmlInputFactory.createXMLEventReader(new FileInputStream(readProperties.get(Options.READ_XML_FILE)));
+                String splitElementName = readProperties.get(Options.READ_XML_SPLIT);
                 while (reader.hasNext()) {
                     XMLEvent nextEvent = reader.nextEvent();
                     if (nextEvent.isStartElement()) {
                         StartElement startElement = nextEvent.asStartElement();
-                        if ("Employee".equals(startElement.getName().getLocalPart())) {
+                        if (splitElementName.equals(startElement.getName().getLocalPart())) {
                             elementStrings.add(writeToString(reader, nextEvent));
                         }
                     }

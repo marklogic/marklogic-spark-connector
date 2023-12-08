@@ -33,7 +33,8 @@ public abstract class Options {
     public static final String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     public static final String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
     public static final String READ_PUSH_DOWN_AGGREGATES = "spark.marklogic.read.pushDownAggregates";
-    public static final String READ_XML_FILE = "spark.marklogic.read.xmlFile";
+    public static final String READ_XML_FILE = "spark.marklogic.read.xml.file";
+    public static final String READ_XML_SPLIT = "spark.marklogic.read.xml.split";
 
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";

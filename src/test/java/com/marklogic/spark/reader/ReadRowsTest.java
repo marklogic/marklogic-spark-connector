@@ -41,6 +41,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_XML_FILE, "src/test/resources/employee.xml")
+            .option(Options.READ_XML_SPLIT, "Employee")
             .load();
 
         assertNotNull(dataset);
