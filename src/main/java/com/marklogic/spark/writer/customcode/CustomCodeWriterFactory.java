@@ -1,16 +1,16 @@
-package com.marklogic.spark.writer;
+package com.marklogic.spark.writer.customcode;
 
-import com.marklogic.spark.CustomCodeContext;
+import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
 
-class CustomCodeWriterFactory implements DataWriterFactory, StreamingDataWriterFactory {
+public class CustomCodeWriterFactory implements DataWriterFactory, StreamingDataWriterFactory {
 
     private CustomCodeContext customCodeContext;
 
-    CustomCodeWriterFactory(CustomCodeContext customCodeContext) {
+    public CustomCodeWriterFactory(CustomCodeContext customCodeContext) {
         this.customCodeContext = customCodeContext;
     }
 

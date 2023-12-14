@@ -1,8 +1,9 @@
-package com.marklogic.spark.writer;
+package com.marklogic.spark.writer.customcode;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.AbstractWriteTest;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;

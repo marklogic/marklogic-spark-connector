@@ -1,6 +1,5 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
-import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;

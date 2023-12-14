@@ -1,10 +1,10 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.client.eval.ServerEvaluationCall;
-import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;

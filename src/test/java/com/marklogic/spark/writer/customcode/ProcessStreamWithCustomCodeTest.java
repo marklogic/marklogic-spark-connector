@@ -1,4 +1,4 @@
-package com.marklogic.spark.writer;
+package com.marklogic.spark.writer.customcode;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.AbstractIntegrationTest;

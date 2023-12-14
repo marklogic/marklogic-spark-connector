@@ -20,7 +20,7 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.SaveMode;
 
-abstract class AbstractWriteTest extends AbstractIntegrationTest {
+public abstract class AbstractWriteTest extends AbstractIntegrationTest {
 
     protected static final String COLLECTION = "write-test";
 
