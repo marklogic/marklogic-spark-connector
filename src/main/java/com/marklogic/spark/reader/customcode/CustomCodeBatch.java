@@ -1,6 +1,5 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
-import com.marklogic.spark.CustomCodeContext;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;

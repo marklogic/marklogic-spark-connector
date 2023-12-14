@@ -1,8 +1,7 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;

@@ -1,4 +1,4 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.spark.AbstractIntegrationTest;

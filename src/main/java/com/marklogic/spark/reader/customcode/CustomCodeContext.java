@@ -1,7 +1,9 @@
-package com.marklogic.spark;
+package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.ContextSupport;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 

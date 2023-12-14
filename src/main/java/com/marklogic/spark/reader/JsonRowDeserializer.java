@@ -27,7 +27,7 @@ import java.util.ArrayList;
  * That's exactly what we want, so we don't need to have any knowledge of how to convert to Spark's set of data
  * types.
  */
-class JsonRowDeserializer {
+public class JsonRowDeserializer {
 
     private final JacksonParser jacksonParser;
     private final Function2<JsonFactory, String, JsonParser> jsonParserCreator;
@@ -35,7 +35,7 @@ class JsonRowDeserializer {
 
     // Ignoring warnings about JFunction.func until an alternative can be found.
     @SuppressWarnings("java:S1874")
-    JsonRowDeserializer(StructType schema) {
+    public JsonRowDeserializer(StructType schema) {
         this.jacksonParser = newJacksonParser(schema);
 
         // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
@@ -46,7 +46,7 @@ class JsonRowDeserializer {
         this.utf8StringCreator = JFunction.func(UTF8String::fromString);
     }
 
-    InternalRow deserializeJson(String json) {
+    public InternalRow deserializeJson(String json) {
         return this.jacksonParser.parse(json, this.jsonParserCreator, this.utf8StringCreator).head();
     }
 

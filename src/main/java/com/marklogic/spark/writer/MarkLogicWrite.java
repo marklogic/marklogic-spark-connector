@@ -15,8 +15,9 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.spark.CustomCodeContext;
+import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;

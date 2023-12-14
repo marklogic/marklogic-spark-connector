@@ -1,10 +1,10 @@
-package com.marklogic.spark.reader;
+package com.marklogic.spark.reader.customcode;
 
 import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
 
-class CustomCodePartition implements InputPartition, Serializable {
+public class CustomCodePartition implements InputPartition, Serializable {
 
     static final long serialVersionUID = 1;
 
