@@ -2,7 +2,7 @@
 
 from pyspark.sql import SparkSession
 
-SparkSession.builder.getOrCreate().read.format("com.marklogic.spark") \
+SparkSession.builder.getOrCreate().read.format("marklogic") \
   .option("spark.marklogic.client.uri", "spark-test-user:spark@localhost:8016") \
   .option("spark.marklogic.read.opticQuery", "op.fromView('Medical', 'Authors', '')") \
   .load() \

@@ -45,7 +45,7 @@ class PerformanceTester {
             .master(String.format("local[%d]", sparkConcurrentTaskCount))
             .getOrCreate()
             .read()
-            .format("com.marklogic.spark")
+            .format("marklogic")
             .option("spark.marklogic.client.host", host)
             .option("spark.marklogic.client.port", 8009)
             .option("spark.marklogic.client.username", "admin")

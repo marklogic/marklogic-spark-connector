@@ -13,6 +13,16 @@ options. Each set of options is defined below.
 - TOC
 {:toc}
 
+## Referencing the connector
+
+Starting with the 2.2.0 release, you can reference the MarkLogic connector via the short name "marklogic":
+
+    session.read.format("marklogic")
+
+Prior to 2.2.0, you must use the full name:
+
+    session.read.format("com.marklogic.spark")
+
 ## Connection options
 
 These options define how the connector connects and authenticates with MarkLogic.
@@ -55,7 +65,7 @@ that the connector will connect to via the `port` value.
 Using this convenience can provide a much more succinct set of options - for example:
 
 ```
-df = spark.read.format("com.marklogic.spark")\
+df = spark.read.format("marklogic")\
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003")\
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')")\
     .load()

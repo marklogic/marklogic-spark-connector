@@ -23,6 +23,7 @@ import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
+import org.apache.spark.sql.sources.DataSourceRegister;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
@@ -35,9 +36,15 @@ import java.util.Map;
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
  * user specifies a package name and the class name is assumed to be "DefaultSource".
  */
-public class DefaultSource implements TableProvider {
+public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultSource.class);
+
+    @Override
+    public String shortName() {
+        // Allows for "marklogic" to be used instead of "com.marklogic.spark".
+        return "marklogic";
+    }
 
     /**
      * If no schema is provided when reading data, Spark invokes this before getTable is invoked.

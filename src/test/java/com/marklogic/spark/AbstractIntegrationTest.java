@@ -43,7 +43,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     // User credentials for all calls to MarkLogic by the Spark connector
     protected static final String TEST_USERNAME = "spark-test-user";
     protected static final String TEST_PASSWORD = "spark";
-    protected static final String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
+    protected static final String CONNECTOR_IDENTIFIER = "marklogic";
     protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
 
     private static MarkLogicVersion markLogicVersion;
