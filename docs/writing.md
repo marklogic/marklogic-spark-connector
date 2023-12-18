@@ -19,7 +19,7 @@ As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md)
 how the connector should connect to MarkLogic, the Spark mode to use, and zero or more other options:
 
 ```
-df.write.format("com.marklogic.spark") \
+df.write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.collections", "write-test") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
@@ -130,7 +130,7 @@ spark.readStream \
     .option("header", True) \
     .load("examples/getting-started/data/csv-files") \
     .writeStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("checkpointLocation", tempfile.mkdtemp()) \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.uriPrefix", "/streaming-example/") \
@@ -200,11 +200,11 @@ find the logs in the `docker/marklogic/logs/8003_ErrorLog.txt` file in your proj
 in the MarkLogic Admin web application):
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .mode("append") \
@@ -214,11 +214,11 @@ spark.read.format("com.marklogic.spark") \
 Custom code can be written in XQuery and specified via `spark.marklogic.write.xquery`:
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ('limit=10'), cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.xquery", "declare variable $URI external; xdmp:log('Received URI:' || $URI)") \
     .mode("append") \
@@ -230,11 +230,11 @@ below, the module - which was deployed from the `src/main/ml-modules` directory 
 declare an external variable named "URI":
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.invoke", "/process-uri.sjs") \
     .mode("append") \
@@ -288,11 +288,11 @@ your custom code declares an external variable with a different name, you can co
 `spark.marklogic.write.externalVariableName`:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
+df = spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received value: ' + MY_VAR);") \
     .option("spark.marklogic.write.externalVariableName", "MY_VAR") \
@@ -310,11 +310,11 @@ Spark capturing all option values as strings.
 The following demonstrates two custom external variables being configured and used by custom JavaScript code:
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.vars.var1", "value1") \
     .option("spark.marklogic.write.vars.var2", "value2") \
@@ -350,13 +350,13 @@ code:
 ```
 import tempfile
 stream = spark.readStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'), null, [PARTITION]);") \
     .load() \
     .writeStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .option("checkpointLocation", tempfile.mkdtemp()) \

@@ -133,7 +133,7 @@ The below command is an example of loading data from the test application deploy
 this page. 
 
 ```
-df = spark.read.format("com.marklogic.spark")\
+df = spark.read.format("marklogic")\
     .option("spark.marklogic.client.uri", "spark-test-user:spark@localhost:8016")\
     .option("spark.marklogic.read.opticQuery", "op.fromView('Medical', 'Authors')")\
     .option("spark.marklogic.read.numPartitions", 8)\

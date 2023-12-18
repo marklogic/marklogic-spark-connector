@@ -10,7 +10,7 @@ public class TestProgram {
 
     public static void main(String[] args) {
         SparkSession.builder().getOrCreate().read()
-            .format("com.marklogic.spark")
+            .format("marklogic")
             .option(Options.CLIENT_URI, "spark-test-user:spark@localhost:8016")
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')")
             .load()
