@@ -63,7 +63,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "read-stream")
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/read-stream/{partition}.json")
             .option(Options.WRITE_URI_PREFIX, "/")
 
@@ -108,7 +108,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "read-stream")
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/read-stream/{partition}.json")
             .option(Options.WRITE_URI_PREFIX, "/")
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
@@ -137,7 +137,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "single-partition-test")
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
             .start()
             .processAllAvailable();

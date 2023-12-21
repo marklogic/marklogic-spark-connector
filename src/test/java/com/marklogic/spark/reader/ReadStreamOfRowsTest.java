@@ -44,7 +44,7 @@ class ReadStreamOfRowsTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "output")
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_PREFIX, "/output/")
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
             .start()

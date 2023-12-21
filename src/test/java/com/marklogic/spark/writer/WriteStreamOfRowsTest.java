@@ -81,7 +81,7 @@ class WriteStreamOfRowsTest extends AbstractWriteTest {
             .format(CONNECTOR_IDENTIFIER)
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update");
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS);
     }
 
 }
