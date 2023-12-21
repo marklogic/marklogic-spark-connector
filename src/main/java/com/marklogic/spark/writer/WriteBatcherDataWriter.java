@@ -130,6 +130,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private DocBuilder.DocumentInputs makeDocumentInputsForFileRow(InternalRow row) {
         String initialUri = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle content = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
+        forceFormatIfNecessary(content);
         ObjectNode columnValues = null;
         if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
             columnValues = objectMapper.createObjectNode();
@@ -142,6 +143,18 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             // Not including content as it's a byte array that is not expected to be helpful for making a URI.
         }
         return new DocBuilder.DocumentInputs(initialUri, content, columnValues);
+    }
+
+    private void forceFormatIfNecessary(BytesHandle content) {
+        if (writeContext.hasOption(Options.WRITE_FILES_DOCUMENT_TYPE)) {
+            String value = writeContext.getProperties().get(Options.WRITE_FILES_DOCUMENT_TYPE);
+            try {
+                content.withFormat(Format.valueOf(value.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                String message = "Invalid value for option %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                throw new ConnectorException(String.format(message, Options.WRITE_FILES_DOCUMENT_TYPE, value));
+            }
+        }
     }
 
     private String convertRowToJSONString(InternalRow row) {

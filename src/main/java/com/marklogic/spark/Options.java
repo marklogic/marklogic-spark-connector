@@ -49,12 +49,15 @@ public abstract class Options {
     public static final String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
     public static final String WRITE_TEMPORAL_COLLECTION = "spark.marklogic.write.temporalCollection";
     public static final String WRITE_URI_PREFIX = "spark.marklogic.write.uriPrefix";
+    public static final String WRITE_URI_REPLACE = "spark.marklogic.write.uriReplace";
     public static final String WRITE_URI_SUFFIX = "spark.marklogic.write.uriSuffix";
     public static final String WRITE_URI_TEMPLATE = "spark.marklogic.write.uriTemplate";
 
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
+
+    public static final String WRITE_FILES_DOCUMENT_TYPE = "spark.marklogic.write.files.documentType";
 
     private Options() {
     }

@@ -43,8 +43,15 @@ To support the common use case of reading files and ingesting their contents as-
 special support for rows with a schema matching that of 
 [Spark's binaryFile data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html). If the incoming
 rows adhere to the `binaryFile` schema, the connector will not serialize the row into JSON. Instead, the connector will 
-use the `path` column value as an initial URI for the document and the `content` column value as the document contents. 
+use the `path` column value as an initial URI for the document and the `content` column value as the document contents.
+
+The URI can then be further adjusted as described in the "Controlling document URIs"
 The URI can then be adjusted as described in the "Controlling documents URIs" section below.
+
+This feature allows for ingesting files of any type. The MarkLogic REST API will
+[determine the document type](https://docs.marklogic.com/guide/rest-dev/intro#id_53367) based on the URI extension, if
+MarkLogic recognizes it. If MarkLogic does not recognize the extension, and you wish to force a document type on each of
+the documents, you can set the `spark.marklogic.write.files.documentType` option to one of `XML`, `JSON`, or `TEXT`.
 
 ### Controlling document content
 
@@ -83,9 +90,18 @@ via `spark.marklogic.write.uriSuffix`. For example, the following options would 
     .option("spark.marklogic.write.uriPrefix", "/employee/")
     .option("spark.marklogic.write.uriSuffix", "/record.json")
 
+If you are ingesting file rows, which have an initial URI defined by the `path` column, you can also use the
+`spark.marklogic.write.uriReplace` option to perform one or more replacements on the initial URI. The value of 
+this option must be a comma-delimited list of regular expression and replacement string pairs, with each replacement 
+string enclosed in single quotes. For example, the following approach shows a common technique for removing most of 
+the file path:
+
+    .option("spark.marklogic.write.uriReplace", ".*/some/directory,''")
+
 URIs can also be constructed based on column values for a given row. The `spark.marklogic.write.uriTemplate` option 
 allows for column names to be referenced via braces when constructing a URI. If this option is used, the 
-above options for setting a prefix and suffix will be ignored, as the template can be used to define the entire URI. 
+above options for setting a prefix, suffix, and replacement expression will be ignored, as the template defines the 
+entire URI. 
 
 For example, consider a Spark DataFrame with a set of columns including `organization` and `employee_id`. 
 The following template would construct URIs based on those two columns:

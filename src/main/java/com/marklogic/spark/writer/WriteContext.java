@@ -87,7 +87,7 @@ public class WriteContext extends ContextSupport {
         String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
         if (uriTemplate != null && uriTemplate.trim().length() > 0) {
             factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
-            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX).forEach(option -> {
+            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
                 String value = getProperties().get(option);
                 if (value != null && value.trim().length() > 0) {
                     logger.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
@@ -100,7 +100,10 @@ public class WriteContext extends ContextSupport {
             } else if (!isUsingFileSchema()) {
                 uriSuffix = ".json";
             }
-            factory.withSimpleUriStrategy(getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix);
+            factory.withUriMaker(new StandardUriMaker(
+                getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix,
+                getProperties().get(Options.WRITE_URI_REPLACE)
+            ));
         }
 
         return factory.newDocBuilder();
