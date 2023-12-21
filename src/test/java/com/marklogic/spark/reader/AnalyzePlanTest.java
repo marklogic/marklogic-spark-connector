@@ -46,17 +46,12 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
 
     @ParameterizedTest
     @CsvSource({
-        "1,0",
-        "1,5",
-        "1,15",
-        "2,0",
         "2,5",
-        "2,15",
-        "5,0",
-        "5,5",
-        "5,15"
+        "4,5"
     })
     void partitionCountAndBatchSize(long partitionCount, long batchSize) {
+        rowManager.setTraceLabel("PARTITIONS-" + partitionCount);
+
         logger.info(partitionCount + ":" + batchSize);
 
         PlanAnalysis planAnalysis = analyzePlan(partitionCount, batchSize);

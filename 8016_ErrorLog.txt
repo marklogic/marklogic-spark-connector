@@ -1,0 +1,911 @@
+2023-12-21 20:39:50.591 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-2 sessionKey=15412120375580238076 optimize=off final plan=
+2023-12-21 20:39:50.591 Info:+<plan:plan trace="PARTITIONS-2" label="optimize=off final plan" session-key="15412120375580238076" generated-at="2023-12-21T20:39:50.590395Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.591 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.591 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.591 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.591 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:50.591 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.591 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.591 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.591 Info:+      </plan:column>
+2023-12-21 20:39:50.591 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.591 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.591 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.591 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.591 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.591 Info:+                  <plan:literal>
+2023-12-21 20:39:50.591 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.591 Info:+                  </plan:literal>
+2023-12-21 20:39:50.591 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.591 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.591 Info:+              </plan:cast>
+2023-12-21 20:39:50.591 Info:+            </plan:cast>
+2023-12-21 20:39:50.591 Info:+          </plan:cast>
+2023-12-21 20:39:50.591 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.591 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.591 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.591 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.591 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.591 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.591 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.591 Info:+                  <plan:literal>
+2023-12-21 20:39:50.591 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.591 Info:+                  </plan:literal>
+2023-12-21 20:39:50.591 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.591 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.591 Info:+              </plan:cast>
+2023-12-21 20:39:50.591 Info:+            </plan:cast>
+2023-12-21 20:39:50.591 Info:+          </plan:cast>
+2023-12-21 20:39:50.591 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.591 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.591 Info:+    </plan:template-view>
+2023-12-21 20:39:50.591 Info:+  </plan:project>
+2023-12-21 20:39:50.591 Info:+</plan:plan>
+2023-12-21 20:39:50.593 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-2 sessionKey=15412120375580238076 id=15507005355659913600 dplan=
+2023-12-21 20:39:50.593 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.593 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:50.593 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:50.593 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.593 Info:+    </plan:column>
+2023-12-21 20:39:50.593 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:50.593 Info:+      <plan:range>
+2023-12-21 20:39:50.593 Info:+        <plan:GE rowID="14992830574179162536:0"/>
+2023-12-21 20:39:50.593 Info:+        <plan:LE rowID="14992830574179162536:9223372036854775807"/>
+2023-12-21 20:39:50.593 Info:+      </plan:range>
+2023-12-21 20:39:50.593 Info:+    </plan:row>
+2023-12-21 20:39:50.593 Info:+  </plan:rows>
+2023-12-21 20:39:50.593 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:50.593 Info:+</plan:call>
+2023-12-21 20:39:50.601 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-2 {"SessionKey":15412120375580238076,"TotalMs":11,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":2,"IteratorStartTimeMs":3,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":6},"Freq":{"ItemsIterated":10,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":10752},"OptimizationBreakdown": {"TotalOptimizationTimeMs":2,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:50.603 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-2 sessionKey=15412120375580238076 diagnostic_plan=
+2023-12-21 20:39:50.603 Info:+<plan:plan trace="PARTITIONS-2" label="diagnostic_plan" session-key="15412120375580238076" generated-at="2023-12-21T20:39:50.603097Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.603 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.603 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.603 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.603 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="11" local-time="79230" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:50.603 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.603 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.603 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.603 Info:+      </plan:column>
+2023-12-21 20:39:50.603 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.603 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.603 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.603 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.603 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.603 Info:+                  <plan:literal>
+2023-12-21 20:39:50.603 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.603 Info:+                  </plan:literal>
+2023-12-21 20:39:50.603 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.603 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.603 Info:+              </plan:cast>
+2023-12-21 20:39:50.603 Info:+            </plan:cast>
+2023-12-21 20:39:50.603 Info:+          </plan:cast>
+2023-12-21 20:39:50.603 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.603 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.603 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.603 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.603 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.603 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.603 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.603 Info:+                  <plan:literal>
+2023-12-21 20:39:50.603 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.603 Info:+                  </plan:literal>
+2023-12-21 20:39:50.603 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.603 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.603 Info:+              </plan:cast>
+2023-12-21 20:39:50.603 Info:+            </plan:cast>
+2023-12-21 20:39:50.603 Info:+          </plan:cast>
+2023-12-21 20:39:50.603 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.603 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.603 Info:+    </plan:template-view>
+2023-12-21 20:39:50.603 Info:+  </plan:project>
+2023-12-21 20:39:50.603 Info:+</plan:plan>
+2023-12-21 20:39:50.715 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-2 sessionKey=4224200033295384107 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:50.715 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-2 No statistics available.
+2023-12-21 20:39:50.716 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-2 sessionKey=4224200033295384107 optimize=off final plan=
+2023-12-21 20:39:50.716 Info:+<plan:plan trace="PARTITIONS-2" label="optimize=off final plan" session-key="4224200033295384107" generated-at="2023-12-21T20:39:50.715976Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.716 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.716 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.716 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.716 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:50.716 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.716 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.716 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.716 Info:+      </plan:column>
+2023-12-21 20:39:50.716 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.716 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.716 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.716 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.716 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.716 Info:+                  <plan:literal>
+2023-12-21 20:39:50.716 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.716 Info:+                  </plan:literal>
+2023-12-21 20:39:50.716 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.716 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.716 Info:+              </plan:cast>
+2023-12-21 20:39:50.716 Info:+            </plan:cast>
+2023-12-21 20:39:50.716 Info:+          </plan:cast>
+2023-12-21 20:39:50.716 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.716 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.716 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.716 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.716 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.716 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.716 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.716 Info:+                  <plan:literal>
+2023-12-21 20:39:50.716 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.716 Info:+                  </plan:literal>
+2023-12-21 20:39:50.716 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.716 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.716 Info:+              </plan:cast>
+2023-12-21 20:39:50.716 Info:+            </plan:cast>
+2023-12-21 20:39:50.716 Info:+          </plan:cast>
+2023-12-21 20:39:50.716 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.716 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.716 Info:+    </plan:template-view>
+2023-12-21 20:39:50.716 Info:+  </plan:project>
+2023-12-21 20:39:50.716 Info:+</plan:plan>
+2023-12-21 20:39:50.716 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-2 sessionKey=4224200033295384107 id=15507005355659913600 dplan=
+2023-12-21 20:39:50.716 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.716 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:50.716 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:50.716 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.716 Info:+    </plan:column>
+2023-12-21 20:39:50.716 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:50.716 Info:+      <plan:range>
+2023-12-21 20:39:50.716 Info:+        <plan:GE rowID="14992830574179162536:0"/>
+2023-12-21 20:39:50.716 Info:+        <plan:LE rowID="14992830574179162536:9223372036854775807"/>
+2023-12-21 20:39:50.716 Info:+      </plan:range>
+2023-12-21 20:39:50.716 Info:+    </plan:row>
+2023-12-21 20:39:50.716 Info:+  </plan:rows>
+2023-12-21 20:39:50.716 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:50.716 Info:+</plan:call>
+2023-12-21 20:39:50.721 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-2 {"SessionKey":4224200033295384107,"TotalMs":5,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":3,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":2},"Freq":{"ItemsIterated":10,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":10752},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:50.722 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-2 sessionKey=4224200033295384107 diagnostic_plan=
+2023-12-21 20:39:50.722 Info:+<plan:plan trace="PARTITIONS-2" label="diagnostic_plan" session-key="4224200033295384107" generated-at="2023-12-21T20:39:50.72219Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.722 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.722 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.722 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.722 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="11" local-time="59470" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:50.722 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.722 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.722 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.722 Info:+      </plan:column>
+2023-12-21 20:39:50.722 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.722 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.722 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.722 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.722 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.722 Info:+                  <plan:literal>
+2023-12-21 20:39:50.722 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.722 Info:+                  </plan:literal>
+2023-12-21 20:39:50.722 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.722 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.722 Info:+              </plan:cast>
+2023-12-21 20:39:50.722 Info:+            </plan:cast>
+2023-12-21 20:39:50.722 Info:+          </plan:cast>
+2023-12-21 20:39:50.722 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.722 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.722 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.722 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.722 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.722 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.722 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.722 Info:+                  <plan:literal>
+2023-12-21 20:39:50.722 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.722 Info:+                  </plan:literal>
+2023-12-21 20:39:50.722 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.722 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.722 Info:+              </plan:cast>
+2023-12-21 20:39:50.722 Info:+            </plan:cast>
+2023-12-21 20:39:50.722 Info:+          </plan:cast>
+2023-12-21 20:39:50.722 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.722 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.722 Info:+    </plan:template-view>
+2023-12-21 20:39:50.722 Info:+  </plan:project>
+2023-12-21 20:39:50.722 Info:+</plan:plan>
+2023-12-21 20:39:50.970 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-2 sessionKey=8608931647176724042 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:50.970 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-2 No statistics available.
+2023-12-21 20:39:50.970 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-2 sessionKey=8608931647176724042 optimize=off final plan=
+2023-12-21 20:39:50.970 Info:+<plan:plan trace="PARTITIONS-2" label="optimize=off final plan" session-key="8608931647176724042" generated-at="2023-12-21T20:39:50.970151Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.970 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.970 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.970 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.970 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:50.970 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.970 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.970 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.970 Info:+      </plan:column>
+2023-12-21 20:39:50.970 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.970 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.970 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.970 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.970 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.970 Info:+                  <plan:literal>
+2023-12-21 20:39:50.970 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.970 Info:+                  </plan:literal>
+2023-12-21 20:39:50.970 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.970 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.970 Info:+              </plan:cast>
+2023-12-21 20:39:50.970 Info:+            </plan:cast>
+2023-12-21 20:39:50.970 Info:+          </plan:cast>
+2023-12-21 20:39:50.970 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.970 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.970 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.970 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.970 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.970 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.970 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.970 Info:+                  <plan:literal>
+2023-12-21 20:39:50.970 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.970 Info:+                  </plan:literal>
+2023-12-21 20:39:50.970 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.970 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.970 Info:+              </plan:cast>
+2023-12-21 20:39:50.970 Info:+            </plan:cast>
+2023-12-21 20:39:50.970 Info:+          </plan:cast>
+2023-12-21 20:39:50.970 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.970 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.970 Info:+    </plan:template-view>
+2023-12-21 20:39:50.970 Info:+  </plan:project>
+2023-12-21 20:39:50.970 Info:+</plan:plan>
+2023-12-21 20:39:50.970 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-2 sessionKey=8608931647176724042 id=15507005355659913600 dplan=
+2023-12-21 20:39:50.970 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.970 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:50.970 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:50.970 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.970 Info:+    </plan:column>
+2023-12-21 20:39:50.970 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:50.970 Info:+      <plan:range>
+2023-12-21 20:39:50.970 Info:+        <plan:GE rowID="14992830574179162536:9223372036854775808"/>
+2023-12-21 20:39:50.970 Info:+        <plan:LE rowID="14992830574179162536:18446744073709551615"/>
+2023-12-21 20:39:50.970 Info:+      </plan:range>
+2023-12-21 20:39:50.970 Info:+    </plan:row>
+2023-12-21 20:39:50.970 Info:+  </plan:rows>
+2023-12-21 20:39:50.970 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:50.970 Info:+</plan:call>
+2023-12-21 20:39:50.972 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-2 {"SessionKey":8608931647176724042,"TotalMs":2,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":1,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":1},"Freq":{"ItemsIterated":7,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":7168},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:50.973 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-2 sessionKey=8608931647176724042 diagnostic_plan=
+2023-12-21 20:39:50.973 Info:+<plan:plan trace="PARTITIONS-2" label="diagnostic_plan" session-key="8608931647176724042" generated-at="2023-12-21T20:39:50.972814Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:50.973 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:50.973 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.973 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:50.973 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="8" local-time="17040" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:50.973 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:50.973 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:50.973 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:50.973 Info:+      </plan:column>
+2023-12-21 20:39:50.973 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:50.973 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:50.973 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.973 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.973 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.973 Info:+                  <plan:literal>
+2023-12-21 20:39:50.973 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.973 Info:+                  </plan:literal>
+2023-12-21 20:39:50.973 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:50.973 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.973 Info:+              </plan:cast>
+2023-12-21 20:39:50.973 Info:+            </plan:cast>
+2023-12-21 20:39:50.973 Info:+          </plan:cast>
+2023-12-21 20:39:50.973 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.973 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.973 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:50.973 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:50.973 Info:+        <plan:right-expr>
+2023-12-21 20:39:50.973 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:50.973 Info:+                <plan:string-concat>
+2023-12-21 20:39:50.973 Info:+                  <plan:literal>
+2023-12-21 20:39:50.973 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:50.973 Info:+                  </plan:literal>
+2023-12-21 20:39:50.973 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:50.973 Info:+                </plan:string-concat>
+2023-12-21 20:39:50.973 Info:+              </plan:cast>
+2023-12-21 20:39:50.973 Info:+            </plan:cast>
+2023-12-21 20:39:50.973 Info:+          </plan:cast>
+2023-12-21 20:39:50.973 Info:+        </plan:right-expr>
+2023-12-21 20:39:50.973 Info:+      </plan:join-filter>
+2023-12-21 20:39:50.973 Info:+    </plan:template-view>
+2023-12-21 20:39:50.973 Info:+  </plan:project>
+2023-12-21 20:39:50.973 Info:+</plan:plan>
+2023-12-21 20:39:51.122 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=13031524022802706151 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:51.122 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-4 No statistics available.
+2023-12-21 20:39:51.122 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=13031524022802706151 optimize=off final plan=
+2023-12-21 20:39:51.122 Info:+<plan:plan trace="PARTITIONS-4" label="optimize=off final plan" session-key="13031524022802706151" generated-at="2023-12-21T20:39:51.122069Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.122 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.122 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.122 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.122 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:51.122 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.122 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.122 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.122 Info:+      </plan:column>
+2023-12-21 20:39:51.122 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.122 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.122 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.122 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.122 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.122 Info:+                  <plan:literal>
+2023-12-21 20:39:51.122 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.122 Info:+                  </plan:literal>
+2023-12-21 20:39:51.122 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.122 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.122 Info:+              </plan:cast>
+2023-12-21 20:39:51.122 Info:+            </plan:cast>
+2023-12-21 20:39:51.122 Info:+          </plan:cast>
+2023-12-21 20:39:51.122 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.122 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.122 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.122 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.122 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.122 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.122 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.122 Info:+                  <plan:literal>
+2023-12-21 20:39:51.122 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.122 Info:+                  </plan:literal>
+2023-12-21 20:39:51.122 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.122 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.122 Info:+              </plan:cast>
+2023-12-21 20:39:51.122 Info:+            </plan:cast>
+2023-12-21 20:39:51.122 Info:+          </plan:cast>
+2023-12-21 20:39:51.122 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.122 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.122 Info:+    </plan:template-view>
+2023-12-21 20:39:51.122 Info:+  </plan:project>
+2023-12-21 20:39:51.122 Info:+</plan:plan>
+2023-12-21 20:39:51.122 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-4 sessionKey=13031524022802706151 id=15507005355659913600 dplan=
+2023-12-21 20:39:51.122 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.122 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:51.122 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:51.122 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.122 Info:+    </plan:column>
+2023-12-21 20:39:51.122 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:51.122 Info:+      <plan:range>
+2023-12-21 20:39:51.122 Info:+        <plan:GE rowID="14992830574179162536:0"/>
+2023-12-21 20:39:51.122 Info:+        <plan:LE rowID="14992830574179162536:4611686018427387903"/>
+2023-12-21 20:39:51.122 Info:+      </plan:range>
+2023-12-21 20:39:51.122 Info:+    </plan:row>
+2023-12-21 20:39:51.122 Info:+  </plan:rows>
+2023-12-21 20:39:51.122 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:51.122 Info:+</plan:call>
+2023-12-21 20:39:51.124 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-4 {"SessionKey":13031524022802706151,"TotalMs":1,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":1,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":0},"Freq":{"ItemsIterated":6,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":10752},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:51.124 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-4 sessionKey=13031524022802706151 diagnostic_plan=
+2023-12-21 20:39:51.124 Info:+<plan:plan trace="PARTITIONS-4" label="diagnostic_plan" session-key="13031524022802706151" generated-at="2023-12-21T20:39:51.1243Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.124 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.124 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.124 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.124 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="7" local-time="17000" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:51.124 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.124 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.124 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.124 Info:+      </plan:column>
+2023-12-21 20:39:51.124 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.124 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.124 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.124 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.124 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.124 Info:+                  <plan:literal>
+2023-12-21 20:39:51.124 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.124 Info:+                  </plan:literal>
+2023-12-21 20:39:51.124 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.124 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.124 Info:+              </plan:cast>
+2023-12-21 20:39:51.124 Info:+            </plan:cast>
+2023-12-21 20:39:51.124 Info:+          </plan:cast>
+2023-12-21 20:39:51.124 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.124 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.124 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.124 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.124 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.124 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.124 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.124 Info:+                  <plan:literal>
+2023-12-21 20:39:51.124 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.124 Info:+                  </plan:literal>
+2023-12-21 20:39:51.124 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.124 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.124 Info:+              </plan:cast>
+2023-12-21 20:39:51.124 Info:+            </plan:cast>
+2023-12-21 20:39:51.124 Info:+          </plan:cast>
+2023-12-21 20:39:51.124 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.124 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.124 Info:+    </plan:template-view>
+2023-12-21 20:39:51.124 Info:+  </plan:project>
+2023-12-21 20:39:51.124 Info:+</plan:plan>
+2023-12-21 20:39:51.449 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=9385195706554570775 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:51.449 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=4644413980051918442 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:51.449 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-4 No statistics available.
+2023-12-21 20:39:51.449 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-4 No statistics available.
+2023-12-21 20:39:51.450 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=4644413980051918442 optimize=off final plan=
+2023-12-21 20:39:51.450 Info:+<plan:plan trace="PARTITIONS-4" label="optimize=off final plan" session-key="4644413980051918442" generated-at="2023-12-21T20:39:51.44978Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.450 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.450 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.450 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.450 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:51.450 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.450 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.450 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.450 Info:+      </plan:column>
+2023-12-21 20:39:51.450 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.450 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.450 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.450 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.450 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.450 Info:+                  <plan:literal>
+2023-12-21 20:39:51.450 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.450 Info:+                  </plan:literal>
+2023-12-21 20:39:51.450 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.450 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.450 Info:+              </plan:cast>
+2023-12-21 20:39:51.450 Info:+            </plan:cast>
+2023-12-21 20:39:51.450 Info:+          </plan:cast>
+2023-12-21 20:39:51.450 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.450 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.450 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.450 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.450 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.450 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.450 Info:+                  <plan:literal>
+2023-12-21 20:39:51.450 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.450 Info:+                  </plan:literal>
+2023-12-21 20:39:51.450 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.450 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.450 Info:+              </plan:cast>
+2023-12-21 20:39:51.450 Info:+            </plan:cast>
+2023-12-21 20:39:51.450 Info:+          </plan:cast>
+2023-12-21 20:39:51.450 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.450 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.450 Info:+    </plan:template-view>
+2023-12-21 20:39:51.450 Info:+  </plan:project>
+2023-12-21 20:39:51.450 Info:+</plan:plan>
+2023-12-21 20:39:51.450 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=9385195706554570775 optimize=off final plan=
+2023-12-21 20:39:51.450 Info:+<plan:plan trace="PARTITIONS-4" label="optimize=off final plan" session-key="9385195706554570775" generated-at="2023-12-21T20:39:51.450067Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.450 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.450 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.450 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.450 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:51.450 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.450 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.450 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.450 Info:+      </plan:column>
+2023-12-21 20:39:51.450 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.450 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.450 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.450 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.450 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.450 Info:+                  <plan:literal>
+2023-12-21 20:39:51.450 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.450 Info:+                  </plan:literal>
+2023-12-21 20:39:51.450 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.450 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.450 Info:+              </plan:cast>
+2023-12-21 20:39:51.450 Info:+            </plan:cast>
+2023-12-21 20:39:51.450 Info:+          </plan:cast>
+2023-12-21 20:39:51.450 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.450 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.450 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.450 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.450 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.450 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.450 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.450 Info:+                  <plan:literal>
+2023-12-21 20:39:51.450 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.450 Info:+                  </plan:literal>
+2023-12-21 20:39:51.450 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.450 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.450 Info:+              </plan:cast>
+2023-12-21 20:39:51.450 Info:+            </plan:cast>
+2023-12-21 20:39:51.450 Info:+          </plan:cast>
+2023-12-21 20:39:51.450 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.450 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.450 Info:+    </plan:template-view>
+2023-12-21 20:39:51.450 Info:+  </plan:project>
+2023-12-21 20:39:51.450 Info:+</plan:plan>
+2023-12-21 20:39:51.451 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-4 sessionKey=4644413980051918442 id=15507005355659913600 dplan=
+2023-12-21 20:39:51.451 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.451 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:51.451 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:51.451 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.451 Info:+    </plan:column>
+2023-12-21 20:39:51.451 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:51.451 Info:+      <plan:range>
+2023-12-21 20:39:51.451 Info:+        <plan:GE rowID="14992830574179162536:9223372036854775808"/>
+2023-12-21 20:39:51.451 Info:+        <plan:LE rowID="14992830574179162536:13835058055282163711"/>
+2023-12-21 20:39:51.451 Info:+      </plan:range>
+2023-12-21 20:39:51.451 Info:+    </plan:row>
+2023-12-21 20:39:51.451 Info:+  </plan:rows>
+2023-12-21 20:39:51.451 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:51.451 Info:+</plan:call>
+2023-12-21 20:39:51.451 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-4 sessionKey=9385195706554570775 id=15507005355659913600 dplan=
+2023-12-21 20:39:51.451 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.451 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:51.451 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:51.451 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.451 Info:+    </plan:column>
+2023-12-21 20:39:51.451 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:51.451 Info:+      <plan:range>
+2023-12-21 20:39:51.451 Info:+        <plan:GE rowID="14992830574179162536:13835058055282163712"/>
+2023-12-21 20:39:51.451 Info:+        <plan:LE rowID="14992830574179162536:18446744073709551615"/>
+2023-12-21 20:39:51.451 Info:+      </plan:range>
+2023-12-21 20:39:51.451 Info:+    </plan:row>
+2023-12-21 20:39:51.451 Info:+  </plan:rows>
+2023-12-21 20:39:51.451 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:51.451 Info:+</plan:call>
+2023-12-21 20:39:51.460 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-4 {"SessionKey":4644413980051918442,"TotalMs":9,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":4,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":5},"Freq":{"ItemsIterated":4,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":7168},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:51.461 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-4 {"SessionKey":9385195706554570775,"TotalMs":8,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":4,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":4},"Freq":{"ItemsIterated":4,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":7168},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:51.462 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-4 sessionKey=4644413980051918442 diagnostic_plan=
+2023-12-21 20:39:51.462 Info:+<plan:plan trace="PARTITIONS-4" label="diagnostic_plan" session-key="4644413980051918442" generated-at="2023-12-21T20:39:51.461486Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.462 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.462 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.462 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.462 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="5" local-time="77860" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:51.462 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.462 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.462 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.462 Info:+      </plan:column>
+2023-12-21 20:39:51.462 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.462 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.462 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.462 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.462 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.462 Info:+                  <plan:literal>
+2023-12-21 20:39:51.462 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.462 Info:+                  </plan:literal>
+2023-12-21 20:39:51.462 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.462 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.462 Info:+              </plan:cast>
+2023-12-21 20:39:51.462 Info:+            </plan:cast>
+2023-12-21 20:39:51.462 Info:+          </plan:cast>
+2023-12-21 20:39:51.462 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.462 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.462 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.462 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.462 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.462 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.462 Info:+                  <plan:literal>
+2023-12-21 20:39:51.462 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.462 Info:+                  </plan:literal>
+2023-12-21 20:39:51.462 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.462 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.462 Info:+              </plan:cast>
+2023-12-21 20:39:51.462 Info:+            </plan:cast>
+2023-12-21 20:39:51.462 Info:+          </plan:cast>
+2023-12-21 20:39:51.462 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.462 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.462 Info:+    </plan:template-view>
+2023-12-21 20:39:51.462 Info:+  </plan:project>
+2023-12-21 20:39:51.462 Info:+</plan:plan>
+2023-12-21 20:39:51.462 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-4 sessionKey=9385195706554570775 diagnostic_plan=
+2023-12-21 20:39:51.462 Info:+<plan:plan trace="PARTITIONS-4" label="diagnostic_plan" session-key="9385195706554570775" generated-at="2023-12-21T20:39:51.461637Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.462 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.462 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.462 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.462 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="5" local-time="79950" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:51.462 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.462 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.462 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.462 Info:+      </plan:column>
+2023-12-21 20:39:51.462 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.462 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.462 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.462 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.462 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.462 Info:+                  <plan:literal>
+2023-12-21 20:39:51.462 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.462 Info:+                  </plan:literal>
+2023-12-21 20:39:51.462 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.462 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.462 Info:+              </plan:cast>
+2023-12-21 20:39:51.462 Info:+            </plan:cast>
+2023-12-21 20:39:51.462 Info:+          </plan:cast>
+2023-12-21 20:39:51.462 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.462 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.462 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.462 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.462 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.462 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.462 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.462 Info:+                  <plan:literal>
+2023-12-21 20:39:51.462 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.462 Info:+                  </plan:literal>
+2023-12-21 20:39:51.462 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.462 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.462 Info:+              </plan:cast>
+2023-12-21 20:39:51.462 Info:+            </plan:cast>
+2023-12-21 20:39:51.462 Info:+          </plan:cast>
+2023-12-21 20:39:51.462 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.462 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.462 Info:+    </plan:template-view>
+2023-12-21 20:39:51.462 Info:+  </plan:project>
+2023-12-21 20:39:51.462 Info:+</plan:plan>
+2023-12-21 20:39:51.966 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=16022979258312279365 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:51.966 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-4 No statistics available.
+2023-12-21 20:39:51.966 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=16022979258312279365 optimize=off final plan=
+2023-12-21 20:39:51.966 Info:+<plan:plan trace="PARTITIONS-4" label="optimize=off final plan" session-key="16022979258312279365" generated-at="2023-12-21T20:39:51.966685Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.966 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.966 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.966 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.966 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:51.966 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.966 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.966 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.966 Info:+      </plan:column>
+2023-12-21 20:39:51.966 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.966 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.966 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.966 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.966 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.966 Info:+                  <plan:literal>
+2023-12-21 20:39:51.966 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.966 Info:+                  </plan:literal>
+2023-12-21 20:39:51.966 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.966 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.966 Info:+              </plan:cast>
+2023-12-21 20:39:51.966 Info:+            </plan:cast>
+2023-12-21 20:39:51.966 Info:+          </plan:cast>
+2023-12-21 20:39:51.966 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.966 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.966 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.966 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.966 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.966 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.966 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.966 Info:+                  <plan:literal>
+2023-12-21 20:39:51.966 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.966 Info:+                  </plan:literal>
+2023-12-21 20:39:51.966 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.966 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.966 Info:+              </plan:cast>
+2023-12-21 20:39:51.966 Info:+            </plan:cast>
+2023-12-21 20:39:51.966 Info:+          </plan:cast>
+2023-12-21 20:39:51.966 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.966 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.966 Info:+    </plan:template-view>
+2023-12-21 20:39:51.966 Info:+  </plan:project>
+2023-12-21 20:39:51.966 Info:+</plan:plan>
+2023-12-21 20:39:51.967 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-4 sessionKey=16022979258312279365 id=15507005355659913600 dplan=
+2023-12-21 20:39:51.967 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.967 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:51.967 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:51.967 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.967 Info:+    </plan:column>
+2023-12-21 20:39:51.967 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:51.967 Info:+      <plan:range>
+2023-12-21 20:39:51.967 Info:+        <plan:GE rowID="14992830574179162536:4611686018427387904"/>
+2023-12-21 20:39:51.967 Info:+        <plan:LE rowID="14992830574179162536:9223372036854775807"/>
+2023-12-21 20:39:51.967 Info:+      </plan:range>
+2023-12-21 20:39:51.967 Info:+    </plan:row>
+2023-12-21 20:39:51.967 Info:+  </plan:rows>
+2023-12-21 20:39:51.967 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:51.967 Info:+</plan:call>
+2023-12-21 20:39:51.970 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-4 {"SessionKey":16022979258312279365,"TotalMs":3,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":2,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":1},"Freq":{"ItemsIterated":6,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":7168},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:51.971 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-4 sessionKey=16022979258312279365 diagnostic_plan=
+2023-12-21 20:39:51.971 Info:+<plan:plan trace="PARTITIONS-4" label="diagnostic_plan" session-key="16022979258312279365" generated-at="2023-12-21T20:39:51.971177Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.971 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.971 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.971 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.971 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="7" local-time="35450" remote-time="0" local-max-memory="7168" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:51.971 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.971 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.971 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.971 Info:+      </plan:column>
+2023-12-21 20:39:51.971 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.971 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.971 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.971 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.971 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.971 Info:+                  <plan:literal>
+2023-12-21 20:39:51.971 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.971 Info:+                  </plan:literal>
+2023-12-21 20:39:51.971 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.971 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.971 Info:+              </plan:cast>
+2023-12-21 20:39:51.971 Info:+            </plan:cast>
+2023-12-21 20:39:51.971 Info:+          </plan:cast>
+2023-12-21 20:39:51.971 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.971 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.971 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.971 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.971 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.971 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.971 Info:+                  <plan:literal>
+2023-12-21 20:39:51.971 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.971 Info:+                  </plan:literal>
+2023-12-21 20:39:51.971 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.971 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.971 Info:+              </plan:cast>
+2023-12-21 20:39:51.971 Info:+            </plan:cast>
+2023-12-21 20:39:51.971 Info:+          </plan:cast>
+2023-12-21 20:39:51.971 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.971 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.971 Info:+    </plan:template-view>
+2023-12-21 20:39:51.971 Info:+  </plan:project>
+2023-12-21 20:39:51.971 Info:+</plan:plan>
+2023-12-21 20:39:51.971 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=11606131847602197133 - Plan retrieved from cache. Statistics retrieved/plan optimized at: 2023-12-21T20:39:50
+2023-12-21 20:39:51.971 Info: [Event:id=Optic Statistics Trace] trace=PARTITIONS-4 No statistics available.
+2023-12-21 20:39:51.971 Info: [Event:id=Optic Plan Trace] trace=PARTITIONS-4 sessionKey=11606131847602197133 optimize=off final plan=
+2023-12-21 20:39:51.971 Info:+<plan:plan trace="PARTITIONS-4" label="optimize=off final plan" session-key="11606131847602197133" generated-at="2023-12-21T20:39:51.971454Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.971 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.971 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.971 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.971 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" order="1">
+2023-12-21 20:39:51.971 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.971 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.971 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.971 Info:+      </plan:column>
+2023-12-21 20:39:51.971 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.971 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.971 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.971 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.971 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.971 Info:+                  <plan:literal>
+2023-12-21 20:39:51.971 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.971 Info:+                  </plan:literal>
+2023-12-21 20:39:51.971 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.971 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.971 Info:+              </plan:cast>
+2023-12-21 20:39:51.971 Info:+            </plan:cast>
+2023-12-21 20:39:51.971 Info:+          </plan:cast>
+2023-12-21 20:39:51.971 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.971 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.971 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.971 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.971 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.971 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.971 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.971 Info:+                  <plan:literal>
+2023-12-21 20:39:51.971 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.971 Info:+                  </plan:literal>
+2023-12-21 20:39:51.971 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.971 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.971 Info:+              </plan:cast>
+2023-12-21 20:39:51.971 Info:+            </plan:cast>
+2023-12-21 20:39:51.971 Info:+          </plan:cast>
+2023-12-21 20:39:51.971 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.971 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.971 Info:+    </plan:template-view>
+2023-12-21 20:39:51.971 Info:+  </plan:project>
+2023-12-21 20:39:51.971 Info:+</plan:plan>
+2023-12-21 20:39:51.971 Info: [Event:id=Optic Execution Trace] trace=PARTITIONS-4 sessionKey=11606131847602197133 id=15507005355659913600 dplan=
+2023-12-21 20:39:51.971 Info:+<plan:call locking="read-write" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.971 Info:+  <plan:rows type="columns">
+2023-12-21 20:39:51.971 Info:+    <plan:column column-index="0">
+2023-12-21 20:39:51.971 Info:+      <plan:column-id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.971 Info:+    </plan:column>
+2023-12-21 20:39:51.971 Info:+    <plan:row column-index="1" operator="range">
+2023-12-21 20:39:51.971 Info:+      <plan:range>
+2023-12-21 20:39:51.971 Info:+        <plan:GE rowID="14992830574179162536:0"/>
+2023-12-21 20:39:51.971 Info:+        <plan:LE rowID="14992830574179162536:4611686018427387903"/>
+2023-12-21 20:39:51.971 Info:+      </plan:range>
+2023-12-21 20:39:51.971 Info:+    </plan:row>
+2023-12-21 20:39:51.971 Info:+  </plan:rows>
+2023-12-21 20:39:51.971 Info:+  <plan:unordered-result/>
+2023-12-21 20:39:51.971 Info:+</plan:call>
+2023-12-21 20:39:51.974 Info: [Event:id=Optic Summary Trace] trace=PARTITIONS-4 {"SessionKey":11606131847602197133,"TotalMs":2,"Breakdown":{"ParsingTimeMs":0, "CreateProgramTimeMs":0,"IteratorStartTimeMs":1,"CountTimeMs":0,"SubSequenceTimeMs":0,"DbIteratorIterationTimeMs":0,"UserTimeMs":1},"Freq":{"ItemsIterated":6,"TotalCount":0,"TotalSubsequence":0},"Memory":{"PeakMemoryBytes":10752},"OptimizationBreakdown": {"TotalOptimizationTimeMs":0,"StaticWriterTimeMs":0,"ExpressionOrderTimeMs":0,"InitialPlanTimeMs":0,"CollectStatisticsTimeMs":0,"CostBasedOptimizationBreakdown":{"CostBasedOptimizationTimeMs":0,"InitialMutationsTimeMs":0,"ConcurrentSearchTimeMs":0,"InitialMutationCount":0}}}
+2023-12-21 20:39:51.974 Info: [Event:id=Optic Execution Diagnostics Trace] trace=PARTITIONS-4 sessionKey=11606131847602197133 diagnostic_plan=
+2023-12-21 20:39:51.974 Info:+<plan:plan trace="PARTITIONS-4" label="diagnostic_plan" session-key="11606131847602197133" generated-at="2023-12-21T20:39:51.974391Z" xmlns:plan="http://marklogic.com/plan">
+2023-12-21 20:39:51.974 Info:+  <plan:project id="1243903401354986121" order="1">
+2023-12-21 20:39:51.974 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="LastName" column-number="0" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.974 Info:+    <plan:column type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1" static-type="ROWID"/>
+2023-12-21 20:39:51.974 Info:+    <plan:template-view type="column" iri="http://marklogic.com/view/Medical/Authors" schema-id="8489396668767199960" view-id="14992830574179162536" all-nullable="false" id="15507005355659913600" count="7" local-time="29220" remote-time="0" local-max-memory="10752" remote-max-memory="0" temporary-file-read-bytes="0" temporary-file-write-bytes="0" order="1">
+2023-12-21 20:39:51.974 Info:+      <plan:column nullable="false">
+2023-12-21 20:39:51.974 Info:+        <plan:id column="Medical.Authors.LastName" columnID="18168491119814441224"/>
+2023-12-21 20:39:51.974 Info:+        <plan:name type="column-def" schema="Medical" view="Authors" column="LastName" column-number="1" column-index="0" static-type="STRING"/>
+2023-12-21 20:39:51.974 Info:+      </plan:column>
+2023-12-21 20:39:51.974 Info:+      <plan:row type="column-def" schema="Medical" view="Authors" column="rowid" column-number="9" column-index="1" hidden="true"/>
+2023-12-21 20:39:51.974 Info:+      <plan:join-filter op="&gt;=">
+2023-12-21 20:39:51.974 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.974 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.974 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.974 Info:+                  <plan:literal>
+2023-12-21 20:39:51.974 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.974 Info:+                  </plan:literal>
+2023-12-21 20:39:51.974 Info:+                  <plan:sparql-parameter qname="ML_LOWER_BOUND"/>
+2023-12-21 20:39:51.974 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.974 Info:+              </plan:cast>
+2023-12-21 20:39:51.974 Info:+            </plan:cast>
+2023-12-21 20:39:51.974 Info:+          </plan:cast>
+2023-12-21 20:39:51.974 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.974 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.974 Info:+      <plan:join-filter op="&lt;=">
+2023-12-21 20:39:51.974 Info:+        <plan:left type="column-def" schema="Medical" view="Authors" column="rowid" column-number="1" column-index="1"/>
+2023-12-21 20:39:51.974 Info:+        <plan:right-expr>
+2023-12-21 20:39:51.974 Info:+          <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+            <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+              <plan:cast seq-type="sql:rowID" occur-type="*">
+2023-12-21 20:39:51.974 Info:+                <plan:string-concat>
+2023-12-21 20:39:51.974 Info:+                  <plan:literal>
+2023-12-21 20:39:51.974 Info:+                    <plan:value xsi:type="xs:string" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">14992830574179162536:</plan:value>
+2023-12-21 20:39:51.974 Info:+                  </plan:literal>
+2023-12-21 20:39:51.974 Info:+                  <plan:sparql-parameter qname="ML_UPPER_BOUND"/>
+2023-12-21 20:39:51.974 Info:+                </plan:string-concat>
+2023-12-21 20:39:51.974 Info:+              </plan:cast>
+2023-12-21 20:39:51.974 Info:+            </plan:cast>
+2023-12-21 20:39:51.974 Info:+          </plan:cast>
+2023-12-21 20:39:51.974 Info:+        </plan:right-expr>
+2023-12-21 20:39:51.974 Info:+      </plan:join-filter>
+2023-12-21 20:39:51.974 Info:+    </plan:template-view>
+2023-12-21 20:39:51.974 Info:+  </plan:project>
+2023-12-21 20:39:51.974 Info:+</plan:plan>
+
