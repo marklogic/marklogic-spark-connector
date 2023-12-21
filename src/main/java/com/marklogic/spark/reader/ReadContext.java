@@ -30,17 +30,9 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.filter.OpticFilter;
-import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
-import org.apache.spark.sql.connector.expressions.aggregate.AggregateFunc;
-import org.apache.spark.sql.connector.expressions.aggregate.Aggregation;
-import org.apache.spark.sql.connector.expressions.aggregate.Avg;
-import org.apache.spark.sql.connector.expressions.aggregate.Count;
-import org.apache.spark.sql.connector.expressions.aggregate.CountStar;
-import org.apache.spark.sql.connector.expressions.aggregate.Max;
-import org.apache.spark.sql.connector.expressions.aggregate.Min;
-import org.apache.spark.sql.connector.expressions.aggregate.Sum;
+import org.apache.spark.sql.connector.expressions.aggregate.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -76,17 +68,18 @@ public class ReadContext extends ContextSupport {
     private long serverTimestamp;
     private List<OpticFilter> opticFilters;
 
-    public ReadContext(Map<String, String> properties, StructType schema) {
+    public ReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
         this.schema = schema;
 
-        final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS,
-            SparkSession.active().sparkContext().defaultMinPartitions(), 1);
+        final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
         final long batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
+
         final String dslQuery = properties.get(Options.READ_OPTIC_QUERY);
         if (dslQuery == null || dslQuery.trim().length() < 1) {
             throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
         }
+
         DatabaseClient client = connectToMarkLogic();
         RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));
 

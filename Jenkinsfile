@@ -10,6 +10,8 @@ def runtests(String mlVersionType, String mlVersion, String javaVersion){
     cd marklogic-spark-connector
     echo "mlPassword=admin" > gradle-local.properties
    ./gradlew -i mlDeploy
+   echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
+   ./gradlew -i mlLoadData
    ./gradlew test || true
   '''
   junit '**/build/**/*.xml'
