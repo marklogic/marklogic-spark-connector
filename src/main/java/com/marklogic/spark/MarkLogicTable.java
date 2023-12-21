@@ -15,11 +15,12 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.customcode.CustomCodeScanBuilder;
 import com.marklogic.spark.reader.OpticScanBuilder;
 import com.marklogic.spark.reader.ReadContext;
+import com.marklogic.spark.reader.customcode.CustomCodeScanBuilder;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.catalog.SupportsRead;
 import org.apache.spark.sql.connector.catalog.SupportsWrite;
 import org.apache.spark.sql.connector.catalog.TableCapability;
@@ -86,7 +87,11 @@ public class MarkLogicTable implements SupportsRead, SupportsWrite {
         if (logger.isDebugEnabled()) {
             logger.debug("Will read rows via Optic query");
         }
-        return new OpticScanBuilder(new ReadContext(readProperties, readSchema));
+
+        // This is needed by the Optic partition reader; capturing it in the ReadContext so that the reader does not
+        // have a dependency on an active Spark session, which makes certain kinds of tests easier.
+        int defaultMinPartitions = SparkSession.active().sparkContext().defaultMinPartitions();
+        return new OpticScanBuilder(new ReadContext(readProperties, readSchema, defaultMinPartitions));
     }
 
     @Override
