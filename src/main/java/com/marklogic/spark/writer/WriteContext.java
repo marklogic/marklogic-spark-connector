@@ -24,6 +24,8 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -32,10 +34,25 @@ public class WriteContext extends ContextSupport {
     static final long serialVersionUID = 1;
 
     private final StructType schema;
+    private final boolean usingFileSchema;
+
+    private int fileSchemaContentPosition;
+    private int fileSchemaPathPosition;
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
         this.schema = schema;
+
+        // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
+        // so that reader can be reused for loading files as-is.
+        final List<String> names = Arrays.asList(this.schema.fieldNames());
+        this.usingFileSchema = names.size() == 4 && names.contains("path") && names.contains("content")
+            && names.contains("modificationTime") && names.contains("length");
+        if (this.usingFileSchema) {
+            // Per the Spark docs, we expect positions 0 and 3 here, but looking them up just to be safe.
+            this.fileSchemaPathPosition = names.indexOf("path");
+            this.fileSchemaContentPosition = names.indexOf("content");
+        }
     }
 
     public StructType getSchema() {
@@ -77,9 +94,12 @@ public class WriteContext extends ContextSupport {
                 }
             });
         } else {
-            final String uriSuffix = getProperties().containsKey(Options.WRITE_URI_SUFFIX) ?
-                getProperties().get(Options.WRITE_URI_SUFFIX) :
-                ".json";
+            String uriSuffix = null;
+            if (hasOption(Options.WRITE_URI_SUFFIX)) {
+                uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
+            } else if (!isUsingFileSchema()) {
+                uriSuffix = ".json";
+            }
             factory.withSimpleUriStrategy(getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix);
         }
 
@@ -125,5 +145,17 @@ public class WriteContext extends ContextSupport {
             }
         }
         logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+    }
+
+    boolean isUsingFileSchema() {
+        return this.usingFileSchema;
+    }
+
+    int getFileSchemaContentPosition() {
+        return fileSchemaContentPosition;
+    }
+
+    int getFileSchemaPathPosition() {
+        return fileSchemaPathPosition;
     }
 }

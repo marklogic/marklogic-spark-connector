@@ -15,7 +15,11 @@ via custom code written in JavaScript or XQuery and executed in MarkLogic.
 
 ## Writing rows as documents
 
-As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md), a basic write operation will define
+By default, the connector will serialize each Spark row it receives into a JSON document and write it to MarkLogic.
+With this approach, the incoming rows can adhere to any schema, and they will still be serialized to JSON and written
+to MarkLogic, leveraging MarkLogic's schema-agnostic behavior.
+
+As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md), a minimal write operation will define
 how the connector should connect to MarkLogic, the Spark mode to use, and zero or more other options:
 
 ```
@@ -32,6 +36,15 @@ In the above example, only `format`, `spark.marklogic.client.uri` (or the other 
 that can be used to define the connection details), and `mode` (which must equal "append") are required; 
 the collections, permissions , and URI prefix are optional, though it is uncommon to write documents without any 
 permissions. 
+
+### Writing file rows as document
+
+To support the common use case of reading files and ingesting their contents as-is into MarkLogic, the connector has
+special support for rows with a schema matching that of 
+[Spark's binaryFile data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html). If the incoming
+rows adhere to the `binaryFile` schema, the connector will not serialize the row into JSON. Instead, the connector will 
+use the `path` column value as an initial URI for the document and the `content` column value as the document contents. 
+The URI can then be adjusted as described in the "Controlling documents URIs" section below.
 
 ### Controlling document content
 
@@ -60,7 +73,7 @@ the parameter values contains a comma:
     .option("spark.marklogic.write.transformParams", "my-param;has,commas")
     .option("spark.marklogic.write.transformParamsDelimiter", ";")
 
-### Configuring document URIs
+### Controlling document URIs
 
 By default, the connector will construct a URI for each document beginning with a UUID and ending with `.json`. A 
 prefix can be specified via `spark.marklogic.write.uriPrefix`, and the default suffix of `.json` can be modified 
@@ -81,6 +94,11 @@ The following template would construct URIs based on those two columns:
 
 Both columns should have values in each row in the DataFrame. If the connector encounters a row that does not have a 
 value for any column in the URI template, an error will be thrown.
+
+If you are writing file rows that conform to 
+[Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 
+`modificationTime`, and `length` columns will be available for use with the template. The `content` column will not be
+available as it is a binary array that is not expected to be useful when constructing a URI.
 
 ### Configuring document metadata
 
