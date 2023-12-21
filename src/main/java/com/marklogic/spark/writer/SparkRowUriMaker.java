@@ -15,12 +15,8 @@
  */
 package com.marklogic.spark.writer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 
@@ -30,9 +26,7 @@ import java.util.regex.Pattern;
 /**
  * Knows how to use a user-provided URI template for making a URI based on a Spark row.
  */
-class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+class SparkRowUriMaker implements DocBuilder.UriMaker {
 
     private String uriTemplate;
 
@@ -47,16 +41,15 @@ class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
     }
 
     @Override
-    public String apply(AbstractWriteHandle contentHandle) {
-        JsonNode row = getContentAsJson(contentHandle);
-
+    public String makeURI(String initialUri, ObjectNode columnValues) {
+        // initialUri is ignored as the intent is to build the entire URI from the template.
         // Inspired by https://www.baeldung.com/java-regex-token-replacement
         int lastIndex = 0;
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
             output.append(this.uriTemplate, lastIndex, matcher.start());
             String columnName = matcher.group(1);
-            output.append(getColumnValue(row, columnName));
+            output.append(getColumnValue(columnValues, columnName));
             lastIndex = matcher.end();
         }
         if (lastIndex < this.uriTemplate.length()) {
@@ -94,15 +87,6 @@ class SparkRowUriMaker implements DocumentWriteOperation.DocumentUriMaker {
         }
         if (inToken) {
             throw new IllegalArgumentException(preamble + "opening brace without closing brace");
-        }
-    }
-
-    private JsonNode getContentAsJson(AbstractWriteHandle contentHandle) {
-        String json = ((StringHandle) contentHandle).get();
-        try {
-            return objectMapper.readTree(json);
-        } catch (JsonProcessingException e) {
-            throw new ConnectorException(String.format("Unable to read JSON; cause: %s; JSON: %s", e.getMessage(), json));
         }
     }
 

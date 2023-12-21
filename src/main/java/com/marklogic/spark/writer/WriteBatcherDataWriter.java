@@ -15,16 +15,23 @@
  */
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.types.DataTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +45,7 @@ import java.util.concurrent.atomic.AtomicReference;
 class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(WriteBatcherDataWriter.class);
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final WriteContext writeContext;
     private final DatabaseClient databaseClient;
@@ -59,9 +67,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.taskId = taskId;
         this.epochId = epochId;
         this.writeFailure = new AtomicReference<>();
-
         this.docBuilder = this.writeContext.newDocBuilder();
-
         this.databaseClient = writeContext.connectToMarkLogic();
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
@@ -77,10 +83,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) throws IOException {
         throwWriteFailureIfExists();
-
-        String json = convertRowToJSONString(row);
-        StringHandle content = new StringHandle(json).withFormat(Format.JSON);
-        this.writeBatcher.add(this.docBuilder.build(content));
+        DocBuilder.DocumentInputs inputs = writeContext.isUsingFileSchema() ?
+            makeDocumentInputsForFileRow(row) :
+            makeDocumentInputsForArbitraryRow(row);
+        this.writeBatcher.add(this.docBuilder.build(inputs));
         this.docCount++;
     }
 
@@ -105,6 +111,37 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void close() {
         logger.info("Close called; stopping job");
         stopJobAndRelease();
+    }
+
+    private DocBuilder.DocumentInputs makeDocumentInputsForArbitraryRow(InternalRow row) {
+        String json = convertRowToJSONString(row);
+        StringHandle content = new StringHandle(json).withFormat(Format.JSON);
+        ObjectNode columnValues = null;
+        if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
+            try {
+                columnValues = (ObjectNode) objectMapper.readTree(json);
+            } catch (JsonProcessingException e) {
+                throw new ConnectorException(String.format("Unable to read JSON row: %s", e.getMessage()), e);
+            }
+        }
+        return new DocBuilder.DocumentInputs(null, content, columnValues);
+    }
+
+    private DocBuilder.DocumentInputs makeDocumentInputsForFileRow(InternalRow row) {
+        String initialUri = row.getString(writeContext.getFileSchemaPathPosition());
+        BytesHandle content = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
+        ObjectNode columnValues = null;
+        if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
+            columnValues = objectMapper.createObjectNode();
+            columnValues.put("path", initialUri);
+            Object modificationTime = row.get(1, DataTypes.LongType);
+            if (modificationTime != null) {
+                columnValues.put("modificationTime", modificationTime.toString());
+            }
+            columnValues.put("length", row.getLong(2));
+            // Not including content as it's a byte array that is not expected to be helpful for making a URI.
+        }
+        return new DocBuilder.DocumentInputs(initialUri, content, columnValues);
     }
 
     private String convertRowToJSONString(InternalRow row) {
