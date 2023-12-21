@@ -39,7 +39,7 @@ public abstract class AbstractWriteTest extends AbstractIntegrationTest {
     protected DataFrameWriter newWriterWithDefaultConfig(String csvFilename, int partitionCount) {
         return newWriterWithoutDocumentConfig(csvFilename, partitionCount)
             .option(Options.WRITE_COLLECTIONS, COLLECTION)
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_PREFIX, "/test/")
             .option(Options.WRITE_URI_SUFFIX, ".json");
     }
