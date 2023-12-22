@@ -61,9 +61,8 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
 
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
+            .options(defaultWriteOptions())
             .option(Options.WRITE_COLLECTIONS, "read-stream")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/read-stream/{partition}.json")
             .option(Options.WRITE_URI_PREFIX, "/")
 
@@ -106,9 +105,8 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .load()
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
+            .options(defaultWriteOptions())
             .option(Options.WRITE_COLLECTIONS, "read-stream")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/read-stream/{partition}.json")
             .option(Options.WRITE_URI_PREFIX, "/")
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
@@ -135,9 +133,8 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .load()
             .writeStream()
             .format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
+            .options(defaultWriteOptions())
             .option(Options.WRITE_COLLECTIONS, "single-partition-test")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
             .start()
             .processAllAvailable();
