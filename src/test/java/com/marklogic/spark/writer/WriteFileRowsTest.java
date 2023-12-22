@@ -26,11 +26,10 @@ class WriteFileRowsTest extends AbstractWriteTest {
 
     @Test
     void writeAllFourDocumentTypes() {
-        readFourBinaryFilesAndWrite()
+        defaultWrite(readFourBinaryFilesAndWrite()
             .option(Options.WRITE_COLLECTIONS, "mixed-files")
             .option(Options.WRITE_URI_REPLACE, ".*/resources,''")
-            .mode(SaveMode.Append)
-            .save();
+        );
 
         DatabaseClient client = getDatabaseClient();
         assertCollectionSize("mixed-files", 4);
@@ -52,11 +51,10 @@ class WriteFileRowsTest extends AbstractWriteTest {
 
     @Test
     void multipleUriReplacePatterns() {
-        readFourBinaryFilesAndWrite()
+        defaultWrite(readFourBinaryFilesAndWrite()
             .option(Options.WRITE_COLLECTIONS, "multiple-replace")
             .option(Options.WRITE_URI_REPLACE, ".*/src/test,'/test',resources,'modified'")
-            .mode(SaveMode.Append)
-            .save();
+        );
 
         List<String> uris = getUrisInCollection("multiple-replace", 4);
         Stream.of("/test/modified/mixed-files/hello.txt", "/test/modified/mixed-files/hello.json",
@@ -105,15 +103,11 @@ class WriteFileRowsTest extends AbstractWriteTest {
         // account for it in our test.
         final String expectedURI = String.format("/testfile/%d000/%d.json", row.getTimestamp(1).getTime(), row.getLong(2));
 
-        dataset
-            .write()
+        defaultWrite(dataset.write()
             .format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_COLLECTIONS, "template-test")
             .option(Options.WRITE_URI_TEMPLATE, "/testfile/{modificationTime}/{length}.json")
-            .mode(SaveMode.Append)
-            .save();
+        );
 
         JsonNode doc = readJsonDocument(expectedURI);
         assertEquals("world", doc.get("hello").asText());
@@ -127,10 +121,9 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .load("src/test/resources/json-unrecognized-extension/")
             .write()
             .format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
+            .options(defaultWriteOptions())
             // Verifies that the value gets capitalized.
             .option(Options.WRITE_FILES_DOCUMENT_TYPE, "jSoN")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_COLLECTIONS, "json-unrecognized-extension")
             .mode(SaveMode.Append)
             .save();

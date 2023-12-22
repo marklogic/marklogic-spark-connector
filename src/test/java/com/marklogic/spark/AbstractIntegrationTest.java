@@ -17,9 +17,7 @@ package com.marklogic.spark;
 
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
-import org.apache.spark.sql.DataFrameReader;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +25,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -138,5 +138,24 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected final String rowsToString(List<Row> rows) {
         // Used for debugging and in some assertions.
         return rows.stream().map(row -> row.prettyJson()).collect(Collectors.joining());
+    }
+
+    /**
+     * Avoids having to repeat mode/save.
+     */
+    protected void defaultWrite(DataFrameWriter writer) {
+        writer.options(defaultWriteOptions())
+            .mode(SaveMode.Append)
+            .save();
+    }
+
+    /**
+     * Nearly every successful write operation will want these options.
+     */
+    protected Map<String, String> defaultWriteOptions() {
+        Map<String, String> options = new HashMap<>();
+        options.put(Options.CLIENT_URI, makeClientUri());
+        options.put(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS);
+        return options;
     }
 }
