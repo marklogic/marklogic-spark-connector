@@ -23,10 +23,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 class WriteRowsTest extends AbstractWriteTest {
@@ -43,6 +40,10 @@ class WriteRowsTest extends AbstractWriteTest {
     void batchSizeGreaterThanNumberOfRowsToWrite() {
         newWriter()
             .option(Options.WRITE_BATCH_SIZE, 1000)
+            // Adding this here just to ensure an error doesn't happen. While it doesn't make sense for a user to apply
+            // this option when there's no initial URI, it doesn't cause any issues and thus there's no need to throw
+            // an error.
+            .option(Options.WRITE_URI_REPLACE, "thiswont,'have any effect'")
             .save();
 
         // Verifies that the docs were written during the "commit()" call, as the WriteBatcher is expected to be

@@ -17,8 +17,6 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 
-import java.util.UUID;
-
 /**
  * This is intended to migrate to java-client-api and likely just be a Builder class on DocumentWriteOperation.
  */
@@ -45,19 +43,6 @@ class DocBuilderFactory {
     DocBuilderFactory withPermissions(String permissionsString) {
         metadata.getPermissions().addFromDelimitedString(permissionsString);
         return this;
-    }
-
-    DocBuilderFactory withSimpleUriStrategy(String prefix, String suffix) {
-        return withUriMaker((initialUri, columnValues) -> {
-            String uri = initialUri != null ? initialUri : "";
-            if (prefix != null) {
-                uri = prefix + uri;
-            }
-            if (initialUri == null || initialUri.trim().length() == 0) {
-                uri += UUID.randomUUID().toString();
-            }
-            return suffix != null ? uri + suffix : uri;
-        });
     }
 
     DocBuilderFactory withUriMaker(DocBuilder.UriMaker uriMaker) {

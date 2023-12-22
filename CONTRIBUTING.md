@@ -92,13 +92,17 @@ To configure the SonarQube service, perform the following steps:
 6. Click on "Next".
 7. Click on "Use the global setting" and then "Create project".
 8. On the "Analysis Method" page, click on "Locally".
-9. In the "Provide a token" panel, click on "Generate". Copy the token to a safe place (you can always generate a new one).
+9. In the "Provide a token" panel, click on "Generate". Copy the token.
+10. Add `systemProp.sonar.token=your token pasted here` to `gradle-local.properties` in the root of your project, creating
+that file if it does not exist yet.
 
-One place to paste your Sonar token would be in `gradle-local.properties`, as that file is gitignore'd. You'll still 
-need to paste it in the command shown next though.
-
-To run SonarQube, run the following Gradle tasks, which will run all of the tests with code coverage and then generate
+To run SonarQube, run the following Gradle tasks, which will run all the tests with code coverage and then generate
 a quality report with SonarQube:
+
+    ./gradlew test sonar
+
+If you do not add `systemProp.sonar.token` to your `gradle-local.properties` file, you can specify the token via the
+following:
 
     ./gradlew test sonar -Dsonar.token=paste your token here
 
@@ -110,7 +114,7 @@ Click on that link. If it's the first time you've run the report, you'll see all
 before, then SonarQube will show "New Code" by default. That's handy, as you can use that to quickly see any issues
 you've introduced on the feature branch you're working on. You can then click on "Overall Code" to see all issues.
 
-Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar -Dsonar:token`
+Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
 
 # Testing with PySpark
