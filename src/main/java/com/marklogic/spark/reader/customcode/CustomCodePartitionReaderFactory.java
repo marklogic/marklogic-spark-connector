@@ -7,6 +7,8 @@ import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 
 class CustomCodePartitionReaderFactory implements PartitionReaderFactory {
 
+    static final long serialVersionUID = 1;
+
     private CustomCodeContext customCodeContext;
 
     public CustomCodePartitionReaderFactory(CustomCodeContext customCodeContext) {
