@@ -100,10 +100,10 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
         return session
             .read()
             .format(CONNECTOR_IDENTIFIER)
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", TEST_USERNAME)
-            .option("spark.marklogic.client.password", TEST_PASSWORD)
+            .option(Options.CLIENT_HOST, testConfig.getHost())
+            .option(Options.CLIENT_PORT, testConfig.getRestPort())
+            .option(Options.CLIENT_USERNAME, TEST_USERNAME)
+            .option(Options.CLIENT_PASSWORD, TEST_PASSWORD)
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')");
     }
 

@@ -53,10 +53,10 @@ public abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .write()
             .format(CONNECTOR_IDENTIFIER)
             .mode(SaveMode.Append)
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", "spark-test-user")
-            .option("spark.marklogic.client.password", "spark");
+            .option(Options.CLIENT_HOST, testConfig.getHost())
+            .option(Options.CLIENT_PORT, testConfig.getRestPort())
+            .option(Options.CLIENT_USERNAME, "spark-test-user")
+            .option(Options.CLIENT_PASSWORD, "spark");
     }
 
     /**

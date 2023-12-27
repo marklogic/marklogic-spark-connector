@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 class BuildConnectionPropertiesTest {
 
-    private static final String AUTH_TYPE = "spark.marklogic.client.authType";
-    private static final String CONNECTION_TYPE = "spark.marklogic.client.connectionType";
+    private static final String AUTH_TYPE = Options.CLIENT_AUTH_TYPE;
+    private static final String CONNECTION_TYPE = Options.CLIENT_CONNECTION_TYPE;
 
     private Map<String, String> properties = new HashMap<>();
 

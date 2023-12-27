@@ -17,8 +17,15 @@ package com.marklogic.spark;
 
 public abstract class Options {
 
-    public static final String CLIENT_URI = "spark.marklogic.client.uri";
+    public static final String CLIENT_AUTH_TYPE = "spark.marklogic.client.authType";
+    public static final String CLIENT_CONNECTION_TYPE = "spark.marklogic.client.connectionType";
+    public static final String CLIENT_DATABASE = "spark.marklogic.client.database";
+    public static final String CLIENT_HOST = "spark.marklogic.client.host";
+    public static final String CLIENT_PASSWORD = "spark.marklogic.client.password";
+    public static final String CLIENT_PORT = "spark.marklogic.client.port";
     public static final String CLIENT_SSL_ENABLED = "spark.marklogic.client.sslEnabled";
+    public static final String CLIENT_URI = "spark.marklogic.client.uri";
+    public static final String CLIENT_USERNAME = "spark.marklogic.client.username";
 
     public static final String READ_INVOKE = "spark.marklogic.read.invoke";
     public static final String READ_JAVASCRIPT = "spark.marklogic.read.javascript";

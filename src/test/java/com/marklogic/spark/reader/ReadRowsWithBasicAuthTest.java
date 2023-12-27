@@ -20,6 +20,7 @@ import com.marklogic.mgmt.ManageClient;
 import com.marklogic.mgmt.ManageConfig;
 import com.marklogic.mgmt.resource.appservers.ServerManager;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.Options;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +51,7 @@ class ReadRowsWithBasicAuthTest extends AbstractIntegrationTest {
     @Test
     void test() {
         long count = newDefaultReader()
-            .option("spark.marklogic.client.authType", "basic")
+            .option(Options.CLIENT_AUTH_TYPE, "basic")
             .load()
             .count();
 
