@@ -19,7 +19,10 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.SchemaInferrer;
+import com.marklogic.spark.reader.file.FileRowSchema;
+import com.marklogic.spark.reader.file.MarkLogicFileTable;
 import com.marklogic.spark.writer.WriteContext;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
@@ -29,7 +32,10 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.collection.JavaConverters;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,29 +60,25 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
      */
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
-        final Map<String, String> caseSensitiveOptions = options.asCaseSensitiveMap();
-
-        if (isReadWithCustomCodeOperation(caseSensitiveOptions)) {
+        final Map<String, String> properties = options.asCaseSensitiveMap();
+        if (isReadFilesOperation(properties)) {
+            return FileRowSchema.SCHEMA;
+        }
+        if (isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
-
-        final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
-        if (query == null || query.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
-        }
-        RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
-        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
-        try {
-            // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
-            StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            return SchemaInferrer.inferSchema(columnInfoHandle.get());
-        } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
-        }
+        return inferSchemaFromOpticQuery(properties);
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
+        if (isReadFilesOperation(properties)) {
+            return new MarkLogicFileTable(SparkSession.active(),
+                new CaseInsensitiveStringMap(properties),
+                JavaConverters.asScalaBuffer(getPaths(properties))
+            );
+        }
+
         if (isReadOperation(properties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Creating new table for reading");
@@ -100,11 +102,37 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return true;
     }
 
+    private boolean isReadFilesOperation(Map<String, String> properties) {
+        return properties.containsKey("path") || properties.containsKey("paths");
+    }
+
     private boolean isReadOperation(Map<String, String> properties) {
         return properties.get(Options.READ_OPTIC_QUERY) != null || isReadWithCustomCodeOperation(properties);
     }
 
     private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
         return Util.hasOption(properties, Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT);
+    }
+
+    private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
+        final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
+        if (query == null || query.trim().length() < 1) {
+            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
+        }
+        RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
+        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
+        try {
+            // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
+            StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
+            return SchemaInferrer.inferSchema(columnInfoHandle.get());
+        } catch (Exception ex) {
+            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+        }
+    }
+
+    private List<String> getPaths(Map<String, String> properties) {
+        return properties.containsKey("path") ?
+            Arrays.asList(properties.get("path")) :
+            Util.parsePaths(properties.get("paths"));
     }
 }

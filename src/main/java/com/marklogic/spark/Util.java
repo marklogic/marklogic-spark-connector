@@ -18,6 +18,8 @@ package com.marklogic.spark;
 import org.apache.spark.sql.catalyst.json.JSONOptions;
 import scala.collection.immutable.HashMap;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -41,4 +43,26 @@ public interface Util {
             .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
     }
 
+    /**
+     * For parsing the Spark "paths" option, which is set when a user calls {@code load()} with 2 or more
+     * paths. In that scenario, Spark effectively toString's the list of paths into a string of the form:
+     * "["path", "path2", "path3"]", with the surrounding double quotes included.
+     *
+     * @param pathsValue
+     * @return
+     */
+    static List<String> parsePaths(String pathsValue) {
+        List<String> paths = new ArrayList<>();
+        pathsValue = pathsValue.trim().substring(2, pathsValue.length() - 2);
+        for (String path : pathsValue.split(",")) {
+            if (path.charAt(0) == '"') {
+                path = path.substring(1);
+            }
+            if (path.charAt(path.length() - 1) == '"') {
+                path = path.substring(0, path.length() - 1);
+            }
+            paths.add(path);
+        }
+        return paths;
+    }
 }
