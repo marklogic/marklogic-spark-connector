@@ -82,20 +82,20 @@ public class ContextSupport implements Serializable {
         if (tokens.length != 2) {
             throw new IllegalArgumentException(errorMessage);
         }
-        connectionProps.put("spark.marklogic.client.username", decodeValue(tokens[0], "username"));
-        connectionProps.put("spark.marklogic.client.password", decodeValue(tokens[1], "password"));
+        connectionProps.put(Options.CLIENT_USERNAME, decodeValue(tokens[0], "username"));
+        connectionProps.put(Options.CLIENT_PASSWORD, decodeValue(tokens[1], "password"));
 
         tokens = parts[1].split(":");
         if (tokens.length != 2) {
             throw new IllegalArgumentException(errorMessage);
         }
-        connectionProps.put("spark.marklogic.client.host", tokens[0]);
+        connectionProps.put(Options.CLIENT_HOST, tokens[0]);
         if (tokens[1].contains("/")) {
             tokens = tokens[1].split("/");
-            connectionProps.put("spark.marklogic.client.port", tokens[0]);
-            connectionProps.put("spark.marklogic.client.database", tokens[1]);
+            connectionProps.put(Options.CLIENT_PORT, tokens[0]);
+            connectionProps.put(Options.CLIENT_DATABASE, tokens[1]);
         } else {
-            connectionProps.put("spark.marklogic.client.port", tokens[1]);
+            connectionProps.put(Options.CLIENT_PORT, tokens[1]);
         }
     }
 

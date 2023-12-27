@@ -130,7 +130,7 @@ class WriteRowsTest extends AbstractWriteTest {
     void userNotPermittedToWriteAndFailOnCommit() {
         SparkException ex = assertThrows(SparkException.class,
             () -> newWriter()
-                .option("spark.marklogic.client.username", "spark-no-write-user")
+                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 500)
                 .save()
         );
@@ -161,7 +161,7 @@ class WriteRowsTest extends AbstractWriteTest {
     void userNotPermittedToWriteAndFailOnWrite() {
         SparkException ex = assertThrows(SparkException.class,
             () -> newWriter()
-                .option("spark.marklogic.client.username", "spark-no-write-user")
+                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 1)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .save()

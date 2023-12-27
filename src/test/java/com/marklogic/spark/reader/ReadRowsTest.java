@@ -93,7 +93,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
 
     @Test
     void invalidCredentials() {
-        DataFrameReader reader = newDefaultReader().option("spark.marklogic.client.password", "invalid password");
+        DataFrameReader reader = newDefaultReader().option(Options.CLIENT_PASSWORD, "invalid password");
         RuntimeException ex = assertThrows(RuntimeException.class, () -> reader.load());
 
         assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", ex.getMessage(),
