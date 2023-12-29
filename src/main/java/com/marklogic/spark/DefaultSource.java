@@ -19,6 +19,8 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.SchemaInferrer;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
+import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
 import com.marklogic.spark.reader.file.MarkLogicFileTable;
 import com.marklogic.spark.writer.WriteContext;
@@ -64,6 +66,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (isReadFilesOperation(properties)) {
             return FileRowSchema.SCHEMA;
         }
+        // We will likely check for any read.documents option in the near future.
+        if (options.containsKey(Options.READ_DOCUMENTS_COLLECTIONS)) {
+            return DocumentRowSchema.SCHEMA;
+        }
         if (isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
@@ -77,6 +83,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
                 new CaseInsensitiveStringMap(properties),
                 JavaConverters.asScalaBuffer(getPaths(properties))
             );
+        }
+
+        if (properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS)) {
+            return new DocumentTable();
         }
 
         if (isReadOperation(properties)) {
