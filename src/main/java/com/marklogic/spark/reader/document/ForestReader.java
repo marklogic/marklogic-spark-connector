@@ -52,6 +52,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     @Override
     public boolean next() {
         if (currentDocumentPage == null || !currentDocumentPage.hasNext()) {
+            closeCurrentDocumentPageIfNecessary();
             List<String> uris = uriBatcher.nextBatchOfUris();
             if (uris.isEmpty()) {
                 return false;
@@ -68,16 +69,24 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     @Override
     public InternalRow get() {
-        DocumentRecord record = this.currentDocumentPage.next();
-        String format = record.getFormat() != null ? record.getFormat().toString() : Format.UNKNOWN.toString();
+        DocumentRecord document = this.currentDocumentPage.next();
+        String format = document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString();
         return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(record.getUri()),
-            ByteArray.concat(record.getContent(new BytesHandle()).get()),
+            UTF8String.fromString(document.getUri()),
+            ByteArray.concat(document.getContent(new BytesHandle()).get()),
             UTF8String.fromString(format)
         });
     }
 
     @Override
     public void close() {
+        closeCurrentDocumentPageIfNecessary();
+    }
+
+    private void closeCurrentDocumentPageIfNecessary() {
+        if (currentDocumentPage != null) {
+            currentDocumentPage.close();
+            currentDocumentPage = null;
+        }
     }
 }

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ReadDocumentRowsTest extends AbstractIntegrationTest {
+class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
     @Test
     void readByCollection() throws Exception {
@@ -30,4 +30,16 @@ public class ReadDocumentRowsTest extends AbstractIntegrationTest {
         assertEquals(4, doc.get("CitationID").asInt());
         assertEquals("Vivianne", doc.get("ForeName").asText());
     }
+
+    @Test
+    void noDocsInCollection() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "some-collection-with-no-documents")
+            .load()
+            .count();
+        assertEquals(0, count);
+    }
+
 }

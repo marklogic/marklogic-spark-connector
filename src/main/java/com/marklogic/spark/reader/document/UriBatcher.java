@@ -56,7 +56,7 @@ class UriBatcher {
                 this.serverTimestamp = results.getServerTimestamp();
             }
             List<String> uris = new ArrayList<>();
-            results.iterator().forEachRemaining(uri -> uris.add(uri));
+            results.iterator().forEachRemaining(uris::add);
             if (!uris.isEmpty()) {
                 this.lastUri = uris.get(uris.size() - 1);
             }
