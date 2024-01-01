@@ -1,5 +1,7 @@
-package com.marklogic.spark.reader.file;
+package com.marklogic.spark;
 
+import com.marklogic.spark.reader.file.FileScanBuilder;
+import com.marklogic.spark.writer.file.DocumentFileWriteBuilder;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.read.ScanBuilder;
@@ -24,10 +26,15 @@ import scala.collection.Seq;
  * For future attempts, the example at https://stackoverflow.com/a/45373345/3306099 is useful for converting a Java
  * map into an immutable Scala map.
  */
-public class MarkLogicFileTable extends FileTable {
+class MarkLogicFileTable extends FileTable {
 
-    public MarkLogicFileTable(SparkSession sparkSession, CaseInsensitiveStringMap options, Seq<String> paths) {
-        super(sparkSession, options, paths, Option.apply(FileRowSchema.SCHEMA));
+    private final CaseInsensitiveStringMap options;
+    private final StructType schema;
+
+    MarkLogicFileTable(SparkSession sparkSession, CaseInsensitiveStringMap options, Seq<String> paths, StructType schema) {
+        super(sparkSession, options, paths, Option.apply(schema));
+        this.options = options;
+        this.schema = schema;
     }
 
     @Override
@@ -36,20 +43,26 @@ public class MarkLogicFileTable extends FileTable {
     }
 
     @Override
+    public WriteBuilder newWriteBuilder(LogicalWriteInfo info) {
+        // Need to pass along a serializable object.
+        return new DocumentFileWriteBuilder(this.options.asCaseSensitiveMap());
+    }
+
+    @Override
     public Option<StructType> inferSchema(Seq<FileStatus> files) {
-        return Option.apply(FileRowSchema.SCHEMA);
+        return Option.apply(this.schema);
     }
 
     @Override
     public String name() {
-        return "marklogic";
+        return "marklogic-file";
     }
 
     @Override
     public String formatName() {
         // Per the docs in FileTable, this is providing an alias for supported file types. It does not appear to have
         // any impact on functionality.
-        return name();
+        return "marklogic";
     }
 
     @Override
@@ -57,10 +70,5 @@ public class MarkLogicFileTable extends FileTable {
         // Per the docs in FileTable, this allows for returning a Spark V1 FileFormat. We don't have support for that,
         // so null is returned.
         return null;
-    }
-
-    @Override
-    public WriteBuilder newWriteBuilder(LogicalWriteInfo info) {
-        throw new UnsupportedOperationException("The MarkLogic Spark connector does not yet support writing files.");
     }
 }

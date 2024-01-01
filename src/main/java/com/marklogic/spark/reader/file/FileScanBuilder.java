@@ -4,11 +4,11 @@ import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.execution.datasources.PartitioningAwareFileIndex;
 
-class FileScanBuilder implements ScanBuilder {
+public class FileScanBuilder implements ScanBuilder {
 
     private PartitioningAwareFileIndex fileIndex;
 
-    FileScanBuilder(PartitioningAwareFileIndex fileIndex) {
+    public FileScanBuilder(PartitioningAwareFileIndex fileIndex) {
         this.fileIndex = fileIndex;
     }
 
