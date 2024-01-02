@@ -37,8 +37,8 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     ForestReader(ForestPartition forestPartition, DocumentContext documentContext) {
         this.forestName = forestPartition.getForestName();
-        if (logger.isInfoEnabled()) {
-            logger.info("Will read from forest: {}", this.forestName);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will read from forest: {}", this.forestName);
         }
 
         this.databaseClient = documentContext.connectToMarkLogic();
@@ -53,16 +53,22 @@ class ForestReader implements PartitionReader<InternalRow> {
     public boolean next() {
         if (currentDocumentPage == null || !currentDocumentPage.hasNext()) {
             closeCurrentDocumentPageIfNecessary();
+            long start = System.currentTimeMillis();
             List<String> uris = uriBatcher.nextBatchOfUris();
+            if (logger.isTraceEnabled()) {
+                logger.trace("Retrieved {} URIs in {}ms from forest {}", uris.size(),
+                    (System.currentTimeMillis() - start), this.forestName);
+            }
             if (uris.isEmpty()) {
                 return false;
             }
-            if (logger.isDebugEnabled()) {
-                logger.debug("Read {} URIs from forest {}", uris.size(), this.forestName);
-            }
             // Copied from ExportListener. Will add transform support later.
+            start = System.currentTimeMillis();
             this.currentDocumentPage = this.databaseClient.newDocumentManager()
                 .read((ServerTransform) null, uris.toArray(new String[]{}));
+            if (logger.isTraceEnabled()) {
+                logger.trace("Retrieved page of documents in {}ms from forest {}", (System.currentTimeMillis() - start), this.forestName);
+            }
         }
         return currentDocumentPage.hasNext();
     }
