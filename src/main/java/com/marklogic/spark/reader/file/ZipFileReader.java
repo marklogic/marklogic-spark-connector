@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
@@ -11,12 +12,12 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class ZipFileReader implements PartitionReader<InternalRow> {
+
+class ZipFileReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileReader.class);
 
@@ -31,7 +32,8 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
                 logger.debug("Reading zip file {}", this.path);
             }
             Path hadoopPath = new Path(this.path);
-            this.zipInputStream = new ZipInputStream(hadoopPath.getFileSystem(hadoopConfiguration.value()).open(hadoopPath));
+            FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
+            this.zipInputStream = new ZipInputStream(fileSystem.open(hadoopPath));
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
         }
@@ -76,16 +78,8 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
     }
 
     private byte[] readZipEntry() {
-        byte[] buffer = new byte[1024];
-        int offset = 0;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            int read;
-            while ((read = zipInputStream.read(buffer)) != -1) {
-                baos.write(buffer, offset, read);
-                offset += read;
-            }
-            return baos.toByteArray();
+            return FileUtil.readBytes(zipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from zip file at %s; cause: %s",
                 this.path, e.getMessage()), e);

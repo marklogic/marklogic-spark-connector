@@ -43,6 +43,8 @@ public abstract class Options {
 
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";
 
+    public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
+
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";

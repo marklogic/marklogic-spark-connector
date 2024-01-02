@@ -24,7 +24,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void readAndWriteFourFilesInZip() {
-        Dataset<Row> reader = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+        Dataset<Row> reader = newZipReader()
             .load("src/test/resources/zip-files/mixed*.zip");
 
         verifyFileRows(reader.collectAsList());
@@ -49,7 +49,8 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void readViaMultiplePaths() {
-        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+        List<Row> rows = newZipReader()
+            .option(Options.READ_FILES_COMPRESSION, "zip")
             .load(
                 "src/test/resources/zip-files/mixed-files.zip",
                 "src/test/resources/zip-files/child/logback.zip"
@@ -61,7 +62,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void readTwoZipFilesViaRecursiveLookupWithFilter() {
-        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+        List<Row> rows = newZipReader()
             .option("pathGlobFilter", "*.zip")
             .option("recursiveFileLookup", true)
             .load("src/test/resources/zip-files")
@@ -73,7 +74,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void readDirectoryWithNoZips() {
-        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+        List<Row> rows = newZipReader()
             .load("src/test/resources/mixed-files")
             .collectAsList();
 
@@ -84,7 +85,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void noFilesFoundDueToGlobFilter() {
-        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+        List<Row> rows = newZipReader()
             .option("pathGlobFilter", "*.weirdzip")
             .option("recursiveFileLookup", true)
             .load("src/test/resources/zip-files")
@@ -95,7 +96,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void pathDoesntExist() {
-        DataFrameReader reader = newSparkSession().read().format(CONNECTOR_IDENTIFIER);
+        DataFrameReader reader = newZipReader();
         assertThrows(AnalysisException.class, () -> reader.load("path/not/found"), "AnalysisException is a " +
             "standard Spark exception that is thrown when a non-existent path is detected.");
     }
@@ -118,5 +119,11 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
         assertTrue(row.getString(0).endsWith("mixed-files.zip/mixed-files/hello2.txt.gz"));
         assertNull(row.get(1));
         assertEquals(43, row.getLong(2));
+    }
+
+    private DataFrameReader newZipReader() {
+        return newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip");
     }
 }

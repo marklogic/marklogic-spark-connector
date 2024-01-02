@@ -39,7 +39,7 @@ class MarkLogicFileTable extends FileTable {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new FileScanBuilder(super.fileIndex());
+        return new FileScanBuilder(options.asCaseSensitiveMap(), super.fileIndex());
     }
 
     @Override
