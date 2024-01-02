@@ -22,7 +22,6 @@ import com.marklogic.spark.reader.SchemaInferrer;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
-import com.marklogic.spark.reader.file.MarkLogicFileTable;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.catalog.Table;
@@ -63,7 +62,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     @Override
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> properties = options.asCaseSensitiveMap();
-        if (isReadFilesOperation(properties)) {
+        if (isFileOperation(properties)) {
             return FileRowSchema.SCHEMA;
         }
         // We will likely check for any read.documents option in the near future.
@@ -78,10 +77,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
-        if (isReadFilesOperation(properties)) {
+        if (isFileOperation(properties)) {
             return new MarkLogicFileTable(SparkSession.active(),
                 new CaseInsensitiveStringMap(properties),
-                JavaConverters.asScalaBuffer(getPaths(properties))
+                JavaConverters.asScalaBuffer(getPaths(properties)), schema
             );
         }
 
@@ -112,7 +111,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return true;
     }
 
-    private boolean isReadFilesOperation(Map<String, String> properties) {
+    private boolean isFileOperation(Map<String, String> properties) {
         return properties.containsKey("path") || properties.containsKey("paths");
     }
 

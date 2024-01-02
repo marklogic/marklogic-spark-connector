@@ -36,7 +36,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class MarkLogicTable implements SupportsRead, SupportsWrite {
+class MarkLogicTable implements SupportsRead, SupportsWrite {
 
     private static final Logger logger = LoggerFactory.getLogger(MarkLogicTable.class);
 
