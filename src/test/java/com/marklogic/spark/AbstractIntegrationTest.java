@@ -17,6 +17,7 @@ package com.marklogic.spark;
 
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -30,7 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Uses marklogic-junit (from marklogic-unit-test) to construct a DatabaseClient
@@ -157,5 +158,13 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
         options.put(Options.CLIENT_URI, makeClientUri());
         options.put(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS);
         return options;
+    }
+
+    protected final ConnectorException assertThrowsConnectorException(Runnable r) {
+        SparkException ex = assertThrows(SparkException.class, () -> r.run());
+        assertTrue(ex.getCause() instanceof ConnectorException,
+            "Expect the Spark-thrown SparkException to wrap our ConnectorException, which is an exception that we " +
+                "intentionally throw when an error condition is detected.");
+        return (ConnectorException) ex.getCause();
     }
 }
