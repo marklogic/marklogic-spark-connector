@@ -18,7 +18,7 @@ package com.marklogic.spark;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
-import com.marklogic.spark.reader.SchemaInferrer;
+import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
