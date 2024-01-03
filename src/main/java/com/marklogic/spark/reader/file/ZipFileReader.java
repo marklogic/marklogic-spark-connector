@@ -41,40 +41,27 @@ class ZipFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public boolean next() throws IOException {
-        currentZipEntry = findNextValidEntry();
+        currentZipEntry = FileUtil.findNextFileEntry(zipInputStream);
         return currentZipEntry != null;
     }
 
     @Override
     public InternalRow get() {
         String zipEntryName = currentZipEntry.getName();
-        if (logger.isDebugEnabled()) {
-            logger.debug("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
         }
         String uri = this.path + "/" + zipEntryName;
         byte[] content = readZipEntry();
-        Object modificationTime = null; // We don't yet have a need to populate this, nor a way to determine it.
         long length = content.length;
         return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(uri), modificationTime, length, ByteArray.concat(content)
+            UTF8String.fromString(uri), null, length, ByteArray.concat(content)
         });
     }
 
     @Override
     public void close() throws IOException {
         this.zipInputStream.close();
-    }
-
-    // The suppressed Sonar warning is for a potential "Zip bomb" attack when accessing a zip entry. The recommended
-    // fixes involve checking the zip of the entry. That is not possible as the ZipInputStream returns -1 for both the
-    // size and compressed size.
-    @SuppressWarnings("java:S5042")
-    private ZipEntry findNextValidEntry() throws IOException {
-        ZipEntry entry = zipInputStream.getNextEntry();
-        if (entry == null) {
-            return null;
-        }
-        return !entry.isDirectory() ? entry : findNextValidEntry();
     }
 
     private byte[] readZipEntry() {

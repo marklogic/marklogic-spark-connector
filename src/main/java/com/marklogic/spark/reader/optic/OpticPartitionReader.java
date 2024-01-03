@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.JsonRowDeserializer;
-import com.marklogic.spark.reader.optic.PlanAnalysis;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
