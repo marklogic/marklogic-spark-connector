@@ -15,8 +15,8 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.OpticScanBuilder;
-import com.marklogic.spark.reader.ReadContext;
+import com.marklogic.spark.reader.optic.OpticScanBuilder;
+import com.marklogic.spark.reader.optic.ReadContext;
 import com.marklogic.spark.reader.customcode.CustomCodeScanBuilder;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;

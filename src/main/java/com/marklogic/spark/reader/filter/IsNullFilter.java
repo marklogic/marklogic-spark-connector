@@ -17,7 +17,7 @@ package com.marklogic.spark.reader.filter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.expression.PlanBuilder;
-import com.marklogic.spark.reader.PlanUtil;
+import com.marklogic.spark.reader.optic.PlanUtil;
 import org.apache.spark.sql.sources.IsNull;
 
 class IsNullFilter implements OpticFilter {
