@@ -45,6 +45,14 @@ public abstract class Options {
 
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
 
+    // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.
+    // "xml" is included in the name in anticipation of eventually supporting "aggregate JSON" - i.e. an array of N
+    // objects, where each object should become a row / document (this is different from JSON lines format).
+    public static final String READ_AGGREGATES_XML_ELEMENT = "spark.marklogic.read.aggregates.xml.element";
+    public static final String READ_AGGREGATES_XML_NAMESPACE = "spark.marklogic.read.aggregates.xml.namespace";
+    public static final String READ_AGGREGATES_XML_URI_ELEMENT = "spark.marklogic.read.aggregates.xml.uriElement";
+    public static final String READ_AGGREGATES_XML_URI_NAMESPACE = "spark.marklogic.read.aggregates.xml.uriNamespace";
+
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";

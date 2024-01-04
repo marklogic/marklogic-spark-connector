@@ -1,0 +1,16 @@
+<Company xmlns="org:example">
+  <Employee>
+    <name>John</name>
+    <age>40</age>
+  </Employee>
+  <Employee>
+    <name>Jane</name>
+    <age>41</age>
+  </Employee>
+  <wrapper>
+    <Employee>
+      <name>Brenda</name>
+      <age>42</age>
+    </Employee>
+  </wrapper>
+</Company>
