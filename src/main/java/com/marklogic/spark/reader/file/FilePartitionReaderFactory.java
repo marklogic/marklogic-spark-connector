@@ -33,6 +33,8 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
         if (aggregateXmlElement != null && !aggregateXmlElement.trim().isEmpty()) {
             if (isZip) {
                 return new ZipAggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
+            } else if (isGzip) {
+                return new GZIPAggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
             }
             return new AggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
         } else if (isZip) {
