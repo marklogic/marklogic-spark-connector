@@ -3,6 +3,8 @@ package com.marklogic.spark.reader.file;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public interface FileUtil {
 
@@ -16,5 +18,17 @@ public interface FileUtil {
             offset += read;
         }
         return baos.toByteArray();
+    }
+
+    // The suppressed Sonar warning is for a potential "Zip bomb" attack when accessing a zip entry. The recommended
+    // fixes involve checking the zip of the entry. That is not possible as the ZipInputStream returns -1 for both the
+    // size and compressed size.
+    @SuppressWarnings("java:S5042")
+    static ZipEntry findNextFileEntry(ZipInputStream zipInputStream) throws IOException {
+        ZipEntry entry = zipInputStream.getNextEntry();
+        if (entry == null) {
+            return null;
+        }
+        return !entry.isDirectory() ? entry : findNextFileEntry(zipInputStream);
     }
 }

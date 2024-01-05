@@ -26,12 +26,19 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         FilePartition filePartition = (FilePartition) partition;
         String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
-        if ("zip".equalsIgnoreCase(compression)) {
-            return new ZipFileReader(filePartition, hadoopConfiguration);
-        } else if ("gzip".equalsIgnoreCase(compression)) {
-            return new GZIPFileReader(filePartition, hadoopConfiguration);
-        } else if (this.properties.get(Options.READ_AGGREGATES_XML_ELEMENT) != null) {
+        final boolean isZip = "zip".equalsIgnoreCase(compression);
+        final boolean isGzip = "gzip".equalsIgnoreCase(compression);
+
+        String aggregateXmlElement = this.properties.get(Options.READ_AGGREGATES_XML_ELEMENT);
+        if (aggregateXmlElement != null && !aggregateXmlElement.trim().isEmpty()) {
+            if (isZip) {
+                return new ZipAggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
+            }
             return new AggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
+        } else if (isZip) {
+            return new ZipFileReader(filePartition, hadoopConfiguration);
+        } else if (isGzip) {
+            return new GZIPFileReader(filePartition, hadoopConfiguration);
         }
         throw new ConnectorException("Only zip and gzip files supported, more to come before 2.2.0 release.");
     }

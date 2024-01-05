@@ -15,7 +15,6 @@
  */
 package com.marklogic.spark.reader.optic;
 
-import com.marklogic.spark.reader.optic.PlanAnalysis;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
