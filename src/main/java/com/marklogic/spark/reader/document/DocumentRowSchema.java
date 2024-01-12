@@ -8,7 +8,15 @@ public abstract class DocumentRowSchema {
     public static final StructType SCHEMA = new StructType()
         .add("URI", DataTypes.StringType)
         .add("content", DataTypes.BinaryType)
-        .add("format", DataTypes.StringType);
+        .add("format", DataTypes.StringType)
+        .add("collections", DataTypes.createArrayType(DataTypes.StringType))
+        .add("permissions", DataTypes.createMapType(
+            DataTypes.StringType,
+            DataTypes.createArrayType(DataTypes.StringType))
+        )
+        .add("quality", DataTypes.IntegerType)
+        .add("properties", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType))
+        .add("metadataValues", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
 
     private DocumentRowSchema() {
     }
