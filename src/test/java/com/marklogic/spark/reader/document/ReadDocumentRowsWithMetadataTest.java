@@ -1,17 +1,14 @@
 package com.marklogic.spark.reader.document;
 
-import com.marklogic.client.document.DocumentWriteSet;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import scala.collection.JavaConverters;
 import scala.collection.mutable.WrappedArray;
 
-import javax.xml.namespace.QName;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,22 +16,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
 
     @BeforeEach
-    void setupTestDocuments() {
-        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-        metadata.setQuality(10);
-        metadata.getCollections().addAll("collection1", "collection2");
-        metadata.getPermissions().add("spark-user-role", DocumentMetadataHandle.Capability.READ, DocumentMetadataHandle.Capability.UPDATE);
-        metadata.getPermissions().add("qconsole-user", DocumentMetadataHandle.Capability.READ);
-        metadata.getProperties().put(new QName("org:example", "key1"), "value1");
-        metadata.getProperties().put(QName.valueOf("key2"), "value2");
-        metadata.getMetadataValues().put("meta1", "value1");
-        metadata.getMetadataValues().put("meta2", "value2");
-        DocumentWriteSet writeSet = getDatabaseClient().newDocumentManager().newWriteSet();
-        for (int i = 1; i <= 2; i++) {
-            writeSet.add("/metadata-test/" + i + ".xml", metadata,
-                new StringHandle("<content>doesn't matter for this test</content>"));
-        }
-        getDatabaseClient().newDocumentManager().write(writeSet);
+    void setup() {
+        TestUtil.insertTwoDocumentsWithAllMetadata(getDatabaseClient());
     }
 
     @Test
@@ -110,7 +93,7 @@ class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
 
     private void verifyUriColumn(Row row) {
         String uri = row.getString(0);
-        assertTrue(uri.startsWith("/metadata-test/"), "Unexpected URI: " + uri);
+        assertTrue(uri.startsWith("/test/"), "Unexpected URI: " + uri);
     }
 
     private void verifyContentAndFormatColumnsArePopulated(Row row) {

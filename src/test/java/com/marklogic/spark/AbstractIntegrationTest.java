@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark;
 
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.SparkException;
@@ -166,5 +167,10 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
             "Expect the Spark-thrown SparkException to wrap our ConnectorException, which is an exception that we " +
                 "intentionally throw when an error condition is detected.");
         return (ConnectorException) ex.getCause();
+    }
+
+    protected final DocumentMetadataHandle readMetadata(String uri) {
+        // This should really be in marklogic-unit-test.
+        return getDatabaseClient().newDocumentManager().readMetadata(uri, new DocumentMetadataHandle());
     }
 }
