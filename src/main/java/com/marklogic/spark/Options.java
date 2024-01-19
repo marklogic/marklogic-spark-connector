@@ -78,7 +78,10 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
 
+    // TBD Need to rename this, probably to WRITE_FILE_ROWS_DOCUMENT_TYPE.
     public static final String WRITE_FILES_DOCUMENT_TYPE = "spark.marklogic.write.files.documentType";
+
+    public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
 
     private Options() {
     }

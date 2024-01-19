@@ -21,6 +21,7 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
@@ -59,8 +60,7 @@ class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
         ObjectNode doc = new ObjectMapper().createObjectNode();
         doc.putArray("allTypes").addObject().put("intValue", 10);
         getDatabaseClient().newJSONDocumentManager().write("/allTypes2.json",
-            new DocumentMetadataHandle().withPermission("spark-user-role", DocumentMetadataHandle.Capability.READ,
-                DocumentMetadataHandle.Capability.UPDATE),
+            TestUtil.withDefaultPermissions(new DocumentMetadataHandle()),
             new JacksonHandle(doc));
     }
 }
