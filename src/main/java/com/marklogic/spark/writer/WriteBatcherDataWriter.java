@@ -15,29 +15,19 @@
  */
 package com.marklogic.spark.writer;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
-import com.marklogic.client.io.BytesHandle;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.StringHandle;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
-import org.apache.spark.sql.types.DataTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -45,7 +35,6 @@ import java.util.concurrent.atomic.AtomicReference;
 class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(WriteBatcherDataWriter.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final WriteContext writeContext;
     private final DatabaseClient databaseClient;
@@ -58,6 +47,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
     private final AtomicReference<Throwable> writeFailure;
+
+    private final Function<InternalRow, DocBuilder.DocumentInputs> rowToDocumentFunction;
 
     private int docCount;
 
@@ -78,14 +69,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             );
         }
         this.dataMovementManager.startJob(this.writeBatcher);
+
+        if (writeContext.isUsingFileSchema()) {
+            rowToDocumentFunction = new FileRowFunction(writeContext);
+        } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+            rowToDocumentFunction = new DocumentRowFunction();
+        } else {
+            rowToDocumentFunction = new ArbitraryRowFunction(writeContext);
+        }
     }
 
     @Override
     public void write(InternalRow row) throws IOException {
         throwWriteFailureIfExists();
-        DocBuilder.DocumentInputs inputs = writeContext.isUsingFileSchema() ?
-            makeDocumentInputsForFileRow(row) :
-            makeDocumentInputsForArbitraryRow(row);
+        DocBuilder.DocumentInputs inputs = rowToDocumentFunction.apply(row);
         this.writeBatcher.add(this.docBuilder.build(inputs));
         this.docCount++;
     }
@@ -111,62 +108,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void close() {
         logger.info("Close called; stopping job");
         stopJobAndRelease();
-    }
-
-    private DocBuilder.DocumentInputs makeDocumentInputsForArbitraryRow(InternalRow row) {
-        String json = convertRowToJSONString(row);
-        StringHandle content = new StringHandle(json).withFormat(Format.JSON);
-        ObjectNode columnValues = null;
-        if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
-            try {
-                columnValues = (ObjectNode) objectMapper.readTree(json);
-            } catch (JsonProcessingException e) {
-                throw new ConnectorException(String.format("Unable to read JSON row: %s", e.getMessage()), e);
-            }
-        }
-        return new DocBuilder.DocumentInputs(null, content, columnValues);
-    }
-
-    private DocBuilder.DocumentInputs makeDocumentInputsForFileRow(InternalRow row) {
-        String initialUri = row.getString(writeContext.getFileSchemaPathPosition());
-        BytesHandle content = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
-        forceFormatIfNecessary(content);
-        ObjectNode columnValues = null;
-        if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
-            columnValues = objectMapper.createObjectNode();
-            columnValues.put("path", initialUri);
-            Object modificationTime = row.get(1, DataTypes.LongType);
-            if (modificationTime != null) {
-                columnValues.put("modificationTime", modificationTime.toString());
-            }
-            columnValues.put("length", row.getLong(2));
-            // Not including content as it's a byte array that is not expected to be helpful for making a URI.
-        }
-        return new DocBuilder.DocumentInputs(initialUri, content, columnValues);
-    }
-
-    private void forceFormatIfNecessary(BytesHandle content) {
-        if (writeContext.hasOption(Options.WRITE_FILES_DOCUMENT_TYPE)) {
-            String value = writeContext.getProperties().get(Options.WRITE_FILES_DOCUMENT_TYPE);
-            try {
-                content.withFormat(Format.valueOf(value.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                String message = "Invalid value for option %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
-                throw new ConnectorException(String.format(message, Options.WRITE_FILES_DOCUMENT_TYPE, value));
-            }
-        }
-    }
-
-    private String convertRowToJSONString(InternalRow row) {
-        StringWriter jsonObjectWriter = new StringWriter();
-        JacksonGenerator jacksonGenerator = new JacksonGenerator(
-            this.writeContext.getSchema(),
-            jsonObjectWriter,
-            Util.DEFAULT_JSON_OPTIONS
-        );
-        jacksonGenerator.write(row);
-        jacksonGenerator.flush();
-        return jsonObjectWriter.toString();
     }
 
     private synchronized void throwWriteFailureIfExists() throws IOException {

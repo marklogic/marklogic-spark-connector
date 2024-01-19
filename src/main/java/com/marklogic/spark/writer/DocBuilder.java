@@ -28,14 +28,16 @@ class DocBuilder {
     }
 
     public static class DocumentInputs {
-        private String initialUri;
-        private AbstractWriteHandle content;
-        private ObjectNode columnValuesForUriTemplate;
+        private final String initialUri;
+        private final AbstractWriteHandle content;
+        private final ObjectNode columnValuesForUriTemplate;
+        private final DocumentMetadataHandle initialMetadata;
 
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate) {
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate, DocumentMetadataHandle initialMetadata) {
             this.initialUri = initialUri;
             this.content = content;
             this.columnValuesForUriTemplate = columnValuesForUriTemplate;
+            this.initialMetadata = initialMetadata;
         }
 
         public String getInitialUri() {
@@ -49,10 +51,14 @@ class DocBuilder {
         public ObjectNode getColumnValuesForUriTemplate() {
             return columnValuesForUriTemplate;
         }
+
+        public DocumentMetadataHandle getInitialMetadata() {
+            return initialMetadata;
+        }
     }
 
     private final UriMaker uriMaker;
-    private DocumentMetadataHandle metadata;
+    private final DocumentMetadataHandle metadata;
 
     DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata) {
         this.uriMaker = uriMaker;
@@ -61,6 +67,35 @@ class DocBuilder {
 
     DocumentWriteOperation build(DocumentInputs inputs) {
         String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
+        DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
+        if (initialMetadata != null) {
+            overrideInitialMetadata(initialMetadata);
+            return new DocumentWriteOperationImpl(uri, initialMetadata, inputs.getContent());
+        }
         return new DocumentWriteOperationImpl(uri, metadata, inputs.getContent());
+    }
+
+    /**
+     * If an instance of {@code DocumentInputs} has metadata specified, override it with anything in the metadata
+     * instance that was used to construct this class. We could later support an additive approach as well here.
+     *
+     * @param initialMetadata
+     */
+    private void overrideInitialMetadata(DocumentMetadataHandle initialMetadata) {
+        if (!metadata.getCollections().isEmpty()) {
+            initialMetadata.setCollections(metadata.getCollections());
+        }
+        if (!metadata.getPermissions().isEmpty()) {
+            initialMetadata.setPermissions(metadata.getPermissions());
+        }
+        if (metadata.getQuality() != 0) {
+            initialMetadata.setQuality(metadata.getQuality());
+        }
+        if (!metadata.getProperties().isEmpty()) {
+            initialMetadata.setProperties(metadata.getProperties());
+        }
+        if (!metadata.getMetadataValues().isEmpty()) {
+            initialMetadata.setMetadataValues(metadata.getMetadataValues());
+        }
     }
 }
