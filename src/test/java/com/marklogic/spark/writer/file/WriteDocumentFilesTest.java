@@ -8,6 +8,7 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -55,8 +56,8 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
 
     @Test
     void variousURIs(@TempDir Path tempDir) throws Exception {
-        DocumentMetadataHandle metadata = new DocumentMetadataHandle().withCollections("uri-examples")
-            .withPermission("spark-user-role", DocumentMetadataHandle.Capability.READ, DocumentMetadataHandle.Capability.UPDATE);
+        DocumentMetadataHandle metadata = TestUtil.withDefaultPermissions(
+            new DocumentMetadataHandle().withCollections("uri-examples"));
         TextDocumentManager mgr = getDatabaseClient().newTextDocumentManager();
         DocumentWriteSet writeSet = mgr.newWriteSet();
         writeSet.add("example.txt", metadata, new StringHandle("URI without leading slash"));

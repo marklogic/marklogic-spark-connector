@@ -51,7 +51,9 @@ class ZipFileReader implements PartitionReader<InternalRow> {
         if (logger.isTraceEnabled()) {
             logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
         }
-        String uri = this.path + "/" + zipEntryName;
+        String uri = zipEntryName.startsWith("/") ?
+            this.path + zipEntryName :
+            this.path + "/" + zipEntryName;
         byte[] content = readZipEntry();
         long length = content.length;
         return new GenericInternalRow(new Object[]{

@@ -1,5 +1,6 @@
 package com.marklogic.spark.writer.file;
 
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
@@ -21,6 +22,9 @@ class DocumentFileWriterFactory implements DataWriterFactory {
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-        return new DocumentFileWriter(properties, hadoopConfiguration);
+        String compression = this.properties.get(Options.WRITE_FILES_COMPRESSION);
+        return "zip".equalsIgnoreCase(compression) ?
+            new ZipFileWriter(properties, hadoopConfiguration, partitionId) :
+            new DocumentFileWriter(properties, hadoopConfiguration);
     }
 }

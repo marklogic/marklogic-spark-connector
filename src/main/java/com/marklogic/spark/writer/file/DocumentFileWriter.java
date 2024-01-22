@@ -1,6 +1,5 @@
 package com.marklogic.spark.writer.file;
 
-import com.marklogic.spark.ConnectorException;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocalFileSystem;
@@ -16,8 +15,6 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Map;
 
 /**
@@ -67,20 +64,8 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
     private Path makePath(InternalRow row) {
         String dir = properties.get("path");
         final String uri = row.getString(0);
-        String path = makePathFromDocumentURI(uri);
+        String path = FileUtil.makePathFromDocumentURI(uri);
         return path.charAt(0) == '/' ? new Path(dir + path) : new Path(dir, path);
-    }
-
-    private static String makePathFromDocumentURI(String documentURI) {
-        // Copied from MLCP
-        URI uri;
-        try {
-            uri = new URI(documentURI);
-        } catch (URISyntaxException e) {
-            throw new ConnectorException(String.format("Unable to construct URI from: %s", documentURI), e);
-        }
-        // The isOpaque check is made because an opaque URI will not have a path.
-        return uri.isOpaque() ? uri.getSchemeSpecificPart() : uri.getPath();
     }
 
     private BufferedOutputStream makeOutputStream(Path path) throws IOException {

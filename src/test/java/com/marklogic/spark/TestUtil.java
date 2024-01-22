@@ -14,8 +14,7 @@ public interface TestUtil {
         metadata.setQuality(10);
 
         metadata.getCollections().addAll("collection1", "collection2");
-
-        metadata.getPermissions().add("spark-user-role", DocumentMetadataHandle.Capability.READ, DocumentMetadataHandle.Capability.UPDATE);
+        withDefaultPermissions(metadata);
         metadata.getPermissions().add("qconsole-user", DocumentMetadataHandle.Capability.READ);
 
         metadata.getProperties().put(new QName("org:example", "key1"), "value1");
@@ -29,5 +28,11 @@ public interface TestUtil {
             writeSet.add("/test/" + i + ".xml", metadata, new StringHandle("<hello>world</hello>"));
         }
         client.newDocumentManager().write(writeSet);
+    }
+
+    static DocumentMetadataHandle withDefaultPermissions(DocumentMetadataHandle metadata) {
+        metadata.getPermissions().add("spark-user-role",
+            DocumentMetadataHandle.Capability.READ, DocumentMetadataHandle.Capability.UPDATE);
+        return metadata;
     }
 }
