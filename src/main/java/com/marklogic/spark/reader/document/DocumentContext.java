@@ -1,6 +1,8 @@
 package com.marklogic.spark.reader.document;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.DocumentManager;
+import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
@@ -41,5 +43,13 @@ class DocumentContext extends ContextSupport {
             }
         }
         return false;
+    }
+
+    SearchQueryDefinition buildSearchQuery(DatabaseClient client) {
+        return new SearchQueryBuilder()
+            .withQuery(getProperties().get(Options.READ_DOCUMENTS_QUERY))
+            .withQueryType(getProperties().get(Options.READ_DOCUMENTS_QUERY_TYPE))
+            .withCollections(getProperties().get(Options.READ_DOCUMENTS_COLLECTIONS))
+            .buildQuery(client);
     }
 }

@@ -18,10 +18,10 @@ package com.marklogic.spark;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
-import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
+import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.catalog.Table;
@@ -65,8 +65,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (isFileOperation(properties)) {
             return FileRowSchema.SCHEMA;
         }
-        // We will likely check for any read.documents option in the near future.
-        if (options.containsKey(Options.READ_DOCUMENTS_COLLECTIONS)) {
+        if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
         }
         if (isReadWithCustomCodeOperation(properties)) {
@@ -84,11 +83,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             );
         }
 
-        if (properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS)) {
+        if (isReadDocumentsOperation(properties)) {
             return new DocumentTable();
         }
-
-        if (isReadOperation(properties)) {
+        else if (isReadOperation(properties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Creating new table for reading");
             }
@@ -117,6 +115,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private boolean isReadOperation(Map<String, String> properties) {
         return properties.get(Options.READ_OPTIC_QUERY) != null || isReadWithCustomCodeOperation(properties);
+    }
+
+    private boolean isReadDocumentsOperation(Map<String, String> properties) {
+        return properties.containsKey(Options.READ_DOCUMENTS_QUERY) || properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS);
     }
 
     private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {

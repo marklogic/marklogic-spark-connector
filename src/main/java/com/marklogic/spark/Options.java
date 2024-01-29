@@ -44,6 +44,9 @@ public abstract class Options {
     // "categories" as defined by https://docs.marklogic.com/REST/GET/v1/documents .
     public static final String READ_DOCUMENTS_CATEGORIES = "spark.marklogic.read.documents.categories";
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";
+    public static final String READ_DOCUMENTS_QUERY = "spark.marklogic.read.documents.query";
+    public static final String READ_DOCUMENTS_QUERY_TYPE = "spark.marklogic.read.documents.queryType";
+    public static final String READ_DOCUMENTS_QUERY_FORMAT = "spark.marklogic.read.documents.queryFormat";
 
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
 
