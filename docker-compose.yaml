@@ -4,7 +4,7 @@ name: marklogic_spark
 services:
 
   marklogic:
-    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    image: "marklogicdb/marklogic-db:${MARKLOGIC_TAG}"
     platform: linux/amd64
     environment:
       - MARKLOGIC_INIT=true
