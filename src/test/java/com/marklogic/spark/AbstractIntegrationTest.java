@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
@@ -48,6 +49,8 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected static final String CONNECTOR_IDENTIFIER = "marklogic";
     protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
     protected static final String DEFAULT_PERMISSIONS = "spark-user-role,read,spark-user-role,update";
+
+    protected static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static MarkLogicVersion markLogicVersion;
 

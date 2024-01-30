@@ -117,7 +117,6 @@ class WriteZipFilesTest extends AbstractIntegrationTest {
         assertEquals(15, rows.size());
 
         // Verify each row was read correctly.
-        ObjectMapper mapper = new ObjectMapper();
         final String expectedUriPrefix = "file://" + tempDir.toFile().getAbsolutePath();
         for (Row row : rows) {
             String uri = row.getString(0);
@@ -127,7 +126,7 @@ class WriteZipFilesTest extends AbstractIntegrationTest {
             long length = row.getLong(2);
             assertTrue(length > 0, "Length wasn't set to something greater than zero: " + length);
 
-            JsonNode doc = mapper.readTree((byte[]) row.get(3));
+            JsonNode doc = objectMapper.readTree((byte[]) row.get(3));
             assertTrue(doc.has("CitationID"), "Unexpected JSON: " + doc);
         }
     }

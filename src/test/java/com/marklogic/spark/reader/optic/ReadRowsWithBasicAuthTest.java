@@ -59,7 +59,7 @@ class ReadRowsWithBasicAuthTest extends AbstractIntegrationTest {
     }
 
     private void setServerAuthentication(String value) {
-        new ServerManager(manageClient).save(new ObjectMapper().createObjectNode()
+        new ServerManager(manageClient).save(objectMapper.createObjectNode()
             .put("server-name", "spark-test-test")
             .put("group-name", "Default")
             .put("authentication", value)

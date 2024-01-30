@@ -57,7 +57,7 @@ class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
     }
 
     private void insertDocThatProjectsASecondRow() {
-        ObjectNode doc = new ObjectMapper().createObjectNode();
+        ObjectNode doc = objectMapper.createObjectNode();
         doc.putArray("allTypes").addObject().put("intValue", 10);
         getDatabaseClient().newJSONDocumentManager().write("/allTypes2.json",
             TestUtil.withDefaultPermissions(new DocumentMetadataHandle()),

@@ -26,8 +26,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteDocumentFilesTest extends AbstractIntegrationTest {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
     void writeFifteenAuthorFiles(@TempDir Path tempDir) throws Exception {
         newSparkSession().read()

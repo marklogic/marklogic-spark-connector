@@ -8,6 +8,7 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 class DocumentContext extends ContextSupport {
@@ -46,10 +47,16 @@ class DocumentContext extends ContextSupport {
     }
 
     SearchQueryDefinition buildSearchQuery(DatabaseClient client) {
+        final Map<String, String> props = getProperties();
         return new SearchQueryBuilder()
-            .withQuery(getProperties().get(Options.READ_DOCUMENTS_QUERY))
-            .withQueryType(getProperties().get(Options.READ_DOCUMENTS_QUERY_TYPE))
-            .withCollections(getProperties().get(Options.READ_DOCUMENTS_COLLECTIONS))
+            .withQuery(props.get(Options.READ_DOCUMENTS_QUERY))
+            .withQueryType(props.get(Options.READ_DOCUMENTS_QUERY_TYPE))
+            .withCollections(props.get(Options.READ_DOCUMENTS_COLLECTIONS))
+            .withDirectory(props.get(Options.READ_DOCUMENTS_DIRECTORY))
+            .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS_NAME))
+            .withTransformName(props.get(Options.READ_DOCUMENTS_TRANSFORM))
+            .withTransformParams(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS))
+            .withTransformParamsDelimiter(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER))
             .buildQuery(client);
     }
 }

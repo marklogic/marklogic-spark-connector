@@ -46,7 +46,11 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";
     public static final String READ_DOCUMENTS_QUERY = "spark.marklogic.read.documents.query";
     public static final String READ_DOCUMENTS_QUERY_TYPE = "spark.marklogic.read.documents.queryType";
-    public static final String READ_DOCUMENTS_QUERY_FORMAT = "spark.marklogic.read.documents.queryFormat";
+    public static final String READ_DOCUMENTS_OPTIONS_NAME = "spark.marklogic.read.documents.optionsName";
+    public static final String READ_DOCUMENTS_DIRECTORY = "spark.marklogic.read.documents.directory";
+    public static final String READ_DOCUMENTS_TRANSFORM = "spark.marklogic.read.documents.transform";
+    public static final String READ_DOCUMENTS_TRANSFORM_PARAMS = "spark.marklogic.read.documents.transformParams";
+    public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
 
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
 

@@ -22,7 +22,7 @@ class SerializeOpticReaderObjectsTest extends AbstractIntegrationTest {
     void planAnalysis() {
         PlanAnalysis.Bucket bucket = new PlanAnalysis.Bucket("1", "2");
         PlanAnalysis.Partition partition = new PlanAnalysis.Partition("id", bucket);
-        ObjectNode plan = new ObjectMapper().createObjectNode();
+        ObjectNode plan = objectMapper.createObjectNode();
         plan.put("hello", "world");
         PlanAnalysis planAnalysis = new PlanAnalysis(plan, Arrays.asList(partition));
 
