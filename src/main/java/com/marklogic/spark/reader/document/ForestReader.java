@@ -5,7 +5,7 @@ import com.marklogic.client.document.*;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.client.query.StructuredQueryDefinition;
+import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
@@ -49,12 +49,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         }
 
         DatabaseClient client = documentContext.connectToMarkLogic();
-
-        // Can break out query construction into a new private method as we add more query features.
-        String[] collections = documentContext.getProperties().get(Options.READ_DOCUMENTS_COLLECTIONS).split(",");
-        StructuredQueryDefinition query = client.newQueryManager()
-            .newStructuredQueryBuilder()
-            .collection(collections);
+        SearchQueryDefinition query = documentContext.buildSearchQuery(client);
         this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName());
 
         this.documentManager = client.newDocumentManager();
