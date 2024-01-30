@@ -23,7 +23,7 @@ def runSonarScan(String javaVersion){
       export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
       export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
       cd marklogic-spark-connector
-     ./gradlew sonar -Dsonar.projectKey='marklogic_marklogic-spark-connector_AYxF-ciuhXuvzhhRmJ3v' -Dsonar.projectName='ADP-ML-DevExp-marklogic-spark-connector' || true
+     ./gradlew sonar -Dsonar.projectKey='marklogic_marklogic-spark-connector_AY1bXn6J_50_odbCDKMX' -Dsonar.projectName='ML-DevExp-marklogic-spark-connector' || true
     '''
 }
 
