@@ -59,4 +59,11 @@ class DocumentContext extends ContextSupport {
             .withTransformParamsDelimiter(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER))
             .buildQuery(client);
     }
+
+    int getBatchSize() {
+        if (hasOption(Options.READ_BATCH_SIZE)) {
+            return Integer.parseInt(getProperties().get(Options.READ_BATCH_SIZE));
+        }
+        return 100;
+    }
 }

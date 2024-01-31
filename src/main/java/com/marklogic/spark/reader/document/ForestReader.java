@@ -55,7 +55,8 @@ class ForestReader implements PartitionReader<InternalRow> {
         DatabaseClient client = documentContext.connectToMarkLogic();
         SearchQueryDefinition query = documentContext.buildSearchQuery(client);
         this.serverTransform = query.getResponseTransform();
-        this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName());
+        int batchSize = documentContext.getBatchSize();
+        this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName(), batchSize, true);
 
         this.documentManager = client.newDocumentManager();
         this.contentWasRequested = documentContext.contentWasRequested();
