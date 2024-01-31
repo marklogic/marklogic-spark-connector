@@ -1,14 +1,14 @@
 @Library('shared-libraries') _
 
-def runtests(String mlVersionType, String mlVersion, String javaVersion){
-  copyRPM mlVersionType,mlVersion
-  setUpML '$WORKSPACE/xdmp/src/Mark*.rpm'
+def runtests(String javaVersion){
   sh label:'test', script: '''#!/bin/bash
     export JAVA_HOME=$'''+javaVersion+'''
     export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
     export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
     echo "mlPassword=admin" > gradle-local.properties
+    echo "Waiting for MarkLogic server to initialize."
+    sleep 30s
    ./gradlew -i mlDeploy
    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
    ./gradlew -i mlLoadData
@@ -53,9 +53,27 @@ pipeline{
       }
       agent {label 'devExpLinuxPool'}
       steps{
-        runtests('Latest','11','JAVA11_HOME_DIR')
+        sh label:'mlsetup', script: '''#!/bin/bash
+            echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
+            sudo /usr/local/sbin/mladmin remove
+            sudo /usr/local/sbin/mladmin cleandata
+            cd marklogic-spark-connector
+            mkdir -p docker/marklogic/logs
+            docker-compose down -v || true
+            docker-compose up -d --build
+          '''
+        runtests('JAVA11_HOME_DIR')
         withSonarQubeEnv('SONAR_Progress') {
           runSonarScan('JAVA11_HOME_DIR')
+        }
+      }
+      post{
+        always{
+          sh label:'mlcleanup', script: '''#!/bin/bash
+            cd marklogic-spark-connector
+            docker-compose down -v || true
+            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
+          '''
         }
       }
     }
@@ -76,26 +94,35 @@ pipeline{
       }
     }
     stage('regressions'){
+      agent {label 'devExpLinuxPool'}
       when{
         allOf{
           branch 'develop'
           expression {return params.regressions}
         }
       }
-      parallel{
-        stage('11-nightly-java11'){
-          agent {label 'devExpLinuxPool'}
-          steps{
-            runtests('Latest','11','JAVA11_HOME_DIR')
-          }
-        }
-        stage('10.0-9.5-java11'){
-          agent {label 'devExpLinuxPool'}
-          steps{
-            runtests('Release','10.0-9.5','JAVA11_HOME_DIR')
-          }
+      steps{
+            sh label:'mlsetup', script: '''#!/bin/bash
+                echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
+                sudo /usr/local/sbin/mladmin remove
+                sudo /usr/local/sbin/mladmin cleandata
+                cd marklogic-spark-connector
+                mkdir -p docker/marklogic/logs
+                docker-compose down -v || true
+                MARKLOGIC_TAG=latest-10.0 docker-compose up -d --build
+            '''
+            runtests('JAVA11_HOME_DIR')
+      }
+      post{
+        always{
+          sh label:'mlcleanup', script: '''#!/bin/bash
+            cd marklogic-spark-connector
+            docker-compose down -v || true
+            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
+          '''
         }
       }
+
     }
   }
 }
