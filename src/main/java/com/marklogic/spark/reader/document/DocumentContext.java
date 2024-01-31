@@ -49,8 +49,8 @@ class DocumentContext extends ContextSupport {
     SearchQueryDefinition buildSearchQuery(DatabaseClient client) {
         final Map<String, String> props = getProperties();
         return new SearchQueryBuilder()
+            .withStringQuery(props.get(Options.READ_DOCUMENTS_STRING_QUERY))
             .withQuery(props.get(Options.READ_DOCUMENTS_QUERY))
-            .withQueryType(props.get(Options.READ_DOCUMENTS_QUERY_TYPE))
             .withCollections(props.get(Options.READ_DOCUMENTS_COLLECTIONS))
             .withDirectory(props.get(Options.READ_DOCUMENTS_DIRECTORY))
             .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS))
