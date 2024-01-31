@@ -119,6 +119,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private boolean isReadDocumentsOperation(Map<String, String> properties) {
         return properties.containsKey(Options.READ_DOCUMENTS_QUERY) ||
+            properties.containsKey(Options.READ_DOCUMENTS_STRING_QUERY) ||
             properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
             properties.containsKey(Options.READ_DOCUMENTS_OPTIONS);

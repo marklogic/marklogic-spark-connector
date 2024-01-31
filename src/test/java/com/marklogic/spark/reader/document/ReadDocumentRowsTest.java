@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
@@ -46,8 +47,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     @Test
     void stringQuery() {
         List<Row> rows = startRead()
-            // Query type defaults to "string", so no need to specify it.
-            .option(Options.READ_DOCUMENTS_QUERY, "Vivianne OR Moria")
+            .option(Options.READ_DOCUMENTS_STRING_QUERY, "Vivianne OR Moria")
             .load()
             .collectAsList();
 
@@ -63,7 +63,21 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             "<term-query><text>Vivianne</text></term-query></query>";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "strucTURED")
+            .load()
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("/author/author1.json", rows.get(0).getString(0));
+    }
+
+    @Test
+    void structuredQueryWithStringQuery() {
+        String query = "<query xmlns='http://marklogic.com/appservices/search'>" +
+            "<term-query><text>Vivianne</text></term-query></query>";
+
+        List<Row> rows = startRead()
+            .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_STRING_QUERY, "Wooles")
             .load()
             .collectAsList();
 
@@ -77,7 +91,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             "<term-query><text>Vivianne</text></term-query></query>";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "structured")
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
             .load()
             .collectAsList();
@@ -91,7 +104,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             "<term-query><text>Vivianne</text></term-query></query>";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "STRUCTURED")
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "some-other-collection")
             .load()
             .collectAsList();
@@ -104,7 +116,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         String query = "{ \"query\": { \"queries\": [{ \"term-query\": { \"text\": [ \"Moria\" ] } }] } }";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "STRUCTured")
             .load()
             .collectAsList();
 
@@ -120,7 +131,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "serialized_cts")
             .load()
             .collectAsList();
 
@@ -129,11 +139,10 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
     @Test
     void serializedCTSQueryJSON() {
-        String query = "{ \"query\": { \"queries\": [{ \"term-query\": { \"text\": [ \"Vivianne\" ] } }] } }";
+        String query = "{\"ctsquery\": {\"wordQuery\": {\"text\": \"Vivianne\"}}}";
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "serialized_cts")
             .load()
             .collectAsList();
 
@@ -143,12 +152,11 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     @Test
     void combinedQueryXML() {
         String query = "<search xmlns='http://marklogic.com/appservices/search'>" +
-            "<cts:word-query xmlns:cts='http://marklogic.com/cts'><cts:text xml:lang='en'>Vivianne</cts:text></cts:word-query>" +
-            "<options/></search>";
+            "<options><constraint name='c1'><word><element name='ForeName'/></word></constraint></options>" +
+            "<qtext>c1:Vivianne</qtext></search>";
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "combined")
             .load()
             .collectAsList();
 
@@ -157,28 +165,18 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
     @Test
     void combinedQueryJSON() {
-        String query = "{ \"search\": { \"query\": { \"query\": { \"queries\": [{\"term-query\":{\"text\":[\"Vivianne\"]}}] } } } }";
+        ObjectNode combinedQuery = objectMapper.createObjectNode().putObject("search");
+        ObjectNode constraint = combinedQuery.putObject("options").putObject("constraint");
+        constraint.put("name", "c1");
+        constraint.putObject("word").putObject("element").put("name", "ForeName");
+        combinedQuery.put("qtext", "c1:Vivianne");
 
         List<Row> rows = startRead()
-            .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "combined")
+            .option(Options.READ_DOCUMENTS_QUERY, combinedQuery.toString())
             .load()
             .collectAsList();
 
         assertEquals(1, rows.size());
-    }
-
-    @Test
-    void invalidQueryType() {
-        Dataset<Row> dataset = startRead()
-            .option(Options.READ_DOCUMENTS_QUERY, "<test/>")
-            .option(Options.READ_DOCUMENTS_QUERY_TYPE, "not-valid-type")
-            .load();
-
-        SparkException sparkException = assertThrows(SparkException.class, () -> dataset.collectAsList());
-        IllegalArgumentException ex = (IllegalArgumentException) sparkException.getCause();
-        assertEquals("Invalid query type: not-valid-type; must be one of [STRING, STRUCTURED, SERIALIZED_CTS, COMBINED]",
-            ex.getMessage());
     }
 
     @Test
@@ -204,7 +202,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     @Test
     void withSearchOptions() {
         List<Row> rows = startRead()
-            .option(Options.READ_DOCUMENTS_QUERY, "citation_id:3")
+            .option(Options.READ_DOCUMENTS_STRING_QUERY, "citation_id:3")
             .option(Options.READ_DOCUMENTS_OPTIONS, "test-options")
             .load()
             .collectAsList();
@@ -223,7 +221,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     @Test
     void withTransform() {
         List<Row> rows = startRead()
-            .option(Options.READ_DOCUMENTS_QUERY, "Vivianne")
+            .option(Options.READ_DOCUMENTS_STRING_QUERY, "Vivianne")
             .option(Options.READ_DOCUMENTS_TRANSFORM, "withParams")
             .option(Options.READ_DOCUMENTS_TRANSFORM_PARAMS, "param1;value,1;param2;value2")
             .option(Options.READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER, ";")

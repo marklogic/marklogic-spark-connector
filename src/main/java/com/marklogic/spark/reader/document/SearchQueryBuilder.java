@@ -3,11 +3,7 @@ package com.marklogic.spark.reader.document;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.query.QueryDefinition;
-import com.marklogic.client.query.QueryManager;
-import com.marklogic.client.query.SearchQueryDefinition;
-
-import java.util.Arrays;
+import com.marklogic.client.query.*;
 
 /**
  * Potentially reusable class for the Java Client that handles constructing a query based on a common
@@ -15,15 +11,8 @@ import java.util.Arrays;
  */
 public class SearchQueryBuilder {
 
-    public enum QueryType {
-        STRING,
-        STRUCTURED,
-        SERIALIZED_CTS,
-        COMBINED;
-    }
-
+    private String stringQuery;
     private String query;
-    private QueryType queryType;
     private String[] collections;
     private String directory;
     private String optionsName;
@@ -37,20 +26,26 @@ public class SearchQueryBuilder {
         return queryDefinition;
     }
 
-    public SearchQueryBuilder withQuery(String query) {
-        this.query = query;
+    /**
+     * Corresponds to the "q" request parameter as defined by https://docs.marklogic.com/REST/POST/v1/search .
+     *
+     * @param stringQuery
+     * @return
+     */
+    public SearchQueryBuilder withStringQuery(String stringQuery) {
+        this.stringQuery = stringQuery;
         return this;
     }
 
-    public SearchQueryBuilder withQueryType(String queryType) {
-        if (queryType != null) {
-            try {
-                this.queryType = QueryType.valueOf(queryType.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                String message = String.format("Invalid query type: %s; must be one of %s", queryType, Arrays.asList(QueryType.values()));
-                throw new IllegalArgumentException(message);
-            }
-        }
+    /**
+     * Corresponds to the request body as defined by https://docs.marklogic.com/REST/POST/v1/search . Can be either
+     * a structured query, a serialized CTS query, or a combined query. Can be defined as either JSON or XML.
+     *
+     * @param query
+     * @return
+     */
+    public SearchQueryBuilder withQuery(String query) {
+        this.query = query;
         return this;
     }
 
@@ -88,18 +83,20 @@ public class SearchQueryBuilder {
 
     private QueryDefinition buildQueryDefinition(DatabaseClient client) {
         final QueryManager queryManager = client.newQueryManager();
+        // The Java Client misleadingly suggests a distinction amongst the 3 complex queries - structured,
+        // serialized CTS, and combined - but the REST API does not.
         if (query != null) {
-            if (QueryType.STRUCTURED.equals(queryType)) {
-                return queryManager.newRawStructuredQueryDefinition(new StringHandle(query));
-            } else if (QueryType.SERIALIZED_CTS.equals(queryType)) {
-                return queryManager.newRawCtsQueryDefinition(new StringHandle(query));
-            } else if (QueryType.COMBINED.equals(queryType)) {
-                return queryManager.newRawCombinedQueryDefinition(new StringHandle(query));
-            } else {
-                return queryManager.newStringDefinition().withCriteria(this.query);
+            RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(new StringHandle(query));
+            if (stringQuery != null && stringQuery.length() > 0) {
+                queryDefinition.withCriteria(stringQuery);
             }
+            return queryDefinition;
         }
-        return queryManager.newStringDefinition();
+        StringQueryDefinition queryDefinition = queryManager.newStringDefinition();
+        if (this.stringQuery != null && stringQuery.length() > 0) {
+            queryDefinition.setCriteria(this.stringQuery);
+        }
+        return queryDefinition;
     }
 
     private void applyCommonQueryConfig(QueryDefinition queryDefinition) {
