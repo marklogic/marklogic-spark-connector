@@ -153,6 +153,25 @@ You now have a Spark dataframe - try some commands out on it:
 Check out the [PySpark docs](https://spark.apache.org/docs/latest/api/python/getting_started/quickstart_df.html) for 
 more commands you can try out. 
 
+You can query for documents as well - the following shows a simple example along with a technique for converting the
+binary content of each document into a string of JSON.
+
+```
+import json
+from pyspark.sql import functions as F
+
+df = spark.read.format("marklogic")\
+    .option("spark.marklogic.client.uri", "spark-test-user:spark@localhost:8016")\
+    .option("spark.marklogic.read.documents.collections", "author")\
+    .load()
+df.show()
+
+df2 = df.select(F.col("content").cast("string"))
+df2.head()
+json.loads(df2.head()['content'])
+```
+
+
 # Testing against a local Spark cluster
 
 When you run PySpark, it will create its own Spark cluster. If you'd like to try against a separate Spark cluster

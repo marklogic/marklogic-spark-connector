@@ -53,7 +53,7 @@ class DocumentContext extends ContextSupport {
             .withQueryType(props.get(Options.READ_DOCUMENTS_QUERY_TYPE))
             .withCollections(props.get(Options.READ_DOCUMENTS_COLLECTIONS))
             .withDirectory(props.get(Options.READ_DOCUMENTS_DIRECTORY))
-            .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS_NAME))
+            .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS))
             .withTransformName(props.get(Options.READ_DOCUMENTS_TRANSFORM))
             .withTransformParams(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS))
             .withTransformParamsDelimiter(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER))

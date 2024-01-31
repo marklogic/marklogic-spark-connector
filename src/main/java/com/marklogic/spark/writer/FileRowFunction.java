@@ -44,13 +44,13 @@ class FileRowFunction implements Function<InternalRow, DocBuilder.DocumentInputs
     }
 
     private void forceFormatIfNecessary(BytesHandle content) {
-        if (writeContext.hasOption(Options.WRITE_FILES_DOCUMENT_TYPE)) {
-            String value = writeContext.getProperties().get(Options.WRITE_FILES_DOCUMENT_TYPE);
+        if (writeContext.hasOption(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE)) {
+            String value = writeContext.getProperties().get(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE);
             try {
                 content.withFormat(Format.valueOf(value.toUpperCase()));
             } catch (IllegalArgumentException e) {
                 String message = "Invalid value for option %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
-                throw new ConnectorException(String.format(message, Options.WRITE_FILES_DOCUMENT_TYPE, value));
+                throw new ConnectorException(String.format(message, Options.WRITE_FILE_ROWS_DOCUMENT_TYPE, value));
             }
         }
     }

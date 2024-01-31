@@ -205,7 +205,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     void withSearchOptions() {
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, "citation_id:3")
-            .option(Options.READ_DOCUMENTS_OPTIONS_NAME, "test-options")
+            .option(Options.READ_DOCUMENTS_OPTIONS, "test-options")
             .load()
             .collectAsList();
 
