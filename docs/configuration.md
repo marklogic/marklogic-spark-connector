@@ -105,7 +105,7 @@ describes the other choices for this option.
 
 ## Read options
 
-See [the guide on reading](reading.md) for more information on how data is read from MarkLogic.
+See [the guide on reading](reading-data/reading.md) for more information on how data is read from MarkLogic.
 
 ### Read options for Optic queries
 
@@ -137,6 +137,22 @@ multiple queries, the following options can also be used to control how partitio
 | spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
+
+### Read options for documents
+
+The following options control how the connector reads document rows from MarkLogic via search queries:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.documents.stringQuery | A [MarkLogic string query](https://docs.marklogic.com/guide/search-dev/string-query) for selecting documents. |
+| spark.marklogic.read.documents.query | A JSON or XML representation of a structured query, serialized CTS query, or combined query. |
+| spark.marklogic.read.documents.categories | Controls which metadata is returned for each document. Defaults to `content`. Allowable values are `content`, `metadata`, `collections`, `permissions`, `quality`, `properties`, and `metadatavalues`. |
+| spark.marklogic.read.documents.collections | Comma-delimited string of zero to many collections to constrain the query. |
+| spark.marklogic.read.documents.directory | Database directory - e.g. "/company/employees/" - to constrain the query. |
+| spark.marklogic.read.documents.options | Name of a set of [MarkLogic search options](https://docs.marklogic.com/guide/search-dev/query-options) to be applied against a string query. |
+| spark.marklogic.read.documents.transform | Name of a [MarkLogic REST transform](https://docs.marklogic.com/guide/rest-dev/transforms) to apply to each matching document. |
+| spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
+| spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
 
 ## Write options
 

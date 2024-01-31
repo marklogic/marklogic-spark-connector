@@ -152,31 +152,33 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     @Test
     void combinedQueryXML() {
         String query = "<search xmlns='http://marklogic.com/appservices/search'>" +
-            "<options><constraint name='c1'><word><element name='ForeName'/></word></constraint></options>" +
-            "<qtext>c1:Vivianne</qtext></search>";
+            "<options><constraint name='citation_id'>" +
+            "<range type='xs:int'><json-property>CitationID</json-property></range>" +
+            "</constraint></options>" +
+            "<qtext>citation_id:3</qtext></search>";
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
             .load()
             .collectAsList();
 
-        assertEquals(1, rows.size());
+        assertEquals(4, rows.size());
     }
 
     @Test
     void combinedQueryJSON() {
         ObjectNode combinedQuery = objectMapper.createObjectNode().putObject("search");
         ObjectNode constraint = combinedQuery.putObject("options").putObject("constraint");
-        constraint.put("name", "c1");
-        constraint.putObject("word").putObject("element").put("name", "ForeName");
-        combinedQuery.put("qtext", "c1:Vivianne");
+        constraint.put("name", "citation_id");
+        constraint.putObject("range").put("json-property", "CitationID");
+        combinedQuery.put("qtext", "citation_id:3");
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, combinedQuery.toString())
             .load()
             .collectAsList();
 
-        assertEquals(1, rows.size());
+        assertEquals(4, rows.size());
     }
 
     @Test

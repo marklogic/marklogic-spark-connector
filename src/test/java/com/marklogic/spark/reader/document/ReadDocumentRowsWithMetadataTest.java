@@ -37,6 +37,22 @@ class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void contentAndEachMetadataType() {
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "collection1")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,collections,permissions,quality,properties,metadatavalues")
+            .load()
+            .collectAsList()
+            .forEach(row -> {
+                verifyUriColumn(row);
+                verifyContentAndFormatColumnsArePopulated(row);
+                verifyAllMetadataColumnsArePopulated(row);
+            });
+    }
+
+    @Test
     void noMetadata() {
         newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)

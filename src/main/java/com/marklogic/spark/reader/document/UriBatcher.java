@@ -26,10 +26,6 @@ class UriBatcher {
     private String lastUri;
     private long start = 1;
 
-    UriBatcher(DatabaseClient client, SearchQueryDefinition query, String forestName) {
-        this(client, query, forestName, 500, false);
-    }
-
     UriBatcher(DatabaseClient client, SearchQueryDefinition query, String forestName, int pageLength, boolean filtered) {
         this.client = client;
         this.query = query;

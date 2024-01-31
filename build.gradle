@@ -23,7 +23,7 @@ repositories {
 
 dependencies {
   compileOnly 'org.apache.spark:spark-sql_2.12:' + sparkVersion
-  implementation ("com.marklogic:marklogic-client-api:6.4.0") {
+  implementation ("com.marklogic:marklogic-client-api:6.5.0") {
     // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
     // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
     // So the 4 Jackson modules are excluded to allow for Spark's to be used.

@@ -377,7 +377,7 @@ can be useful when you are already reading a stream of rows from MarkLogic becau
 rows may take too long to execute. The connector allows you to then process each batch of results via custom code as
 well. 
 
-The following example is a variation of the example in the [reading guide for streaming rows](reading.md). Instead
+The following example is a variation of the example in the [reading guide for streaming rows](reading-data/optic.md). Instead
 of using the connector's support for writing rows as documents, it shows each streamed batch being processed by custom
 code:
 
