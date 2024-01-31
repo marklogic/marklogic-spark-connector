@@ -1,7 +1,6 @@
 package com.marklogic.spark.writer.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -24,7 +23,7 @@ import java.util.zip.ZipFile;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class WriteZipFilesTest extends AbstractIntegrationTest {
+class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void defaultPartitionCount(@TempDir Path tempDir) throws Exception {
@@ -99,7 +98,9 @@ class WriteZipFilesTest extends AbstractIntegrationTest {
 
     private void verifyZipFilesHaveExpectedFilenames(Path tempDir) {
         // Expecting the same prefix that's used by MLCP.
-        final String expectedPrefix = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
+        // Not verifying minutes/seconds as there's a reasonable chance that those can differ slightly between the
+        // files being written and then being verified.
+        final String expectedPrefix = new SimpleDateFormat("yyyyMMddHH").format(new Date());
         for (File file : tempDir.toFile().listFiles()) {
             String name = file.getName();
             assertTrue(name.startsWith(expectedPrefix), String.format("Filename %s did not start with %s", name, expectedPrefix));

@@ -46,7 +46,7 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";
     public static final String READ_DOCUMENTS_QUERY = "spark.marklogic.read.documents.query";
     public static final String READ_DOCUMENTS_QUERY_TYPE = "spark.marklogic.read.documents.queryType";
-    public static final String READ_DOCUMENTS_OPTIONS_NAME = "spark.marklogic.read.documents.optionsName";
+    public static final String READ_DOCUMENTS_OPTIONS = "spark.marklogic.read.documents.options";
     public static final String READ_DOCUMENTS_DIRECTORY = "spark.marklogic.read.documents.directory";
     public static final String READ_DOCUMENTS_TRANSFORM = "spark.marklogic.read.documents.transform";
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS = "spark.marklogic.read.documents.transformParams";
@@ -66,6 +66,7 @@ public abstract class Options {
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
+    // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
     public static final String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
     public static final String WRITE_XQUERY = "spark.marklogic.write.xquery";
@@ -73,6 +74,7 @@ public abstract class Options {
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
+    // For writing documents to MarkLogic.
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     public static final String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
     public static final String WRITE_TEMPORAL_COLLECTION = "spark.marklogic.write.temporalCollection";
@@ -80,14 +82,14 @@ public abstract class Options {
     public static final String WRITE_URI_REPLACE = "spark.marklogic.write.uriReplace";
     public static final String WRITE_URI_SUFFIX = "spark.marklogic.write.uriSuffix";
     public static final String WRITE_URI_TEMPLATE = "spark.marklogic.write.uriTemplate";
-
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
 
-    // TBD Need to rename this, probably to WRITE_FILE_ROWS_DOCUMENT_TYPE.
-    public static final String WRITE_FILES_DOCUMENT_TYPE = "spark.marklogic.write.files.documentType";
+    // For writing rows adhering to {@code FileRowSchema} to MarkLogic.
+    public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 
+    // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
 
     private Options() {

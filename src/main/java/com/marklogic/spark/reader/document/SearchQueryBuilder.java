@@ -13,7 +13,7 @@ import java.util.Arrays;
  * Potentially reusable class for the Java Client that handles constructing a query based on a common
  * set of user-defined inputs.
  */
-class SearchQueryBuilder {
+public class SearchQueryBuilder {
 
     public enum QueryType {
         STRING,

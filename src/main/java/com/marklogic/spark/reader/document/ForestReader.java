@@ -42,6 +42,10 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     private DocumentPage currentDocumentPage;
 
+    // Used for logging/debugging.
+    private long startTime;
+    private int docCount;
+
     ForestReader(ForestPartition forestPartition, DocumentContext documentContext) {
         this.forestName = forestPartition.getForestName();
         if (logger.isDebugEnabled()) {
@@ -61,10 +65,17 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     @Override
     public boolean next() {
+        if (startTime == 0) {
+            startTime = System.currentTimeMillis();
+        }
         if (currentDocumentPage == null || !currentDocumentPage.hasNext()) {
             closeCurrentDocumentPage();
             List<String> uris = getNextBatchOfUris();
             if (uris.isEmpty()) {
+                // TBD on whether this should be info/debug.
+                if (logger.isInfoEnabled()) {
+                    logger.info("Read {} documents from forest {} in {}ms", docCount, forestName, System.currentTimeMillis() - startTime);
+                }
                 return false;
             }
             this.currentDocumentPage = readPage(uris);
@@ -89,6 +100,7 @@ class ForestReader implements PartitionReader<InternalRow> {
             populateMetadataColumns(row, metadata);
         }
 
+        docCount++;
         return new GenericInternalRow(row);
     }
 

@@ -121,7 +121,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return properties.containsKey(Options.READ_DOCUMENTS_QUERY) ||
             properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
-            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS_NAME);
+            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS);
     }
 
     private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
