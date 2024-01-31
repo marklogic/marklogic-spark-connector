@@ -1,0 +1,7 @@
+<options xmlns="http://marklogic.com/appservices/search">
+  <constraint name="citation_id">
+    <range type="xs:int">
+      <json-property>CitationID</json-property>
+    </range>
+  </constraint>
+</options>

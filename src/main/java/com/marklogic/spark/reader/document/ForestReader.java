@@ -6,7 +6,6 @@ import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.query.SearchQueryDefinition;
-import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
@@ -35,6 +34,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final UriBatcher uriBatcher;
     private final GenericDocumentManager documentManager;
     private final Set<DocumentManager.Metadata> requestedMetadata;
+    private final ServerTransform serverTransform;
     private final boolean contentWasRequested;
 
     // Only used for logging.
@@ -50,6 +50,7 @@ class ForestReader implements PartitionReader<InternalRow> {
 
         DatabaseClient client = documentContext.connectToMarkLogic();
         SearchQueryDefinition query = documentContext.buildSearchQuery(client);
+        this.serverTransform = query.getResponseTransform();
         this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName());
 
         this.documentManager = client.newDocumentManager();
@@ -104,9 +105,8 @@ class ForestReader implements PartitionReader<InternalRow> {
     private DocumentPage readPage(List<String> uris) {
         long start = System.currentTimeMillis();
         String[] uriArray = uris.toArray(new String[]{});
-        // Copied from ExportListener. Will add transform support later.
         DocumentPage page = this.contentWasRequested ?
-            this.documentManager.read((ServerTransform) null, uriArray) :
+            this.documentManager.read(this.serverTransform, uriArray) :
             this.documentManager.readMetadata(uriArray);
         if (logger.isTraceEnabled()) {
             logger.trace("Retrieved page of documents in {}ms from forest {}", (System.currentTimeMillis() - start), this.forestName);

@@ -1,0 +1,8 @@
+<text>
+  This document is loaded solely to ensure that it is not returned by any queries. For example, its presence
+  ensures that if a test queries on the "/author/" directory, the test can safely verify that all 15 docs in the
+  directory are returned and this one is not. Note that allTypes-data.json currently serves the same purpose, but
+  it may be moved to another directory for some reason. This document has no reason to be moved and thus serves as
+  an effective way of ensuring that a query doesn't return all documents in a database unless the query intends to
+  do so.
+</text>

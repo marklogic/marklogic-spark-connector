@@ -45,7 +45,7 @@ class ReadWithJoinDocTest extends AbstractIntegrationTest {
         assertEquals(1, rows.size());
 
         Row row = rows.get(0);
-        JsonNode doc = new ObjectMapper().readTree(row.getString(0));
+        JsonNode doc = objectMapper.readTree(row.getString(0));
         assertEquals(1, doc.get("allTypes").get(0).get("intValue").asInt(),
             "Verifying that the doc was correctly returned as a string in the Spark row, and could then be read via " +
                 "Jackson into a JsonNode");
