@@ -23,8 +23,12 @@ class DocumentFileWriterFactory implements DataWriterFactory {
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
         String compression = this.properties.get(Options.WRITE_FILES_COMPRESSION);
-        return "zip".equalsIgnoreCase(compression) ?
-            new ZipFileWriter(properties, hadoopConfiguration, partitionId) :
-            new DocumentFileWriter(properties, hadoopConfiguration);
+        if (compression != null && compression.length() > 0) {
+            if ("zip".equalsIgnoreCase(compression)) {
+                return new ZipFileWriter(properties, hadoopConfiguration, partitionId);
+            }
+            return new GZIPFileWriter(properties, hadoopConfiguration);
+        }
+        return new DocumentFileWriter(properties, hadoopConfiguration);
     }
 }

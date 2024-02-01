@@ -11,10 +11,7 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 
 /**
@@ -38,7 +35,7 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
         if (logger.isTraceEnabled()) {
             logger.trace("Will write to: {}", path);
         }
-        BufferedOutputStream outputStream = makeOutputStream(path);
+        OutputStream outputStream = makeOutputStream(path);
         try {
             outputStream.write(row.getBinary(1));
         } finally {
@@ -64,11 +61,17 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
     private Path makePath(InternalRow row) {
         String dir = properties.get("path");
         final String uri = row.getString(0);
-        String path = FileUtil.makePathFromDocumentURI(uri);
+        String path = makeFilePath(uri);
         return path.charAt(0) == '/' ? new Path(dir + path) : new Path(dir, path);
     }
 
-    private BufferedOutputStream makeOutputStream(Path path) throws IOException {
+    // Protected so it can be overridden by subclass.
+    protected String makeFilePath(String uri) {
+        return FileUtil.makePathFromDocumentURI(uri);
+    }
+
+    // Protected so it can be overridden by subclass.
+    protected OutputStream makeOutputStream(Path path) throws IOException {
         FileSystem fileSystem = path.getFileSystem(this.hadoopConfiguration.value());
         // MLCP doesn't write .crc files, not sure yet if we want to default this to true or false.
         fileSystem.setWriteChecksum(false);
