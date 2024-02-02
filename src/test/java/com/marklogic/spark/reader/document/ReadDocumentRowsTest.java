@@ -3,8 +3,8 @@ package com.marklogic.spark.reader.document;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -14,7 +14,8 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
@@ -33,6 +34,25 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         // Verify just a couple fields to ensure the JSON object is correct.
         assertEquals(4, doc.get("CitationID").asInt());
         assertEquals("Vivianne", doc.get("ForeName").asText());
+    }
+
+    @Test
+    void invalidBatchSize() {
+        // Verify batch size doesn't cause an error.
+        assertEquals(15, startRead()
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.READ_BATCH_SIZE, "10")
+            .load()
+            .count());
+
+        // Then verify a nice error is thrown when the value is invalid.
+        Dataset dataset = startRead()
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.READ_BATCH_SIZE, "abc")
+            .load();
+
+        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        assertEquals("Invalid value for option spark.marklogic.read.batchSize: abc; must be numeric.", ex.getMessage());
     }
 
     @Test

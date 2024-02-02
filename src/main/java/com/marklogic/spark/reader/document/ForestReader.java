@@ -1,11 +1,16 @@
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.document.*;
+import com.marklogic.client.document.DocumentManager;
+import com.marklogic.client.document.DocumentPage;
+import com.marklogic.client.document.DocumentRecord;
+import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
+import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
+import com.marklogic.client.query.StructuredQueryBuilder;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
@@ -33,8 +38,8 @@ class ForestReader implements PartitionReader<InternalRow> {
     private static final Logger logger = LoggerFactory.getLogger(ForestReader.class);
     private final UriBatcher uriBatcher;
     private final GenericDocumentManager documentManager;
+    private final StructuredQueryBuilder queryBuilder;
     private final Set<DocumentManager.Metadata> requestedMetadata;
-    private final ServerTransform serverTransform;
     private final boolean contentWasRequested;
 
     // Only used for logging.
@@ -53,15 +58,17 @@ class ForestReader implements PartitionReader<InternalRow> {
         }
 
         DatabaseClient client = documentContext.connectToMarkLogic();
+
         SearchQueryDefinition query = documentContext.buildSearchQuery(client);
-        this.serverTransform = query.getResponseTransform();
         int batchSize = documentContext.getBatchSize();
         this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName(), batchSize, true);
 
         this.documentManager = client.newDocumentManager();
+        this.documentManager.setReadTransform(query.getResponseTransform());
         this.contentWasRequested = documentContext.contentWasRequested();
         this.requestedMetadata = documentContext.getRequestedMetadata();
         this.documentManager.setMetadataCategories(this.requestedMetadata);
+        this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
     }
 
     @Override
@@ -118,9 +125,14 @@ class ForestReader implements PartitionReader<InternalRow> {
     private DocumentPage readPage(List<String> uris) {
         long start = System.currentTimeMillis();
         String[] uriArray = uris.toArray(new String[]{});
-        DocumentPage page = this.contentWasRequested ?
-            this.documentManager.read(this.serverTransform, uriArray) :
-            this.documentManager.readMetadata(uriArray);
+
+        QueryDefinition queryDefinition = this.queryBuilder.document(uriArray);
+        this.documentManager.setPageLength(uriArray.length);
+
+        // Must do a search so that a POST is sent instead of a GET. A GET can fail with a Request-URI error if too
+        // many URIs are included in the querystring. However, content is always retrieved with a search, so there's
+        // some inefficiency if the caller only wants metadata and no content.
+        DocumentPage page = this.documentManager.search(queryDefinition, 0);
         if (logger.isTraceEnabled()) {
             logger.trace("Retrieved page of documents in {}ms from forest {}", (System.currentTimeMillis() - start), this.forestName);
         }
