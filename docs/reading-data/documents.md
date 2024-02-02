@@ -187,7 +187,9 @@ doc['Department']
 The connector mimics the behavior of the [MarkLogic Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement)
 by creating a Spark partition per forest in the database associated with your REST API app server. Each partition reader
 will return all matching documents from its associated forest. The option `spark.marklogic.read.batchSize` controls how
-many documents will be returned in each call to MarkLogic; its value defaults to 100. 
+many documents will be returned in each call to MarkLogic; its value defaults to 500. For smaller documents, 
+particularly those with 10 elements or fewer, you may find a batch size of 1,000 or even 10,000 to provide better
+performance.
 
 The `spark.marklogic.read.numPartitions` option does not impact performance when reading document rows, as 1 partition 
 is always created for each forest. It is not possible for 2 or more partition readers to read from the same forest.

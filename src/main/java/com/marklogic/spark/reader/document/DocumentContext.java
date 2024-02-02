@@ -71,6 +71,9 @@ class DocumentContext extends ContextSupport {
                 throw new ConnectorException(message);
             }
         }
-        return 100;
+        // Testing has shown that at least for smaller documents, 100 or 200 can be significantly slower than something
+        // like 1000 or even 10000. 500 is thus used as a default that should still be reasonably performant for larger
+        // documents.
+        return 500;
     }
 }
