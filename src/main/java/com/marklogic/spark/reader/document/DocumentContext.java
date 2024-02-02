@@ -3,6 +3,7 @@ package com.marklogic.spark.reader.document;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.query.SearchQueryDefinition;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
@@ -62,7 +63,13 @@ class DocumentContext extends ContextSupport {
 
     int getBatchSize() {
         if (hasOption(Options.READ_BATCH_SIZE)) {
-            return Integer.parseInt(getProperties().get(Options.READ_BATCH_SIZE));
+            String value = getProperties().get(Options.READ_BATCH_SIZE);
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                String message = String.format("Invalid value for option %s: %s; must be numeric.", Options.READ_BATCH_SIZE, value);
+                throw new ConnectorException(message);
+            }
         }
         return 100;
     }
