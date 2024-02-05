@@ -76,4 +76,8 @@ class DocumentContext extends ContextSupport {
         // documents.
         return 500;
     }
+
+    boolean isPageRangeStrategy() {
+        return "pageRange".equalsIgnoreCase(getProperties().get(Options.READ_DOCUMENTS_PARTITION_STRATEGY));
+    }
 }

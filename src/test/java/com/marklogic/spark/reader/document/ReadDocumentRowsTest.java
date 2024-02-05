@@ -20,6 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
     @Test
+    void performanceTest() {
+        long start = System.currentTimeMillis();
+        long count = startRead()
+            .option(Options.CLIENT_URI, "admin:CHANGEME@CHANGEME:8015")
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "address")
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "24")
+            .option(Options.READ_BATCH_SIZE, "1250")
+            .load()
+            .count();
+
+        logger.info("Time: " + (System.currentTimeMillis() - start));
+        assertEquals(150000, count);
+    }
+
+    @Test
     void readByCollection() {
         Dataset<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
