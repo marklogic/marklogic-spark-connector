@@ -52,6 +52,7 @@ class DocumentContext extends ContextSupport {
         return new SearchQueryBuilder()
             .withStringQuery(props.get(Options.READ_DOCUMENTS_STRING_QUERY))
             .withQuery(props.get(Options.READ_DOCUMENTS_QUERY))
+            .withQueryFormat(props.get(Options.READ_DOCUMENTS_QUERY_FORMAT))
             .withCollections(props.get(Options.READ_DOCUMENTS_COLLECTIONS))
             .withDirectory(props.get(Options.READ_DOCUMENTS_DIRECTORY))
             .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS))

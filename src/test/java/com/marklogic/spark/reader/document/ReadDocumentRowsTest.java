@@ -21,6 +21,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
     @Test
     void performanceTest() {
+        if (true) return;
         long start = System.currentTimeMillis();
         long count = startRead()
             .option(Options.CLIENT_URI, "admin:CHANGEME@CHANGEME:8015")
@@ -84,6 +85,9 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
     void stringQuery() {
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_STRING_QUERY, "Vivianne OR Moria")
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -99,6 +103,9 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             "<term-query><text>Vivianne</text></term-query></query>";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -114,6 +121,9 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
             .option(Options.READ_DOCUMENTS_STRING_QUERY, "Wooles")
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -152,6 +162,10 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         String query = "{ \"query\": { \"queries\": [{ \"term-query\": { \"text\": [ \"Moria\" ] } }] } }";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "json")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -167,6 +181,9 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -179,6 +196,10 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "json")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -195,6 +216,9 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
@@ -211,6 +235,10 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, combinedQuery.toString())
+            .option(Options.READ_DOCUMENTS_PARTITION_STRATEGY, "pageRange")
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "json")
+            .option(Options.READ_NUM_PARTITIONS, "2")
+            .option(Options.READ_BATCH_SIZE, "10")
             .load()
             .collectAsList();
 
