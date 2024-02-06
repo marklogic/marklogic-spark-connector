@@ -77,6 +77,17 @@ class PageRangeReader implements PartitionReader<InternalRow> {
         if (currentDocumentPage == null || !currentDocumentPage.hasNext()) {
             closeCurrentDocumentPage();
             this.offset += this.batchSize;
+            // If the offset is greater than the end point, we're done.
+            if (offset > partition.getOffsetEnd()) {
+                if (logger.isInfoEnabled()) {
+                    logger.info("Read {} documents from bucket {} in {}ms", docCount, this.partition, System.currentTimeMillis() - startTime);
+                }
+                return false;
+            }
+            // If we're close to the offset end, make sure we don't go past it.
+            if (offset + batchSize > partition.getOffsetEnd()) {
+                this.documentManager.setPageLength(partition.getOffsetEnd() - offset + 1);
+            }
             this.currentDocumentPage = this.documentManager.search(this.queryDefinition, offset, this.partition.getServerTimestamp());
             if (this.currentDocumentPage.size() == 0) {
                 if (logger.isInfoEnabled()) {
