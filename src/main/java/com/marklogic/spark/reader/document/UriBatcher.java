@@ -17,21 +17,26 @@ import java.util.List;
 class UriBatcher {
 
     private final DatabaseClient client;
+    private final QueryManagerImpl queryManager;
     private final SearchQueryDefinition query;
-    private final boolean filtered;
-    private final String forestName;
+    private final ForestPartition partition;
     private final int pageLength;
+    private final boolean filtered;
 
-    private long serverTimestamp = -1;
+    // These change as batches of URIs are retrieved.
     private String lastUri;
-    private long start = 1;
+    private long offsetStart = 1;
 
-    UriBatcher(DatabaseClient client, SearchQueryDefinition query, String forestName, int pageLength, boolean filtered) {
+
+    UriBatcher(DatabaseClient client, SearchQueryDefinition query, ForestPartition partition, int pageLength, boolean filtered) {
         this.client = client;
+        this.queryManager = (QueryManagerImpl) this.client.newQueryManager();
+        this.queryManager.setPageLength(pageLength);
         this.query = query;
-        this.filtered = filtered;
-        this.forestName = forestName;
+        this.partition = partition;
+        this.offsetStart = this.partition.getOffsetStart();
         this.pageLength = pageLength;
+        this.filtered = filtered;
     }
 
     /**
@@ -40,23 +45,27 @@ class UriBatcher {
      * without resorting to pagination.
      */
     List<String> nextBatchOfUris() {
-        QueryManagerImpl queryManager = (QueryManagerImpl) client.newQueryManager();
-        queryManager.setPageLength(this.pageLength);
-        UrisHandle urisHandle = new UrisHandle();
-        if (this.serverTimestamp > -1) {
-            urisHandle.setPointInTimeQueryTimestamp(this.serverTimestamp);
+        if (partition.getOffsetEnd() != null && this.offsetStart > partition.getOffsetEnd()) {
+            return new ArrayList<>();
         }
 
-        try (UrisHandle results = queryManager.uris("POST", query, filtered, urisHandle, start, lastUri, forestName)) {
-            if (serverTimestamp == -1) {
-                this.serverTimestamp = results.getServerTimestamp();
-            }
+        UrisHandle urisHandle = new UrisHandle();
+        urisHandle.setPointInTimeQueryTimestamp(partition.getServerTimestamp());
+
+        // If we have an offsetEnd, the page length is adjusted to ensure we do not go past offsetEnd.
+        if (partition.getOffsetEnd() != null && (this.offsetStart + this.pageLength > partition.getOffsetEnd())) {
+            // e.g. 9001 to 10000; need a page length of 1000, so 1 is added.
+            int finalPageLength = (int) (partition.getOffsetEnd() - this.offsetStart) + 1;
+            this.queryManager.setPageLength(finalPageLength);
+        }
+
+        try (UrisHandle results = queryManager.uris("POST", query, filtered, urisHandle, offsetStart, lastUri, partition.getForestName())) {
             List<String> uris = new ArrayList<>();
             results.iterator().forEachRemaining(uris::add);
             if (!uris.isEmpty()) {
                 this.lastUri = uris.get(uris.size() - 1);
             }
-            this.start = this.start + uris.size();
+            this.offsetStart = this.offsetStart + uris.size();
             return uris;
         } catch (ResourceNotFoundException ex) {
             // QueryBatcherImpl notes that this is how internal/uris informs us that there are no results left.

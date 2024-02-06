@@ -36,6 +36,7 @@ import java.util.Set;
 class ForestReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ForestReader.class);
+
     private final UriBatcher uriBatcher;
     private final GenericDocumentManager documentManager;
     private final StructuredQueryBuilder queryBuilder;
@@ -43,25 +44,24 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final boolean contentWasRequested;
 
     // Only used for logging.
-    private final String forestName;
+    private final ForestPartition forestPartition;
+    private long startTime;
 
     private DocumentPage currentDocumentPage;
 
-    // Used for logging/debugging.
-    private long startTime;
     private int docCount;
 
     ForestReader(ForestPartition forestPartition, DocumentContext documentContext) {
-        this.forestName = forestPartition.getForestName();
         if (logger.isDebugEnabled()) {
-            logger.debug("Will read from forest: {}", this.forestName);
+            logger.debug("Will read from partition: {}", forestPartition);
         }
+        this.forestPartition = forestPartition;
 
         DatabaseClient client = documentContext.connectToMarkLogic();
 
         SearchQueryDefinition query = documentContext.buildSearchQuery(client);
         int batchSize = documentContext.getBatchSize();
-        this.uriBatcher = new UriBatcher(client, query, forestPartition.getForestName(), batchSize, true);
+        this.uriBatcher = new UriBatcher(client, query, forestPartition, batchSize, false);
 
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
@@ -82,7 +82,8 @@ class ForestReader implements PartitionReader<InternalRow> {
             if (uris.isEmpty()) {
                 // TBD on whether this should be info/debug.
                 if (logger.isInfoEnabled()) {
-                    logger.info("Read {} documents from forest {} in {}ms", docCount, forestName, System.currentTimeMillis() - startTime);
+                    long duration = System.currentTimeMillis() - startTime;
+                    logger.info("Read {} documents from partition {} in {}ms", docCount, forestPartition, duration);
                 }
                 return false;
             }
@@ -116,8 +117,8 @@ class ForestReader implements PartitionReader<InternalRow> {
         long start = System.currentTimeMillis();
         List<String> uris = uriBatcher.nextBatchOfUris();
         if (logger.isTraceEnabled()) {
-            logger.trace("Retrieved {} URIs in {}ms from forest {}", uris.size(),
-                (System.currentTimeMillis() - start), this.forestName);
+            logger.trace("Retrieved {} URIs in {}ms from partition {}", uris.size(),
+                (System.currentTimeMillis() - start), this.forestPartition);
         }
         return uris;
     }
@@ -134,7 +135,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         // some inefficiency if the caller only wants metadata and no content.
         DocumentPage page = this.documentManager.search(queryDefinition, 0);
         if (logger.isTraceEnabled()) {
-            logger.trace("Retrieved page of documents in {}ms from forest {}", (System.currentTimeMillis() - start), this.forestName);
+            logger.trace("Retrieved page of documents in {}ms from partition {}", (System.currentTimeMillis() - start), this.forestPartition);
         }
         return page;
     }

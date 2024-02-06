@@ -17,6 +17,7 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -107,8 +108,8 @@ class ReadRowsTest extends AbstractIntegrationTest {
         Dataset<Row> reader = newDefaultReader()
             .option(Options.READ_NUM_PARTITIONS, "abc")
             .load();
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be numeric", ex.getMessage());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be numeric.", ex.getMessage());
     }
 
     @Test
@@ -117,8 +118,8 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .option(Options.READ_NUM_PARTITIONS, "0")
             .load();
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be 1 or greater", ex.getMessage());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be 1 or greater.", ex.getMessage());
     }
 
     @Test
@@ -127,8 +128,8 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .option(Options.READ_BATCH_SIZE, "abc")
             .load();
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric", ex.getMessage());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric.", ex.getMessage());
     }
 
     @Test
@@ -136,7 +137,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
         Dataset<Row> reader = newDefaultReader()
             .option(Options.READ_BATCH_SIZE, "-1")
             .load();
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 0 or greater", ex.getMessage());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 0 or greater.", ex.getMessage());
     }
 }

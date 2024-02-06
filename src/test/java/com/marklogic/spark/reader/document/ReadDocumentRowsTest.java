@@ -52,7 +52,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
-        assertEquals("Invalid value for option spark.marklogic.read.batchSize: abc; must be numeric.", ex.getMessage());
+        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric.", ex.getMessage());
     }
 
     @Test
@@ -136,6 +136,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         String query = "{ \"query\": { \"queries\": [{ \"term-query\": { \"text\": [ \"Moria\" ] } }] } }";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "jsON")
             .load()
             .collectAsList();
 
@@ -163,6 +164,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "JSON")
             .load()
             .collectAsList();
 
@@ -195,6 +197,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, combinedQuery.toString())
+            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "json")
             .load()
             .collectAsList();
 

@@ -2,6 +2,7 @@ package com.marklogic.spark.reader.document;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.ServerTransform;
+import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.query.*;
 
@@ -13,6 +14,7 @@ public class SearchQueryBuilder {
 
     private String stringQuery;
     private String query;
+    private Format queryFormat;
     private String[] collections;
     private String directory;
     private String optionsName;
@@ -46,6 +48,13 @@ public class SearchQueryBuilder {
      */
     public SearchQueryBuilder withQuery(String query) {
         this.query = query;
+        return this;
+    }
+
+    public SearchQueryBuilder withQueryFormat(String format) {
+        if (format != null) {
+            this.queryFormat = Format.valueOf(format.toUpperCase());
+        }
         return this;
     }
 
@@ -86,7 +95,11 @@ public class SearchQueryBuilder {
         // The Java Client misleadingly suggests a distinction amongst the 3 complex queries - structured,
         // serialized CTS, and combined - but the REST API does not.
         if (query != null) {
-            RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(new StringHandle(query));
+            StringHandle queryHandle = new StringHandle(query);
+            if (queryFormat != null) {
+                queryHandle.withFormat(queryFormat);
+            }
+            RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(queryHandle);
             if (stringQuery != null && stringQuery.length() > 0) {
                 queryDefinition.withCriteria(stringQuery);
             }
