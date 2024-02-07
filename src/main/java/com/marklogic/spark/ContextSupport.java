@@ -36,7 +36,19 @@ public class ContextSupport implements Serializable {
     }
 
     public DatabaseClient connectToMarkLogic() {
+        return connectToMarkLogic(null);
+    }
+
+    /**
+     * @param host if not null, overrides the user-defined host. Used for direct connections when a load balancer is
+     *             not in front of MarkLogic.
+     * @return
+     */
+    public DatabaseClient connectToMarkLogic(String host) {
         Map<String, String> connectionProps = buildConnectionProperties();
+        if (host != null) {
+            connectionProps.put(Options.CLIENT_HOST, host);
+        }
         DatabaseClient client;
         try {
             client = DatabaseClientFactory.newClient(propertyName -> connectionProps.get("spark." + propertyName));
@@ -128,6 +140,11 @@ public class ContextSupport implements Serializable {
      */
     public final boolean isAbortOnFailure() {
         return !"false".equalsIgnoreCase(getProperties().get(Options.WRITE_ABORT_ON_FAILURE));
+    }
+
+    public final boolean isDirectConnection() {
+        String value = getProperties().get(Options.CLIENT_CONNECTION_TYPE);
+        return value != null && value.equalsIgnoreCase(DatabaseClient.ConnectionType.DIRECT.name());
     }
 
     public final boolean hasOption(String... options) {

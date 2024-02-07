@@ -210,3 +210,9 @@ with more partition readers and a higher batch size.
 You can also adjust the level of parallelism by controlling how many threads Spark uses for executing partition reads. 
 Please see your Spark distribution's documentation for further information.
 
+### Direct connections to hosts
+
+If your Spark program is able to connect to each host in your MarkLogic cluster, you can set the
+`spark.marklogic.client.connectionType` option to `direct`. Each partition reader will then connect to the
+host on which the reader's assigned forest resides. This will typically improve performance by reducing the network
+traffic, as the host that receives a request will not need to involve any other host in the processing of that request.

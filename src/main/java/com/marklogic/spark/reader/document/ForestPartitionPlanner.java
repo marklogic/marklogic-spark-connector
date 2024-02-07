@@ -28,7 +28,7 @@ class ForestPartitionPlanner {
                     break;
                 }
                 Long offsetEnd = j < (partitionsPerForest - 1) ? (urisPerPartition + offset - 1) : null;
-                partitions.add(new ForestPartition(forest.getForestName(), serverTimestamp, offset, offsetEnd));
+                partitions.add(new ForestPartition(forest, serverTimestamp, offset, offsetEnd));
                 offset += urisPerPartition;
             }
         }

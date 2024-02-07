@@ -55,13 +55,17 @@ class ForestReader implements PartitionReader<InternalRow> {
     private int docCount;
 
     ForestReader(ForestPartition forestPartition, DocumentContext context) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Will read from partition: {}", forestPartition);
-        }
         this.forestPartition = forestPartition;
         this.limit = context.getLimit();
 
-        DatabaseClient client = context.connectToMarkLogic();
+        DatabaseClient client = context.isDirectConnection() ?
+            context.connectToMarkLogic(forestPartition.getHost()) :
+            context.connectToMarkLogic();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will read from host {} for partition: {}", client.getHost(), forestPartition);
+        }
+
         SearchQueryDefinition query = context.buildSearchQuery(client);
         this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), false);
 
