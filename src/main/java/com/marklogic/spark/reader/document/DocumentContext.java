@@ -3,7 +3,6 @@ package com.marklogic.spark.reader.document;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.query.SearchQueryDefinition;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
@@ -52,6 +51,7 @@ class DocumentContext extends ContextSupport {
         return new SearchQueryBuilder()
             .withStringQuery(props.get(Options.READ_DOCUMENTS_STRING_QUERY))
             .withQuery(props.get(Options.READ_DOCUMENTS_QUERY))
+            .withQueryFormat(props.get(Options.READ_DOCUMENTS_QUERY_FORMAT))
             .withCollections(props.get(Options.READ_DOCUMENTS_COLLECTIONS))
             .withDirectory(props.get(Options.READ_DOCUMENTS_DIRECTORY))
             .withOptionsName(props.get(Options.READ_DOCUMENTS_OPTIONS))
@@ -62,18 +62,15 @@ class DocumentContext extends ContextSupport {
     }
 
     int getBatchSize() {
-        if (hasOption(Options.READ_BATCH_SIZE)) {
-            String value = getProperties().get(Options.READ_BATCH_SIZE);
-            try {
-                return Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                String message = String.format("Invalid value for option %s: %s; must be numeric.", Options.READ_BATCH_SIZE, value);
-                throw new ConnectorException(message);
-            }
-        }
         // Testing has shown that at least for smaller documents, 100 or 200 can be significantly slower than something
         // like 1000 or even 10000. 500 is thus used as a default that should still be reasonably performant for larger
         // documents.
-        return 500;
+        int defaultBatchSize = 500;
+        return (int) getNumericOption(Options.READ_BATCH_SIZE, defaultBatchSize, 1);
+    }
+
+    int getPartitionsPerForest() {
+        int defaultPartitionsPerForest = 2;
+        return (int) getNumericOption(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, defaultPartitionsPerForest, 1);
     }
 }

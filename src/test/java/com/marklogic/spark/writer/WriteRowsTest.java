@@ -17,8 +17,10 @@ package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.PermissionsTester;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
+import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -94,27 +96,17 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void invalidThreadCount() {
-        SparkException ex = assertThrows(
-            SparkException.class,
-            () -> newWriter().option(Options.WRITE_THREAD_COUNT, 0).save()
-        );
-
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
-        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater", cause.getMessage());
+        DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater.", ex.getMessage());
         verifyNoDocsWereWritten();
     }
 
     @Test
     void invalidBatchSize() {
-        SparkException ex = assertThrows(
-            SparkException.class,
-            () -> newWriter().option(Options.WRITE_BATCH_SIZE, 0).save()
-        );
-
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
-        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater", cause.getMessage(),
+        DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
                 "many requests will be made by a partition, and zero is a valid value for reading.");

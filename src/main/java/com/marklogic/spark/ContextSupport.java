@@ -113,11 +113,11 @@ public class ContextSupport implements Serializable {
                 Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
             if (value < minimumValue) {
-                throw new IllegalArgumentException(String.format("Value of '%s' option must be %d or greater", optionName, minimumValue));
+                throw new ConnectorException(String.format("Value of '%s' option must be %d or greater.", optionName, minimumValue));
             }
             return value;
         } catch (NumberFormatException ex) {
-            throw new IllegalArgumentException(String.format("Value of '%s' option must be numeric", optionName), ex);
+            throw new ConnectorException(String.format("Value of '%s' option must be numeric.", optionName), ex);
         }
     }
 

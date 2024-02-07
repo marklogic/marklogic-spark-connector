@@ -93,6 +93,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
             .load();
     }
 
