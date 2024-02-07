@@ -136,7 +136,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         String query = "{ \"query\": { \"queries\": [{ \"term-query\": { \"text\": [ \"Moria\" ] } }] } }";
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "jsON")
             .load()
             .collectAsList();
 
@@ -164,7 +163,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "JSON")
             .load()
             .collectAsList();
 
@@ -197,7 +195,6 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_QUERY, combinedQuery.toString())
-            .option(Options.READ_DOCUMENTS_QUERY_FORMAT, "json")
             .load()
             .collectAsList();
 

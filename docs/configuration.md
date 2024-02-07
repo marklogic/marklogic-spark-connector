@@ -153,6 +153,7 @@ The following options control how the connector reads document rows from MarkLog
 | spark.marklogic.read.documents.transform | Name of a [MarkLogic REST transform](https://docs.marklogic.com/guide/rest-dev/transforms) to apply to each matching document. |
 | spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
 | spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
+| spark.marklogic.read.documents.partitionsPerForest | Number of Spark partition readers to create per forest; defaults to 4. |
 
 ## Write options
 
