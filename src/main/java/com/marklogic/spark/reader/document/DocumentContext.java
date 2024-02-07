@@ -13,6 +13,8 @@ import java.util.Set;
 
 class DocumentContext extends ContextSupport {
 
+    private Integer limit;
+
     DocumentContext(CaseInsensitiveStringMap options) {
         super(options.asCaseSensitiveMap());
     }
@@ -72,5 +74,13 @@ class DocumentContext extends ContextSupport {
     int getPartitionsPerForest() {
         int defaultPartitionsPerForest = 2;
         return (int) getNumericOption(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, defaultPartitionsPerForest, 1);
+    }
+
+    void setLimit(Integer limit) {
+        this.limit = limit;
+    }
+
+    Integer getLimit() {
+        return limit;
     }
 }

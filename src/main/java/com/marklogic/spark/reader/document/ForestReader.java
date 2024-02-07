@@ -42,6 +42,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final StructuredQueryBuilder queryBuilder;
     private final Set<DocumentManager.Metadata> requestedMetadata;
     private final boolean contentWasRequested;
+    private final Integer limit;
 
     // Only used for logging.
     private final ForestPartition forestPartition;
@@ -49,24 +50,24 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     private DocumentPage currentDocumentPage;
 
+    // Used for logging and for ensuring a non-null limit is not exceeded.
     private int docCount;
 
-    ForestReader(ForestPartition forestPartition, DocumentContext documentContext) {
+    ForestReader(ForestPartition forestPartition, DocumentContext context) {
         if (logger.isDebugEnabled()) {
             logger.debug("Will read from partition: {}", forestPartition);
         }
         this.forestPartition = forestPartition;
+        this.limit = context.getLimit();
 
-        DatabaseClient client = documentContext.connectToMarkLogic();
-
-        SearchQueryDefinition query = documentContext.buildSearchQuery(client);
-        int batchSize = documentContext.getBatchSize();
-        this.uriBatcher = new UriBatcher(client, query, forestPartition, batchSize, false);
+        DatabaseClient client = context.connectToMarkLogic();
+        SearchQueryDefinition query = context.buildSearchQuery(client);
+        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), false);
 
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
-        this.contentWasRequested = documentContext.contentWasRequested();
-        this.requestedMetadata = documentContext.getRequestedMetadata();
+        this.contentWasRequested = context.contentWasRequested();
+        this.requestedMetadata = context.getRequestedMetadata();
         this.documentManager.setMetadataCategories(this.requestedMetadata);
         this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
     }
@@ -76,6 +77,13 @@ class ForestReader implements PartitionReader<InternalRow> {
         if (startTime == 0) {
             startTime = System.currentTimeMillis();
         }
+
+        if (limit != null && docCount >= limit) {
+            // No logging here as this block may never be hit, depending on whether Spark first detects that the limit
+            // has been reached.
+            return false;
+        }
+
         if (currentDocumentPage == null || !currentDocumentPage.hasNext()) {
             closeCurrentDocumentPage();
             List<String> uris = getNextBatchOfUris();
@@ -89,6 +97,7 @@ class ForestReader implements PartitionReader<InternalRow> {
             }
             this.currentDocumentPage = readPage(uris);
         }
+
         return currentDocumentPage.hasNext();
     }
 
