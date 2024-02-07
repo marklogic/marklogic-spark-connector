@@ -14,7 +14,6 @@ public class SearchQueryBuilder {
 
     private String stringQuery;
     private String query;
-    private Format queryFormat;
     private String[] collections;
     private String directory;
     private String optionsName;
@@ -48,13 +47,6 @@ public class SearchQueryBuilder {
      */
     public SearchQueryBuilder withQuery(String query) {
         this.query = query;
-        return this;
-    }
-
-    public SearchQueryBuilder withQueryFormat(String format) {
-        if (format != null) {
-            this.queryFormat = Format.valueOf(format.toUpperCase());
-        }
         return this;
     }
 
@@ -92,13 +84,15 @@ public class SearchQueryBuilder {
 
     private QueryDefinition buildQueryDefinition(DatabaseClient client) {
         final QueryManager queryManager = client.newQueryManager();
-        // The Java Client misleadingly suggests a distinction amongst the 3 complex queries - structured,
-        // serialized CTS, and combined - but the REST API does not.
         if (query != null) {
             StringHandle queryHandle = new StringHandle(query);
-            if (queryFormat != null) {
-                queryHandle.withFormat(queryFormat);
+            // v1/search assumes XML by default, so only need to set to JSON if the query is JSON.
+            if (queryIsJSON()) {
+                queryHandle.withFormat(Format.JSON);
             }
+            // The Java Client misleadingly suggests a distinction amongst the 3 complex queries - structured,
+            // serialized CTS, and combined - but the REST API does not. Thus, a RawStructuredQueryDefinition will work
+            // for any of the 3 query types.
             RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(queryHandle);
             if (stringQuery != null && stringQuery.length() > 0) {
                 queryDefinition.withCriteria(stringQuery);
@@ -110,6 +104,10 @@ public class SearchQueryBuilder {
             queryDefinition.setCriteria(this.stringQuery);
         }
         return queryDefinition;
+    }
+
+    private boolean queryIsJSON() {
+        return query != null && query.trim().startsWith("{");
     }
 
     private void applyCommonQueryConfig(QueryDefinition queryDefinition) {

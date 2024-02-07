@@ -48,7 +48,6 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_STRING_QUERY = "spark.marklogic.read.documents.stringQuery";
     // Corresponds to the complex query submitted via the request body at https://docs.marklogic.com/REST/POST/v1/search .
     public static final String READ_DOCUMENTS_QUERY = "spark.marklogic.read.documents.query";
-    public static final String READ_DOCUMENTS_QUERY_FORMAT = "spark.marklogic.read.documents.queryFormat";
     public static final String READ_DOCUMENTS_OPTIONS = "spark.marklogic.read.documents.options";
     public static final String READ_DOCUMENTS_DIRECTORY = "spark.marklogic.read.documents.directory";
     public static final String READ_DOCUMENTS_TRANSFORM = "spark.marklogic.read.documents.transform";
