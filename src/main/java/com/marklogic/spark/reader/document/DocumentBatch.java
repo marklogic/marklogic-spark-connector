@@ -8,7 +8,6 @@ import com.marklogic.client.query.SearchQueryDefinition;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
-import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,10 +15,10 @@ class DocumentBatch implements Batch {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentBatch.class);
 
-    private DocumentContext context;
+    private final DocumentContext context;
 
-    DocumentBatch(CaseInsensitiveStringMap options) {
-        this.context = new DocumentContext(options);
+    DocumentBatch(DocumentContext context) {
+        this.context = context;
     }
 
     /**
