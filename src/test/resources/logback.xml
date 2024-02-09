@@ -16,6 +16,12 @@
     <appender-ref ref="STDOUT"/>
   </logger>
 
+  <!-- Set to ERROR so that the somewhat-ugly WARN level messages are suppressed. Users will still see them unless
+  they do likewise. Our connector then logs more-pleasant ERROR messages when a batch fails. -->
+  <logger name="com.marklogic.client.datamovement.impl.WriteBatcherImpl" level="ERROR" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
   <logger name="com.marklogic.spark" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>

@@ -29,6 +29,7 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
@@ -92,8 +93,8 @@ public class ReadContext extends ContextSupport {
         }
 
         if (this.planAnalysis != null) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
                     this.planAnalysis.getPartitions().size(), this.planAnalysis.getAllBuckets().size());
             }
             // Calling this to establish a server timestamp.
@@ -108,7 +109,7 @@ public class ReadContext extends ContextSupport {
     private void handlePlanAnalysisError(String query, FailedRequestException ex) {
         final String indicatorOfNoRowsExisting = "$tableId as xs:string -- Invalid coercion: () as xs:string";
         if (ex.getMessage().contains(indicatorOfNoRowsExisting)) {
-            logger.info("No rows were found, so will not create any partitions.");
+            Util.MAIN_LOGGER.info("No rows were found, so will not create any partitions.");
         } else {
             throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
         }
@@ -195,12 +196,14 @@ public class ReadContext extends ContextSupport {
                 StructField field = findColumnInSchema(sum.column(), PlanUtil.expressionToColumnName(sum.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
             } else {
-                logger.info("Unsupported aggregate function: {}", func);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Unsupported aggregate function: {}", func);
+                }
             }
         }
 
         if (!getProperties().containsKey(Options.READ_BATCH_SIZE)) {
-            logger.info("Batch size was not overridden, so modifying each partition to make a single request to improve " +
+            Util.MAIN_LOGGER.info("Batch size was not overridden, so modifying each partition to make a single request to improve " +
                 "performance of pushed down aggregation.");
             List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())

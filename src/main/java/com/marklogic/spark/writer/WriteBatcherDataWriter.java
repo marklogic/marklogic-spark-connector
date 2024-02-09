@@ -18,6 +18,7 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -100,13 +101,15 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        logger.warn("Abort called; stopping job");
+        Util.MAIN_LOGGER.warn("Abort called; stopping job");
         stopJobAndRelease();
     }
 
     @Override
     public void close() {
-        logger.info("Close called; stopping job");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Close called; stopping job.");
+        }
         stopJobAndRelease();
     }
 

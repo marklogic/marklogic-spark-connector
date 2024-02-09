@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader.customcode;
 
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
@@ -74,6 +75,6 @@ class CustomCodeMicroBatchStream implements MicroBatchStream {
 
     @Override
     public void stop() {
-        logger.info("Stopping");
+        Util.MAIN_LOGGER.info("Stopping");
     }
 }

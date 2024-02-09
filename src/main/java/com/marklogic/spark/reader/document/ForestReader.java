@@ -11,6 +11,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
@@ -89,9 +90,9 @@ class ForestReader implements PartitionReader<InternalRow> {
             List<String> uris = getNextBatchOfUris();
             if (uris.isEmpty()) {
                 // TBD on whether this should be info/debug.
-                if (logger.isInfoEnabled()) {
+                if (Util.MAIN_LOGGER.isInfoEnabled()) {
                     long duration = System.currentTimeMillis() - startTime;
-                    logger.info("Read {} documents from partition {} in {}ms", docCount, forestPartition, duration);
+                    Util.MAIN_LOGGER.info("Read {} documents from partition {} in {}ms", docCount, forestPartition, duration);
                 }
                 return false;
             }

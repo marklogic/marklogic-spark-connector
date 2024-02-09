@@ -22,8 +22,10 @@ import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +65,13 @@ public class WriteContext extends ContextSupport {
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
-            .withThreadCount((int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1));
+            .withThreadCount((int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1))
+            // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
+            // message from the server. This is intended to always show up and be associated with our Spark connector
+            // and also to be more brief, just capturing the main message from the server.
+            .onBatchFailure(((batch, failure) -> {
+                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage());
+            }));
 
         if (logger.isDebugEnabled()) {
             writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
@@ -90,7 +98,7 @@ public class WriteContext extends ContextSupport {
             Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
                 String value = getProperties().get(option);
                 if (value != null && value.trim().length() > 0) {
-                    logger.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
+                    Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
                 }
             });
         } else {

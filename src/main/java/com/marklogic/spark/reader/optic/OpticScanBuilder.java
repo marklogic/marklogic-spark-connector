@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.filter.FilterFactory;
 import com.marklogic.spark.reader.filter.OpticFilter;
 import org.apache.spark.sql.connector.expressions.SortOrder;
@@ -80,8 +81,8 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         for (Filter filter : filters) {
             OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
             if (opticFilter != null) {
-                if (logger.isInfoEnabled()) {
-                    logger.info("Pushing down filter: {}", filter);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Pushing down filter: {}", filter);
                 }
                 opticFilters.add(opticFilter);
                 this.pushedFilters.add(filter);
@@ -110,8 +111,8 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         if (readContext.planAnalysisFoundNoRows()) {
             return false;
         }
-        if (logger.isInfoEnabled()) {
-            logger.info("Pushing down limit: {}", limit);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down limit: {}", limit);
         }
         readContext.pushDownLimit(limit);
         return true;
@@ -125,8 +126,8 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         // This will be invoked when the user calls both orderBy and limit in their Spark program. If the user only
         // calls limit, then only pushLimit is called and this will not be called. If the user only calls orderBy and
         // not limit, then neither this nor pushLimit will be called.
-        if (logger.isInfoEnabled()) {
-            logger.info("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
         }
         readContext.pushDownTopN(orders, limit);
         return true;
@@ -156,16 +157,16 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         }
 
         if (hasUnsupportedAggregateFunction(aggregation)) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Aggregation contains one or more unsupported functions, " +
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Aggregation contains one or more unsupported functions, " +
                     "so not pushing aggregation to MarkLogic: {}", describeAggregation(aggregation));
             }
             return false;
         }
 
         if (readContext.getBucketCount() > 1) {
-            if (logger.isInfoEnabled()) {
-                logger.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
                     describeAggregation(aggregation));
             }
             return false;
@@ -183,12 +184,12 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         }
 
         if (pushDownAggregatesIsDisabled()) {
-            logger.info("Push down of aggregates is disabled; Spark will handle all aggregations.");
+            Util.MAIN_LOGGER.info("Push down of aggregates is disabled; Spark will handle all aggregations.");
             return false;
         }
 
-        if (logger.isInfoEnabled()) {
-            logger.info("Pushing down aggregation: {}", describeAggregation(aggregation));
+        if (logger.isDebugEnabled()) {
+            logger.debug("Pushing down aggregation: {}", describeAggregation(aggregation));
         }
         readContext.pushDownAggregation(aggregation);
         return true;
