@@ -86,12 +86,14 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        logger.warn("Abort called; stopping job");
+        Util.MAIN_LOGGER.warn("Abort called; stopping job");
     }
 
     @Override
     public void close() {
-        logger.info("Close called; stopping job");
+        if (logger.isDebugEnabled()) {
+            logger.debug("Close called; stopping job.");
+        }
         if (databaseClient != null) {
             databaseClient.release();
         }
@@ -167,7 +169,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;
             }
-            logger.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
+            Util.MAIN_LOGGER.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
         }
     }
 

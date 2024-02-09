@@ -45,7 +45,7 @@ import java.util.Map;
  */
 public class DefaultSource implements TableProvider, DataSourceRegister {
 
-    private static final Logger logger = LoggerFactory.getLogger(DefaultSource.class);
+    private static final Logger logger = LoggerFactory.getLogger("com.marklogic.spark");
 
     @Override
     public String shortName() {

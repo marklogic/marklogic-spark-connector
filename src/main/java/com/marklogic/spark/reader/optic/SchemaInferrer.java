@@ -19,18 +19,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public abstract class SchemaInferrer {
 
-    private static final Logger logger = LoggerFactory.getLogger(SchemaInferrer.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     // "Column info types" = the possible set of types returned by the columnInfo call to /v1/rows. Note that this is
@@ -105,7 +103,7 @@ public abstract class SchemaInferrer {
         if (COLUMN_INFO_TYPES_TO_SPARK_TYPES.containsKey(type)) {
             return COLUMN_INFO_TYPES_TO_SPARK_TYPES.get(type);
         }
-        logger.warn("Unrecognized column type: {}; will map to Spark StringType", column);
+        Util.MAIN_LOGGER.warn("Unrecognized column type: {}; will map to Spark StringType", column);
         return DataTypes.StringType;
     }
 

@@ -35,7 +35,9 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
-        logger.info("Creating reader for partition: {}", partition);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Creating reader for partition: {}", partition);
+        }
         return new OpticPartitionReader(this.readContext, (PlanAnalysis.Partition) partition);
     }
 }

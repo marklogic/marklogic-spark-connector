@@ -16,6 +16,8 @@
 package com.marklogic.spark;
 
 import org.apache.spark.sql.catalyst.json.JSONOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import scala.collection.immutable.HashMap;
 
 import java.util.ArrayList;
@@ -24,6 +26,12 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public interface Util {
+
+    /**
+     * Intended for all non-debug logging where the class name doesn't matter and only adds complexity to the log
+     * messages.
+     */
+    Logger MAIN_LOGGER = LoggerFactory.getLogger("com.marklogic.spark");
 
     JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
         new HashMap<>(),

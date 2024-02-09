@@ -15,8 +15,9 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
@@ -31,7 +32,7 @@ import java.util.Arrays;
 
 class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
-    private static final Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
+    private static final Logger logger = LoggerFactory.getLogger("com.marklogic.spark");
 
     private WriteContext writeContext;
 
@@ -46,21 +47,21 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        logger.info("Number of partitions: {}", info.numPartitions());
+        Util.MAIN_LOGGER.info("Number of partitions: {}", info.numPartitions());
         return (DataWriterFactory) determineWriterFactory();
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && logger.isInfoEnabled()) {
-            logger.info("Commit messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
+            logger.debug("Commit messages received: {}", Arrays.asList(messages));
         }
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            logger.warn("Abort messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && messages[0] != null) {
+            Util.MAIN_LOGGER.warn("Abort messages received: {}", Arrays.asList(messages));
         }
     }
 
@@ -79,7 +80,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            logger.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+            Util.MAIN_LOGGER.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
         }
     }
 

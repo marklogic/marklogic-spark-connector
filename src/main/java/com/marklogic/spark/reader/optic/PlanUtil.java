@@ -99,7 +99,9 @@ public abstract class PlanUtil {
                         aggregateArgs.addObject().put("values", "distinct");
                     }
                 } else {
-                    logger.info("Unsupported aggregate function, will not be pushed to Optic: {}", func);
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Unsupported aggregate function, will not be pushed to Optic: {}", func);
+                    }
                 }
             }
         });
