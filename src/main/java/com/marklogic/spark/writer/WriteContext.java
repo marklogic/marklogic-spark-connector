@@ -25,7 +25,6 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -69,9 +68,9 @@ public class WriteContext extends ContextSupport {
             // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
             // message from the server. This is intended to always show up and be associated with our Spark connector
             // and also to be more brief, just capturing the main message from the server.
-            .onBatchFailure(((batch, failure) -> {
-                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage());
-            }));
+            .onBatchFailure((batch, failure) ->
+                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage())
+            );
 
         if (logger.isDebugEnabled()) {
             writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
