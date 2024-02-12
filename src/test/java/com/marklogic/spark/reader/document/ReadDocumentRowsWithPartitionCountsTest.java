@@ -50,6 +50,24 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
         assertEquals("Value of 'spark.marklogic.read.documents.partitionsPerForest' option must be numeric.", ex.getMessage());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "{\"ctsquery\": {\"collectionQuery\": {\"uris\": [\"author\"]}}}",
+        "{\"query\": {\"collection-query\": {\"uri\": [\"author\"]}}}",
+        "{\"search\": {\"query\": {\"collection-query\": {\"uri\": [\"author\"]}}}}"
+    })
+    void complexQuery(String query) {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_QUERY, query)
+            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 3)
+            .load()
+            .count();
+
+        assertEquals(15, count, "Unexpected count for query: " + query);
+    }
+
     private Dataset<Row> readAuthors(int partitionsPerForest) {
         return newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
