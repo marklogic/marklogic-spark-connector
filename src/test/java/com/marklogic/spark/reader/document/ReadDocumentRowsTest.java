@@ -2,9 +2,11 @@ package com.marklogic.spark.reader.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.marklogic.client.MarkLogicIOException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -14,8 +16,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadDocumentRowsTest extends AbstractIntegrationTest {
 
@@ -34,6 +35,19 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         // Verify just a couple fields to ensure the JSON object is correct.
         assertEquals(4, doc.get("CitationID").asInt());
         assertEquals("Vivianne", doc.get("ForeName").asText());
+    }
+
+    @Test
+    void readViaDirectConnect() {
+        Dataset<Row> rows = startRead()
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.CLIENT_CONNECTION_TYPE, "direct")
+            .load();
+
+        SparkException ex = assertThrows(SparkException.class, () -> rows.count());
+        assertTrue(ex.getCause() instanceof MarkLogicIOException, "This test is expected to fail when run against " +
+            "the cluster created by docker-compose.yaml, as the host name of the MarkLogic cluster is not expected " +
+            "to be accessible. Actual exception: " + ex.getCause());
     }
 
     @Test
