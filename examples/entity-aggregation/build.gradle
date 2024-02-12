@@ -16,3 +16,8 @@ task importCustomers(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'org.example.ImportCustomers'
 }
+
+task importCustomersWithRentalsAndPayments(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass = 'org.example.ImportCustomersWithRentalsAndPayments'
+}

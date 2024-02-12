@@ -115,3 +115,65 @@ Note as well that this example is not intended to be authoritative. Please see
 on writing Spark programs. You may also find
 [this reference on Spark aggregate functions](https://sparkbyexamples.com/spark/spark-sql-aggregate-functions/) helpful.
 
+## Importing customers, rentals and payments from Postgres to MarkLogic
+
+This project also contains an example of nested joins being aggregated. In this example, the query includes a join with
+rentals (as above), but with the addition that payments are joined with rentals, producing a nested join in the query.
+Then Spark aggregation functions are used to perform nested aggregations, resulting in customer documents with JSON
+similar to the following snippet.
+
+```
+{
+  "customer_id": 182,
+  "last_name": "Lane",
+  "Rentals": [
+    {
+      "rental_id": 1542,
+      "payments": [
+        {
+          "payment_id": 19199,
+          "amount": 3.99
+        }
+      ]
+    },
+...
+    {
+      "rental_id": 4591,
+      "payments": [
+        {
+          "payment_id": 19518,
+          "amount": 1.99
+        },
+        {
+          "payment_id": 25162,
+          "amount": 1.99
+        },
+        {
+          "payment_id": 29163,
+          "amount": 0.99
+        },
+        {
+          "payment_id": 31069,
+          "amount": 3.99
+        },
+        {
+          "payment_id": 31834,
+          "amount": 3.99
+        }
+      ]
+    },
+...
+}
+```
+
+To try this out, there is another Gradle command similar to the first:
+
+    ./gradlew importCustomersWithRentalsAndPayments
+
+You can then use [MarkLogic's qconsole application](https://docs.marklogic.com/guide/qconsole/intro) to view the
+customer documents written to the Documents database. In this example, 10 customer rows are queried from the Postgres
+"customers" table, so you will see 10 customer documents in the Documents database.
+
+The JSON snippet above is from the document for customer 182. One of that customer's rentals, 4591, has multiple
+payments. If you examine the document for that customer, (/customerWithDoubleNesting/182.json) you will be able to
+verify the nested aggregation.
