@@ -13,6 +13,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
+import com.marklogic.spark.writer.CommitMessage;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -41,6 +42,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final int partitionId;
     private final long taskId;
     private final long epochId;
+    private int itemCount;
 
     CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId, long epochId) {
         this.customCodeContext = customCodeContext;
@@ -66,6 +68,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         String rowValue = customCodeContext.isCustomSchema() ?
             convertRowToJSONString(row) :
             row.getString(0);
+        itemCount++;
 
         this.currentBatch.add(rowValue);
 
@@ -77,7 +80,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        CommitMessage message = new CommitMessage(partitionId, taskId, epochId);
+        CommitMessage message = new CommitMessage("Processed", itemCount, partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }
@@ -170,25 +173,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
                 throw ex;
             }
             Util.MAIN_LOGGER.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
-        }
-    }
-
-    private static class CommitMessage implements WriterCommitMessage {
-        private int partitionId;
-        private long taskId;
-        private long epochId;
-
-        public CommitMessage(int partitionId, long taskId, long epochId) {
-            this.partitionId = partitionId;
-            this.taskId = taskId;
-            this.epochId = epochId;
-        }
-
-        @Override
-        public String toString() {
-            return epochId != 0L ?
-                String.format("[partitionId: %d; taskId: %d; epochId: %d]", partitionId, taskId, epochId) :
-                String.format("[partitionId: %d; taskId: %d]", partitionId, taskId);
         }
     }
 }
