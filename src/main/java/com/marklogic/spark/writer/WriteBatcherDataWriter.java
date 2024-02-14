@@ -90,7 +90,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() throws IOException {
-        CommitMessage message = new CommitMessage(docCount, partitionId, taskId, epochId);
+        CommitMessage message = new CommitMessage("Wrote", docCount, partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }
@@ -127,27 +127,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         if (this.databaseClient != null) {
             this.databaseClient.release();
-        }
-    }
-
-    private static class CommitMessage implements WriterCommitMessage {
-        private int docCount;
-        private int partitionId;
-        private long taskId;
-        private long epochId;
-
-        public CommitMessage(int docCount, int partitionId, long taskId, long epochId) {
-            this.docCount = docCount;
-            this.partitionId = partitionId;
-            this.taskId = taskId;
-            this.epochId = epochId;
-        }
-
-        @Override
-        public String toString() {
-            return epochId != 0L ?
-                String.format("[partitionId: %d; taskId: %d; epochId: %d]; docCount: %d", partitionId, taskId, epochId, docCount) :
-                String.format("[partitionId: %d; taskId: %d]; docCount: %d", partitionId, taskId, docCount);
         }
     }
 }

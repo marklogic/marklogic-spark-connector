@@ -53,8 +53,18 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
-            logger.debug("Commit messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Commit messages received: {}", Arrays.asList(messages));
+            }
+            final String action = ((CommitMessage) messages[0]).getAction();
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                int count = 0;
+                for (WriterCommitMessage message : messages) {
+                    count += ((CommitMessage) message).getDocCount();
+                }
+                Util.MAIN_LOGGER.info("{} {} documents", action, count);
+            }
         }
     }
 
