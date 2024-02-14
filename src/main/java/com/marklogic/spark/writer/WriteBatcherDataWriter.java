@@ -27,6 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -51,7 +52,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private final Function<InternalRow, DocBuilder.DocumentInputs> rowToDocumentFunction;
 
-    private int docCount;
+    // Updated as batches are processed.
+    private AtomicInteger successItemCount = new AtomicInteger(0);
+    private AtomicInteger failedItemCount = new AtomicInteger(0);
 
     WriteBatcherDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
         this.writeContext = writeContext;
@@ -63,12 +66,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.databaseClient = writeContext.connectToMarkLogic();
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
-        if (writeContext.isAbortOnFailure()) {
-            this.writeBatcher.onBatchFailure((batch, failure) ->
-                // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
-                this.writeFailure.compareAndSet(null, failure)
-            );
-        }
+        addBatchListeners();
         this.dataMovementManager.startJob(this.writeBatcher);
 
         if (writeContext.isUsingFileSchema()) {
@@ -85,16 +83,15 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
         DocBuilder.DocumentInputs inputs = rowToDocumentFunction.apply(row);
         this.writeBatcher.add(this.docBuilder.build(inputs));
-        this.docCount++;
     }
 
     @Override
     public WriterCommitMessage commit() throws IOException {
-        CommitMessage message = new CommitMessage("Wrote", docCount, partitionId, taskId, epochId);
+        this.writeBatcher.flushAndWait();
+        CommitMessage message = new CommitMessage(successItemCount.get(), failedItemCount.get(), partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }
-        this.writeBatcher.flushAndWait();
         throwWriteFailureIfExists();
         return message;
     }
@@ -111,6 +108,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             logger.debug("Close called; stopping job.");
         }
         stopJobAndRelease();
+    }
+
+    private void addBatchListeners() {
+        this.writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
+        if (writeContext.isAbortOnFailure()) {
+            // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
+            this.writeBatcher.onBatchFailure((batch, failure) ->
+                this.writeFailure.compareAndSet(null, failure)
+            );
+        } else {
+            this.writeBatcher.onBatchFailure((batch, failure) ->
+                this.failedItemCount.getAndAdd(batch.getItems().length)
+            );
+        }
     }
 
     private synchronized void throwWriteFailureIfExists() throws IOException {

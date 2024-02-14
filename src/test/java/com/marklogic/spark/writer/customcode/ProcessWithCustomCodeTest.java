@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.writer.AbstractWriteTest;
+import com.marklogic.spark.writer.MarkLogicWrite;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -121,15 +123,22 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
                 "Unexpected error message: " + ex.getMessage());
     }
 
-    @SuppressWarnings("java:S2699") // The absence of an assertion is fine for this test.
     @Test
     void dontAbortOnFailure() {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.successCountConsumer = count -> successCount.set(count);
+        MarkLogicWrite.failureCountConsumer = count -> failureCount.set(count);
+
         // The lack of an error here indicates that the job did not abort. The connector is expected to have logged
         // each error instead.
         newWriterWithDefaultConfig("three-uris.csv", 2)
             .option(Options.WRITE_JAVASCRIPT, "var URI; throw Error('Boom!');")
             .option(Options.WRITE_ABORT_ON_FAILURE, "false")
             .save();
+
+        assertEquals(3, failureCount.get());
+        assertEquals(0, successCount.get());
     }
 
     private void verifyThreeJsonDocumentsWereWritten() {

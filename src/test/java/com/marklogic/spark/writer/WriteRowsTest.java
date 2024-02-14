@@ -24,6 +24,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -177,6 +178,11 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void dontAbortOnFailure() {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.successCountConsumer = count -> successCount.set(count);
+        MarkLogicWrite.failureCountConsumer = count -> failureCount.set(count);
+
         newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
             // Force each row in the CSV to be written in its own batch, ensuring that the one row that should succeed
@@ -186,6 +192,8 @@ class WriteRowsTest extends AbstractWriteTest {
             .save();
 
         assertCollectionSize("9 of the batches should have failed, with the 10th batch succeeding", COLLECTION, 1);
+        assertEquals(9, failureCount.get());
+        assertEquals(1, successCount.get());
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
