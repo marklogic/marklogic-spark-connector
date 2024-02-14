@@ -29,12 +29,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
-class MarkLogicWrite implements BatchWrite, StreamingWrite {
+public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     private static final Logger logger = LoggerFactory.getLogger("com.marklogic.spark");
 
     private WriteContext writeContext;
+
+    // Used solely for testing. Will never be populated in a real world scenario.
+    public static Consumer<Integer> successCountConsumer;
+    public static Consumer<Integer> failureCountConsumer;
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
@@ -57,13 +62,24 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
             if (logger.isDebugEnabled()) {
                 logger.debug("Commit messages received: {}", Arrays.asList(messages));
             }
-            final String action = ((CommitMessage) messages[0]).getAction();
+            int successCount = 0;
+            int failureCount = 0;
+            for (WriterCommitMessage message : messages) {
+                CommitMessage msg = (CommitMessage)message;
+                successCount += msg.getSuccessItemCount();
+                failureCount += msg.getFailedItemCount();
+            }
+            if (successCountConsumer != null) {
+                successCountConsumer.accept(successCount);
+            }
+            if (failureCountConsumer != null) {
+                failureCountConsumer.accept(failureCount);
+            }
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                int count = 0;
-                for (WriterCommitMessage message : messages) {
-                    count += ((CommitMessage) message).getDocCount();
-                }
-                Util.MAIN_LOGGER.info("{} {} documents", action, count);
+                Util.MAIN_LOGGER.info("Success count: {}", successCount);
+            }
+            if (failureCount > 0) {
+                Util.MAIN_LOGGER.error("Failure count: {}", failureCount);
             }
         }
     }

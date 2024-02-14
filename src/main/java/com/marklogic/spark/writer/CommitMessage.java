@@ -4,32 +4,34 @@ import org.apache.spark.sql.connector.write.WriterCommitMessage;
 
 public class CommitMessage implements WriterCommitMessage {
 
-    private final String action;
-    private final int docCount;
+    private final int successItemCount;
+    private final int failedItemCount;
     private final int partitionId;
     private final long taskId;
     private final long epochId;
 
-    public CommitMessage(String action, int docCount, int partitionId, long taskId, long epochId) {
-        this.action = action;
-        this.docCount = docCount;
+    public CommitMessage(int successItemCount, int failedItemCount, int partitionId, long taskId, long epochId) {
+        this.successItemCount = successItemCount;
+        this.failedItemCount = failedItemCount;
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.epochId = epochId;
     }
 
-    public String getAction() {
-        return action;
+    public int getSuccessItemCount() {
+        return successItemCount;
     }
 
-    public int getDocCount() {
-        return docCount;
+    public int getFailedItemCount() {
+        return failedItemCount;
     }
 
     @Override
     public String toString() {
         return epochId != 0L ?
-            String.format("[partitionId: %d; taskId: %d; epochId: %d]; docCount: %d", partitionId, taskId, epochId, docCount) :
-            String.format("[partitionId: %d; taskId: %d]; docCount: %d", partitionId, taskId, docCount);
+            String.format("[partitionId: %d; taskId: %d; epochId: %d]; docCount: %d; failedItemCount: %d",
+                partitionId, taskId, epochId, successItemCount, failedItemCount) :
+            String.format("[partitionId: %d; taskId: %d]; docCount: %d; failedItemCount: %d",
+                partitionId, taskId, successItemCount, failedItemCount);
     }
 }

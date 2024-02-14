@@ -42,7 +42,10 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final int partitionId;
     private final long taskId;
     private final long epochId;
-    private int itemCount;
+
+    // Updated after each call to MarkLogic.
+    private int successItemCount;
+    private int failedItemCount;
 
     CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId, long epochId) {
         this.customCodeContext = customCodeContext;
@@ -68,7 +71,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         String rowValue = customCodeContext.isCustomSchema() ?
             convertRowToJSONString(row) :
             row.getString(0);
-        itemCount++;
 
         this.currentBatch.add(rowValue);
 
@@ -80,7 +82,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        CommitMessage message = new CommitMessage("Processed", itemCount, partitionId, taskId, epochId);
+        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, partitionId, taskId, epochId);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }
@@ -114,13 +116,14 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         if (logger.isDebugEnabled()) {
             logger.debug("Calling custom code in MarkLogic");
         }
+        final int itemCount = currentBatch.size();
         ServerEvaluationCall call = customCodeContext.buildCall(
             this.databaseClient,
             new CustomCodeContext.CallOptions(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)
         );
         call.addVariable(determineExternalVariableName(), makeVariableValue());
         currentBatch.clear();
-        executeCall(call);
+        executeCall(call, itemCount);
     }
 
     private String determineExternalVariableName() {
@@ -165,13 +168,15 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         return jsonObjectWriter.toString();
     }
 
-    private void executeCall(ServerEvaluationCall call) {
+    private void executeCall(ServerEvaluationCall call, int itemCount) {
         try {
             call.evalAs(String.class);
+            this.successItemCount += itemCount;
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;
             }
+            this.failedItemCount += itemCount;
             Util.MAIN_LOGGER.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
         }
     }
