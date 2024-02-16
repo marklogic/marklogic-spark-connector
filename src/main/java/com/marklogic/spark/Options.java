@@ -55,6 +55,7 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_PARTITIONS_PER_FOREST = "spark.marklogic.read.documents.partitionsPerForest";
 
+    public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
 
     // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.

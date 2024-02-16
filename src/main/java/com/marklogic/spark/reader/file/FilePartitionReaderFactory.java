@@ -25,9 +25,14 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         FilePartition filePartition = (FilePartition) partition;
+
         String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
         final boolean isZip = "zip".equalsIgnoreCase(compression);
         final boolean isGzip = "gzip".equalsIgnoreCase(compression);
+
+        if ("rdf".equalsIgnoreCase(this.properties.get(Options.READ_FILES_TYPE))) {
+            return new RdfFileReader(filePartition, hadoopConfiguration);
+        }
 
         String aggregateXmlElement = this.properties.get(Options.READ_AGGREGATES_XML_ELEMENT);
         if (aggregateXmlElement != null && !aggregateXmlElement.trim().isEmpty()) {
