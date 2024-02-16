@@ -23,6 +23,7 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.Arrays;
@@ -104,7 +105,7 @@ public class WriteContext extends ContextSupport {
             String uriSuffix = null;
             if (hasOption(Options.WRITE_URI_SUFFIX)) {
                 uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
-            } else if (!isUsingFileSchema()) {
+            } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema)) {
                 uriSuffix = ".json";
             }
             factory.withUriMaker(new StandardUriMaker(

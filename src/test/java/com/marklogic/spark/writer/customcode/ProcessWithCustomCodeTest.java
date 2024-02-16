@@ -127,8 +127,8 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     void dontAbortOnFailure() {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.successCountConsumer = count -> successCount.set(count);
-        MarkLogicWrite.failureCountConsumer = count -> failureCount.set(count);
+        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
+        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
 
         // The lack of an error here indicates that the job did not abort. The connector is expected to have logged
         // each error instead.

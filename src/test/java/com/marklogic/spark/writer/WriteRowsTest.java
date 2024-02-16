@@ -180,8 +180,8 @@ class WriteRowsTest extends AbstractWriteTest {
     void dontAbortOnFailure() {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.successCountConsumer = count -> successCount.set(count);
-        MarkLogicWrite.failureCountConsumer = count -> failureCount.set(count);
+        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
+        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
 
         newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
