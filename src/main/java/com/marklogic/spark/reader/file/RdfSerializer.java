@@ -2,6 +2,7 @@ package com.marklogic.spark.reader.file;
 
 import org.apache.jena.graph.Node;
 import org.apache.jena.graph.Triple;
+import org.apache.jena.sparql.core.Quad;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.unsafe.types.UTF8String;
@@ -9,18 +10,21 @@ import org.apache.spark.unsafe.types.UTF8String;
 import java.util.Random;
 
 /**
- * Captures the logic from Content Pump for serializing a Jena Triple into a string representation. Note that this does
- * not contain the "escape XML" logic in the MLCP code as we don't care about an XML representation of the triples yet.
- * We just want to return the raw values so they can be added to a Spark row.
+ * Captures the logic from Content Pump for serializing a Jena Triple or Quad into a string representation.
  */
-class TripleSerializer {
+class RdfSerializer {
+
+    private static final String DEFAULT_GRAPH = "http://marklogic.com/semantics#default-graph";
 
     // These are both used in the MLCP-specific code below for generating a "blank" value.
-    private final static long HASH64_STEP = 15485863L;
+    private static final long HASH64_STEP = 15485863L;
+
+    // Sonar is suspicious about the use of Random, the actual random number doesn't matter for any functionality.
+    @SuppressWarnings("java:S2245")
     private final Random random = new Random();
 
-    public InternalRow serialize(Triple triple) {
-        String[] objectValues = serializeObject(triple);
+    InternalRow serialize(Triple triple) {
+        String[] objectValues = serializeObject(triple.getObject());
         return new GenericInternalRow(new Object[]{
             UTF8String.fromString(serialize(triple.getSubject())),
             UTF8String.fromString(serialize(triple.getPredicate())),
@@ -28,6 +32,20 @@ class TripleSerializer {
             objectValues[1] != null ? UTF8String.fromString(objectValues[1]) : null,
             objectValues[2] != null ? UTF8String.fromString(objectValues[2]) : null,
             null
+        });
+    }
+
+    InternalRow serialize(Quad quad) {
+        String[] objectValues = serializeObject(quad.getObject());
+        return new GenericInternalRow(new Object[]{
+            UTF8String.fromString(serialize(quad.getSubject())),
+            UTF8String.fromString(serialize(quad.getPredicate())),
+            UTF8String.fromString(objectValues[0]),
+            objectValues[1] != null ? UTF8String.fromString(objectValues[1]) : null,
+            objectValues[2] != null ? UTF8String.fromString(objectValues[2]) : null,
+            quad.getGraph() != null ?
+                UTF8String.fromString(serialize(quad.getGraph())) :
+                UTF8String.fromString(DEFAULT_GRAPH)
         });
     }
 
@@ -39,11 +57,10 @@ class TripleSerializer {
      * @param triple
      * @return an array containing a string serialization of the object; an optional datatype; and an optional "lang" value.
      */
-    private String[] serializeObject(Triple triple) {
-        Node node = triple.getObject();
-        if (node.isLiteral()) {
-            String type = node.getLiteralDatatypeURI();
-            String lang = node.getLiteralLanguage();
+    private String[] serializeObject(Node object) {
+        if (object.isLiteral()) {
+            String type = object.getLiteralDatatypeURI();
+            String lang = object.getLiteralLanguage();
             if ("".equals(lang)) {
                 lang = null;
             }
@@ -54,11 +71,11 @@ class TripleSerializer {
             } else {
                 type = null;
             }
-            return new String[]{node.getLiteralLexicalForm(), type, lang};
-        } else if (node.isBlank()) {
-            return new String[]{generateBlankValue(node), null, null};
+            return new String[]{object.getLiteralLexicalForm(), type, lang};
+        } else if (object.isBlank()) {
+            return new String[]{generateBlankValue(object), null, null};
         } else {
-            return new String[]{node.toString(), null, null};
+            return new String[]{object.toString(), null, null};
         }
     }
 

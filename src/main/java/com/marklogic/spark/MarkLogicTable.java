@@ -107,7 +107,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
     /**
      * @deprecated Marked as deprecated in the Table interface.
      */
-    @SuppressWarnings("java:S1133")
+    @SuppressWarnings({"java:S1133", "java:S6355"})
     @Deprecated
     @Override
     public StructType schema() {
