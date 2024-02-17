@@ -13,8 +13,10 @@ group 'com.marklogic'
 version '2.2-SNAPSHOT'
 
 java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+  // To support reading RDF files, Apache Jena is used - but that requires Java 11. If we want to do a 2.2.0 release
+  // without requiring Java 11, we'll remove the support for reading RDF files along with the Jena dependency.
+  sourceCompatibility = 11
+  targetCompatibility = 11
 }
 
 repositories {
@@ -40,6 +42,8 @@ dependencies {
     exclude module: "scala-library"
   }
 
+  implementation "org.apache.jena:jena-arq:4.10.0"
+
   testImplementation 'org.apache.spark:spark-sql_2.12:' + sparkVersion
 
   // The exclusions in these two modules ensure that we use the Jackson libraries from spark-sql when running the tests.
@@ -56,7 +60,7 @@ dependencies {
     exclude module: 'jackson-dataformat-csv'
   }
 
-  testImplementation "ch.qos.logback:logback-classic:1.3.5"
+  testImplementation "ch.qos.logback:logback-classic:1.3.14"
   testImplementation "org.slf4j:jcl-over-slf4j:1.7.36"
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 }

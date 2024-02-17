@@ -8,10 +8,10 @@ public abstract class FileRowSchema {
     // Same as Spark's binaryType.
     // See https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
     public static final StructType SCHEMA = new StructType()
-        .add("path", DataTypes.StringType)
+        .add("path", DataTypes.StringType, false)
         .add("modificationTime", DataTypes.TimestampType)
         .add("length", DataTypes.LongType)
-        .add("content", DataTypes.BinaryType);
+        .add("content", DataTypes.BinaryType, false);
 
     private FileRowSchema() {
     }
