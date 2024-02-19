@@ -21,7 +21,6 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
-import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
@@ -64,7 +63,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> properties = options.asCaseSensitiveMap();
         if (isFileOperation(properties)) {
-            return "rdf".equals(properties.get(Options.READ_FILES_TYPE)) ? TripleRowSchema.SCHEMA : FileRowSchema.SCHEMA;
+            return FileRowSchema.SCHEMA;
         }
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
@@ -86,7 +85,8 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
         if (isReadDocumentsOperation(properties)) {
             return new DocumentTable();
-        } else if (isReadOperation(properties)) {
+        }
+        else if (isReadOperation(properties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Creating new table for reading");
             }
