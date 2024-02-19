@@ -145,15 +145,15 @@ The following options control how the connector reads document rows from MarkLog
 | Option | Description | 
 | --- | --- |
 | spark.marklogic.read.documents.stringQuery | A [MarkLogic string query](https://docs.marklogic.com/guide/search-dev/string-query) for selecting documents. |
-| spark.marklogic.read.documents.query | A JSON or XML representation of a structured query, serialized CTS query, or combined query. |
+| spark.marklogic.read.documents.query | A JSON or XML representation of a [structured query](https://docs.marklogic.com/guide/search-dev/structured-query#), [serialized CTS query](https://docs.marklogic.com/guide/rest-dev/search#id_30577), or [combined query](https://docs.marklogic.com/guide/rest-dev/search#id_69918). |
 | spark.marklogic.read.documents.categories | Controls which metadata is returned for each document. Defaults to `content`. Allowable values are `content`, `metadata`, `collections`, `permissions`, `quality`, `properties`, and `metadatavalues`. |
 | spark.marklogic.read.documents.collections | Comma-delimited string of zero to many collections to constrain the query. |
 | spark.marklogic.read.documents.directory | Database directory - e.g. "/company/employees/" - to constrain the query. |
 | spark.marklogic.read.documents.options | Name of a set of [MarkLogic search options](https://docs.marklogic.com/guide/search-dev/query-options) to be applied against a string query. |
+| spark.marklogic.read.documents.partitionsPerForest | Number of Spark partition readers to create per forest; defaults to 4. |
 | spark.marklogic.read.documents.transform | Name of a [MarkLogic REST transform](https://docs.marklogic.com/guide/rest-dev/transforms) to apply to each matching document. |
 | spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
 | spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
-| spark.marklogic.read.documents.partitionsPerForest | Number of Spark partition readers to create per forest; defaults to 4. |
 
 ## Write options
 

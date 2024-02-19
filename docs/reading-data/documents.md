@@ -18,10 +18,12 @@ when data needs to be retrieved and an [Optic query](optic.md) is not a practica
 
 ## Usage
 
-This will be cleaned up before the 2.2.0 release, just getting the basics in place. 
+To read documents from MarkLogic, you must specify at least one of 4 supported query types described below - a string 
+query; a structured, serialized CTS, or combined query; a collection query; or a directory query. You may specify any
+combination of those 4 query types as well. 
 
-General approach is to specify any combination of a string query, a complex query, collections, and a directory. A 
-string query is configured via `spark.marklogic.read.documents.stringQuery`:
+You can specify a [string query](https://docs.marklogic.com/guide/search-dev/string-query) that utilizes 
+MarkLogic's search grammar via the `spark.marklogic.read.documents.stringQuery` option:
 
 ```
 df = spark.read.format("marklogic") \
@@ -30,6 +32,9 @@ df = spark.read.format("marklogic") \
     .load()
 df.show()
 ```
+
+The document content is in a column named `content` of type `binary`. See further below for an example of how to use
+common Spark functions to cast this value to a string or parse it into a JSON object. 
 
 You can also submit a [structured query](https://docs.marklogic.com/guide/search-dev/structured-query#), a 
 [serialized CTS query](https://docs.marklogic.com/guide/rest-dev/search#id_30577), or a 
@@ -43,6 +48,7 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.query", '{"query": {"queries": [{"term-query": {"text": ["Engineering"]} }] } }') \
     .load()
 df.show()
+df.count()
 
 # Serialized CTS query
 df = spark.read.format("marklogic") \
@@ -50,6 +56,7 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.query", '{"ctsquery": {"wordQuery": {"text": "Engineering"}}}') \
     .load()
 df.show()
+df.count()
 
 # Combined query
 query = "<search xmlns='http://marklogic.com/appservices/search'>\
@@ -61,6 +68,7 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.query", query) \
     .load()
 df.show()
+df.count()
 ```
 
 ## Querying by collections
@@ -73,6 +81,7 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.collections", "employee") \
     .load()
 df.show()
+df.count()
 ```
 
 You can also specify collections with any of the above queries:
@@ -84,6 +93,7 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.stringQuery", "Marketing") \
     .load()
 df.show()
+df.count()
 ```
 
 ## Querying by directory
@@ -96,20 +106,23 @@ df = spark.read.format("marklogic") \
     .option("spark.marklogic.read.documents.directory", "/employee/") \
     .load()
 df.show()
+df.count()
 ```
 
 ## Using query options
 
 If you have a set of [MarkLogic query options](https://docs.marklogic.com/guide/search-dev/query-options) installed in 
-your REST API app server, you can reference these via `spark.marklogic.read.documents.options`.
+your REST API app server, you can reference these via `spark.marklogic.read.documents.options`. You will then typically
+use the `spark.marklogic.read.documents.stringQuery` option and reference one or more constraints defined in your 
+query options.
 
 ## Requesting document metadata
 
-By default, each document row will only have its `URI`, `content`, and `format` columns populated. You can use the 
+By default, each row will only have its `URI`, `content`, and `format` columns populated. You can use the 
 `spark.marklogic.read.documents.categories` option to request metadata for each document. The value of the option 
 must be a comma-delimited list of one or more of the following values: 
 
-- `content` will result in the `content` and `format` columns being populated. If excluded, neither will be populated.
+- `content` will result in the `content` and `format` columns being populated. If excluded from the option value, neither will be populated.
 - `metadata` will result in all metadata columns - collections, permissions, quality, properties, and metadata values - 
 being populated.
 - `collections`, `permissions`, `quality`, `properties`, and `metadatavalues` can be used to request each metadata type
@@ -134,7 +147,15 @@ df.show(2)
 +--------------------+--------------------+------+-----------+--------------------+-------+----------+--------------+
 ```
 
-A value of `collections,permissions`
+Note that the Spark `show()` function allows for results to be displayed in a vertical format instead of in a table. 
+You can more easily see values in the metadata columns by requesting a vertical format and dropping the `content` column:
+
+```
+df.drop("content").show(2, 0, True)
+```
+
+A value of `collections,permissions` will result in the `content` and `format` columns being empty and the `collections`
+and `permissions` columns being populated:
 
 ```
 df = spark.read.format("marklogic") \
@@ -184,16 +205,20 @@ doc = json.loads(df2.head()['content'])
 doc['Department']
 ```
 
-## Understanding performance
+## Tuning performance
 
 The connector mimics the behavior of the [MarkLogic Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement)
 by creating Spark partition readers that are assigned to a specific forest. By default, the connector will create 
-4 readers per forest. You can use the `spark.marklogic.read.documents.partitionsPerForest` option to control
-the number of readers. You should adjust this based on your cluster configuration. For example,a default REST API app 
-server will have 32 server threads and 3 forests per host. 4 partition readers will thus consume 12 of the 32 server
-threads. If the app server is not servicing any other requests, performance will typically be improved by configuring
-8 partitions per forest. Note that the `spark.marklogic.read.numPartitions` option does not have any impact;
-that is only used when reading via an Optic query.
+4 readers per forest. Each reader will read URIs and documents in a specific range of URIs at a specific MarkLogic 
+server timestamp, ensuring both that every matching document is retrieved and that the same document is never returned 
+more than once for a query.
+
+You can use the `spark.marklogic.read.documents.partitionsPerForest` option to control the number of readers. You 
+should adjust this based on your cluster configuration. For example, a default REST API app server will have 32 server 
+threads and 3 forests per host. 4 partition readers will thus utilize 12 of the 32 server threads. If the app server 
+is not servicing any other requests, performance will typically be improved by configuring 8 partitions per forest. 
+Note that the `spark.marklogic.read.numPartitions` option does not have any impact; that is only used when reading 
+via an Optic query.
 
 Each partition reader will make one to many calls to MarkLogic to retrieve documents. The 
 `spark.marklogic.read.batchSize` option controls how many documents will be retrieved in a call. The value defaults
