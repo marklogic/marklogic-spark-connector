@@ -5,6 +5,7 @@ import com.marklogic.client.datamovement.Forest;
 import com.marklogic.client.io.SearchHandle;
 import com.marklogic.client.query.QueryManager;
 import com.marklogic.client.query.SearchQueryDefinition;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
@@ -16,19 +17,15 @@ class DocumentBatch implements Batch {
     private static final Logger logger = LoggerFactory.getLogger(DocumentBatch.class);
 
     private final DocumentContext context;
-
-    DocumentBatch(DocumentContext context) {
-        this.context = context;
-    }
+    private final InputPartition[] partitions;
 
     /**
      * Reuses the DMSDK support for obtaining a list of all eligible forests. A partition reader will then be
      * created for each partition/forest.
-     *
-     * @return
      */
-    @Override
-    public InputPartition[] planInputPartitions() {
+    DocumentBatch(DocumentContext context) {
+        this.context = context;
+
         DatabaseClient client = this.context.connectToMarkLogic();
         Forest[] forests = client.newDataMovementManager().readForestConfig().listForests();
 
@@ -47,11 +44,16 @@ class DocumentBatch implements Batch {
             logger.debug("Creating forest partitions; query estimate: {}; server timestamp: {}", estimate, serverTimestamp);
         }
         ForestPartitionPlanner planner = new ForestPartitionPlanner(context.getPartitionsPerForest());
-        ForestPartition[] partitions = planner.makePartitions(estimate, serverTimestamp, forests);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Created {} forest partitions", partitions.length);
+        this.partitions = planner.makePartitions(estimate, serverTimestamp, forests);
+
+        if (Util.MAIN_LOGGER.isInfoEnabled()) {
+            logger.info("Created {} partitions; query estimate: {}", partitions.length, estimate);
         }
-        return partitions;
+    }
+
+    @Override
+    public InputPartition[] planInputPartitions() {
+        return this.partitions;
     }
 
     @Override
