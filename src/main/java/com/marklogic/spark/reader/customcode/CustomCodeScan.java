@@ -15,6 +15,7 @@ class CustomCodeScan implements Scan {
 
     private CustomCodeContext customCodeContext;
     private final List<String> partitions;
+    private final CustomCodeBatch batch;
 
     public CustomCodeScan(CustomCodeContext customCodeContext) {
         this.customCodeContext = customCodeContext;
@@ -35,6 +36,8 @@ class CustomCodeScan implements Scan {
                 client.release();
             }
         }
+
+        batch = new CustomCodeBatch(customCodeContext, partitions);
     }
 
     @Override
@@ -44,7 +47,7 @@ class CustomCodeScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        return new CustomCodeBatch(customCodeContext, partitions);
+        return batch;
     }
 
     @Override

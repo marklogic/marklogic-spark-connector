@@ -6,10 +6,10 @@ import org.apache.spark.sql.types.StructType;
 
 class DocumentScan implements Scan {
 
-    private final DocumentContext context;
+    private final DocumentBatch batch;
 
     DocumentScan(DocumentContext context) {
-        this.context = context;
+        this.batch = new DocumentBatch(context);
     }
 
     @Override
@@ -19,6 +19,6 @@ class DocumentScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        return new DocumentBatch(context);
+        return this.batch;
     }
 }

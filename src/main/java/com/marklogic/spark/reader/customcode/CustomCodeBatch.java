@@ -9,16 +9,10 @@ import java.util.List;
 class CustomCodeBatch implements Batch {
 
     private CustomCodeContext customCodeContext;
-    private List<String> partitions;
+    private InputPartition[] inputPartitions;
 
-    public CustomCodeBatch(CustomCodeContext customCodeContext, List<String> partitions) {
+    CustomCodeBatch(CustomCodeContext customCodeContext, List<String> partitions) {
         this.customCodeContext = customCodeContext;
-        this.partitions = partitions;
-    }
-
-    @Override
-    public InputPartition[] planInputPartitions() {
-        InputPartition[] inputPartitions;
         if (partitions != null && partitions.size() > 1) {
             inputPartitions = new InputPartition[partitions.size()];
             for (int i = 0; i < partitions.size(); i++) {
@@ -27,6 +21,10 @@ class CustomCodeBatch implements Batch {
         } else {
             inputPartitions = new InputPartition[]{new CustomCodePartition()};
         }
+    }
+
+    @Override
+    public InputPartition[] planInputPartitions() {
         return inputPartitions;
     }
 
