@@ -55,6 +55,25 @@ class WriteDocumentRowsToMarkLogicTest extends AbstractIntegrationTest {
         });
     }
 
+    /**
+     * This ensures that the default suffix of ".json" isn't applied when the incoming row is a "document row" and
+     * thus has an initial URI.
+     */
+    @Test
+    void uriPrefix() {
+        readTheTwoTestDocuments()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_PREFIX, "/backup")
+            .option(Options.WRITE_COLLECTIONS, "backup-docs")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("backup-docs", 2);
+        assertInCollections("/backup/test/1.xml", "backup-docs");
+        assertInCollections("/backup/test/2.xml", "backup-docs");
+    }
+
     @Test
     void overrideMetadataFromCopiedDocuments() {
         readTheTwoTestDocuments()

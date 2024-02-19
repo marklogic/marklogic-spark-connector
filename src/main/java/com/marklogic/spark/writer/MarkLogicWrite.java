@@ -38,8 +38,16 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     private WriteContext writeContext;
 
     // Used solely for testing. Will never be populated in a real world scenario.
-    public static Consumer<Integer> successCountConsumer;
-    public static Consumer<Integer> failureCountConsumer;
+    private static Consumer<Integer> successCountConsumer;
+    private static Consumer<Integer> failureCountConsumer;
+
+    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
+        successCountConsumer = consumer;
+    }
+
+    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
+        failureCountConsumer = consumer;
+    }
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
