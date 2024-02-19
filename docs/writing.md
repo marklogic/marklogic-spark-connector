@@ -37,21 +37,45 @@ that can be used to define the connection details), and `mode` (which must equal
 the collections, permissions , and URI prefix are optional, though it is uncommon to write documents without any 
 permissions. 
 
-### Writing file rows as document
+### Writing file rows as documents
 
 To support the common use case of reading files and ingesting their contents as-is into MarkLogic, the connector has
 special support for rows with a schema matching that of 
 [Spark's binaryFile data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html). If the incoming
 rows adhere to the `binaryFile` schema, the connector will not serialize the row into JSON. Instead, the connector will 
 use the `path` column value as an initial URI for the document and the `content` column value as the document contents.
-
-The URI can then be further adjusted as described in the "Controlling document URIs"
-The URI can then be adjusted as described in the "Controlling documents URIs" section below.
+The URI can then be further adjusted as described in the "Controlling document URIs".
 
 This feature allows for ingesting files of any type. The MarkLogic REST API will
 [determine the document type](https://docs.marklogic.com/guide/rest-dev/intro#id_53367) based on the URI extension, if
 MarkLogic recognizes it. If MarkLogic does not recognize the extension, and you wish to force a document type on each of
 the documents, you can set the `spark.marklogic.write.files.documentType` option to one of `XML`, `JSON`, or `TEXT`.
+
+### Writing document rows
+
+As of the 2.2.0 release, you can [read documents from MarkLogic](reading-data/documents.md). A common use case is to then write these rows
+to another database, or another MarkLogic cluster, or even the same database the documents were read from, potentially
+transforming them and altering their URIs. 
+
+"Document rows" adhere to the following Spark schema, which is important to understand when writing these rows as 
+documents to MarkLogic:
+
+1. `URI` is of type `string`.
+2. `content` is of type `binary`.
+3. `format` is of type `string`.
+4. `collections` is an array of `string`s.
+5. `permissions` is a map with keys of type `string` and values that are arrays of `string`s. 
+6. `quality` is an `integer`.
+7. `properties` is a map with keys and values of type `string`.
+8. `metadataValues` is a map with keys and values of type `string`.
+
+Writing rows corresponding to the "document row" schema is largely the same as writing rows of any arbitrary schema, 
+but bear in mind these differences:
+
+1. All the column values will be honored if populated. 
+2. The `collections` and `permissions` will be replaced - not added to - if the `spark.marklogic.write.collections` and 
+`spark.marklogic.write.permissions` options are specified.
+3. The `spark.marklogic.write.uriTemplate` option is less useful as only the `URI` and `format` column values are available for use in the template.
 
 ### Controlling document content
 
@@ -197,6 +221,17 @@ with its own set of threads.
 Optimizing performance will thus involve testing various combinations of partition counts, batch sizes, and thread
 counts. The [MarkLogic Monitoring tool](https://docs.marklogic.com/guide/monitoring/intro) can help you understand
 resource consumption and throughput from Spark to MarkLogic.
+
+**You should take care** not to exceed the number of requests that your MarkLogic cluster can reasonably handle at a
+given time. A general rule of thumb is not to use more threads than the number of hosts multiplied by the number of
+threads per app server. A MarkLogic app server defaults to a limit of 32 threads. So for a 3-host cluster, you should
+not exceed 96 total threads. This also assumes that each host is receiving requests - either via a load balancer placed
+in front of the MarkLogic cluster, or by setting the `spark.marklogic.client.connectionType` option to `direct` when 
+the connector can directly connect to each host in the cluster. 
+
+The rule of thumb above can thus be expressed as:
+
+    Number of partitions * Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
 
 ### Error handling
 
