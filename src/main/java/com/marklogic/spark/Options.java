@@ -45,6 +45,7 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_CATEGORIES = "spark.marklogic.read.documents.categories";
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";
     public static final String READ_DOCUMENTS_DIRECTORY = "spark.marklogic.read.documents.directory";
+    public static final String READ_DOCUMENTS_FILTERED = "spark.marklogic.read.documents.filtered";
     public static final String READ_DOCUMENTS_OPTIONS = "spark.marklogic.read.documents.options";
     public static final String READ_DOCUMENTS_PARTITIONS_PER_FOREST = "spark.marklogic.read.documents.partitionsPerForest";
     // Corresponds to "q" at https://docs.marklogic.com/REST/POST/v1/search, known as a "string query".

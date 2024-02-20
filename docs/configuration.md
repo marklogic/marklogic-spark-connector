@@ -149,6 +149,7 @@ The following options control how the connector reads document rows from MarkLog
 | spark.marklogic.read.documents.categories | Controls which metadata is returned for each document. Defaults to `content`. Allowable values are `content`, `metadata`, `collections`, `permissions`, `quality`, `properties`, and `metadatavalues`. |
 | spark.marklogic.read.documents.collections | Comma-delimited string of zero to many collections to constrain the query. |
 | spark.marklogic.read.documents.directory | Database directory - e.g. "/company/employees/" - to constrain the query. |
+| spark.marklogic.read.documents.filtered | Set to true for [filtered searches](https://docs.marklogic.com/guide/performance/unfiltered). Defaults to `false` as unfiltered searches are significantly faster and will produce accurate results when your application indexes are sufficient for your query. |
 | spark.marklogic.read.documents.options | Name of a set of [MarkLogic search options](https://docs.marklogic.com/guide/search-dev/query-options) to be applied against a string query. |
 | spark.marklogic.read.documents.partitionsPerForest | Number of Spark partition readers to create per forest; defaults to 4. |
 | spark.marklogic.read.documents.transform | Name of a [MarkLogic REST transform](https://docs.marklogic.com/guide/rest-dev/transforms) to apply to each matching document. |

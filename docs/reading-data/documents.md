@@ -205,6 +205,23 @@ doc = json.loads(df2.head()['content'])
 doc['Department']
 ```
 
+## Filtered searches
+
+The connector defaults to [unfiltered searches in MarkLogic](https://docs.marklogic.com/guide/performance/unfiltered). 
+Assuming you have sufficient indexes configured for your query, an unfiltered search will return correct results with
+optimal performance.
+
+However, as noted in the above linked documentation, a query may need to be "filtered" to ensure that the returned 
+results are accurate. If your query and index configuration meet this need, you can use the following option to 
+request a filtered search:
+
+    .option("spark.marklogic.read.documents.filtered", "true")
+
+Filtered searches are generally slower, and you should be careful with this setting for larger result sets. However, 
+the cost of a filtered search may be outweighed by the connector having to return far fewer results. In that scenario,
+a filtered search will both return accurate results and may be faster. Ideally though, you can configure indexes on your
+database to allow for an unfiltered search, which will return accurate results and be faster than a filtered search.
+
 ## Tuning performance
 
 The connector mimics the behavior of the [MarkLogic Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement)
