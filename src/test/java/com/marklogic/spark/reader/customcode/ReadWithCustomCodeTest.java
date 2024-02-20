@@ -1,8 +1,10 @@
 package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.FailedRequestException;
+import com.marklogic.client.MarkLogicIOException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -130,6 +132,22 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
         assertEquals("Unable to retrieve partitions", ex.getMessage());
         assertTrue(ex.getCause() instanceof FailedRequestException, "Unexpected cause: " + ex.getCause());
     }
+
+    @Test
+    void verifyTimeoutWorks() {
+        Dataset<Row> dataset = startRead()
+            .option(Options.READ_XQUERY, "(xdmp:sleep(1500), 'abc')")
+            .option("spark.marklogic.client.callTimeout", "1")
+            .load();
+
+        SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
+        assertTrue(ex.getCause() instanceof MarkLogicIOException, "Unexpected cause: " + ex.getCause());
+        assertTrue(ex.getCause().getMessage().contains("timeout"),
+            "Expecting a timeout due to the callTimeout being set to 1sec. Curiously, the Java Client does not " +
+                "attempt a retry on this sort of exception; it only attempts a retry if an HTTP response is received. " +
+                "Actual message: " + ex.getCause().getMessage());
+    }
+
 
     private List<Row> readRows(String option, String value) {
         return startRead()

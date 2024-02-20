@@ -33,6 +33,9 @@ dependencies {
     exclude module: 'jackson-dataformat-csv'
   }
 
+  // Need this so that an OkHttpClientConfigurator can be created.
+  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+
   // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
   // See https://github.com/scala/scala-java8-compat for more information
   implementation("org.scala-lang.modules:scala-java8-compat_2.12:1.0.2") {
