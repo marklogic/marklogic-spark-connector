@@ -257,6 +257,13 @@ The effectiveness of this approach can be evaluated by executing the Optic query
 [MarkLogic's qconsole application](https://docs.marklogic.com/guide/qconsole/intro), which will execute the query in
 a single request as well.
 
+### Using a load balancer
+
+If your MarkLogic cluster has multiple hosts, it is highly recommended to put a load balancer in front
+of your cluster and have the connector connect through the load balancer. A typical load balancer will help ensure
+not only that load is spread across the hosts in your cluster, but that any network or connection failures can be
+retried without the error propagating to the connector.
+
 ### More detail on partitions
 
 This section is solely informational and is not required understanding for using the connector

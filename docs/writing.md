@@ -233,6 +233,13 @@ The rule of thumb above can thus be expressed as:
 
     Number of partitions * Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
 
+### Using a load balancer
+
+If your MarkLogic cluster has multiple hosts, it is highly recommended to put a load balancer in front
+of your cluster and have the connector connect through the load balancer. A typical load balancer will help ensure
+not only that load is spread across the hosts in your cluster, but that any network or connection failures can be
+retried without the error propagating to the connector.
+
 ### Error handling
 
 The connector may throw an error during one of two phases of operation - before it begins to write data to MarkLogic,

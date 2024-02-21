@@ -252,9 +252,17 @@ with more partition readers and a higher batch size.
 You can also adjust the level of parallelism by controlling how many threads Spark uses for executing partition reads. 
 Please see your Spark distribution's documentation for further information.
 
+### Using a load balancer
+
+If your MarkLogic cluster has multiple hosts, it is highly recommended to put a load balancer in front
+of your cluster and have the connector connect through the load balancer. A typical load balancer will help ensure 
+not only that load is spread across the hosts in your cluster, but that any network or connection failures can be 
+retried without the error propagating to the connector. 
+
 ### Direct connections to hosts
 
-If your Spark program is able to connect to each host in your MarkLogic cluster, you can set the
+If you do not have a load balancer in front of your MarkLogic cluster, and your Spark program is able to connect to 
+each host in your MarkLogic cluster, you can set the
 `spark.marklogic.client.connectionType` option to `direct`. Each partition reader will then connect to the
 host on which the reader's assigned forest resides. This will typically improve performance by reducing the network
 traffic, as the host that receives a request will not need to involve any other host in the processing of that request.
