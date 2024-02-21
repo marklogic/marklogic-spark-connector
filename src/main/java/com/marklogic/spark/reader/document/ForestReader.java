@@ -11,6 +11,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
@@ -66,7 +67,11 @@ class ForestReader implements PartitionReader<InternalRow> {
         }
 
         SearchQueryDefinition query = context.buildSearchQuery(client);
-        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), false);
+        boolean filtered = false;
+        if (context.hasOption(Options.READ_DOCUMENTS_FILTERED)) {
+            filtered = Boolean.parseBoolean(context.getProperties().get(Options.READ_DOCUMENTS_FILTERED));
+        }
+        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), filtered);
 
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
