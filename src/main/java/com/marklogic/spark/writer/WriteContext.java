@@ -61,11 +61,15 @@ public class WriteContext extends ContextSupport {
         return schema;
     }
 
+    int getThreadCount() {
+        return (int)getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
+    }
+
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
-            .withThreadCount((int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1))
+            .withThreadCount(getThreadCount())
             // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
             // message from the server. This is intended to always show up and be associated with our Spark connector
             // and also to be more brief, just capturing the main message from the server.
