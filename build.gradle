@@ -10,7 +10,7 @@ plugins {
 }
 
 group 'com.marklogic'
-version '2.2-SNAPSHOT'
+version '2.2.0'
 
 java {
   sourceCompatibility = 1.8
