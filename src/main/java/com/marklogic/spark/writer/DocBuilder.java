@@ -15,28 +15,87 @@
  */
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 
-/**
- * This is intended to be replaced by something generic in the Java Client which can then be reused in other Java-based
- * connectors that must support a similar use case of taking a set of user options and producing a
- * DocumentWriteOperation.
- */
 class DocBuilder {
 
-    private DocumentWriteOperation.DocumentUriMaker uriMaker;
-    private DocumentMetadataHandle metadata;
+    public interface UriMaker {
+        String makeURI(String initialUri, ObjectNode columnValues);
+    }
 
+    public static class DocumentInputs {
+        private final String initialUri;
+        private final AbstractWriteHandle content;
+        private final ObjectNode columnValuesForUriTemplate;
+        private final DocumentMetadataHandle initialMetadata;
 
-    DocBuilder(DocumentWriteOperation.DocumentUriMaker uriMaker, DocumentMetadataHandle metadata) {
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate, DocumentMetadataHandle initialMetadata) {
+            this.initialUri = initialUri;
+            this.content = content;
+            this.columnValuesForUriTemplate = columnValuesForUriTemplate;
+            this.initialMetadata = initialMetadata;
+        }
+
+        public String getInitialUri() {
+            return initialUri;
+        }
+
+        public AbstractWriteHandle getContent() {
+            return content;
+        }
+
+        public ObjectNode getColumnValuesForUriTemplate() {
+            return columnValuesForUriTemplate;
+        }
+
+        public DocumentMetadataHandle getInitialMetadata() {
+            return initialMetadata;
+        }
+    }
+
+    private final UriMaker uriMaker;
+    private final DocumentMetadataHandle metadata;
+
+    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata) {
         this.uriMaker = uriMaker;
         this.metadata = metadata;
     }
 
-    DocumentWriteOperation build(AbstractWriteHandle contentHandle) {
-        return new DocumentWriteOperationImpl(uriMaker.apply(contentHandle), metadata, contentHandle);
+    DocumentWriteOperation build(DocumentInputs inputs) {
+        String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
+        DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
+        if (initialMetadata != null) {
+            overrideInitialMetadata(initialMetadata);
+            return new DocumentWriteOperationImpl(uri, initialMetadata, inputs.getContent());
+        }
+        return new DocumentWriteOperationImpl(uri, metadata, inputs.getContent());
+    }
+
+    /**
+     * If an instance of {@code DocumentInputs} has metadata specified, override it with anything in the metadata
+     * instance that was used to construct this class. We could later support an additive approach as well here.
+     *
+     * @param initialMetadata
+     */
+    private void overrideInitialMetadata(DocumentMetadataHandle initialMetadata) {
+        if (!metadata.getCollections().isEmpty()) {
+            initialMetadata.setCollections(metadata.getCollections());
+        }
+        if (!metadata.getPermissions().isEmpty()) {
+            initialMetadata.setPermissions(metadata.getPermissions());
+        }
+        if (metadata.getQuality() != 0) {
+            initialMetadata.setQuality(metadata.getQuality());
+        }
+        if (!metadata.getProperties().isEmpty()) {
+            initialMetadata.setProperties(metadata.getProperties());
+        }
+        if (!metadata.getMetadataValues().isEmpty()) {
+            initialMetadata.setMetadataValues(metadata.getMetadataValues());
+        }
     }
 }

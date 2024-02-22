@@ -20,9 +20,9 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.SaveMode;
 
-abstract class AbstractWriteTest extends AbstractIntegrationTest {
+public abstract class AbstractWriteTest extends AbstractIntegrationTest {
 
-    protected final static String COLLECTION = "write-test";
+    protected static final String COLLECTION = "write-test";
 
     protected DataFrameWriter newWriter() {
         return newWriter(1);
@@ -39,7 +39,7 @@ abstract class AbstractWriteTest extends AbstractIntegrationTest {
     protected DataFrameWriter newWriterWithDefaultConfig(String csvFilename, int partitionCount) {
         return newWriterWithoutDocumentConfig(csvFilename, partitionCount)
             .option(Options.WRITE_COLLECTIONS, COLLECTION)
-            .option(Options.WRITE_PERMISSIONS, "spark-user-role,read,spark-user-role,update")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_PREFIX, "/test/")
             .option(Options.WRITE_URI_SUFFIX, ".json");
     }
@@ -53,10 +53,10 @@ abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .write()
             .format(CONNECTOR_IDENTIFIER)
             .mode(SaveMode.Append)
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", "spark-test-user")
-            .option("spark.marklogic.client.password", "spark");
+            .option(Options.CLIENT_HOST, testConfig.getHost())
+            .option(Options.CLIENT_PORT, testConfig.getRestPort())
+            .option(Options.CLIENT_USERNAME, "spark-test-user")
+            .option(Options.CLIENT_PASSWORD, "spark");
     }
 
     /**

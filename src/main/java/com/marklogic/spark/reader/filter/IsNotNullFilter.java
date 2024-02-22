@@ -17,12 +17,12 @@ package com.marklogic.spark.reader.filter;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.expression.PlanBuilder;
-import com.marklogic.spark.reader.PlanUtil;
+import com.marklogic.spark.reader.optic.PlanUtil;
 import org.apache.spark.sql.sources.IsNotNull;
 
 class IsNotNullFilter implements OpticFilter {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private IsNotNull filter;
 

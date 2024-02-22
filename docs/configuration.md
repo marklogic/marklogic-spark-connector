@@ -13,6 +13,16 @@ options. Each set of options is defined below.
 - TOC
 {:toc}
 
+## Referencing the connector
+
+Starting with the 2.2.0 release, you can reference the MarkLogic connector via the short name "marklogic":
+
+    session.read.format("marklogic")
+
+Prior to 2.2.0, you must use the full name:
+
+    session.read.format("com.marklogic.spark")
+
 ## Connection options
 
 These options define how the connector connects and authenticates with MarkLogic.
@@ -59,7 +69,7 @@ that the connector will connect to via the `port` value.
 Using this convenience can provide a much more succinct set of options - for example:
 
 ```
-df = spark.read.format("com.marklogic.spark")\
+df = spark.read.format("marklogic")\
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003")\
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')")\
     .load()
@@ -95,7 +105,7 @@ describes the other choices for this option.
 
 ## Read options
 
-See [the guide on reading](reading.md) for more information on how data is read from MarkLogic.
+See [the guide on reading](reading-data/reading.md) for more information on how data is read from MarkLogic.
 
 ### Read options for Optic queries
 
@@ -128,6 +138,24 @@ multiple queries, the following options can also be used to control how partitio
 | spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
 
+### Read options for documents
+
+The following options control how the connector reads document rows from MarkLogic via search queries:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.documents.stringQuery | A [MarkLogic string query](https://docs.marklogic.com/guide/search-dev/string-query) for selecting documents. |
+| spark.marklogic.read.documents.query | A JSON or XML representation of a [structured query](https://docs.marklogic.com/guide/search-dev/structured-query#), [serialized CTS query](https://docs.marklogic.com/guide/rest-dev/search#id_30577), or [combined query](https://docs.marklogic.com/guide/rest-dev/search#id_69918). |
+| spark.marklogic.read.documents.categories | Controls which metadata is returned for each document. Defaults to `content`. Allowable values are `content`, `metadata`, `collections`, `permissions`, `quality`, `properties`, and `metadatavalues`. |
+| spark.marklogic.read.documents.collections | Comma-delimited string of zero to many collections to constrain the query. |
+| spark.marklogic.read.documents.directory | Database directory - e.g. "/company/employees/" - to constrain the query. |
+| spark.marklogic.read.documents.filtered | Set to true for [filtered searches](https://docs.marklogic.com/guide/performance/unfiltered). Defaults to `false` as unfiltered searches are significantly faster and will produce accurate results when your application indexes are sufficient for your query. |
+| spark.marklogic.read.documents.options | Name of a set of [MarkLogic search options](https://docs.marklogic.com/guide/search-dev/query-options) to be applied against a string query. |
+| spark.marklogic.read.documents.partitionsPerForest | Number of Spark partition readers to create per forest; defaults to 4. |
+| spark.marklogic.read.documents.transform | Name of a [MarkLogic REST transform](https://docs.marklogic.com/guide/rest-dev/transforms) to apply to each matching document. |
+| spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
+| spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
+
 ## Write options
 
 See [the guide on writing](writing.md) for more information on how data is written to MarkLogic.
@@ -142,12 +170,16 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
+| spark.marklogic.write.files.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must 
+be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
 | spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
 | spark.marklogic.write.transform | Name of a REST transform to apply to each document. |
 | spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 . |
 | spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option. |
 | spark.marklogic.write.uriPrefix | String to prepend to each document URI, where the URI defaults to a UUID. |
+| spark.marklogic.write.uriReplace | Modify the initial URI for a row via a comma-delimited list of regular expression 
+and replacement string pairs - e.g. regex,'value',regex,'value'. Each replacement string must be enclosed by single quotes. |
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
 

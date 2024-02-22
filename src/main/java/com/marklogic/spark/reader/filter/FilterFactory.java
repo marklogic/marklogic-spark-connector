@@ -20,9 +20,9 @@ import org.apache.spark.sql.sources.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FilterFactory {
+public interface FilterFactory {
 
-    public static OpticFilter toPlanFilter(Filter filter) {
+    static OpticFilter toPlanFilter(Filter filter) {
         if (filter instanceof EqualTo) {
             EqualTo f = (EqualTo) filter;
             return new SingleValueFilter("eq", f.attribute(), f.value());

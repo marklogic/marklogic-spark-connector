@@ -33,9 +33,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WriteStreamOfRowsTest extends AbstractWriteTest {
+class WriteStreamOfRowsTest extends AbstractWriteTest {
 
-    private final static StructType SCHEMA = new StructType()
+    private static final StructType SCHEMA = new StructType()
         .add("Name", DataTypes.StringType)
         .add("House", DataTypes.StringType);
 
@@ -81,7 +81,7 @@ public class WriteStreamOfRowsTest extends AbstractWriteTest {
             .format(CONNECTOR_IDENTIFIER)
             .option("checkpointLocation", tempDir.toFile().getAbsolutePath())
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_PERMISSIONS, "rest-extension-user,read,rest-writer,update");
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS);
     }
 
 }

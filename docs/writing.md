@@ -15,11 +15,15 @@ via custom code written in JavaScript or XQuery and executed in MarkLogic.
 
 ## Writing rows as documents
 
-As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md), a basic write operation will define
+By default, the connector will serialize each Spark row it receives into a JSON document and write it to MarkLogic.
+With this approach, the incoming rows can adhere to any schema, and they will still be serialized to JSON and written
+to MarkLogic, leveraging MarkLogic's schema-agnostic behavior.
+
+As shown in the [Getting Started with PySpark guide](getting-started/pyspark.md), a minimal write operation will define
 how the connector should connect to MarkLogic, the Spark mode to use, and zero or more other options:
 
 ```
-df.write.format("com.marklogic.spark") \
+df.write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.collections", "write-test") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
@@ -32,6 +36,46 @@ In the above example, only `format`, `spark.marklogic.client.uri` (or the other 
 that can be used to define the connection details), and `mode` (which must equal "append") are required; 
 the collections, permissions , and URI prefix are optional, though it is uncommon to write documents without any 
 permissions. 
+
+### Writing file rows as documents
+
+To support the common use case of reading files and ingesting their contents as-is into MarkLogic, the connector has
+special support for rows with a schema matching that of 
+[Spark's binaryFile data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html). If the incoming
+rows adhere to the `binaryFile` schema, the connector will not serialize the row into JSON. Instead, the connector will 
+use the `path` column value as an initial URI for the document and the `content` column value as the document contents.
+The URI can then be further adjusted as described in the "Controlling document URIs".
+
+This feature allows for ingesting files of any type. The MarkLogic REST API will
+[determine the document type](https://docs.marklogic.com/guide/rest-dev/intro#id_53367) based on the URI extension, if
+MarkLogic recognizes it. If MarkLogic does not recognize the extension, and you wish to force a document type on each of
+the documents, you can set the `spark.marklogic.write.files.documentType` option to one of `XML`, `JSON`, or `TEXT`.
+
+### Writing document rows
+
+As of the 2.2.0 release, you can [read documents from MarkLogic](reading-data/documents.md). A common use case is to then write these rows
+to another database, or another MarkLogic cluster, or even the same database the documents were read from, potentially
+transforming them and altering their URIs. 
+
+"Document rows" adhere to the following Spark schema, which is important to understand when writing these rows as 
+documents to MarkLogic:
+
+1. `URI` is of type `string`.
+2. `content` is of type `binary`.
+3. `format` is of type `string`.
+4. `collections` is an array of `string`s.
+5. `permissions` is a map with keys of type `string` and values that are arrays of `string`s. 
+6. `quality` is an `integer`.
+7. `properties` is a map with keys and values of type `string`.
+8. `metadataValues` is a map with keys and values of type `string`.
+
+Writing rows corresponding to the "document row" schema is largely the same as writing rows of any arbitrary schema, 
+but bear in mind these differences:
+
+1. All the column values will be honored if populated. 
+2. The `collections` and `permissions` will be replaced - not added to - if the `spark.marklogic.write.collections` and 
+`spark.marklogic.write.permissions` options are specified.
+3. The `spark.marklogic.write.uriTemplate` option is less useful as only the `URI` and `format` column values are available for use in the template.
 
 ### Controlling document content
 
@@ -60,7 +104,7 @@ the parameter values contains a comma:
     .option("spark.marklogic.write.transformParams", "my-param;has,commas")
     .option("spark.marklogic.write.transformParamsDelimiter", ";")
 
-### Configuring document URIs
+### Controlling document URIs
 
 By default, the connector will construct a URI for each document beginning with a UUID and ending with `.json`. A 
 prefix can be specified via `spark.marklogic.write.uriPrefix`, and the default suffix of `.json` can be modified 
@@ -70,9 +114,18 @@ via `spark.marklogic.write.uriSuffix`. For example, the following options would 
     .option("spark.marklogic.write.uriPrefix", "/employee/")
     .option("spark.marklogic.write.uriSuffix", "/record.json")
 
+If you are ingesting file rows, which have an initial URI defined by the `path` column, you can also use the
+`spark.marklogic.write.uriReplace` option to perform one or more replacements on the initial URI. The value of 
+this option must be a comma-delimited list of regular expression and replacement string pairs, with each replacement 
+string enclosed in single quotes. For example, the following approach shows a common technique for removing most of 
+the file path:
+
+    .option("spark.marklogic.write.uriReplace", ".*/some/directory,''")
+
 URIs can also be constructed based on column values for a given row. The `spark.marklogic.write.uriTemplate` option 
 allows for column names to be referenced via braces when constructing a URI. If this option is used, the 
-above options for setting a prefix and suffix will be ignored, as the template can be used to define the entire URI. 
+above options for setting a prefix, suffix, and replacement expression will be ignored, as the template defines the 
+entire URI. 
 
 For example, consider a Spark DataFrame with a set of columns including `organization` and `employee_id`. 
 The following template would construct URIs based on those two columns:
@@ -81,6 +134,11 @@ The following template would construct URIs based on those two columns:
 
 Both columns should have values in each row in the DataFrame. If the connector encounters a row that does not have a 
 value for any column in the URI template, an error will be thrown.
+
+If you are writing file rows that conform to 
+[Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 
+`modificationTime`, and `length` columns will be available for use with the template. The `content` column will not be
+available as it is a binary array that is not expected to be useful when constructing a URI.
 
 ### Configuring document metadata
 
@@ -130,7 +188,7 @@ spark.readStream \
     .option("header", True) \
     .load("examples/getting-started/data/csv-files") \
     .writeStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("checkpointLocation", tempfile.mkdtemp()) \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.uriPrefix", "/streaming-example/") \
@@ -163,6 +221,24 @@ with its own set of threads.
 Optimizing performance will thus involve testing various combinations of partition counts, batch sizes, and thread
 counts. The [MarkLogic Monitoring tool](https://docs.marklogic.com/guide/monitoring/intro) can help you understand
 resource consumption and throughput from Spark to MarkLogic.
+
+**You should take care** not to exceed the number of requests that your MarkLogic cluster can reasonably handle at a
+given time. A general rule of thumb is not to use more threads than the number of hosts multiplied by the number of
+threads per app server. A MarkLogic app server defaults to a limit of 32 threads. So for a 3-host cluster, you should
+not exceed 96 total threads. This also assumes that each host is receiving requests - either via a load balancer placed
+in front of the MarkLogic cluster, or by setting the `spark.marklogic.client.connectionType` option to `direct` when 
+the connector can directly connect to each host in the cluster. 
+
+The rule of thumb above can thus be expressed as:
+
+    Number of partitions * Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
+
+### Using a load balancer
+
+If your MarkLogic cluster has multiple hosts, it is highly recommended to put a load balancer in front
+of your cluster and have the connector connect through the load balancer. A typical load balancer will help ensure
+not only that load is spread across the hosts in your cluster, but that any network or connection failures can be
+retried without the error propagating to the connector.
 
 ### Error handling
 
@@ -200,11 +276,11 @@ find the logs in the `docker/marklogic/logs/8003_ErrorLog.txt` file in your proj
 in the MarkLogic Admin web application):
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .mode("append") \
@@ -214,11 +290,11 @@ spark.read.format("com.marklogic.spark") \
 Custom code can be written in XQuery and specified via `spark.marklogic.write.xquery`:
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ('limit=10'), cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.xquery", "declare variable $URI external; xdmp:log('Received URI:' || $URI)") \
     .mode("append") \
@@ -230,11 +306,11 @@ below, the module - which was deployed from the `src/main/ml-modules` directory 
 declare an external variable named "URI":
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.invoke", "/process-uri.sjs") \
     .mode("append") \
@@ -288,11 +364,11 @@ your custom code declares an external variable with a different name, you can co
 `spark.marklogic.write.externalVariableName`:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
+df = spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received value: ' + MY_VAR);") \
     .option("spark.marklogic.write.externalVariableName", "MY_VAR") \
@@ -310,11 +386,11 @@ Spark capturing all option values as strings.
 The following demonstrates two custom external variables being configured and used by custom JavaScript code:
 
 ```
-spark.read.format("com.marklogic.spark") \
+spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'))") \
     .load() \
-    .write.format("com.marklogic.spark") \
+    .write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.vars.var1", "value1") \
     .option("spark.marklogic.write.vars.var2", "value2") \
@@ -343,20 +419,20 @@ can be useful when you are already reading a stream of rows from MarkLogic becau
 rows may take too long to execute. The connector allows you to then process each batch of results via custom code as
 well. 
 
-The following example is a variation of the example in the [reading guide for streaming rows](reading.md). Instead
+The following example is a variation of the example in the [reading guide for streaming rows](reading-data/optic.md). Instead
 of using the connector's support for writing rows as documents, it shows each streamed batch being processed by custom
 code:
 
 ```
 import tempfile
 stream = spark.readStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.partitions.javascript", "xdmp.databaseForests(xdmp.database('spark-example-content'))") \
     .option("spark.marklogic.read.javascript", "cts.uris(null, ['limit=10'], cts.collectionQuery('employee'), null, [PARTITION]);") \
     .load() \
     .writeStream \
-    .format("com.marklogic.spark") \
+    .format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.javascript", "console.log('Received URI: ' + URI);") \
     .option("checkpointLocation", tempfile.mkdtemp()) \

@@ -15,8 +15,10 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.spark.CustomCodeContext;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.customcode.CustomCodeContext;
+import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
@@ -27,12 +29,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
-class MarkLogicWrite implements BatchWrite, StreamingWrite {
+public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
-    private final static Logger logger = LoggerFactory.getLogger(MarkLogicWrite.class);
+    private static final Logger logger = LoggerFactory.getLogger("com.marklogic.spark");
 
     private WriteContext writeContext;
+
+    // Used solely for testing. Will never be populated in a real world scenario.
+    private static Consumer<Integer> successCountConsumer;
+    private static Consumer<Integer> failureCountConsumer;
+
+    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
+        successCountConsumer = consumer;
+    }
+
+    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
+        failureCountConsumer = consumer;
+    }
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
@@ -45,21 +60,45 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        logger.info("Number of partitions: {}", info.numPartitions());
+        int partitions = info.numPartitions();
+        int threadCount = writeContext.getThreadCount();
+        Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
+            partitions, threadCount, partitions * threadCount);
         return (DataWriterFactory) determineWriterFactory();
     }
 
     @Override
     public void commit(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && logger.isInfoEnabled()) {
-            logger.info("Commit messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Commit messages received: {}", Arrays.asList(messages));
+            }
+            int successCount = 0;
+            int failureCount = 0;
+            for (WriterCommitMessage message : messages) {
+                CommitMessage msg = (CommitMessage)message;
+                successCount += msg.getSuccessItemCount();
+                failureCount += msg.getFailedItemCount();
+            }
+            if (successCountConsumer != null) {
+                successCountConsumer.accept(successCount);
+            }
+            if (failureCountConsumer != null) {
+                failureCountConsumer.accept(failureCount);
+            }
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Success count: {}", successCount);
+            }
+            if (failureCount > 0) {
+                Util.MAIN_LOGGER.error("Failure count: {}", failureCount);
+            }
         }
     }
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            logger.warn("Abort messages received: {}", Arrays.asList(messages));
+        if (messages != null && messages.length > 0 && messages[0] != null) {
+            Util.MAIN_LOGGER.warn("Abort messages received: {}", Arrays.asList(messages));
         }
     }
 
@@ -78,7 +117,7 @@ class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            logger.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
+            Util.MAIN_LOGGER.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
         }
     }
 

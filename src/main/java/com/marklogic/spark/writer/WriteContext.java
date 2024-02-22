@@ -22,31 +22,60 @@ import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private final StructType schema;
+    private final boolean usingFileSchema;
+
+    private int fileSchemaContentPosition;
+    private int fileSchemaPathPosition;
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
         this.schema = schema;
+
+        // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
+        // so that reader can be reused for loading files as-is.
+        final List<String> names = Arrays.asList(this.schema.fieldNames());
+        this.usingFileSchema = names.size() == 4 && names.contains("path") && names.contains("content")
+            && names.contains("modificationTime") && names.contains("length");
+        if (this.usingFileSchema) {
+            // Per the Spark docs, we expect positions 0 and 3 here, but looking them up just to be safe.
+            this.fileSchemaPathPosition = names.indexOf("path");
+            this.fileSchemaContentPosition = names.indexOf("content");
+        }
     }
 
     public StructType getSchema() {
         return schema;
     }
 
+    int getThreadCount() {
+        return (int)getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
+    }
+
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
-            .withThreadCount((int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1));
+            .withThreadCount(getThreadCount())
+            // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
+            // message from the server. This is intended to always show up and be associated with our Spark connector
+            // and also to be more brief, just capturing the main message from the server.
+            .onBatchFailure((batch, failure) ->
+                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage())
+            );
 
         if (logger.isDebugEnabled()) {
             writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
@@ -70,17 +99,23 @@ public class WriteContext extends ContextSupport {
         String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
         if (uriTemplate != null && uriTemplate.trim().length() > 0) {
             factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
-            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX).forEach(option -> {
+            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
                 String value = getProperties().get(option);
                 if (value != null && value.trim().length() > 0) {
-                    logger.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
+                    Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
                 }
             });
         } else {
-            final String uriSuffix = getProperties().containsKey(Options.WRITE_URI_SUFFIX) ?
-                getProperties().get(Options.WRITE_URI_SUFFIX) :
-                ".json";
-            factory.withSimpleUriStrategy(getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix);
+            String uriSuffix = null;
+            if (hasOption(Options.WRITE_URI_SUFFIX)) {
+                uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
+            } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema)) {
+                uriSuffix = ".json";
+            }
+            factory.withUriMaker(new StandardUriMaker(
+                getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix,
+                getProperties().get(Options.WRITE_URI_REPLACE)
+            ));
         }
 
         return factory.newDocBuilder();
@@ -125,5 +160,17 @@ public class WriteContext extends ContextSupport {
             }
         }
         logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+    }
+
+    boolean isUsingFileSchema() {
+        return this.usingFileSchema;
+    }
+
+    int getFileSchemaContentPosition() {
+        return fileSchemaContentPosition;
+    }
+
+    int getFileSchemaPathPosition() {
+        return fileSchemaPathPosition;
     }
 }

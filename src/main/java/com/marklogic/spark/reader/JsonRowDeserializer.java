@@ -27,31 +27,32 @@ import java.util.ArrayList;
  * That's exactly what we want, so we don't need to have any knowledge of how to convert to Spark's set of data
  * types.
  */
-class JsonRowDeserializer {
+public class JsonRowDeserializer {
 
     private final JacksonParser jacksonParser;
     private final Function2<JsonFactory, String, JsonParser> jsonParserCreator;
     private final Function1<String, UTF8String> utf8StringCreator;
 
-    JsonRowDeserializer(StructType schema) {
+    // Ignoring warnings about JFunction.func until an alternative can be found.
+    @SuppressWarnings("java:S1874")
+    public JsonRowDeserializer(StructType schema) {
         this.jacksonParser = newJacksonParser(schema);
 
         // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
         // scala-java8-compat, we should be able to use scala.jdk.FunctionConverters since those are part of Scala
-        // 2.13. However, that is not yet working within PySpark. So sticking with this "legacy" appraoch as it seems
+        // 2.13. However, that is not yet working within PySpark. So sticking with this "legacy" approach as it seems
         // to work fine in both vanilla Spark (i.e. JUnit tests) and PySpark.
-        this.jsonParserCreator = JFunction.func((jsonFactory, someString) -> CreateJacksonParser.string(jsonFactory, someString));
-
-        this.utf8StringCreator = JFunction.func((someString) -> UTF8String.fromString(someString));
+        this.jsonParserCreator = JFunction.func(CreateJacksonParser::string);
+        this.utf8StringCreator = JFunction.func(UTF8String::fromString);
     }
 
-    InternalRow deserializeJson(String json) {
+    public InternalRow deserializeJson(String json) {
         return this.jacksonParser.parse(json, this.jsonParserCreator, this.utf8StringCreator).head();
     }
-    
+
     private JacksonParser newJacksonParser(StructType schema) {
         final boolean allowArraysAsStructs = true;
-        final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList().iterator()).toSeq();
+        final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList<Filter>().iterator()).toSeq();
         return new JacksonParser(schema, Util.DEFAULT_JSON_OPTIONS, allowArraysAsStructs, filters);
     }
 }

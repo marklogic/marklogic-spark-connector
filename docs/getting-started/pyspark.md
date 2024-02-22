@@ -50,7 +50,7 @@ The connector reads data from MarkLogic as rows to construct a Spark DataFrame. 
 paste the following Python statement into PySpark, adjusting the host and password values as needed:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
+df = spark.read.format("marklogic") \
     .option("spark.marklogic.client.host", "localhost") \
     .option("spark.marklogic.client.port", "8003") \
     .option("spark.marklogic.client.username", "spark-example-user") \
@@ -63,7 +63,7 @@ When using `digest` or `basic` authentication, you can also use this more succin
 client options in one option:
 
 ```
-df = spark.read.format("com.marklogic.spark") \
+df = spark.read.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee')") \
     .load()
@@ -78,10 +78,21 @@ The `df` variable is an instance of a Spark DataFrame. Try the following command
 The [PySpark docs](https://spark.apache.org/docs/latest/api/python/getting_started/quickstart_df.html) provide more
 information on how a Spark DataFrame works along with more commands that you can try on it.
 
+As of the connector 2.2.0 release, you can also query for documents, receiving "document" rows that contain columns
+capturing the URI, content, and metadata for each document:
+
+```
+df = spark.read.format("marklogic") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.documents.collections", "employee") \
+    .load()
+df.show()
+```
+
 The instructions above can be applied to your own MarkLogic application. You can use the same Spark command above,
 simply adjusting the connection details and the Optic query. Please see 
-[the guide on reading data](../reading.md) for more information on how data can be read from MarkLogic, including via custom 
-JavaScript and XQuery code.
+[the guide on reading data](../reading-data/reading.md) for more information on how data can be read from MarkLogic, 
+including both via search queries and via custom JavaScript and XQuery code.
 
 ### Writing data to the connector
 
@@ -90,7 +101,7 @@ into XML documents. To try this on the DataFrame that was read from MarkLogic in
 paste the following into PySpark, adjusting the host and password values as needed:
 
 ```
-df.write.format("com.marklogic.spark") \
+df.write.format("marklogic") \
     .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
     .option("spark.marklogic.write.collections", "write-test") \
     .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \

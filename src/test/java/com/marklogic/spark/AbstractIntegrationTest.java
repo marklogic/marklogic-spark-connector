@@ -15,11 +15,12 @@
  */
 package com.marklogic.spark;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
-import org.apache.spark.sql.DataFrameReader;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
+import org.apache.spark.SparkException;
+import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,10 +28,12 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Uses marklogic-junit (from marklogic-unit-test) to construct a DatabaseClient
@@ -38,13 +41,16 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * <p>
  * Use this as the base class for all tests that need to connect to MarkLogic.
  */
-public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
+public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
     // User credentials for all calls to MarkLogic by the Spark connector
-    protected final static String TEST_USERNAME = "spark-test-user";
-    protected final static String TEST_PASSWORD = "spark";
-    protected final static String CONNECTOR_IDENTIFIER = "com.marklogic.spark";
-    protected final static String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
+    protected static final String TEST_USERNAME = "spark-test-user";
+    protected static final String TEST_PASSWORD = "spark";
+    protected static final String CONNECTOR_IDENTIFIER = "marklogic";
+    protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
+    protected static final String DEFAULT_PERMISSIONS = "spark-user-role,read,spark-user-role,update";
+
+    protected static final ObjectMapper objectMapper = new ObjectMapper();
 
     private static MarkLogicVersion markLogicVersion;
 
@@ -99,10 +105,10 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
         return session
             .read()
             .format(CONNECTOR_IDENTIFIER)
-            .option("spark.marklogic.client.host", testConfig.getHost())
-            .option("spark.marklogic.client.port", testConfig.getRestPort())
-            .option("spark.marklogic.client.username", TEST_USERNAME)
-            .option("spark.marklogic.client.password", TEST_PASSWORD)
+            .option(Options.CLIENT_HOST, testConfig.getHost())
+            .option(Options.CLIENT_PORT, testConfig.getRestPort())
+            .option(Options.CLIENT_USERNAME, TEST_USERNAME)
+            .option(Options.CLIENT_PASSWORD, TEST_PASSWORD)
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')");
     }
 
@@ -137,5 +143,37 @@ public class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
     protected final String rowsToString(List<Row> rows) {
         // Used for debugging and in some assertions.
         return rows.stream().map(row -> row.prettyJson()).collect(Collectors.joining());
+    }
+
+    /**
+     * Avoids having to repeat mode/save.
+     */
+    protected void defaultWrite(DataFrameWriter writer) {
+        writer.options(defaultWriteOptions())
+            .mode(SaveMode.Append)
+            .save();
+    }
+
+    /**
+     * Nearly every successful write operation will want these options.
+     */
+    protected Map<String, String> defaultWriteOptions() {
+        Map<String, String> options = new HashMap<>();
+        options.put(Options.CLIENT_URI, makeClientUri());
+        options.put(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS);
+        return options;
+    }
+
+    protected final ConnectorException assertThrowsConnectorException(Runnable r) {
+        SparkException ex = assertThrows(SparkException.class, () -> r.run());
+        assertTrue(ex.getCause() instanceof ConnectorException,
+            "Expect the Spark-thrown SparkException to wrap our ConnectorException, which is an exception that we " +
+                "intentionally throw when an error condition is detected.");
+        return (ConnectorException) ex.getCause();
+    }
+
+    protected final DocumentMetadataHandle readMetadata(String uri) {
+        // This should really be in marklogic-unit-test.
+        return getDatabaseClient().newDocumentManager().readMetadata(uri, new DocumentMetadataHandle());
     }
 }

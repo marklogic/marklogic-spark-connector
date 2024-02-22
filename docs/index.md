@@ -16,4 +16,7 @@ The connector has the following system requirements:
 * For writing data, MarkLogic 9.0-9 or higher.
 * For reading data, MarkLogic 10.0-9 or higher.
 
+In addition, if your MarkLogic cluster has multiple hosts in it, it is highly recommended to put a load balancer in front
+of your cluster and have the MarkLogic Spark connector connect through the load balancer. 
+
 Please see the [Getting Started guide](getting-started/getting-started.md) to begin using the connector. 

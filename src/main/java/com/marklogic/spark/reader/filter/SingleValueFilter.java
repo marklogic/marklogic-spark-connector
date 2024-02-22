@@ -18,7 +18,7 @@ package com.marklogic.spark.reader.filter;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.expression.PlanBuilder;
-import com.marklogic.spark.reader.PlanUtil;
+import com.marklogic.spark.reader.optic.PlanUtil;
 
 import java.util.UUID;
 
@@ -27,11 +27,15 @@ import java.util.UUID;
  */
 class SingleValueFilter implements OpticFilter {
 
-    final static long serialVersionUID = 1;
+    static final long serialVersionUID = 1;
 
     private final String paramName;
     private final String functionName;
     private final String columnName;
+
+    // This warning about the value not being serializable is ignored, as we trust Spark to only ever have
+    // serializable values in its filters.
+    @SuppressWarnings("java:S1948")
     private final Object value;
 
     SingleValueFilter(String functionName, String columnName, Object value) {

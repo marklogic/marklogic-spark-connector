@@ -17,21 +17,21 @@ package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.PermissionsTester;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
+import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 
-public class WriteRowsTest extends AbstractWriteTest {
+class WriteRowsTest extends AbstractWriteTest {
 
-    private final static String TEMPORAL_COLLECTION = "temporal-collection";
+    private static final String TEMPORAL_COLLECTION = "temporal-collection";
 
     @Test
     void defaultBatchSizeAndThreadCount() {
@@ -43,6 +43,10 @@ public class WriteRowsTest extends AbstractWriteTest {
     void batchSizeGreaterThanNumberOfRowsToWrite() {
         newWriter()
             .option(Options.WRITE_BATCH_SIZE, 1000)
+            // Adding this here just to ensure an error doesn't happen. While it doesn't make sense for a user to apply
+            // this option when there's no initial URI, it doesn't cause any issues and thus there's no need to throw
+            // an error.
+            .option(Options.WRITE_URI_REPLACE, "thiswont,'have any effect'")
             .save();
 
         // Verifies that the docs were written during the "commit()" call, as the WriteBatcher is expected to be
@@ -93,27 +97,17 @@ public class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void invalidThreadCount() {
-        SparkException ex = assertThrows(
-            SparkException.class,
-            () -> newWriter().option(Options.WRITE_THREAD_COUNT, 0).save()
-        );
-
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
-        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater", cause.getMessage());
+        DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
+        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater.", ex.getMessage());
         verifyNoDocsWereWritten();
     }
 
     @Test
     void invalidBatchSize() {
-        SparkException ex = assertThrows(
-            SparkException.class,
-            () -> newWriter().option(Options.WRITE_BATCH_SIZE, 0).save()
-        );
-
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause.getClass());
-        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater", cause.getMessage(),
+        DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
                 "many requests will be made by a partition, and zero is a valid value for reading.");
@@ -129,7 +123,7 @@ public class WriteRowsTest extends AbstractWriteTest {
     void userNotPermittedToWriteAndFailOnCommit() {
         SparkException ex = assertThrows(SparkException.class,
             () -> newWriter()
-                .option("spark.marklogic.client.username", "spark-no-write-user")
+                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 500)
                 .save()
         );
@@ -160,7 +154,7 @@ public class WriteRowsTest extends AbstractWriteTest {
     void userNotPermittedToWriteAndFailOnWrite() {
         SparkException ex = assertThrows(SparkException.class,
             () -> newWriter()
-                .option("spark.marklogic.client.username", "spark-no-write-user")
+                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
                 .option(Options.WRITE_BATCH_SIZE, 1)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .save()
@@ -184,6 +178,11 @@ public class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void dontAbortOnFailure() {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
+        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+
         newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
             // Force each row in the CSV to be written in its own batch, ensuring that the one row that should succeed
@@ -193,6 +192,8 @@ public class WriteRowsTest extends AbstractWriteTest {
             .save();
 
         assertCollectionSize("9 of the batches should have failed, with the 10th batch succeeding", COLLECTION, 1);
+        assertEquals(9, failureCount.get());
+        assertEquals(1, successCount.get());
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
