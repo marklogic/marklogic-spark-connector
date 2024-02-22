@@ -60,7 +60,10 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        Util.MAIN_LOGGER.info("Number of partitions: {}", info.numPartitions());
+        int partitions = info.numPartitions();
+        int threadCount = writeContext.getThreadCount();
+        Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
+            partitions, threadCount, partitions * threadCount);
         return (DataWriterFactory) determineWriterFactory();
     }
 

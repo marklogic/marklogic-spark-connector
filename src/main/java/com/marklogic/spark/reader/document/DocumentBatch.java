@@ -47,7 +47,7 @@ class DocumentBatch implements Batch {
         this.partitions = planner.makePartitions(estimate, serverTimestamp, forests);
 
         if (Util.MAIN_LOGGER.isInfoEnabled()) {
-            logger.info("Created {} partitions; query estimate: {}", partitions.length, estimate);
+            Util.MAIN_LOGGER.info("Created {} partitions; query estimate: {}", partitions.length, estimate);
         }
     }
 

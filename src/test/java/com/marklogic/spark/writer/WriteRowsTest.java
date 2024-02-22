@@ -98,7 +98,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void invalidThreadCount() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
         assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater.", ex.getMessage());
         verifyNoDocsWereWritten();
     }
