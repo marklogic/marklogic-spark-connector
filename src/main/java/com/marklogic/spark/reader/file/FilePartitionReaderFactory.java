@@ -2,6 +2,7 @@ package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -26,13 +27,13 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         FilePartition filePartition = (FilePartition) partition;
 
+        if ("rdf".equalsIgnoreCase(this.properties.get(Options.READ_FILES_TYPE))) {
+            return createRdfReader(filePartition);
+        }
+
         String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
         final boolean isZip = "zip".equalsIgnoreCase(compression);
         final boolean isGzip = "gzip".equalsIgnoreCase(compression);
-
-        if ("rdf".equalsIgnoreCase(this.properties.get(Options.READ_FILES_TYPE))) {
-            return new RdfFileReader(filePartition, hadoopConfiguration);
-        }
 
         String aggregateXmlElement = this.properties.get(Options.READ_AGGREGATES_XML_ELEMENT);
         if (aggregateXmlElement != null && !aggregateXmlElement.trim().isEmpty()) {
@@ -48,5 +49,13 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return new GZIPFileReader(filePartition, hadoopConfiguration);
         }
         throw new ConnectorException("Only zip and gzip files supported, more to come before 2.2.0 release.");
+    }
+
+    private PartitionReader<InternalRow> createRdfReader(FilePartition filePartition) {
+        Path path = new Path(filePartition.getPath());
+        boolean isQuadsFile = path.getName().endsWith(".trig") || path.getName().endsWith(".nq");
+        return isQuadsFile ?
+            new QuadsFileReader(filePartition, hadoopConfiguration) :
+            new RdfFileReader(filePartition, hadoopConfiguration);
     }
 }
