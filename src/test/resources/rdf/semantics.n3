@@ -1,0 +1,51 @@
+#Processed by Id: cwm.py,v 1.197 2007-12-13 15:38:39 syosi Exp
+        #    using base file:///projects/MarkLogic/data.marklogic.com/w3c-tr.rdf
+
+#  Notation3 generation by
+#       notation3.py,v 1.200 2007-12-11 21:18:08 syosi Exp
+
+#   Base was: file:///projects/MarkLogic/data.marklogic.com/w3c-tr.rdf
+     @prefix : <#> .
+    @prefix e: <http://www.w3.org/2001/sw/WebOnt/errata#> .
+    @prefix e2: <http://www.w3.org/2001/sw/RDFCore/errata#> .
+    @prefix g: <http://www.w3.org/2000/04/mem-news/groups.rdf#> .
+    @prefix j.0: <http://simile.mit.edu/2004/05/year#> .
+    @prefix j.1: <http://www.w3.org/2000/10/swap/pim/doc#> .
+    @prefix j.2: <http://simile.mit.edu/2004/02/ontologies/display#> .
+    @prefix j.3: <http://www.w3.org/2001/04/roadmap/org#> .
+    @prefix j.4: <http://www.w3.org/2001/02pd/rec54#> .
+    @prefix j.6: <http://www.w3.org/2000/10/swap/pim/contact#> .
+    @prefix j.7: <http://www.w3.org/2002/05/matrix/vocab#> .
+    @prefix j.8: <http://opencyc.sourceforge.net/daml/cyc.daml#> .
+    @prefix j.9: <http://www.daml.org/2001/03/daml+oil#> .
+    @prefix owl: <http://www.w3.org/2002/07/owl#> .
+    @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+    @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+    ()     a rdf:List,
+                rdfs:Resource;
+         rdfs:comment "The empty list, with no items in it. If the rest of a list is nil then the list has no more items in it.";
+         rdfs:isDefinedBy rdf:;
+         rdfs:label "nil";
+         rdfs:seeAlso rdf: .
+
+    rdf:type     a rdf:Property,
+                rdfs:Resource;
+         rdfs:comment "The subject is an instance of a class.";
+         rdfs:domain rdfs:Resource;
+         rdfs:isDefinedBy rdf:;
+         rdfs:label "type";
+         rdfs:range rdfs:Class;
+         rdfs:seeAlso rdf: .
+
+    <http://purl.org/dc/elements/1.1/>     <http://purl.org/dc/elements/1.1/description> "The Dublin Core Element Set v1.1 namespace provides URIs for the Dublin Core Elements v1.1. Entries are declared using RDF Schema language to support RDF applications."@en-US;
+         <http://purl.org/dc/elements/1.1/language> "English"@en-US;
+         <http://purl.org/dc/elements/1.1/publisher> "The Dublin Core Metadata Initiative"@en-US;
+         <http://purl.org/dc/elements/1.1/source> <http://dublincore.org/documents/dces/>,
+                <http://dublincore.org/usage/decisions/>;
+         <http://purl.org/dc/elements/1.1/title> "The Dublin Core Element Set v1.1 namespace providing access to its content by means of an RDF Schema"@en-US;
+         <http://purl.org/dc/terms/isReferencedBy> <http://purl.org/dc/dcmitype/>,
+                <http://www.dublincore.org/documents/2001/10/26/dcmi-namespace/>;
+         <http://purl.org/dc/terms/isRequiredBy> <http://purl.org/dc/terms/>;
+         <http://purl.org/dc/terms/issued> "1999-07-02";
+         <http://purl.org/dc/terms/modified> "2003-03-24" .
