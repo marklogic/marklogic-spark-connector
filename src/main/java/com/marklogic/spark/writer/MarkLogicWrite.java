@@ -19,6 +19,7 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
+import com.marklogic.spark.writer.rdf.GraphWriter;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
@@ -29,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
@@ -40,14 +43,6 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     // Used solely for testing. Will never be populated in a real world scenario.
     private static Consumer<Integer> successCountConsumer;
     private static Consumer<Integer> failureCountConsumer;
-
-    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
-        successCountConsumer = consumer;
-    }
-
-    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
-        failureCountConsumer = consumer;
-    }
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
@@ -70,27 +65,26 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void commit(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Commit messages received: {}", Arrays.asList(messages));
+            final CommitResults commitResults = aggregateCommitMessages(messages);
+            if (!commitResults.graphs.isEmpty()) {
+                new GraphWriter(
+                    writeContext.connectToMarkLogic(),
+                    writeContext.getProperties().get(Options.WRITE_PERMISSIONS)
+                ).createGraphs(commitResults.graphs);
             }
-            int successCount = 0;
-            int failureCount = 0;
-            for (WriterCommitMessage message : messages) {
-                CommitMessage msg = (CommitMessage)message;
-                successCount += msg.getSuccessItemCount();
-                failureCount += msg.getFailedItemCount();
-            }
+
             if (successCountConsumer != null) {
-                successCountConsumer.accept(successCount);
+                successCountConsumer.accept(commitResults.successCount);
             }
             if (failureCountConsumer != null) {
-                failureCountConsumer.accept(failureCount);
+                failureCountConsumer.accept(commitResults.failureCount);
             }
+
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Success count: {}", successCount);
+                Util.MAIN_LOGGER.info("Success count: {}", commitResults.successCount);
             }
-            if (failureCount > 0) {
-                Util.MAIN_LOGGER.error("Failure count: {}", failureCount);
+            if (commitResults.failureCount > 0) {
+                Util.MAIN_LOGGER.error("Failure count: {}", commitResults.failureCount);
             }
         }
     }
@@ -130,4 +124,47 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         }
         return new WriteBatcherDataWriterFactory(writeContext);
     }
+
+    private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Commit messages received: {}", Arrays.asList(messages));
+        }
+
+        int successCount = 0;
+        int failureCount = 0;
+        Set<String> graphs = new HashSet<>();
+        for (WriterCommitMessage message : messages) {
+            CommitMessage msg = (CommitMessage) message;
+            successCount += msg.getSuccessItemCount();
+            failureCount += msg.getFailedItemCount();
+            if (msg.getGraphs() != null) {
+                graphs.addAll(msg.getGraphs());
+            }
+        }
+        return new CommitResults(successCount, failureCount, graphs);
+    }
+
+    /**
+     * Aggregates the results of each CommitMessage.
+     */
+    private static class CommitResults {
+        final int successCount;
+        final int failureCount;
+        final Set<String> graphs;
+
+        public CommitResults(int successCount, int failureCount, Set<String> graphs) {
+            this.successCount = successCount;
+            this.failureCount = failureCount;
+            this.graphs = graphs;
+        }
+    }
+
+    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
+        successCountConsumer = consumer;
+    }
+
+    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
+        failureCountConsumer = consumer;
+    }
+
 }

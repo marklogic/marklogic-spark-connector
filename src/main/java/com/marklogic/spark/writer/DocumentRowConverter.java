@@ -10,17 +10,19 @@ import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.types.DataTypes;
 
 import javax.xml.namespace.QName;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code DocumentRowSchema}.
  */
-class DocumentRowFunction implements Function<InternalRow, DocBuilder.DocumentInputs> {
+class DocumentRowConverter implements RowConverter {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public DocBuilder.DocumentInputs apply(InternalRow row) {
+    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         String uri = row.getString(0);
         BytesHandle content = new BytesHandle(row.getBinary(1));
 
@@ -36,7 +38,12 @@ class DocumentRowFunction implements Function<InternalRow, DocBuilder.DocumentIn
         }
         addPropertiesToMetadata(row, metadata);
         addMetadataValuesToMetadata(row, metadata);
-        return new DocBuilder.DocumentInputs(uri, content, columnValues, metadata);
+        return Optional.of(new DocBuilder.DocumentInputs(uri, content, columnValues, metadata));
+    }
+
+    @Override
+    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return new ArrayList<>();
     }
 
     private void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {

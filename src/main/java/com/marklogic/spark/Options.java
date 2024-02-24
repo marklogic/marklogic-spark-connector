@@ -91,6 +91,9 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
 
+    public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
+    public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
+
     // For writing rows adhering to {@code FileRowSchema} to MarkLogic.
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 

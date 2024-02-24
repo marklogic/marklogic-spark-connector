@@ -9,23 +9,25 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.DataTypes;
 
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code FileRowSchema}.
  */
-class FileRowFunction implements Function<InternalRow, DocBuilder.DocumentInputs> {
+class FileRowConverter implements RowConverter {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     private WriteContext writeContext;
 
-    FileRowFunction(WriteContext writeContext) {
+    FileRowConverter(WriteContext writeContext) {
         this.writeContext = writeContext;
     }
 
     @Override
-    public DocBuilder.DocumentInputs apply(InternalRow row) {
+    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         String initialUri = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle content = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
         forceFormatIfNecessary(content);
@@ -40,7 +42,12 @@ class FileRowFunction implements Function<InternalRow, DocBuilder.DocumentInputs
             columnValues.put("length", row.getLong(2));
             // Not including content as it's a byte array that is not expected to be helpful for making a URI.
         }
-        return new DocBuilder.DocumentInputs(initialUri, content, columnValues, null);
+        return Optional.of(new DocBuilder.DocumentInputs(initialUri, content, columnValues, null));
+    }
+
+    @Override
+    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return new ArrayList<>();
     }
 
     private void forceFormatIfNecessary(BytesHandle content) {

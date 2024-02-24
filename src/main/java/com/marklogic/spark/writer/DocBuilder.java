@@ -21,39 +21,56 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 
-class DocBuilder {
+public class DocBuilder {
 
     public interface UriMaker {
         String makeURI(String initialUri, ObjectNode columnValues);
     }
 
+    /**
+     * Captures the various inputs used for constructing a document to be written to MarkLogic. {@code graph} refers
+     * to an optional MarkLogic semantics graph, which must be added to the final set of collections for the
+     * document.
+     */
     public static class DocumentInputs {
         private final String initialUri;
         private final AbstractWriteHandle content;
         private final ObjectNode columnValuesForUriTemplate;
         private final DocumentMetadataHandle initialMetadata;
+        private final String graph;
 
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate, DocumentMetadataHandle initialMetadata) {
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate,
+                              DocumentMetadataHandle initialMetadata) {
+            this(initialUri, content, columnValuesForUriTemplate, initialMetadata, null);
+        }
+
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate,
+                              DocumentMetadataHandle initialMetadata, String graph) {
             this.initialUri = initialUri;
             this.content = content;
             this.columnValuesForUriTemplate = columnValuesForUriTemplate;
             this.initialMetadata = initialMetadata;
+            this.graph = graph;
         }
 
-        public String getInitialUri() {
+        String getInitialUri() {
             return initialUri;
         }
 
-        public AbstractWriteHandle getContent() {
+        AbstractWriteHandle getContent() {
             return content;
         }
 
-        public ObjectNode getColumnValuesForUriTemplate() {
+        ObjectNode getColumnValuesForUriTemplate() {
             return columnValuesForUriTemplate;
         }
 
-        public DocumentMetadataHandle getInitialMetadata() {
+        DocumentMetadataHandle getInitialMetadata() {
             return initialMetadata;
+        }
+
+        String getGraph() {
+            return graph;
         }
     }
 
@@ -66,12 +83,23 @@ class DocBuilder {
     }
 
     DocumentWriteOperation build(DocumentInputs inputs) {
-        String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
-        DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
+        final String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
+        final String graph = inputs.getGraph();
+        final DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
+
         if (initialMetadata != null) {
             overrideInitialMetadata(initialMetadata);
+            if (graph != null) {
+                initialMetadata.getCollections().add(graph);
+            }
             return new DocumentWriteOperationImpl(uri, initialMetadata, inputs.getContent());
         }
+
+        if (graph != null && !metadata.getCollections().contains(graph)) {
+            DocumentMetadataHandle newMetadata = newMetadataWithGraph(graph);
+            return new DocumentWriteOperationImpl(uri, newMetadata, inputs.getContent());
+        }
+
         return new DocumentWriteOperationImpl(uri, metadata, inputs.getContent());
     }
 
@@ -97,5 +125,25 @@ class DocBuilder {
         if (!metadata.getMetadataValues().isEmpty()) {
             initialMetadata.setMetadataValues(metadata.getMetadataValues());
         }
+    }
+
+    /**
+     * If a semantics graph is specified in the set of document inputs, must copy the DocumentMetadataHandle instance
+     * in this class to a new DocumentMetadataHandle instance that includes the graph as a collection. This is done to
+     * avoid modifying the DocumentMetadataHandle instance owned by this class which is expected to be reused for
+     * many documents.
+     *
+     * @param graph
+     * @return
+     */
+    private DocumentMetadataHandle newMetadataWithGraph(String graph) {
+        DocumentMetadataHandle newMetadata = new DocumentMetadataHandle();
+        newMetadata.getCollections().addAll(metadata.getCollections());
+        newMetadata.getPermissions().putAll(metadata.getPermissions());
+        newMetadata.setQuality(metadata.getQuality());
+        newMetadata.setProperties(metadata.getProperties());
+        newMetadata.setMetadataValues(metadata.getMetadataValues());
+        newMetadata.getCollections().add(graph);
+        return newMetadata;
     }
 }

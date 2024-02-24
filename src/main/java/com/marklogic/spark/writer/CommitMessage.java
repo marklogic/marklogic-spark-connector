@@ -2,6 +2,8 @@ package com.marklogic.spark.writer;
 
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 
+import java.util.Set;
+
 public class CommitMessage implements WriterCommitMessage {
 
     private final int successItemCount;
@@ -9,13 +11,25 @@ public class CommitMessage implements WriterCommitMessage {
     private final int partitionId;
     private final long taskId;
     private final long epochId;
+    private final Set<String> graphs;
 
-    public CommitMessage(int successItemCount, int failedItemCount, int partitionId, long taskId, long epochId) {
+    /**
+     * @param successItemCount
+     * @param failedItemCount
+     * @param partitionId
+     * @param taskId
+     * @param epochId          only populated when using Spark streaming
+     * @param graphs           zero or more MarkLogic Semantics graph names, each of which is associated with a
+     *                         graph document in MarkLogic that must be created after all the documents have been
+     *                         written.
+     */
+    public CommitMessage(int successItemCount, int failedItemCount, int partitionId, long taskId, long epochId, Set<String> graphs) {
         this.successItemCount = successItemCount;
         this.failedItemCount = failedItemCount;
         this.partitionId = partitionId;
         this.taskId = taskId;
         this.epochId = epochId;
+        this.graphs = graphs;
     }
 
     public int getSuccessItemCount() {
@@ -24,6 +38,10 @@ public class CommitMessage implements WriterCommitMessage {
 
     public int getFailedItemCount() {
         return failedItemCount;
+    }
+
+    public Set<String> getGraphs() {
+        return graphs;
     }
 
     @Override
