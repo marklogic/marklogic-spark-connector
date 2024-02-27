@@ -24,6 +24,7 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
+import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.Arrays;
@@ -62,7 +63,7 @@ public class WriteContext extends ContextSupport {
     }
 
     int getThreadCount() {
-        return (int)getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
+        return (int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
     }
 
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
@@ -96,29 +97,49 @@ public class WriteContext extends ContextSupport {
             .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
             .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS));
 
-        String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
-        if (uriTemplate != null && uriTemplate.trim().length() > 0) {
-            factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
-            Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
-                String value = getProperties().get(option);
-                if (value != null && value.trim().length() > 0) {
-                    Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
-                }
-            });
+        if (hasOption(Options.WRITE_URI_TEMPLATE)) {
+            configureTemplateUriMaker(factory);
         } else {
-            String uriSuffix = null;
-            if (hasOption(Options.WRITE_URI_SUFFIX)) {
-                uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
-            } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema)) {
-                uriSuffix = ".json";
-            }
-            factory.withUriMaker(new StandardUriMaker(
-                getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix,
-                getProperties().get(Options.WRITE_URI_REPLACE)
-            ));
+            configureStandardUriMaker(factory);
         }
 
         return factory.newDocBuilder();
+    }
+
+    /**
+     * The URI template approach will typically be used with rows with an "arbitrary" schema where each column value
+     * may be useful in constructing a URI.
+     *
+     * @param factory
+     */
+    private void configureTemplateUriMaker(DocBuilderFactory factory) {
+        String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
+        factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
+        Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
+            String value = getProperties().get(option);
+            if (value != null && value.trim().length() > 0) {
+                Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
+            }
+        });
+    }
+
+    /**
+     * For rows with an "arbitrary" schema, the URI suffix defaults to ".json" as we know there won't be an initial URI
+     * for these rows.
+     *
+     * @param factory
+     */
+    private void configureStandardUriMaker(DocBuilderFactory factory) {
+        String uriSuffix = null;
+        if (hasOption(Options.WRITE_URI_SUFFIX)) {
+            uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
+        } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
+            uriSuffix = ".json";
+        }
+        factory.withUriMaker(new StandardUriMaker(
+            getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix,
+            getProperties().get(Options.WRITE_URI_REPLACE)
+        ));
     }
 
     private void configureRestTransform(WriteBatcher writeBatcher) {

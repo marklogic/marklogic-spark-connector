@@ -170,6 +170,10 @@ public class ContextSupport implements Serializable {
         return Util.hasOption(this.properties, options);
     }
 
+    public final String getStringOption(String option) {
+        return hasOption(option) ? properties.get(option).trim() : null;
+    }
+
     public Map<String, String> getProperties() {
         return properties;
     }

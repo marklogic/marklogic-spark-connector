@@ -10,9 +10,9 @@ import org.apache.spark.sql.types.StructType;
 public abstract class TripleRowSchema {
 
     public static final StructType SCHEMA = new StructType()
-        .add("subject", DataTypes.StringType, false)
-        .add("predicate", DataTypes.StringType, false)
-        .add("object", DataTypes.StringType, false)
+        .add("subject", DataTypes.StringType)
+        .add("predicate", DataTypes.StringType)
+        .add("object", DataTypes.StringType)
         .add("datatype", DataTypes.StringType)
         .add("lang", DataTypes.StringType)
         .add("graph", DataTypes.StringType);

@@ -12,24 +12,26 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 
 import java.io.StringWriter;
-import java.util.function.Function;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * Handles building a document from an "arbitrary" row - i.e. one with an unknown schema, where the row will be
  * serialized by Spark to a JSON object.
  */
-class ArbitraryRowFunction implements Function<InternalRow, DocBuilder.DocumentInputs> {
+class ArbitraryRowConverter implements RowConverter {
 
     private static ObjectMapper objectMapper = new ObjectMapper();
 
     private WriteContext writeContext;
 
-    ArbitraryRowFunction(WriteContext writeContext) {
+    ArbitraryRowConverter(WriteContext writeContext) {
         this.writeContext = writeContext;
     }
 
     @Override
-    public DocBuilder.DocumentInputs apply(InternalRow row) {
+    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         String json = convertRowToJSONString(row);
         StringHandle content = new StringHandle(json).withFormat(Format.JSON);
         ObjectNode columnValues = null;
@@ -40,7 +42,12 @@ class ArbitraryRowFunction implements Function<InternalRow, DocBuilder.DocumentI
                 throw new ConnectorException(String.format("Unable to read JSON row: %s", e.getMessage()), e);
             }
         }
-        return new DocBuilder.DocumentInputs(null, content, columnValues, null);
+        return Optional.of(new DocBuilder.DocumentInputs(null, content, columnValues, null));
+    }
+
+    @Override
+    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return new ArrayList<>();
     }
 
     private String convertRowToJSONString(InternalRow row) {

@@ -130,6 +130,8 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
     void trigQuads() {
         Dataset<Row> dataset = startRead().load("src/test/resources/rdf/three-quads.trig");
 
+        dataset.show(20, 0, true);
+
         List<Row> rows = dataset.collectAsList();
         assertEquals(16, rows.size());
 
@@ -141,6 +143,11 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
 
         verifyRow(rows.get(6), "http://www.example.org/exampleDocument#G1", "http://www.w3.org/2004/03/trix/swp-1/assertedBy",
             "BLANK", null, null, "http://www.example.org/exampleDocument#G3");
+
+        // Verifies that Jena uses urn:x-arq:DefaultGraphNode as the default graph when a graph is not specified
+        // in a quads file.
+        verifyRow(rows.get(15), "http://www.example.org/exampleDocument#Default", "http://www.example.org/vocabulary#graphname",
+            "Default", "http://www.w3.org/2001/XMLSchema#string", null, "urn:x-arq:DefaultGraphNode");
     }
 
     @Test

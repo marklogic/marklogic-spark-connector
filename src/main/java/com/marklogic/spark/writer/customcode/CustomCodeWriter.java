@@ -82,7 +82,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, partitionId, taskId, epochId);
+        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, partitionId, taskId, epochId, null);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }
