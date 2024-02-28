@@ -53,9 +53,15 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
 
     private PartitionReader<InternalRow> createRdfReader(FilePartition filePartition) {
         Path path = new Path(filePartition.getPath());
-        boolean isQuadsFile = path.getName().endsWith(".trig") || path.getName().endsWith(".nq");
-        return isQuadsFile ?
-            new QuadsFileReader(filePartition, hadoopConfiguration) :
-            new RdfFileReader(filePartition, hadoopConfiguration);
+        return isQuadsFile(path) ?
+            new QuadsFileReader(filePartition, hadoopConfiguration, properties) :
+            new RdfFileReader(filePartition, hadoopConfiguration, properties);
+    }
+
+    private boolean isQuadsFile(Path path) {
+        return path.getName().endsWith(".trig") ||
+            path.getName().endsWith(".trig.gz") ||
+            path.getName().endsWith(".nq") ||
+            path.getName().endsWith(".nq.gz");
     }
 }

@@ -11,31 +11,23 @@ import org.apache.jena.riot.system.AsyncParser;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.util.SerializableConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Iterator;
+import java.util.Map;
 
-class RdfFileReader implements PartitionReader<InternalRow> {
+class RdfFileReader extends AbstractRdfFileReader implements PartitionReader<InternalRow> {
 
-    private static final Logger logger = LoggerFactory.getLogger(RdfFileReader.class);
-
-    private final InputStream inputStream;
     private final Iterator<Triple> tripleStream;
     private final FilePartition partition;
 
-    private final RdfSerializer rdfSerializer = new RdfSerializer();
-
-    RdfFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration) {
+    RdfFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration, Map<String, String> properties) {
+        super(partition);
         this.partition = partition;
-        if (logger.isDebugEnabled()) {
-            logger.debug("Reading RDF file: {}", partition.getPath());
-        }
-        Path path = new Path(partition.getPath());
+        final Path path = new Path(partition.getPath());
+        
         try {
-            this.inputStream = path.getFileSystem(hadoopConfiguration.value()).open(path);
+            this.inputStream = openStream(path, hadoopConfiguration, properties);
             RDFParserBuilder parserBuilder = RDFParserBuilder.create()
                 .source(this.inputStream)
                 .errorHandler(new RdfErrorHandler(partition.getPath()))
@@ -81,7 +73,7 @@ class RdfFileReader implements PartitionReader<InternalRow> {
      */
     private Lang determineLang(FilePartition partition) {
         String path = partition.getPath().toLowerCase();
-        if (path.endsWith(".json")) {
+        if (path.endsWith(".json") || path.endsWith(".json.gz")) {
             return Lang.RDFJSON;
         }
         return null;

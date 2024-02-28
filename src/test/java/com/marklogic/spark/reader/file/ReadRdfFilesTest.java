@@ -111,9 +111,6 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
     @Test
     void ntriples() {
         Dataset<Row> dataset = startRead().load("src/test/resources/rdf/semantics.nt");
-        System.out.println("COUNT: " + dataset.count());
-        dataset.show(30, 0, true);
-
         List<Row> rows = dataset.collectAsList();
         assertEquals(8, rows.size());
 
@@ -129,9 +126,6 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
     @Test
     void trigQuads() {
         Dataset<Row> dataset = startRead().load("src/test/resources/rdf/three-quads.trig");
-
-        dataset.show(20, 0, true);
-
         List<Row> rows = dataset.collectAsList();
         assertEquals(16, rows.size());
 
