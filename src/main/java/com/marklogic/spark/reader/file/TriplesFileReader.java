@@ -9,16 +9,16 @@ import org.apache.spark.util.SerializableConfiguration;
 import java.io.IOException;
 import java.util.Map;
 
-class QuadsFileReader extends AbstractRdfFileReader implements PartitionReader<InternalRow> {
+class TriplesFileReader extends AbstractRdfFileReader implements PartitionReader<InternalRow> {
 
-    private final QuadStreamReader quadStreamReader;
+    private final TripleStreamReader tripleStreamReader;
 
-    QuadsFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration, Map<String, String> properties) {
+    TriplesFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration, Map<String, String> properties) {
         super(partition);
         final Path path = new Path(partition.getPath());
         try {
             this.inputStream = openStream(path, hadoopConfiguration, properties);
-            this.quadStreamReader = new QuadStreamReader(partition.getPath(), inputStream);
+            this.tripleStreamReader = new TripleStreamReader(partition.getPath(), this.inputStream);
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to read RDF file at %s; cause: %s", path, e.getMessage()), e);
         }
@@ -26,11 +26,11 @@ class QuadsFileReader extends AbstractRdfFileReader implements PartitionReader<I
 
     @Override
     public boolean next() throws IOException {
-        return quadStreamReader.hasNext();
+        return this.tripleStreamReader.hasNext();
     }
 
     @Override
     public InternalRow get() {
-        return quadStreamReader.get();
+        return this.tripleStreamReader.get();
     }
 }
