@@ -31,6 +31,10 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return createRdfReader(filePartition);
         }
 
+        if ("mlcp_archive".equalsIgnoreCase(this.properties.get(Options.READ_FILES_TYPE))) {
+            return new MlcpArchiveFileReader(filePartition, hadoopConfiguration);
+        }
+
         String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
         final boolean isZip = "zip".equalsIgnoreCase(compression);
         final boolean isGzip = "gzip".equalsIgnoreCase(compression);
