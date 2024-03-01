@@ -13,20 +13,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 class RdfZipFileReader implements PartitionReader<InternalRow> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ZipAggregateXMLFileReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(RdfZipFileReader.class);
 
     private final CustomZipInputStream customZipInputStream;
     private final String path;
 
     private RdfStreamReader rdfStreamReader;
 
-    RdfZipFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration, Map<String, String> properties) {
+    RdfZipFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration) {
         this.path = partition.getPath();
         if (logger.isTraceEnabled()) {
             logger.trace("Reading path: {}", this.path);

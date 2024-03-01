@@ -73,4 +73,11 @@ public interface Util {
         }
         return paths;
     }
+
+    static boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT,
+            Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE
+        );
+    }
 }

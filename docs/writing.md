@@ -317,6 +317,12 @@ spark.read.format("marklogic") \
     .save()
 ```
 
+As of the 2.3.0 release, you can also specify a local file path containing either JavaScript or XQuery code via
+the `spark.marklogic.write.javascriptFile` and `spark.marklogic.write.xqueryFile` options. The value of the option
+must be a file path that can be resolved by the Spark environment running the connector. The file will not be loaded
+into your application's modules database. Its content will be read in and then evaluated in the same fashion as
+when specifying code via `spark.marklogic.write.javascript` or `spark.marklogic.write.xquery`.
+
 ### Processing multiple rows in a single call
 
 By default, a single row is sent by the connector to your custom code. In many use cases, particularly when writing

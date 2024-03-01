@@ -58,7 +58,7 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
     private PartitionReader<InternalRow> createRdfReader(FilePartition filePartition) {
         final String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
         if ("zip".equalsIgnoreCase(compression)) {
-            return new RdfZipFileReader(filePartition, hadoopConfiguration, properties);
+            return new RdfZipFileReader(filePartition, hadoopConfiguration);
         }
         final Path path = new Path(filePartition.getPath());
         return RdfUtil.isQuadsFile(path.getName()) ?
