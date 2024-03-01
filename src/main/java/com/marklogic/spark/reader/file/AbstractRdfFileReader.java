@@ -21,8 +21,6 @@ abstract class AbstractRdfFileReader implements PartitionReader<InternalRow> {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    protected final RdfSerializer rdfSerializer = new RdfSerializer();
-
     protected InputStream inputStream;
 
     AbstractRdfFileReader(FilePartition filePartition) {

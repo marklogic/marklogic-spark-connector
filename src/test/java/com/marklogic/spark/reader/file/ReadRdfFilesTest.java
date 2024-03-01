@@ -30,6 +30,13 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
         verifyRow(rows.get(4), subject, "http://www.w3.org/2004/02/skos/core#prefLabel", "Debt Management", null, "en");
     }
 
+    @Test
+    void emptyRdfXml() {
+        Dataset<Row> dataset = startRead().load("src/test/resources/rdf/empty-taxonomy.xml");
+        assertEquals(0, dataset.count(), "Verifying that no error is thrown if an RDF file is valid but simply " +
+            "has no triples in it.");
+    }
+    
     /**
      * Verifies that blank nodes are generated in the same manner as with MLCP.
      */
