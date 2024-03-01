@@ -45,6 +45,11 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         zipOutputStream.write(row.getBinary(1));
+        /**
+         * Check here for non-null metadata columns. If there's at least one, call
+         * DocumentRowSchema.makeDocumentMetadata(row) to get a DocumentMetadataHandle object and call toString on it.
+         * That will then become an additional entry in the zip file.
+         */
     }
 
     @Override
