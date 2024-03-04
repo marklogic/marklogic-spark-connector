@@ -116,6 +116,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void abort() {
         Util.MAIN_LOGGER.warn("Abort called; stopping job");
         stopJobAndRelease();
+        Util.MAIN_LOGGER.info("Finished abort");
     }
 
     @Override

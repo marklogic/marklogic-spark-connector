@@ -91,7 +91,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        Util.MAIN_LOGGER.warn("Abort called; stopping job");
+        // No action to take.
     }
 
     @Override
