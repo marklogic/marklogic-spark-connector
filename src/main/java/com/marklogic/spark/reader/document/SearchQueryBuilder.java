@@ -5,6 +5,7 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.query.*;
+import com.marklogic.spark.Util;
 
 /**
  * Potentially reusable class for the Java Client that handles constructing a query based on a common
@@ -20,6 +21,7 @@ public class SearchQueryBuilder {
     private String transformName;
     private String transformParams;
     private String transformParamsDelimiter;
+    private String[] uris;
 
     SearchQueryDefinition buildQuery(DatabaseClient client) {
         QueryDefinition queryDefinition = buildQueryDefinition(client);
@@ -82,8 +84,25 @@ public class SearchQueryBuilder {
         return this;
     }
 
+    public SearchQueryBuilder withUris(String... uris) {
+        this.uris = uris;
+        return this;
+    }
+
     private QueryDefinition buildQueryDefinition(DatabaseClient client) {
         final QueryManager queryManager = client.newQueryManager();
+
+        if (uris != null && uris.length > 0) {
+            StructuredQueryDefinition urisQuery = queryManager.newStructuredQueryBuilder().document(this.uris);
+            if (stringQuery != null && stringQuery.length() > 0) {
+                urisQuery.withCriteria(stringQuery);
+            }
+            if (this.query != null) {
+                Util.MAIN_LOGGER.warn("Ignoring query since a list of URIs was provided; query: {}", this.query);
+            }
+            return urisQuery;
+        }
+
         if (query != null) {
             StringHandle queryHandle = new StringHandle(query);
             // v1/search assumes XML by default, so only need to set to JSON if the query is JSON.
@@ -95,14 +114,16 @@ public class SearchQueryBuilder {
             // for any of the 3 query types.
             RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(queryHandle);
             if (stringQuery != null && stringQuery.length() > 0) {
-                queryDefinition.withCriteria(stringQuery);
+                queryDefinition.setCriteria(stringQuery);
             }
             return queryDefinition;
         }
+
         StringQueryDefinition queryDefinition = queryManager.newStringDefinition();
         if (this.stringQuery != null && stringQuery.length() > 0) {
             queryDefinition.setCriteria(this.stringQuery);
         }
+
         return queryDefinition;
     }
 

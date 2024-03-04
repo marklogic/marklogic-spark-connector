@@ -122,7 +122,8 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             properties.containsKey(Options.READ_DOCUMENTS_STRING_QUERY) ||
             properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
-            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS);
+            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS) ||
+            properties.containsKey(Options.READ_DOCUMENTS_URIS);
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {

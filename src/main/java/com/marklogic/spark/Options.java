@@ -59,6 +59,7 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM = "spark.marklogic.read.documents.transform";
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS = "spark.marklogic.read.documents.transformParams";
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
+    public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
