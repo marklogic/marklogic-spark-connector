@@ -49,7 +49,7 @@ The URI can then be further adjusted as described in the "Controlling document U
 This feature allows for ingesting files of any type. The MarkLogic REST API will
 [determine the document type](https://docs.marklogic.com/guide/rest-dev/intro#id_53367) based on the URI extension, if
 MarkLogic recognizes it. If MarkLogic does not recognize the extension, and you wish to force a document type on each of
-the documents, you can set the `spark.marklogic.write.files.documentType` option to one of `XML`, `JSON`, or `TEXT`.
+the documents, you can set the `spark.marklogic.write.fileRows.documentType` option to one of `XML`, `JSON`, or `TEXT`.
 
 ### Writing document rows
 
