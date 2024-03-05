@@ -23,10 +23,12 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
 
     private final Map<String, String> properties;
     private final SerializableConfiguration hadoopConfiguration;
+    private final ContentWriter contentWriter;
 
     DocumentFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
         this.properties = properties;
         this.hadoopConfiguration = hadoopConfiguration;
+        this.contentWriter = new ContentWriter(properties);
     }
 
     @Override
@@ -37,7 +39,7 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
         }
         OutputStream outputStream = makeOutputStream(path);
         try {
-            outputStream.write(row.getBinary(1));
+            this.contentWriter.writeContent(row, outputStream);
         } finally {
             IOUtils.closeQuietly(outputStream);
         }

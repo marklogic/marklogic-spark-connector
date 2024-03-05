@@ -23,6 +23,7 @@ class ZipFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
+    private final ContentWriter contentWriter;
     private ZipOutputStream zipOutputStream;
 
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
@@ -30,6 +31,7 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         if (logger.isDebugEnabled()) {
             logger.debug("Will write to: {}", path);
         }
+        this.contentWriter = new ContentWriter(properties);
         try {
             FileSystem fileSystem = path.getFileSystem(hadoopConfiguration.value());
             fileSystem.setWriteChecksum(false);
@@ -44,7 +46,7 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        zipOutputStream.write(row.getBinary(1));
+        this.contentWriter.writeContent(row, zipOutputStream);
         /**
          * Check here for non-null metadata columns. If there's at least one, call
          * DocumentRowSchema.makeDocumentMetadata(row) to get a DocumentMetadataHandle object and call toString on it.
