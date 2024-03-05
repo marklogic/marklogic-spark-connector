@@ -106,6 +106,9 @@ public abstract class Options {
     // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
 
+    // Applies to XML and JSON documents.
+    public static final String WRITE_FILES_PRETTY_PRINT = "spark.marklogic.write.files.prettyPrint";
+
     private Options() {
     }
 }
