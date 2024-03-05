@@ -119,7 +119,8 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         final int itemCount = currentBatch.size();
         ServerEvaluationCall call = customCodeContext.buildCall(
             this.databaseClient,
-            new CustomCodeContext.CallOptions(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY)
+            new CustomCodeContext.CallOptions(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
+                Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE)
         );
         call.addVariable(determineExternalVariableName(), makeVariableValue());
         currentBatch.clear();

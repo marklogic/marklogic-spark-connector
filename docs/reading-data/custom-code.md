@@ -55,6 +55,13 @@ df = spark.read.format("marklogic") \
 df.show()
 ```
 
+As of the 2.3.0 release, you can also specify a local file path containing either JavaScript or XQuery code via
+the `spark.marklogic.read.javascriptFile` and `spark.marklogic.read.xqueryFile` options. The value of the option 
+must be a file path that can be resolved by the Spark environment running the connector. The file will not be loaded
+into your application's modules database. Its content will be read in and then evaluated in the same fashion as
+when specifying code via `spark.marklogic.read.javascript` or `spark.marklogic.read.xquery`.
+
+
 ## Custom code schemas
 
 While the connector can infer a schema when executing an Optic query, it does not have any way to do so with custom
@@ -104,12 +111,15 @@ your query into many smaller queries, you can use one of the following options t
 
 - `spark.marklogic.read.partitions.invoke`
 - `spark.marklogic.read.partitions.javascript`
+- `spark.marklogic.read.partitions.javascriptFile` (New in 2.3.0)
 - `spark.marklogic.read.partitions.xquery`
+- `spark.marklogic.read.partitions.xqueryFile` (New in 2.3.0)
 
 If one of the above options is defined, the connector will execute the code associated with the option and expect a
 sequence of values to be returned. You can return any values you want to define partitions; the connector does not care
 what the values represent. The connector will then execute your custom code - defined by `spark.marklogic.read.invoke`,
-`spark.marklogic.read.javascript`, or `spark.marklogic.read.xquery` - once for each partition value. The partition value
+`spark.marklogic.read.javascript`, `spark.marklogic.read.javascriptFile`, `spark.marklogic.read.xquery` or 
+`spark.marklogic.read.xqueryFile` - once for each partition value. The partition value
 will be defined in an external variable named `PARTITION`. Note as well that any external variables you define via the
 `spark.marklogic.read.vars` prefix will also be sent to the code for returning partitions.
 
@@ -151,8 +161,9 @@ to read a stream of data from MarkLogic. This can be useful for when you wish to
 MarkLogic and immediately send them to a Spark writer.
 
 When streaming results from your custom code, you will need to set one of the options described above - either
-`spark.marklogic.read.partitions.invoke`, `spark.marklogic.read.partitions.javascript`, or
-`spark.marklogic.read.partitions.xquery` - for defining partitions.
+`spark.marklogic.read.partitions.invoke`, `spark.marklogic.read.partitions.javascript`,
+`spark.marklogic.read.partitions.javascriptFile`, `spark.marklogic.read.partitions.xquery`, or 
+`spark.marklogic.read.partitions.xqueryFile` - for defining partitions.
 
 The following example shows how the same connector configuration can be used for defining partitions and the custom
 code for returning rows, just with different Spark APIs. In this example, Spark will invoke the custom code once

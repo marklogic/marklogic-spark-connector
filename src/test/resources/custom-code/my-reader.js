@@ -1,0 +1,1 @@
+Sequence.from(['firstValue', 'secondValue'])

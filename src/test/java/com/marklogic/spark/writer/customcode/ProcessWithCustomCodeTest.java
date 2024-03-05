@@ -38,6 +38,15 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     }
 
     @Test
+    void evalJavaScriptFile() {
+        newWriterWithDefaultConfig("three-uris.csv", 2)
+            .option(Options.WRITE_JAVASCRIPT_FILE, "src/test/resources/custom-code/my-writer.js")
+            .save();
+
+        verifyThreeJsonDocumentsWereWritten();
+    }
+
+    @Test
     void invokeXQuery() {
         newWriterWithDefaultConfig("three-uris.csv", 1)
             .option(Options.WRITE_INVOKE, "/process-uri.xqy")
@@ -55,6 +64,15 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
                 "(xdmp:permission(\"spark-user-role\", \"read\"),\n" +
                 "xdmp:permission(\"spark-user-role\", \"update\")\n" +
                 "));")
+            .save();
+
+        verifyThreeXmlDocumentsWereWritten();
+    }
+
+    @Test
+    void evalXQueryFile() {
+        newWriterWithDefaultConfig("three-uris.csv", 1)
+            .option(Options.WRITE_XQUERY_FILE, "src/test/resources/custom-code/my-writer.xqy")
             .save();
 
         verifyThreeXmlDocumentsWereWritten();

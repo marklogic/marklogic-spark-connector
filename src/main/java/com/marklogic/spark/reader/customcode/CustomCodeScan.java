@@ -21,17 +21,18 @@ class CustomCodeScan implements Scan {
         this.customCodeContext = customCodeContext;
         this.partitions = new ArrayList<>();
 
-        if (this.customCodeContext.hasOption(Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY)) {
+        if (this.customCodeContext.hasPartitionCode()) {
             DatabaseClient client = this.customCodeContext.connectToMarkLogic();
             try {
                 this.customCodeContext
                     .buildCall(client, new CustomCodeContext.CallOptions(
-                        Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY
+                        Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY,
+                        Options.READ_PARTITIONS_JAVASCRIPT_FILE, Options.READ_PARTITIONS_XQUERY_FILE
                     ))
                     .eval()
                     .forEach(result -> this.partitions.add(result.getString()));
             } catch (Exception ex) {
-                throw new ConnectorException("Unable to retrieve partitions", ex);
+                throw new ConnectorException(String.format("Unable to retrieve partitions; cause: %s", ex.getMessage()), ex);
             } finally {
                 client.release();
             }

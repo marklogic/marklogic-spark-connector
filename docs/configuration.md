@@ -126,7 +126,9 @@ The following options control how the connector reads rows from MarkLogic via cu
 | --- | --- |
 | spark.marklogic.read.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.javascript | JavaScript code to execute. |
+| spark.marklogic.read.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.xquery | XQuery code to execute. |
+| spark.marklogic.read.xqueryFile | Local file path containing XQuery code to execute. |
 | spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
 
 If you are using Spark's streaming support with custom code, or you need to break up your custom code query into 
@@ -136,7 +138,9 @@ multiple queries, the following options can also be used to control how partitio
 | --- | --- |
 | spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
+| spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
+| spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute. |
 
 ### Read options for documents
 
@@ -193,7 +197,9 @@ The following options control how rows can be processed with custom code in Mark
 | spark.marklogic.write.batchSize | The number of rows sent in a call to MarkLogic; defaults to 1. |
 | spark.marklogic.write.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.write.javascript | JavaScript code to execute. |
+| spark.marklogic.write.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.write.xquery | XQuery code to execute. |
+| spark.marklogic.write.xqueryFile | Local file path containing XQuery code to execute. |
 | spark.marklogic.write.externalVariableName | Name of the external variable in custom code that is populated with row values; defaults to `URI`. |
 | spark.marklogic.write.externalVariableDelimiter | Delimiter used when multiple row values are sent in a single call; defaults to a comma. |
 | spark.marklogic.write.vars. | Prefix for user-defined variables to be sent to the custom code. |

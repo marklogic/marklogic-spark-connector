@@ -75,7 +75,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
      */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        if (Util.hasOption(readProperties, Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)) {
+        if (Util.isReadWithCustomCodeOperation(readProperties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Will read rows via custom code");
             }

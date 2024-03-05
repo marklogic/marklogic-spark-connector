@@ -23,7 +23,8 @@ class CustomCodePartitionReader implements PartitionReader<InternalRow> {
         this.databaseClient = customCodeContext.connectToMarkLogic();
         this.serverEvaluationCall = customCodeContext.buildCall(
             this.databaseClient,
-            new CustomCodeContext.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)
+            new CustomCodeContext.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY,
+                Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE)
         );
 
         if (partition != null) {

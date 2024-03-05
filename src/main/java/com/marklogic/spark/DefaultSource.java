@@ -69,7 +69,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
         }
-        if (isReadWithCustomCodeOperation(properties)) {
+        if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
         return inferSchemaFromOpticQuery(properties);
@@ -114,7 +114,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     }
 
     private boolean isReadOperation(Map<String, String> properties) {
-        return properties.get(Options.READ_OPTIC_QUERY) != null || isReadWithCustomCodeOperation(properties);
+        return properties.get(Options.READ_OPTIC_QUERY) != null || Util.isReadWithCustomCodeOperation(properties);
     }
 
     private boolean isReadDocumentsOperation(Map<String, String> properties) {
@@ -123,10 +123,6 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
             properties.containsKey(Options.READ_DOCUMENTS_OPTIONS);
-    }
-
-    private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
-        return Util.hasOption(properties, Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT);
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {

@@ -29,12 +29,16 @@ public abstract class Options {
 
     public static final String READ_INVOKE = "spark.marklogic.read.invoke";
     public static final String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
+    public static final String READ_JAVASCRIPT_FILE = "spark.marklogic.read.javascriptFile";
     public static final String READ_XQUERY = "spark.marklogic.read.xquery";
+    public static final String READ_XQUERY_FILE = "spark.marklogic.read.xqueryFile";
     public static final String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
 
     public static final String READ_PARTITIONS_INVOKE = "spark.marklogic.read.partitions.invoke";
     public static final String READ_PARTITIONS_JAVASCRIPT = "spark.marklogic.read.partitions.javascript";
+    public static final String READ_PARTITIONS_JAVASCRIPT_FILE = "spark.marklogic.read.partitions.javascriptFile";
     public static final String READ_PARTITIONS_XQUERY = "spark.marklogic.read.partitions.xquery";
+    public static final String READ_PARTITIONS_XQUERY_FILE = "spark.marklogic.read.partitions.xqueryFile";
 
     public static final String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     public static final String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
@@ -74,7 +78,9 @@ public abstract class Options {
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
     public static final String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
+    public static final String WRITE_JAVASCRIPT_FILE = "spark.marklogic.write.javascriptFile";
     public static final String WRITE_XQUERY = "spark.marklogic.write.xquery";
+    public static final String WRITE_XQUERY_FILE = "spark.marklogic.write.xqueryFile";
     public static final String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
