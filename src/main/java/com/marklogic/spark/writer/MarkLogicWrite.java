@@ -26,17 +26,12 @@ import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
 import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
-
-    private static final Logger logger = LoggerFactory.getLogger("com.marklogic.spark");
 
     private WriteContext writeContext;
 
@@ -91,9 +86,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void abort(WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && messages[0] != null) {
-            Util.MAIN_LOGGER.warn("Abort messages received: {}", Arrays.asList(messages));
-        }
+        // No action. We may eventually want to show the partial progress via the commit messages.
     }
 
     @Override
@@ -103,16 +96,12 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public void commit(long epochId, WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0 && logger.isDebugEnabled()) {
-            logger.debug("Commit messages received for epochId {}: {}", epochId, Arrays.asList(messages));
-        }
+        commit(messages);
     }
 
     @Override
     public void abort(long epochId, WriterCommitMessage[] messages) {
-        if (messages != null && messages.length > 0) {
-            Util.MAIN_LOGGER.warn("Abort messages received for epochId {}: {}", epochId, Arrays.asList(messages));
-        }
+        abort(messages);
     }
 
     private Object determineWriterFactory() {
@@ -127,10 +116,6 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Commit messages received: {}", Arrays.asList(messages));
-        }
-
         int successCount = 0;
         int failureCount = 0;
         Set<String> graphs = new HashSet<>();

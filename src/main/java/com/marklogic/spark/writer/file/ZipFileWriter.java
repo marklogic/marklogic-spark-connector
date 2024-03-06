@@ -24,18 +24,23 @@ class ZipFileWriter implements DataWriter<InternalRow> {
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
     private final ContentWriter contentWriter;
+    private final String path;
+
     private ZipOutputStream zipOutputStream;
 
+    private int zipEntryCounter;
+
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
-        Path path = makeFilePath(properties, partitionId);
+        this.path = properties.get("path");
+        Path filePath = makeFilePath(path, partitionId);
         if (logger.isDebugEnabled()) {
-            logger.debug("Will write to: {}", path);
+            logger.debug("Will write to: {}", filePath);
         }
         this.contentWriter = new ContentWriter(properties);
         try {
-            FileSystem fileSystem = path.getFileSystem(hadoopConfiguration.value());
+            FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
             fileSystem.setWriteChecksum(false);
-            zipOutputStream = new ZipOutputStream(fileSystem.create(path, true));
+            zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
         } catch (IOException e) {
             throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
         }
@@ -47,6 +52,7 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
+        zipEntryCounter++;
         /**
          * Check here for non-null metadata columns. If there's at least one, call
          * DocumentRowSchema.makeDocumentMetadata(row) to get a DocumentMetadataHandle object and call toString on it.
@@ -61,7 +67,7 @@ class ZipFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        return null;
+        return new ZipCommitMessage(path, zipEntryCounter);
     }
 
     @Override
@@ -77,13 +83,13 @@ class ZipFileWriter implements DataWriter<InternalRow> {
      * Additionally, a user can arrive at that outcome if desired by using Spark to repartion the dataset based on
      * the "format" column.
      *
-     * @param properties
+     * @param path
      * @param partitionId
      * @return
      */
-    private Path makeFilePath(Map<String, String> properties, int partitionId) {
+    private Path makeFilePath(String path, int partitionId) {
         final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
-        String path = String.format("%s%s%s-%d.zip", properties.get("path"), File.separator, timestamp, partitionId);
-        return new Path(path);
+        String filePath = String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
+        return new Path(filePath);
     }
 }

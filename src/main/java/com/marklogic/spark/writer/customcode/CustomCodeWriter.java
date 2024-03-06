@@ -38,21 +38,12 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
 
-    // Only used for commit messages
-    private final int partitionId;
-    private final long taskId;
-    private final long epochId;
-
     // Updated after each call to MarkLogic.
     private int successItemCount;
     private int failedItemCount;
 
-    CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId, long epochId) {
+    CustomCodeWriter(CustomCodeContext customCodeContext) {
         this.customCodeContext = customCodeContext;
-        this.partitionId = partitionId;
-        this.taskId = taskId;
-        this.epochId = epochId;
-
         this.databaseClient = customCodeContext.connectToMarkLogic();
 
         this.batchSize = customCodeContext.optionExists(Options.WRITE_BATCH_SIZE) ?
@@ -82,7 +73,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, partitionId, taskId, epochId, null);
+        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, null);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }

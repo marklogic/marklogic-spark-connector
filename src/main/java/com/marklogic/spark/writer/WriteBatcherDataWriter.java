@@ -48,9 +48,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final DataMovementManager dataMovementManager;
     private final WriteBatcher writeBatcher;
     private final DocBuilder docBuilder;
-    private final int partitionId;
-    private final long taskId;
-    private final long epochId;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
     private final AtomicReference<Throwable> writeFailure;
@@ -61,11 +58,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
 
-    WriteBatcherDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
+    WriteBatcherDataWriter(WriteContext writeContext) {
         this.writeContext = writeContext;
-        this.partitionId = partitionId;
-        this.taskId = taskId;
-        this.epochId = epochId;
         this.writeFailure = new AtomicReference<>();
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
@@ -109,7 +103,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             graphs = ((RdfRowConverter) rowConverter).getGraphs();
         }
 
-        return new CommitMessage(successItemCount.get(), failedItemCount.get(), partitionId, taskId, epochId, graphs);
+        return new CommitMessage(successItemCount.get(), failedItemCount.get(), graphs);
     }
 
     @Override

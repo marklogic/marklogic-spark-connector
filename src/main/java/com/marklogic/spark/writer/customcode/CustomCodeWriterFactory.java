@@ -16,11 +16,11 @@ public class CustomCodeWriterFactory implements DataWriterFactory, StreamingData
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-        return new CustomCodeWriter(customCodeContext, partitionId, taskId, 0l);
+        return new CustomCodeWriter(customCodeContext);
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId, long epochId) {
-        return new CustomCodeWriter(customCodeContext, partitionId, taskId, epochId);
+        return new CustomCodeWriter(customCodeContext);
     }
 }

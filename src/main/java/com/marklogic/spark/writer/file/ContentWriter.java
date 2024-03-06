@@ -6,6 +6,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import javax.xml.XMLConstants;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -29,16 +30,7 @@ class ContentWriter {
         this.prettyPrint = "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT));
         if (this.prettyPrint) {
             this.objectMapper = new ObjectMapper();
-            try {
-                this.transformer = TransformerFactory.newInstance().newTransformer();
-            } catch (TransformerConfigurationException e) {
-                throw new ConnectorException(
-                    String.format("Unable to instantiate transformer for pretty-printing XML; cause: %s", e.getMessage()), e
-                );
-            }
-            this.transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-            this.transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            this.transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            this.transformer = newTransformer();
         } else {
             this.transformer = null;
             this.objectMapper = null;
@@ -50,6 +42,26 @@ class ContentWriter {
             prettyPrintContent(row, outputStream);
         } else {
             outputStream.write(row.getBinary(1));
+        }
+    }
+
+    private Transformer newTransformer() {
+        try {
+            TransformerFactory factory = TransformerFactory.newInstance();
+            // Disables certain features as recommended by Sonar to prevent security vulnerabilities.
+            // Also see https://stackoverflow.com/questions/32178558/how-to-prevent-xml-external-entity-injection-on-transformerfactory .
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+            final Transformer t = factory.newTransformer();
+            t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+            return t;
+        } catch (TransformerConfigurationException e) {
+            throw new ConnectorException(
+                String.format("Unable to instantiate transformer for pretty-printing XML; cause: %s", e.getMessage()), e
+            );
         }
     }
 
@@ -76,7 +88,7 @@ class ContentWriter {
         try {
             this.transformer.transform(source, result);
         } catch (TransformerException e) {
-            throw new RuntimeException(e);
+            throw new ConnectorException(String.format("Unable to pretty print XML; cause: %s", e.getMessage()), e);
         }
     }
 }
