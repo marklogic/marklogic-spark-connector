@@ -30,11 +30,11 @@ class WriteBatcherDataWriterFactory implements DataWriterFactory, StreamingDataW
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
-        return new WriteBatcherDataWriter(writeContext, partitionId, taskId, 0L);
+        return new WriteBatcherDataWriter(writeContext);
     }
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId, long epochId) {
-        return new WriteBatcherDataWriter(writeContext, partitionId, taskId, epochId);
+        return new WriteBatcherDataWriter(writeContext);
     }
 }
