@@ -1,11 +1,9 @@
 package com.marklogic.spark.reader.file;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.spark.util.SerializableConfiguration;
+import com.marklogic.spark.ConnectorException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -14,12 +12,18 @@ import java.util.zip.GZIPInputStream;
  */
 class GZIPAggregateXMLFileReader extends AggregateXMLFileReader {
 
-    GZIPAggregateXMLFileReader(FilePartition partition, Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
-        super(partition, properties, hadoopConfiguration);
+    GZIPAggregateXMLFileReader(FilePartition filePartition, FileContext fileContext) {
+        super(filePartition, fileContext);
     }
 
     @Override
-    protected InputStream makeInputStream(Path path, SerializableConfiguration hadoopConfiguration) throws IOException {
-        return new GZIPInputStream(path.getFileSystem(hadoopConfiguration.value()).open(path));
+    protected InputStream makeInputStream(FilePartition filePartition, FileContext fileContext) {
+        InputStream inputStream = fileContext.open(filePartition);
+        try {
+            return new GZIPInputStream(inputStream);
+        } catch (IOException ex) {
+            throw new ConnectorException(String.format(
+                "Unable to read file at %s; cause: %s", filePartition.getPath(), ex.getMessage()));
+        }
     }
 }

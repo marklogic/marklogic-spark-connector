@@ -42,7 +42,7 @@ class ReadGZIPAggregateXMLFilesTest extends AbstractIntegrationTest {
 
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
         String message = ex.getMessage();
-        assertTrue(message.startsWith("Unable to open file:///"), "Unexpected error: " + message);
+        assertTrue(message.startsWith("Unable to read file at file:///"), "Unexpected error: " + message);
         assertTrue(message.endsWith("cause: Not in GZIP format"), "Unexpected error: " + message);
     }
 
