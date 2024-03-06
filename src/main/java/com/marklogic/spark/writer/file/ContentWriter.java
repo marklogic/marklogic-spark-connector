@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import javax.xml.XMLConstants;
@@ -43,6 +44,10 @@ class ContentWriter {
         } else {
             outputStream.write(row.getBinary(1));
         }
+    }
+
+    void writeMetadata(InternalRow row, OutputStream outputStream) throws IOException {
+         outputStream.write(DocumentRowSchema.makeDocumentMetadata(row).toString().getBytes());
     }
 
     private Transformer newTransformer() {
