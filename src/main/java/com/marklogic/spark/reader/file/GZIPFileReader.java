@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
@@ -10,7 +11,6 @@ import org.apache.spark.unsafe.types.UTF8String;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Expects to read a single gzipped file and return a single row. May expand the scope of this later to expect multiple
@@ -20,7 +20,8 @@ class GZIPFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
-    private boolean fileHasBeenRead;
+
+    private InternalRow rowToReturn = null;
 
     GZIPFileReader(FilePartition partition, FileContext fileContext) {
         this.filePartition = partition;
@@ -29,21 +30,36 @@ class GZIPFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public boolean next() {
-        return !fileHasBeenRead;
+        if (rowToReturn != null) {
+            return false;
+        }
+
+        // Must capture the row here so that if an error occurs and it should not cause a failure, it can be logged here
+        // and false can be returned.
+        InputStream gzipInputStream = null;
+        try {
+            gzipInputStream = fileContext.open(filePartition);
+            byte[] content = extractGZIPContents(gzipInputStream);
+            String uri = makeURI();
+            long length = content.length;
+            this.rowToReturn = new GenericInternalRow(new Object[]{
+                UTF8String.fromString(uri), null, length, ByteArray.concat(content)
+            });
+            return true;
+        } catch (RuntimeException ex) {
+            if (fileContext.isReadAbortOnFailure()) {
+                throw ex;
+            }
+            Util.MAIN_LOGGER.warn("Unable to read file at {}; cause: {}", this.filePartition.getPath(), ex.getMessage());
+            return false;
+        } finally {
+            IOUtils.closeQuietly(gzipInputStream);
+        }
     }
 
     @Override
     public InternalRow get() {
-        GZIPInputStream gzipInputStream = openGZIPFile();
-        byte[] content = extractGZIPContents(gzipInputStream);
-        IOUtils.closeQuietly(gzipInputStream);
-        this.fileHasBeenRead = true;
-
-        String uri = makeURI();
-        long length = content.length;
-        return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(uri), null, length, ByteArray.concat(content)
-        });
+        return rowToReturn;
     }
 
     @Override
@@ -51,16 +67,7 @@ class GZIPFileReader implements PartitionReader<InternalRow> {
         // Nothing to close.
     }
 
-    private GZIPInputStream openGZIPFile() {
-        InputStream inputStream = fileContext.open(filePartition);
-        try {
-            return new GZIPInputStream(inputStream);
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to read gzip file at %s; cause: %s", this.filePartition, e.getMessage()), e);
-        }
-    }
-
-    private byte[] extractGZIPContents(GZIPInputStream gzipInputStream) {
+    private byte[] extractGZIPContents(InputStream gzipInputStream) {
         try {
             return FileUtil.readBytes(gzipInputStream);
         } catch (IOException e) {

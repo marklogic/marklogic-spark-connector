@@ -1,6 +1,7 @@
 <Company>
   <Employee>
     <name>John</name>
+    <id>1</id>
     <age>40</age>
     <mixed>has <b>mixed</b> content</mixed>
   </Employee>
@@ -12,6 +13,7 @@
   <wrapper>
     <Employee>
       <name>Brenda</name>
+      <id>2</id>
       <age>42</age>
       <mixed>has <b>mixed</b> content</mixed>
     </Employee>

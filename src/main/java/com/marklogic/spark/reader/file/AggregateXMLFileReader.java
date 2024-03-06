@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -9,38 +10,55 @@ import java.io.InputStream;
 
 class AggregateXMLFileReader implements PartitionReader<InternalRow> {
 
-    private final String path;
-    private final InputStream inputStream;
-    private final AggregateXMLSplitter aggregateXMLSplitter;
+    private final FilePartition filePartition;
+    private final FileContext fileContext;
+
+    private InputStream inputStream;
+    private AggregateXMLSplitter aggregateXMLSplitter;
+    private InternalRow nextRowToReturn;
 
     AggregateXMLFileReader(FilePartition filePartition, FileContext fileContext) {
-        this.path = filePartition.getPath();
-        this.inputStream = makeInputStream(filePartition, fileContext);
-
-        String identifierForError = "file " + filePartition.getPath();
-        try {
-            this.aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.inputStream, fileContext.getProperties());
-        } catch (Exception e) {
-            // Interestingly, this won't fail if the file is malformed or not XML. It's only when we try to get the
-            // first element.
-            String message = String.format("Unable to read file at %s; cause: %s", filePartition.getPath(), e.getMessage());
-            throw new ConnectorException(message, e);
-        }
+        this.filePartition = filePartition;
+        this.fileContext = fileContext;
     }
 
     @Override
     public boolean next() {
-        try {
-            return this.aggregateXMLSplitter.hasNext();
-        } catch (RuntimeException e) {
-            String message = String.format("Unable to read XML from %s; cause: %s", this.path, e.getMessage());
-            throw new ConnectorException(message, e);
+        if (aggregateXMLSplitter == null && !initializeAggregateXMLSplitter()) {
+            return false;
+        }
+
+        // Iterate until either a valid element is found or we run out of elements.
+        while (true) {
+            try {
+                if (!this.aggregateXMLSplitter.hasNext()) {
+                    return false;
+                }
+            } catch (RuntimeException ex) {
+                String message = String.format("Unable to read XML from %s; cause: %s", filePartition.getPath(), ex.getMessage());
+                if (fileContext.isReadAbortOnFailure()) {
+                    throw new ConnectorException(message, ex);
+                }
+                Util.MAIN_LOGGER.warn(message);
+                return false;
+            }
+
+            try {
+                nextRowToReturn = this.aggregateXMLSplitter.nextRow(filePartition.getPath());
+                return true;
+            } catch (RuntimeException ex) {
+                // Error is expected to be friendly already.
+                if (fileContext.isReadAbortOnFailure()) {
+                    throw ex;
+                }
+                Util.MAIN_LOGGER.warn(ex.getMessage());
+            }
         }
     }
 
     @Override
     public InternalRow get() {
-        return this.aggregateXMLSplitter.nextRow(this.path);
+        return nextRowToReturn;
     }
 
     @Override
@@ -48,10 +66,25 @@ class AggregateXMLFileReader implements PartitionReader<InternalRow> {
         IOUtils.closeQuietly(this.inputStream);
     }
 
-    // Protected so that it can be overridden for gzipped files.
-    protected InputStream makeInputStream(FilePartition filePartition, FileContext fileContext) {
-        // Contrary to writing files, testing has shown no difference in performance with using e.g. FileInputStream
-        // instead of fileSystem.open when fileSystem is a LocalFileSystem.
-        return fileContext.open(filePartition);
+    private boolean initializeAggregateXMLSplitter() {
+        try {
+            this.inputStream = fileContext.open(filePartition);
+            String identifierForError = "file " + filePartition.getPath();
+            this.aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.inputStream, fileContext.getProperties());
+            return true;
+        } catch (ConnectorException ex) {
+            if (fileContext.isReadAbortOnFailure()) {
+                throw ex;
+            }
+            Util.MAIN_LOGGER.warn(ex.getMessage());
+            return false;
+        } catch (Exception ex) {
+            String message = String.format("Unable to read file at %s; cause: %s", filePartition.getPath(), ex.getMessage());
+            if (fileContext.isReadAbortOnFailure()) {
+                throw new ConnectorException(message, ex);
+            }
+            Util.MAIN_LOGGER.warn(ex.getMessage());
+            return false;
+        }
     }
 }

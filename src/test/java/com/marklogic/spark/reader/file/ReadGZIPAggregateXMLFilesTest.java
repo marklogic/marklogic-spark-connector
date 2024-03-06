@@ -46,6 +46,20 @@ class ReadGZIPAggregateXMLFilesTest extends AbstractIntegrationTest {
         assertTrue(message.endsWith("cause: Not in GZIP format"), "Unexpected error: " + message);
     }
 
+    @Test
+    void ignoreInvalidGzipFile() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_FILES_COMPRESSION, "gzip")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/aggregates/employees.xml", "src/test/resources/aggregate-gzips/employees.xml.gz")
+            .collectAsList();
+
+        assertEquals(3, rows.size(), "The error from the non-gzipped file should be ignored and logged, and the " +
+            "3 rows from the valid gzip file should be returned.");
+    }
+
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {
         String uri = row.getString(0);
         assertTrue(uri.endsWith(expectedUriSuffix), String.format("URI %s doesn't end with %s", uri, expectedUriSuffix));

@@ -8,8 +8,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 
 class FileContext extends ContextSupport implements Serializable {
 
@@ -28,14 +30,22 @@ class FileContext extends ContextSupport implements Serializable {
         return "gzip".equalsIgnoreCase(getStringOption(Options.READ_FILES_COMPRESSION));
     }
 
-    FSDataInputStream open(FilePartition filePartition) {
+    InputStream open(FilePartition filePartition) {
         try {
             Path hadoopPath = new Path(filePartition.getPath());
             FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
-            return fileSystem.open(hadoopPath);
+            FSDataInputStream inputStream = fileSystem.open(hadoopPath);
+            return this.isGzip() ? new GZIPInputStream(inputStream) : inputStream;
         } catch (Exception e) {
             throw new ConnectorException(String.format(
                 "Unable to read file at %s; cause: %s", filePartition, e.getMessage()), e);
         }
+    }
+
+    boolean isReadAbortOnFailure() {
+        if (hasOption(Options.READ_FILES_ABORT_ON_FAILURE)) {
+            return Boolean.parseBoolean(getStringOption(Options.READ_FILES_ABORT_ON_FAILURE));
+        }
+        return true;
     }
 }
