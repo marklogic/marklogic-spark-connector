@@ -1,14 +1,11 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
-import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,22 +14,16 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
+
+    private static final Logger logger = LoggerFactory.getLogger(MlcpArchiveFileReader.class);
+
     private final String path;
     private final ZipInputStream zipInputStream;
     private ZipEntry currentZipEntry;
-    private static final Logger logger = LoggerFactory.getLogger(MlcpArchiveFileReader.class);
-    public MlcpArchiveFileReader(FilePartition filePartition, SerializableConfiguration hadoopConfiguration) {
+
+    MlcpArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
         this.path = filePartition.getPath();
-        try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Reading zip file {}", this.path);
-            }
-            Path hadoopPath = new Path(this.path);
-            FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
-            this.zipInputStream = new ZipInputStream(fileSystem.open(hadoopPath));
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
-        }
+        this.zipInputStream = new ZipInputStream(fileContext.open(filePartition));
     }
 
     @Override

@@ -36,6 +36,7 @@ class FileBatch implements Batch {
         // This config is needed to resolve file paths. This is our last chance to access it and provide a serialized
         // version to the factory, which must be serializable itself.
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
-        return new FilePartitionReaderFactory(properties, new SerializableConfiguration(config));
+        FileContext fileContext = new FileContext(properties, new SerializableConfiguration(config));
+        return new FilePartitionReaderFactory(fileContext);
     }
 }

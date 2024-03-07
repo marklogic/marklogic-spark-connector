@@ -15,4 +15,9 @@ class FilePartition implements InputPartition {
     String getPath() {
         return path;
     }
+
+    @Override
+    public String toString() {
+        return path;
+    }
 }

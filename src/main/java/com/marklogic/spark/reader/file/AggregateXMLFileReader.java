@@ -2,45 +2,29 @@ package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
-import org.apache.spark.util.SerializableConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.util.Map;
 
 class AggregateXMLFileReader implements PartitionReader<InternalRow> {
-
-    private static final Logger logger = LoggerFactory.getLogger(AggregateXMLFileReader.class);
 
     private final String path;
     private final InputStream inputStream;
     private final AggregateXMLSplitter aggregateXMLSplitter;
 
-    AggregateXMLFileReader(FilePartition partition, Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
-        if (logger.isTraceEnabled()) {
-            logger.trace("Reading path: {}", partition.getPath());
-        }
-        this.path = partition.getPath();
-        Path hadoopPath = new Path(this.path);
+    AggregateXMLFileReader(FilePartition filePartition, FileContext fileContext) {
+        this.path = filePartition.getPath();
+        this.inputStream = makeInputStream(filePartition, fileContext);
 
+        String identifierForError = "file " + filePartition.getPath();
         try {
-            this.inputStream = makeInputStream(hadoopPath, hadoopConfiguration);
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to open %s; cause: %s", path, e.getMessage()), e);
-        }
-
-        String identifierForError = "file " + hadoopPath;
-        try {
-            this.aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.inputStream, properties);
+            this.aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.inputStream, fileContext.getProperties());
         } catch (Exception e) {
             // Interestingly, this won't fail if the file is malformed or not XML. It's only when we try to get the
             // first element.
-            throw new ConnectorException(String.format("Unable to read %s", hadoopPath), e);
+            String message = String.format("Unable to read file at %s; cause: %s", filePartition.getPath(), e.getMessage());
+            throw new ConnectorException(message, e);
         }
     }
 
@@ -65,9 +49,9 @@ class AggregateXMLFileReader implements PartitionReader<InternalRow> {
     }
 
     // Protected so that it can be overridden for gzipped files.
-    protected InputStream makeInputStream(Path path, SerializableConfiguration hadoopConfiguration) throws IOException {
+    protected InputStream makeInputStream(FilePartition filePartition, FileContext fileContext) {
         // Contrary to writing files, testing has shown no difference in performance with using e.g. FileInputStream
         // instead of fileSystem.open when fileSystem is a LocalFileSystem.
-        return path.getFileSystem(hadoopConfiguration.value()).open(path);
+        return fileContext.open(filePartition);
     }
 }

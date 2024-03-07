@@ -1,12 +1,8 @@
 package com.marklogic.spark.reader.file;
 
-import com.marklogic.spark.ConnectorException;
 import org.apache.commons.io.IOUtils;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
-import org.apache.spark.util.SerializableConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,18 +21,12 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
 
     private RdfStreamReader rdfStreamReader;
 
-    RdfZipFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration) {
+    RdfZipFileReader(FilePartition partition, FileContext fileContext) {
         this.path = partition.getPath();
         if (logger.isTraceEnabled()) {
             logger.trace("Reading path: {}", this.path);
         }
-        try {
-            Path hadoopPath = new Path(partition.getPath());
-            FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
-            this.customZipInputStream = new CustomZipInputStream(fileSystem.open(hadoopPath));
-        } catch (Exception e) {
-            throw new ConnectorException(String.format("Unable to read %s; cause: %s", this.path, e.getMessage()), e);
-        }
+        this.customZipInputStream = new CustomZipInputStream(fileContext.open(partition));
     }
 
     @Override
