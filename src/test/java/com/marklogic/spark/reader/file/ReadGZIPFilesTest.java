@@ -39,8 +39,22 @@ class ReadGZIPFilesTest extends AbstractIntegrationTest {
 
         SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
         assertTrue(ex.getCause() instanceof ConnectorException);
-        assertTrue(ex.getCause().getMessage().startsWith("Unable to read gzip file at "),
+        assertTrue(ex.getCause().getMessage().startsWith("Unable to read file at file:///"),
             "Unexpected error message: " + ex.getCause().getMessage());
+    }
+
+    @Test
+    void dontAbortOnFailure() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "gzip")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .option("recursiveFileLookup", true)
+            .load("src/test/resources/zip-files/mixed-files.zip", "src/test/resources/gzip-files")
+            .collectAsList();
+
+        assertEquals(3, rows.size(), "Expecting to get the 3 files back from the gzip-files directory, with the " +
+            "error for the non-gzipped mixed-files.zip file being logged as a warning but not causing a failure.");
     }
 
     private void verifyRow(Row row, String expectedUriSuffix, String expectedContent) {

@@ -140,6 +140,32 @@ class ReadAggregateXMLFilesTest extends AbstractIntegrationTest {
             "The error should identify the fail and the root cause; actual error: " + message);
     }
 
+    @Test
+    void ignoreUriElementNotFound() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "id")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/aggregates/employees.xml")
+            .count();
+
+        assertEquals(2, count, "The one employee without an 'id' element should have caused an error to be " +
+            "caught and logged. The 2 employees with 'id' should be returned since abortOnFailure = false.");
+    }
+
+    @Test
+    void ignoreInvalidXmlFile() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/junit-platform.properties", "src/test/resources/aggregates/employees.xml")
+            .count();
+
+        assertEquals(3, count);
+    }
+
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {
         String uri = row.getString(0);
         assertTrue(uri.endsWith(expectedUriSuffix), String.format("URI %s doesn't end with %s", uri, expectedUriSuffix));

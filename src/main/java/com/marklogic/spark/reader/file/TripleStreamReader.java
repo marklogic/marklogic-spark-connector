@@ -37,16 +37,18 @@ class TripleStreamReader implements RdfStreamReader {
             return this.tripleStream.hasNext();
         } catch (RiotException e) {
             if (e.getMessage().contains("Failed to determine the RDF syntax")) {
-                throw new ConnectorException(String.format("Unable to read RDF file at %s; RDF syntax is not supported or " +
+                throw new ConnectorException(String.format("Unable to read file at %s; RDF syntax is not supported or " +
                     "the file extension is not recognized.", this.path), e);
             }
-            throw new ConnectorException(String.format("Unable to read RDF file at %s; cause: %s",
+            throw new ConnectorException(String.format("Unable to read file at %s; cause: %s",
                 this.path, e.getMessage()), e);
         }
     }
 
     @Override
     public InternalRow get() {
+        // Per the Jena javadocs, next() is not expected to throw an error; if an were to occur, it would occur when
+        // calling hasNext() first.
         return rdfSerializer.serialize(this.tripleStream.next());
     }
 

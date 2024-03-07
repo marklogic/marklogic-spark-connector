@@ -62,6 +62,7 @@ public abstract class Options {
 
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
+    public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
 
     // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.
     // "xml" is included in the name in anticipation of eventually supporting "aggregate JSON" - i.e. an array of N

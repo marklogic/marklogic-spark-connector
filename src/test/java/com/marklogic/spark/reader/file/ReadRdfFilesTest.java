@@ -36,7 +36,7 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
         assertEquals(0, dataset.count(), "Verifying that no error is thrown if an RDF file is valid but simply " +
             "has no triples in it.");
     }
-    
+
     /**
      * Verifies that blank nodes are generated in the same manner as with MLCP.
      */
@@ -170,6 +170,28 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
 
         verifyRow(rows.get(3), "http://dbpedia.org/resource/Aristotle", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
             "http://dbpedia.org/ontology/Agent", null, null, "http://en.wikipedia.org/wiki/Aristotle?oldid=494147695#absolute-line=4");
+    }
+
+    @Test
+    void dontAbortOnTriplesFailure() {
+        List<Row> rows = startRead()
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/data.csv", "src/test/resources/rdf/mini-taxonomy.xml")
+            .collectAsList();
+
+        assertEquals(8, rows.size(), "The error from data.csv should be caught and logged, and then the 8 triples " +
+            "from mini-taxonomy.xml should be returned.");
+    }
+
+    @Test
+    void dontAbortOnQuadsFailure() {
+        List<Row> rows = startRead()
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/rdf/bad-quads.trig", "src/test/resources/rdf/three-quads.trig")
+            .collectAsList();
+
+        assertEquals(20, rows.size(), "Should have the 20 triples from three-quads.trig, and the error from " +
+            "bad-quads.trig should have been caught and logged at the WARN level.");
     }
 
     private void verifyRow(Row row, String subject, String predicate, String object) {
