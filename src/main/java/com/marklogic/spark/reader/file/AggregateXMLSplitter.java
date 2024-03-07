@@ -54,7 +54,12 @@ class AggregateXMLSplitter {
     }
 
     boolean hasNext() {
-        return this.contentStream.hasNext();
+        try {
+            return this.contentStream.hasNext();
+        } catch (Exception e) {
+            String message = String.format("Unable to read XML from %s; cause: %s", identifierForErrors, e.getMessage());
+            throw new ConnectorException(message, e);
+        }
     }
 
     /**

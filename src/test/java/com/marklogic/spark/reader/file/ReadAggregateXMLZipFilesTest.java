@@ -102,6 +102,50 @@ class ReadAggregateXMLZipFilesTest extends AbstractIntegrationTest {
             "The error should identify the file and the root cause; actual error: " + message);
     }
 
+    @Test
+    void ignoreUriElementNotFound() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "id")
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/aggregate-zips/employee-aggregates.zip")
+            .count();
+
+        assertEquals(3, count, "The element without an 'id' element should be ignored and an error should be logged " +
+            "for it, and then the 3 elements with an 'id' child element should be returned as rows. 2 of those " +
+            "elements come from employees.xml, and the 3rd comes from employees2.xml.");
+    }
+
+    @Test
+    void ignoreBadFileInZip() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/aggregate-zips/xml-and-json.zip")
+            .count();
+
+        assertEquals(3, count, "The JSON file in the zip should result in the error being logged, and the valid " +
+            "XML file should still be processed.");
+    }
+
+    @Test
+    void ignoreAllBadFilesInZip() {
+        long count = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/zip-files/mixed-files.zip")
+            .count();
+
+        assertEquals(0, count, "Every file in mixed-files.zip is either not XML or it's an XML document " +
+            "with no occurrences of 'Employee', so 0 rows should be returned.");
+    }
+
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {
         String uri = row.getString(0);
         assertTrue(uri.endsWith(expectedUriSuffix), String.format("URI %s doesn't end with %s", uri, expectedUriSuffix));
