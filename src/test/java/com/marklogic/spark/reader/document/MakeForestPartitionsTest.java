@@ -70,7 +70,7 @@ class MakeForestPartitionsTest {
         ForestPartition partition = partitions[partitionIndex];
         assertEquals(forestName, partition.getForestName());
         assertEquals(FAKE_SERVER_TIMESTAMP, partition.getServerTimestamp());
-        assertEquals(new Long(offsetStart), partition.getOffsetStart());
-        assertEquals(offsetEnd == null ? null : new Long(offsetEnd), partition.getOffsetEnd());
+        assertEquals(Long.valueOf(offsetStart), partition.getOffsetStart());
+        assertEquals(offsetEnd == null ? null : Long.valueOf(offsetEnd), partition.getOffsetEnd());
     }
 }

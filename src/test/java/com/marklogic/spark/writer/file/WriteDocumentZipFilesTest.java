@@ -15,6 +15,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -88,11 +89,38 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             "'schema-specific part', which is just example/123.xml.");
     }
 
+    @Test
+    void writeMetadata(@TempDir Path tempDir) throws Exception {
+        readAuthorCollectionWithMetadata()
+            .repartition(1)
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        assertEquals(1, tempDir.toFile().listFiles().length);
+
+        verifyZipFilesHaveExpectedFilenames(tempDir);
+        verifyMetadataFiles(tempDir);
+    }
+
     private Dataset<Row> readAuthorCollection() {
         return newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
+            .load();
+    }
+
+    private Dataset<Row> readAuthorCollectionWithMetadata() {
+        return newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
             .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
             .load();
     }
@@ -130,6 +158,32 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
 
             JsonNode doc = objectMapper.readTree((byte[]) row.get(3));
             assertTrue(doc.has("CitationID"), "Unexpected JSON: " + doc);
+        }
+    }
+
+    private void verifyMetadataFiles(Path tempDir) throws IOException {
+        final List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .load(tempDir.toFile().getAbsolutePath())
+            .collectAsList();
+
+        assertEquals(30, rows.size());
+
+        final String expectedUriPrefix = "file://" + tempDir.toFile().getAbsolutePath();
+        for (Row row : rows) {
+            String uri = row.getString(0);
+            assertTrue(uri.startsWith(expectedUriPrefix), "Unexpected URI, which is expected to start with the " +
+                "absolute path of the zip file: " + uri);
+
+            if(uri.endsWith(".json")) {
+                JsonNode doc = objectMapper.readTree((byte[]) row.get(3));
+                assertTrue(doc.has("CitationID"), "Unexpected JSON: " + doc);
+            } else {
+                assertTrue(uri.endsWith(".metadata"));
+                String metadataContent = new String((byte[]) row.get(3), StandardCharsets.UTF_8);
+                assertTrue(metadataContent.contains("<rapi:collection>author</rapi:collection>"));
+            }
         }
     }
 }
