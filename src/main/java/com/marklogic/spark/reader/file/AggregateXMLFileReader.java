@@ -34,12 +34,11 @@ class AggregateXMLFileReader implements PartitionReader<InternalRow> {
                 if (!this.aggregateXMLSplitter.hasNext()) {
                     return false;
                 }
-            } catch (RuntimeException ex) {
-                String message = String.format("Unable to read XML from %s; cause: %s", filePartition.getPath(), ex.getMessage());
+            } catch (ConnectorException ex) {
                 if (fileContext.isReadAbortOnFailure()) {
-                    throw new ConnectorException(message, ex);
+                    throw ex;
                 }
-                Util.MAIN_LOGGER.warn(message);
+                Util.MAIN_LOGGER.warn(ex.getMessage());
                 return false;
             }
 
