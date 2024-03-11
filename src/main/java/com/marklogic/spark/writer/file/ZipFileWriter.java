@@ -57,8 +57,8 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
         zipEntryCounter++;
-        if(properties.get(Options.READ_DOCUMENTS_CATEGORIES) != null &&
-            properties.get(Options.READ_DOCUMENTS_CATEGORIES).contains("metadata")){
+        if(!row.isNullAt(3) || !row.isNullAt(4) || !row.isNullAt(5) || !row.isNullAt(6)
+            || !row.isNullAt(7)){
             zipOutputStream.putNextEntry(new ZipEntry(entryName+".metadata"));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
