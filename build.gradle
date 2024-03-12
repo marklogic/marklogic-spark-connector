@@ -85,8 +85,8 @@ jacocoTestReport {
 
 sonar {
   properties {
-    property "sonar.projectKey", "marklogic-spark"
-    property "sonar.host.url", "http://localhost:9000"
+    //property "sonar.projectKey", "marklogic-spark"
+    //property "sonar.host.url", "http://localhost:9000"
   }
 }
 
