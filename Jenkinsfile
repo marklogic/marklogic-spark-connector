@@ -64,7 +64,7 @@ pipeline{
           '''
         runtests('JAVA11_HOME_DIR')
         withSonarQubeEnv('SONAR_Progress') {
-          runSonarScan('JAVA11_HOME_DIR')
+          runSonarScan('JAVA8_HOME_DIR')
         }
       }
       post{
