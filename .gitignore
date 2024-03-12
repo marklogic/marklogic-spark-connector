@@ -17,3 +17,4 @@ logs
 venv
 .venv
 docker
+export
