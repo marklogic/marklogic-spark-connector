@@ -21,7 +21,7 @@ import java.util.Map;
  * Knows how to split an aggregate XML document and return a row for each user-defined child element. Each row has
  * a schema matching that of {@code FileRowSchema}.
  */
-class AggregateXMLSplitter {
+class AggregateXmlSplitter {
 
     private final Iterator<StringHandle> contentStream;
     private final String identifierForErrors;
@@ -38,7 +38,7 @@ class AggregateXMLSplitter {
      * @param inputStream         the stream of aggregate XML data
      * @param properties          connector properties
      */
-    AggregateXMLSplitter(String identifierForErrors, InputStream inputStream, Map<String, String> properties) {
+    AggregateXmlSplitter(String identifierForErrors, InputStream inputStream, Map<String, String> properties) {
         this.identifierForErrors = identifierForErrors;
         this.uriElement = properties.get(Options.READ_AGGREGATES_XML_URI_ELEMENT);
         this.uriNamespace = properties.get(Options.READ_AGGREGATES_XML_URI_NAMESPACE);

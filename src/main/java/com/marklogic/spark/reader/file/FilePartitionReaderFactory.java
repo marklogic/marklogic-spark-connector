@@ -28,12 +28,12 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return new MlcpArchiveFileReader(filePartition, fileContext);
         } else if (fileContext.hasOption(Options.READ_AGGREGATES_XML_ELEMENT)) {
             return fileContext.isZip() ?
-                new ZipAggregateXMLFileReader(filePartition, fileContext) :
-                new AggregateXMLFileReader(filePartition, fileContext);
+                new ZipAggregateXmlFileReader(filePartition, fileContext) :
+                new AggregateXmlFileReader(filePartition, fileContext);
         } else if (fileContext.isZip()) {
             return new ZipFileReader(filePartition, fileContext);
         } else if (fileContext.isGzip()) {
-            return new GZIPFileReader(filePartition, fileContext);
+            return new GzipFileReader(filePartition, fileContext);
         }
 
         throw new ConnectorException(String.format("File is not supported: %s", filePartition.getPath()));

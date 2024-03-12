@@ -12,22 +12,22 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-class ZipAggregateXMLFileReader implements PartitionReader<InternalRow> {
+class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ZipAggregateXMLFileReader.class);
+    private static final Logger logger = LoggerFactory.getLogger(ZipAggregateXmlFileReader.class);
 
     private final FileContext fileContext;
     private final ZipInputStream zipInputStream;
     private final String path;
 
-    private AggregateXMLSplitter aggregateXMLSplitter;
+    private AggregateXmlSplitter aggregateXMLSplitter;
 
     // Used solely for a default URI prefix.
     private int entryCounter;
 
     private InternalRow rowToReturn;
 
-    ZipAggregateXMLFileReader(FilePartition filePartition, FileContext fileContext) {
+    ZipAggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.fileContext = fileContext;
         this.path = filePartition.getPath();
         this.zipInputStream = new ZipInputStream(fileContext.open(filePartition));
@@ -102,7 +102,7 @@ class ZipAggregateXMLFileReader implements PartitionReader<InternalRow> {
             String identifierForError = "entry " + zipEntry.getName() + " in " + this.path;
 
             try {
-                aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.zipInputStream, this.fileContext.getProperties());
+                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.zipInputStream, this.fileContext.getProperties());
                 // Fail fast if the next entry is not valid XML.
                 aggregateXMLSplitter.hasNext();
                 return true;

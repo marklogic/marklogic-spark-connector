@@ -27,7 +27,7 @@ class DocumentFileWriterFactory implements DataWriterFactory {
             if ("zip".equalsIgnoreCase(compression)) {
                 return new ZipFileWriter(properties, hadoopConfiguration, partitionId);
             }
-            return new GZIPFileWriter(properties, hadoopConfiguration);
+            return new GzipFileWriter(properties, hadoopConfiguration);
         }
         return new DocumentFileWriter(properties, hadoopConfiguration);
     }

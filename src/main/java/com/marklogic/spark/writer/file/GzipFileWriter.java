@@ -8,9 +8,9 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
-class GZIPFileWriter extends DocumentFileWriter {
+class GzipFileWriter extends DocumentFileWriter {
 
-    GZIPFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
+    GzipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
         super(properties, hadoopConfiguration);
     }
 
