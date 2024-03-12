@@ -3,7 +3,7 @@ layout: default
 title: Aggregate XML
 parent: Reading files
 grand_parent: Reading Data
-nav_order: 1
+nav_order: 2
 ---
 
 XML files often contain aggregate data that can be disaggregated by splitting it into
@@ -95,7 +95,7 @@ For a ZIP compressed file, which can contain one to many aggregate XML files, se
 Each entry in the zip file must be an aggregate XML file. The same element and namespace, along with URI element and
 namespace, will be applied to every file in the zip. 
 
-## Handling errors
+## Error handling
 
 The connector defaults to throwing any error that occurs while reading an aggregate XML file. You can set the 
 `spark.marklogic.read.files.abortOnFailure` option to `false` to have each error logged instead. The connector will 

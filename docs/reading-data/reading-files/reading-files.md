@@ -14,8 +14,6 @@ to include support for reading the following file types:
 - RDF files
 - ZIP files
 
-If you wish to read and write files that are not one of the above types, you can use the 
-[Spark Binary data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html). The connector will
-recognize the schema of rows read with the Binary data source and will write one document per row. 
-
-Please see the guides below for more information on each of the above file type.
+Please see the guides below for more information on each of the above file types, as well as for using 
+[Spark's Binary data source](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html) to read any type
+of file and write it to MarkLogic.

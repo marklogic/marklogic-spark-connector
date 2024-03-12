@@ -51,6 +51,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
     void readViaMultiplePaths() {
         List<Row> rows = newZipReader()
             .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option("modifiedBefore", "2020-06-01T13:00:00")
             .load(
                 "src/test/resources/zip-files/mixed-files.zip",
                 "src/test/resources/zip-files/child/logback.zip"
@@ -58,6 +59,32 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
             .collectAsList();
 
         assertEquals(5, rows.size(), "Expecting 4 rows from mixed-files.zip and 1 row from logback.zip.");
+    }
+
+    /**
+     * See https://spark.apache.org/docs/latest/sql-data-sources-generic-options.html .
+     */
+    @Test
+    void modifiedBefore() {
+        long count = newZipReader()
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option("modifiedBefore", "2020-06-01T13:00:00")
+            .load("src/test/resources/zip-files/mixed-files.zip")
+            .count();
+        assertEquals(0, count, "Verifying that 'modifiedBefore' 'just works'.");
+    }
+
+    /**
+     * See https://spark.apache.org/docs/latest/sql-data-sources-generic-options.html .
+     */
+    @Test
+    void modifiedAfter() {
+        long count = newZipReader()
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option("modifiedAfter", "2020-06-01T13:00:00")
+            .load("src/test/resources/zip-files/mixed-files.zip")
+            .count();
+        assertEquals(4, count, "Verifying that 'modifiedAfter' 'just works'.");
     }
 
     @Test
