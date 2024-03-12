@@ -16,14 +16,14 @@ import java.io.InputStream;
  * Expects to read a single gzipped file and return a single row. May expand the scope of this later to expect multiple
  * files and to thus return multiple rows.
  */
-class GZIPFileReader implements PartitionReader<InternalRow> {
+class GzipFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
 
     private InternalRow rowToReturn = null;
 
-    GZIPFileReader(FilePartition partition, FileContext fileContext) {
+    GzipFileReader(FilePartition partition, FileContext fileContext) {
         this.filePartition = partition;
         this.fileContext = fileContext;
     }

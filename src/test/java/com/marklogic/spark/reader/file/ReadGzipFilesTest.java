@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReadGZIPFilesTest extends AbstractIntegrationTest {
+class ReadGzipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void readThreeGZIPFiles() {

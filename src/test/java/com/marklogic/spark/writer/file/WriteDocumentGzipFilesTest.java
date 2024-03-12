@@ -15,7 +15,7 @@ import java.nio.file.Path;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class WriteDocumentGZIPFilesTest extends AbstractIntegrationTest {
+class WriteDocumentGzipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void test(@TempDir Path tempDir) {

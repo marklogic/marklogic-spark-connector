@@ -8,16 +8,16 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 
 import java.io.InputStream;
 
-class AggregateXMLFileReader implements PartitionReader<InternalRow> {
+class AggregateXmlFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
 
     private InputStream inputStream;
-    private AggregateXMLSplitter aggregateXMLSplitter;
+    private AggregateXmlSplitter aggregateXMLSplitter;
     private InternalRow nextRowToReturn;
 
-    AggregateXMLFileReader(FilePartition filePartition, FileContext fileContext) {
+    AggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
     }
@@ -69,7 +69,7 @@ class AggregateXMLFileReader implements PartitionReader<InternalRow> {
         try {
             this.inputStream = fileContext.open(filePartition);
             String identifierForError = "file " + filePartition.getPath();
-            this.aggregateXMLSplitter = new AggregateXMLSplitter(identifierForError, this.inputStream, fileContext.getProperties());
+            this.aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.inputStream, fileContext.getProperties());
             return true;
         } catch (ConnectorException ex) {
             if (fileContext.isReadAbortOnFailure()) {
