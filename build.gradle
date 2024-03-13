@@ -6,7 +6,7 @@ plugins {
   id 'maven-publish'
   id 'signing'
   id "jacoco"
-  id "org.sonarqube" version "4.4.1.3373"
+  id "org.sonarqube" version "3.5.0.2730"
 }
 
 group 'com.marklogic'
@@ -85,7 +85,7 @@ jacocoTestReport {
 
 sonar {
   properties {
-    //property "sonar.projectKey", "marklogic-spark"
+    property "sonar.projectKey", "ML-DevExp-marklogic-spark-connector"
     //property "sonar.host.url", "http://localhost:9000"
   }
 }
