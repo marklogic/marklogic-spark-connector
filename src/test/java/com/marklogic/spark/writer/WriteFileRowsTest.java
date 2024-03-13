@@ -89,8 +89,6 @@ class WriteFileRowsTest extends AbstractWriteTest {
 
     @Test
     void uriTemplate() {
-        File f = new File("src/test/resources/mixed-files/hello.json");
-
         Dataset<Row> dataset = newSparkSession()
             .read()
             .format("binaryFile")

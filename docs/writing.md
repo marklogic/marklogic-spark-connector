@@ -104,6 +104,27 @@ the parameter values contains a comma:
     .option("spark.marklogic.write.transformParams", "my-param;has,commas")
     .option("spark.marklogic.write.transformParamsDelimiter", ";")
 
+### Setting a JSON root name
+
+As of 2.3.0, when writing JSON documents based on arbitrary rows, you can specify a root field name to be inserted 
+at the top level of the document. Each column value will then be included in an object assigned to that root field name.
+This can be useful when you want your JSON data to be more self-documenting. For example, a document representing an 
+employee may be easier to understand if it has a single root field named "Employee" with every property of the employee
+captured in an object assigned to the "Employee" field.
+
+The following will produce JSON documents that each have a single root field named "myRootField", with all column
+values in a row assigned to an object associated with "myRootField":
+
+```
+df.write.format("marklogic") \
+  .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+  .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
+  .option("spark.marklogic.write.uriPrefix", "/write/") \
+  .option("spark.marklogic.write.jsonRootName", "myRootField") \
+  .mode("append") \
+  .save()
+```
+
 ### Controlling document URIs
 
 By default, the connector will construct a URI for each document beginning with a UUID and ending with `.json`. A 
@@ -134,6 +155,14 @@ The following template would construct URIs based on those two columns:
 
 Both columns should have values in each row in the DataFrame. If the connector encounters a row that does not have a 
 value for any column in the URI template, an error will be thrown.
+
+As of the 2.3.0 release, you can also use a [JSONPointer](https://www.rfc-editor.org/rfc/rfc6901) expression to 
+reference a value. This is often useful in conjunction with the `spark.marklogic.write.jsonRootName` option. For 
+example, if `spark.marklogic.write.jsonRootName` is set to "Employee", and you wish to include the `employee_id`
+value in a URI, you would use the following configuration:
+
+    .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{/Employee/employee_id}.json")
+
 
 If you are writing file rows that conform to 
 [Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 
