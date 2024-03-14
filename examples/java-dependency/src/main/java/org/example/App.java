@@ -15,7 +15,7 @@ public class App {
         try {
             List<Row> rows = session
                 .read()
-                .format("com.marklogic.spark")
+                .format("marklogic")
                 .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003")
                 .option("spark.marklogic.read.opticQuery", "op.fromView('example', 'employee', '')")
                 .load()
