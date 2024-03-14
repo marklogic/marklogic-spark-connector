@@ -84,9 +84,9 @@ For a GZIP compressed file, set the option to a value of `gzip`:
 .option("spark.marklogic.read.files.compression", "gzip")
 ```
 
-Each aggregate XML file will be gunzipped first and then processed normally. 
+Each aggregate XML file will be unzipped first and then processed normally. 
 
-For a ZIP compressed file, which can contain one to many aggregate XML files, set the option to a value of `zip`:
+For a ZIP compressed file, which may contain one to many aggregate XML files, set the option to a value of `zip`:
 
 ```
 .option("spark.marklogic.read.files.compression", "zip")

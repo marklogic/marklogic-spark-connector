@@ -51,7 +51,6 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
     void readViaMultiplePaths() {
         List<Row> rows = newZipReader()
             .option(Options.READ_FILES_COMPRESSION, "zip")
-            .option("modifiedBefore", "2020-06-01T13:00:00")
             .load(
                 "src/test/resources/zip-files/mixed-files.zip",
                 "src/test/resources/zip-files/child/logback.zip"

@@ -160,6 +160,22 @@ The following options control how the connector reads document rows from MarkLog
 | spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
 | spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
 
+### Read options for files
+
+As of the 2.3.0 release, the connector supports reading aggregate XML files, RDF files, and ZIP files. The following
+options control how the connector reads files:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.aggregates.xml.element | Required when reading aggregate XML files; defines the name of the element for selecting elements to convert into Spark rows. |
+| spark.marklogic.read.aggregates.xml.namespace | Optional namespace for the element identified by `spark.marklogic.read.aggregates.xml.element`. |
+| spark.marklogic.read.aggregates.xml.uriElement | Optional element name for constructing a URI based on an element value. |
+| spark.marklogic.read.aggregates.xml.uriNamespace | Optional namespace for the element identified by `spark.marklogic.read.aggregates.xml.uriElement`. |
+| spark.marklogic.read.files.abortOnFailure | Set to `false` so that the connector logs errors and continues processing files. Defaults to `true`. |
+| spark.marklogic.read.files.compression | Set to `gzip` or `zip` when reading compressed files. |
+| spark.marklogic.read.files.type | Set to `rdf` when reading RDF files. This option only needs to be set when the connector is otherwise unable to detect that it should perform some sort of handling for the file. |
+
+
 ## Write options
 
 See [the guide on writing](writing.md) for more information on how data is written to MarkLogic.
