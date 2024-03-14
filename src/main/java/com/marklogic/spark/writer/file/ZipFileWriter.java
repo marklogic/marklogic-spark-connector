@@ -1,7 +1,6 @@
 package com.marklogic.spark.writer.file;
 
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -31,11 +30,8 @@ class ZipFileWriter implements DataWriter<InternalRow> {
 
     private int zipEntryCounter;
 
-    private Map<String, String> properties;
-
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.path = properties.get("path");
-        this.properties = properties;
         Path filePath = makeFilePath(path, partitionId);
         if (logger.isDebugEnabled()) {
             logger.debug("Will write to: {}", filePath);
@@ -57,18 +53,11 @@ class ZipFileWriter implements DataWriter<InternalRow> {
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
         zipEntryCounter++;
-        if(!row.isNullAt(3) || !row.isNullAt(4) || !row.isNullAt(5) || !row.isNullAt(6)
-            || !row.isNullAt(7)){
-            zipOutputStream.putNextEntry(new ZipEntry(entryName+".metadata"));
+        if (hasMetadata(row)) {
+            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
         }
-
-        /**
-         * Check here for non-null metadata columns. If there's at least one, call
-         * DocumentRowSchema.makeDocumentMetadata(row) to get a DocumentMetadataHandle object and call toString on it.
-         * That will then become an additional entry in the zip file.
-         */
     }
 
     @Override
@@ -84,6 +73,10 @@ class ZipFileWriter implements DataWriter<InternalRow> {
     @Override
     public void abort() {
         // No action to take.
+    }
+
+    private boolean hasMetadata(InternalRow row) {
+        return !row.isNullAt(3) || !row.isNullAt(4) || !row.isNullAt(5) || !row.isNullAt(6) || !row.isNullAt(7);
     }
 
     /**
