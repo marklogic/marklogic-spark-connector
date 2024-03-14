@@ -58,7 +58,7 @@ public class ImportCustomersWithRentalsAndPayments {
             // The remaining calls use the MarkLogic Spark connector to write customer rows, with nested rentals and
             // sub-nested payments, to the Documents database in MarkLogic.
             .write()
-            .format("com.marklogic.spark")
+            .format("marklogic")
             .option("spark.marklogic.client.host", "localhost")
             .option("spark.marklogic.client.port", "8000")
             .option("spark.marklogic.client.username", "admin")
