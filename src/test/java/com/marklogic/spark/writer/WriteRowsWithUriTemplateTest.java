@@ -72,12 +72,12 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
 
         Throwable cause = getCauseFromWriterException(ex);
         assertTrue(cause instanceof RuntimeException, "Unexpected cause: " + cause);
-        final String expectedMessage = "Did not find column 'doesntExist' in row: " +
+        final String expectedMessage = "Expression 'doesntExist' did not resolve to a value in row: " +
             "{\"id\":\"1\",\"content\":\"hello world\"," +
             "\"systemStart\":\"2014-04-03T11:00:00\",\"systemEnd\":\"2014-04-03T16:00:00\"," +
             "\"validStart\":\"2014-04-03T11:00:00\",\"validEnd\":\"2014-04-03T16:00:00\"," +
             "\"columnWithOnlyWhitespace\":\"   \"}; " +
-            "column is required by URI template: /test/{id}/{doesntExist}.json";
+            "expression is required by URI template: /test/{id}/{doesntExist}.json";
 
         assertEquals(expectedMessage, cause.getMessage(), "The entire JSON row is being included in the error " +
             "message so that the user is able to figure out what a column they chose in the URI template isn't " +

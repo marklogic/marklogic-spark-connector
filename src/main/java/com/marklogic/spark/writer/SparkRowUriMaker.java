@@ -48,8 +48,8 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         StringBuilder output = new StringBuilder();
         while (matcher.find()) {
             output.append(this.uriTemplate, lastIndex, matcher.start());
-            String columnName = matcher.group(1);
-            output.append(getColumnValue(columnValues, columnName));
+            String expression = matcher.group(1);
+            output.append(getExpressionValue(columnValues, expression));
             lastIndex = matcher.end();
         }
         if (lastIndex < this.uriTemplate.length()) {
@@ -90,23 +90,29 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         }
     }
 
-    private String getColumnValue(JsonNode row, String columnName) {
-        if (!row.has(columnName)) {
+    private String getExpressionValue(JsonNode row, String expression) {
+        JsonNode node;
+        // As of 2.3.0, now supports a JSONPointer expression, which is indicated by the first character being a "/".
+        if (expression.startsWith("/")) {
+            node = row.at(expression);
+        } else {
+            node = row.has(expression) ? row.get(expression) : null;
+        }
+
+        if (node == null || node.isMissingNode()) {
             throw new ConnectorException(
-                String.format("Did not find column '%s' in row: %s; column is required by URI template: %s",
-                    columnName, row, uriTemplate
+                String.format("Expression '%s' did not resolve to a value in row: %s; expression is required by URI template: %s",
+                    expression, row, uriTemplate
                 ));
         }
 
-        String text = row.get(columnName).asText();
+        String text = node.asText();
         if (text.trim().length() == 0) {
             throw new ConnectorException(
-                String.format("Column '%s' is empty in row: %s; column is required by URI template: %s",
-                    columnName, row, uriTemplate
+                String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
+                    expression, row, uriTemplate
                 ));
         }
-
         return text;
     }
-
 }

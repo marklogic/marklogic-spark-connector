@@ -191,6 +191,7 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
 | spark.marklogic.write.fileRows.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
+| spark.marklogic.write.jsonRootName | As of 2.3.0, specifies a root field name when writing JSON documents based on arbitrary rows. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
 | spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
 | spark.marklogic.write.transform | Name of a REST transform to apply to each document. |
