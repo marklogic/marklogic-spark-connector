@@ -63,10 +63,10 @@ class AggregateXmlSplitter {
     }
 
     /**
-     * @param uriPrefix used to construct a URI if no uriElement was specified
+     * @param pathPrefix used to construct a path if no uriElement was specified
      * @return a row corresponding to the {@code FileRowSchema}
      */
-    InternalRow nextRow(String uriPrefix) {
+    InternalRow nextRow(String pathPrefix) {
         String xml;
         try {
             xml = this.contentStream.next().get();
@@ -76,18 +76,15 @@ class AggregateXmlSplitter {
             throw new ConnectorException(message, ex);
         }
 
-        final String uri = this.uriElement != null && !this.uriElement.trim().isEmpty() ?
+        final String path = this.uriElement != null && !this.uriElement.trim().isEmpty() ?
             extractUriElementValue(xml) :
-            uriPrefix + "-" + rowCounter + ".xml";
+            pathPrefix + "-" + rowCounter + ".xml";
 
         rowCounter++;
 
         byte[] content = xml.getBytes();
         long length = content.length;
-        return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(uri), null, length,
-            ByteArray.concat(xml.getBytes()),
-        });
+        return new GenericInternalRow(new Object[]{UTF8String.fromString(path), null, length, ByteArray.concat(content)});
     }
 
     /**
