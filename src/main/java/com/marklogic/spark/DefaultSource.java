@@ -64,7 +64,13 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> properties = options.asCaseSensitiveMap();
         if (isFileOperation(properties)) {
-            return "rdf".equals(properties.get(Options.READ_FILES_TYPE)) ? TripleRowSchema.SCHEMA : FileRowSchema.SCHEMA;
+            final String type = properties.get(Options.READ_FILES_TYPE);
+            if ("rdf".equalsIgnoreCase(type)) {
+                return TripleRowSchema.SCHEMA;
+            } else if ("mlcp_archive".equalsIgnoreCase(type)) {
+                return DocumentRowSchema.SCHEMA;
+            }
+            return FileRowSchema.SCHEMA;
         }
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
