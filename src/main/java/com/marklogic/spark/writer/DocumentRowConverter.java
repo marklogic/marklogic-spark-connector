@@ -23,6 +23,9 @@ class DocumentRowConverter implements RowConverter {
         String uri = row.getString(0);
         BytesHandle content = new BytesHandle(row.getBinary(1));
 
+        // So we could say -
+        // If the doc serializes to a ObjectNode, toss in URI and format as long as they don't exist already.
+        // If it serializes to an ArrayNode, don't toss them in.
         ObjectNode columnValues = objectMapper.createObjectNode();
         columnValues.put("URI", uri);
         columnValues.put("format", row.getString(2));

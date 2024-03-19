@@ -41,7 +41,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
     }
 
     @Override
-    public String makeURI(String initialUri, ObjectNode columnValues) {
+    public String makeURI(String initialUri, JsonNode uriTemplateValues) {
         // initialUri is ignored as the intent is to build the entire URI from the template.
         // Inspired by https://www.baeldung.com/java-regex-token-replacement
         int lastIndex = 0;
@@ -49,7 +49,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         while (matcher.find()) {
             output.append(this.uriTemplate, lastIndex, matcher.start());
             String expression = matcher.group(1);
-            output.append(getExpressionValue(columnValues, expression));
+            output.append(getExpressionValue(uriTemplateValues, expression));
             lastIndex = matcher.end();
         }
         if (lastIndex < this.uriTemplate.length()) {
@@ -90,19 +90,19 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         }
     }
 
-    private String getExpressionValue(JsonNode row, String expression) {
+    private String getExpressionValue(JsonNode uriTemplateValues, String expression) {
         JsonNode node;
         // As of 2.3.0, now supports a JSONPointer expression, which is indicated by the first character being a "/".
         if (expression.startsWith("/")) {
-            node = row.at(expression);
+            node = uriTemplateValues.at(expression);
         } else {
-            node = row.has(expression) ? row.get(expression) : null;
+            node = uriTemplateValues.has(expression) ? uriTemplateValues.get(expression) : null;
         }
 
         if (node == null || node.isMissingNode()) {
             throw new ConnectorException(
                 String.format("Expression '%s' did not resolve to a value in row: %s; expression is required by URI template: %s",
-                    expression, row, uriTemplate
+                    expression, uriTemplateValues, uriTemplate
                 ));
         }
 
@@ -110,7 +110,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         if (text.trim().length() == 0) {
             throw new ConnectorException(
                 String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
-                    expression, row, uriTemplate
+                    expression, uriTemplateValues, uriTemplate
                 ));
         }
         return text;

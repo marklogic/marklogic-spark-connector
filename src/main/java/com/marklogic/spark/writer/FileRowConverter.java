@@ -1,14 +1,14 @@
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.types.DataTypes;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,18 +31,15 @@ class FileRowConverter implements RowConverter {
         String initialUri = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle content = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
         forceFormatIfNecessary(content);
-        ObjectNode columnValues = null;
+        JsonNode uriTemplateValues = null;
         if (writeContext.hasOption(Options.WRITE_URI_TEMPLATE)) {
-            columnValues = objectMapper.createObjectNode();
-            columnValues.put("path", initialUri);
-            Object modificationTime = row.get(1, DataTypes.LongType);
-            if (modificationTime != null) {
-                columnValues.put("modificationTime", modificationTime.toString());
+            try {
+                uriTemplateValues = objectMapper.readTree(row.getBinary(3));
+            } catch (IOException e) {
+                throw new ConnectorException("Can't read your JSON! " + e.getMessage(), e);
             }
-            columnValues.put("length", row.getLong(2));
-            // Not including content as it's a byte array that is not expected to be helpful for making a URI.
         }
-        return Optional.of(new DocBuilder.DocumentInputs(initialUri, content, columnValues, null));
+        return Optional.of(new DocBuilder.DocumentInputs(initialUri, content, uriTemplateValues, null));
     }
 
     @Override

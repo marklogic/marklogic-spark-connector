@@ -1,5 +1,6 @@
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.ConnectorException;
 
@@ -18,7 +19,7 @@ class StandardUriMaker implements DocBuilder.UriMaker {
     }
 
     @Override
-    public String makeURI(String initialUri, ObjectNode columnValues) {
+    public String makeURI(String initialUri, JsonNode uriTemplateValues) {
         String uri = initialUri != null ? initialUri : "";
         if (uriReplace != null && uriReplace.trim().length() > 0) {
             uri = applyUriReplace(uri);
