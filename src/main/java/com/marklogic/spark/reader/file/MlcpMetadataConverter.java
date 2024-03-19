@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -28,7 +29,7 @@ class MlcpMetadataConverter {
         this.saxBuilder = new SAXBuilder();
     }
 
-    DocumentMetadataHandle convert(InputStream inputStream) throws JDOMException, IOException {
+    MlcpMetadata convert(InputStream inputStream) throws JDOMException, IOException {
         Document doc = this.saxBuilder.build(inputStream);
         Element mlcpMetadata = doc.getRootElement();
         Element properties = mlcpMetadata.getChild("properties");
@@ -41,7 +42,14 @@ class MlcpMetadataConverter {
         addPermissions(mlcpMetadata, restMetadata);
         addQuality(mlcpMetadata, restMetadata);
         addMetadataValues(mlcpMetadata, restMetadata);
-        return restMetadata;
+
+        Format javaFormat = null;
+        Element format = mlcpMetadata.getChild("format");
+        if (format != null && format.getChild("name") != null) {
+            javaFormat = Format.valueOf(format.getChildText("name").toUpperCase());
+        }
+
+        return new MlcpMetadata(restMetadata, javaFormat);
     }
 
     /**

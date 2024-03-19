@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import com.marklogic.junit5.PermissionsTester;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -16,7 +17,10 @@ class ConvertMlcpMetadataTest {
     @Test
     void test() throws Exception {
         InputStream input = new ClassPathResource("mlcp-metadata/complete.xml").getInputStream();
-        DocumentMetadataHandle metadata = new MlcpMetadataConverter().convert(input);
+        MlcpMetadata mlcpMetadata = new MlcpMetadataConverter().convert(input);
+        assertEquals(Format.XML, mlcpMetadata.getFormat());
+
+        DocumentMetadataHandle metadata = mlcpMetadata.getMetadata();
 
         assertEquals(2, metadata.getCollections().size());
         assertTrue(metadata.getCollections().contains("collection1"));

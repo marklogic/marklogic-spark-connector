@@ -14,18 +14,13 @@ import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
-import org.apache.spark.sql.catalyst.util.ArrayBasedMapData;
-import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.namespace.QName;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -130,6 +125,11 @@ class ForestReader implements PartitionReader<InternalRow> {
         return new GenericInternalRow(row);
     }
 
+    @Override
+    public void close() {
+        closeCurrentDocumentPage();
+    }
+    
     private List<String> getNextBatchOfUris() {
         long start = System.currentTimeMillis();
         List<String> uris = uriBatcher.nextBatchOfUris();
@@ -159,80 +159,24 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     private void populateMetadataColumns(Object[] row, DocumentMetadataHandle metadata) {
         if (requestedMetadataHas(DocumentManager.Metadata.COLLECTIONS)) {
-            populateCollectionsColumn(row, metadata);
+            DocumentRowSchema.populateCollectionsColumn(row, metadata);
         }
         if (requestedMetadataHas(DocumentManager.Metadata.PERMISSIONS)) {
-            populatePermissionsColumn(row, metadata);
+            DocumentRowSchema.populatePermissionsColumn(row, metadata);
         }
         if (requestedMetadataHas(DocumentManager.Metadata.QUALITY)) {
-            row[5] = metadata.getQuality();
+            DocumentRowSchema.populateQualityColumn(row, metadata);
         }
         if (requestedMetadataHas(DocumentManager.Metadata.PROPERTIES)) {
-            populatePropertiesColumn(row, metadata);
+            DocumentRowSchema.populatePropertiesColumn(row, metadata);
         }
         if (requestedMetadataHas(DocumentManager.Metadata.METADATAVALUES)) {
-            populateMetadataValuesColumn(row, metadata);
+            DocumentRowSchema.populateMetadataValuesColumn(row, metadata);
         }
-    }
-
-    private void populateCollectionsColumn(Object[] row, DocumentMetadataHandle metadata) {
-        UTF8String[] collections = new UTF8String[metadata.getCollections().size()];
-        Iterator<String> iterator = metadata.getCollections().iterator();
-        for (int i = 0; i < collections.length; i++) {
-            collections[i] = UTF8String.fromString(iterator.next());
-        }
-        row[3] = ArrayData.toArrayData(collections);
-    }
-
-    private void populatePermissionsColumn(Object[] row, DocumentMetadataHandle metadata) {
-        DocumentMetadataHandle.DocumentPermissions perms = metadata.getPermissions();
-        UTF8String[] roles = new UTF8String[perms.size()];
-        Object[] capabilityArrays = new Object[perms.size()];
-        int i = 0;
-        for (Map.Entry<String, Set<DocumentMetadataHandle.Capability>> entry : perms.entrySet()) {
-            roles[i] = UTF8String.fromString(entry.getKey());
-            UTF8String[] capabilities = new UTF8String[entry.getValue().size()];
-            int j = 0;
-            Iterator<DocumentMetadataHandle.Capability> iterator = entry.getValue().iterator();
-            while (iterator.hasNext()) {
-                capabilities[j++] = UTF8String.fromString(iterator.next().name());
-            }
-            capabilityArrays[i++] = ArrayData.toArrayData(capabilities);
-        }
-        row[4] = ArrayBasedMapData.apply(roles, capabilityArrays);
-    }
-
-    private void populatePropertiesColumn(Object[] row, DocumentMetadataHandle metadata) {
-        DocumentMetadataHandle.DocumentProperties props = metadata.getProperties();
-        UTF8String[] keys = new UTF8String[props.size()];
-        UTF8String[] values = new UTF8String[props.size()];
-        int index = 0;
-        for (QName key : props.keySet()) {
-            keys[index] = UTF8String.fromString(key.toString());
-            values[index++] = UTF8String.fromString(props.get(key, String.class));
-        }
-        row[6] = ArrayBasedMapData.apply(keys, values);
-    }
-
-    private void populateMetadataValuesColumn(Object[] row, DocumentMetadataHandle metadata) {
-        DocumentMetadataHandle.DocumentMetadataValues metadataValues = metadata.getMetadataValues();
-        UTF8String[] keys = new UTF8String[metadataValues.size()];
-        UTF8String[] values = new UTF8String[metadataValues.size()];
-        int index = 0;
-        for (Map.Entry<String, String> entry : metadataValues.entrySet()) {
-            keys[index] = UTF8String.fromString(entry.getKey());
-            values[index++] = UTF8String.fromString(entry.getValue());
-        }
-        row[7] = ArrayBasedMapData.apply(keys, values);
     }
 
     private boolean requestedMetadataHas(DocumentManager.Metadata metadata) {
         return requestedMetadata.contains(metadata) || requestedMetadata.contains(DocumentManager.Metadata.ALL);
-    }
-
-    @Override
-    public void close() {
-        closeCurrentDocumentPage();
     }
 
     private void closeCurrentDocumentPage() {
