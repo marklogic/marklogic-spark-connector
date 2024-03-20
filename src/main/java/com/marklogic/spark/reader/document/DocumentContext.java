@@ -50,6 +50,11 @@ class DocumentContext extends ContextSupport {
 
     SearchQueryDefinition buildSearchQuery(DatabaseClient client) {
         final Map<String, String> props = getProperties();
+        // REST API allows commas in URIs, but not newlines, so that's safe to use as a delimiter.
+        String[] uris = null;
+        if (hasOption(Options.READ_DOCUMENTS_URIS)) {
+            uris = getStringOption(Options.READ_DOCUMENTS_URIS).split("\n");
+        }
         return new SearchQueryBuilder()
             .withStringQuery(props.get(Options.READ_DOCUMENTS_STRING_QUERY))
             .withQuery(props.get(Options.READ_DOCUMENTS_QUERY))
@@ -59,6 +64,7 @@ class DocumentContext extends ContextSupport {
             .withTransformName(props.get(Options.READ_DOCUMENTS_TRANSFORM))
             .withTransformParams(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS))
             .withTransformParamsDelimiter(props.get(Options.READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER))
+            .withUris(uris)
             .buildQuery(client);
     }
 
