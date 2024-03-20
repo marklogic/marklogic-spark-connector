@@ -69,6 +69,8 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
                 return TripleRowSchema.SCHEMA;
             } else if ("mlcp_archive".equalsIgnoreCase(type)) {
                 return DocumentRowSchema.SCHEMA;
+            } else if ("archive".equalsIgnoreCase(type)) {
+                return DocumentRowSchema.SCHEMA;
             }
             return FileRowSchema.SCHEMA;
         }
