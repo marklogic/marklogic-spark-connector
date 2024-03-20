@@ -19,6 +19,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
+    private static final int COLLECTIONS_COLUMN = 3;
+    private static final int PERMISSIONS_COLUMN = 4;
+    private static final int QUALITY_COLUMN = 5;
+    private static final int PROPERTIES_COLUMN = 6;
+    private static final int METADATAVALUES_COLUMN = 7;
+
     /**
      * Depends on an MLCP archive file containing the two XML documents and their metadata entries as produced by
      * TestUtil.insertTwoDocumentsWithAllMetadata.
@@ -55,6 +61,56 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
         assertEquals("JSON", rows.get(1).getString(2));
         assertEquals("TEXT", rows.get(2).getString(2));
         assertEquals("XML", rows.get(3).getString(2));
+    }
+
+    @Test
+    void subsetOfCategories() {
+        readArchiveWithCategories("collections,permissions,quality").forEach(row -> {
+            verifyCollections(row);
+            verifyPermissions(row);
+            verifyQuality(row);
+            verifyColumnsAreNull(row, PROPERTIES_COLUMN, METADATAVALUES_COLUMN);
+        });
+    }
+
+    @Test
+    void onlyCollections() {
+        readArchiveWithCategories("collections").forEach(row -> {
+            verifyCollections(row);
+            verifyColumnsAreNull(row, PERMISSIONS_COLUMN, QUALITY_COLUMN, PROPERTIES_COLUMN, METADATAVALUES_COLUMN);
+        });
+    }
+
+    @Test
+    void onlyPermissions() {
+        readArchiveWithCategories("permissions").forEach(row -> {
+            verifyPermissions(row);
+            verifyColumnsAreNull(row, COLLECTIONS_COLUMN, QUALITY_COLUMN, PROPERTIES_COLUMN, METADATAVALUES_COLUMN);
+        });
+    }
+
+    @Test
+    void onlyQuality() {
+        readArchiveWithCategories("quality").forEach(row -> {
+            verifyQuality(row);
+            verifyColumnsAreNull(row, COLLECTIONS_COLUMN, PERMISSIONS_COLUMN, PROPERTIES_COLUMN, METADATAVALUES_COLUMN);
+        });
+    }
+
+    @Test
+    void onlyProperties() {
+        readArchiveWithCategories("properties").forEach(row -> {
+            verifyProperties(row);
+            verifyColumnsAreNull(row, COLLECTIONS_COLUMN, PERMISSIONS_COLUMN, QUALITY_COLUMN, METADATAVALUES_COLUMN);
+        });
+    }
+
+    @Test
+    void onlyMetadataValues() {
+        readArchiveWithCategories("metadatavalues").forEach(row -> {
+            verifyMetadataValues(row);
+            verifyColumnsAreNull(row, COLLECTIONS_COLUMN, PERMISSIONS_COLUMN, QUALITY_COLUMN, PROPERTIES_COLUMN);
+        });
     }
 
     @Test
@@ -119,32 +175,46 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     private void verifyFirstRow(Row row) {
         final String uri = row.getString(0);
         assertTrue(uri.endsWith("/files-with-all-metadata.mlcp.zip/test/1.xml"), "Unexpected URI: " + uri);
-
         XmlNode doc = new XmlNode(new String((byte[]) row.get(1)));
         assertEquals("world", doc.getElementValue("hello"));
-
         verifyRowMetadata(row);
     }
 
     private void verifySecondRow(Row row) {
         final String uri = row.getString(0);
         assertTrue(uri.endsWith("/files-with-all-metadata.mlcp.zip/test/2.xml"), "Unexpected URI: " + uri);
-
         XmlNode doc = new XmlNode(new String((byte[]) row.get(1)));
         assertEquals("world", doc.getElementValue("hello"));
-
         verifyRowMetadata(row);
     }
 
     private void verifyRowMetadata(Row row) {
         assertEquals("XML", row.getString(2)); // format
+        verifyCollections(row);
+        verifyPermissions(row);
+        verifyQuality(row);
+        verifyProperties(row);
+        verifyMetadataValues(row);
+    }
 
-        List<String> collections = row.getList(3);
+    private List<Row> readArchiveWithCategories(String categories) {
+        return newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .option(Options.READ_ARCHIVES_CATEGORIES, categories)
+            .load("src/test/resources/mlcp-archive-files/files-with-all-metadata.mlcp.zip")
+            .collectAsList();
+    }
+
+    private void verifyCollections(Row row) {
+        List<String> collections = row.getList(COLLECTIONS_COLUMN);
         assertEquals(2, collections.size());
         assertEquals("collection1", collections.get(0));
         assertEquals("collection2", collections.get(1));
+    }
 
-        Map<String, WrappedArray<String>> permissions = row.getJavaMap(4);
+    private void verifyPermissions(Row row) {
+        Map<String, WrappedArray<String>> permissions = row.getJavaMap(PERMISSIONS_COLUMN);
         assertEquals(2, permissions.size());
         WrappedArray<String> capabilities = permissions.get("qconsole-user");
         assertEquals(1, capabilities.size());
@@ -156,17 +226,29 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
         list.add(capabilities.apply(1));
         assertTrue(list.contains("READ"));
         assertTrue(list.contains("UPDATE"));
+    }
 
-        assertEquals(10, row.getInt(5)); // quality
+    private void verifyQuality(Row row) {
+        assertEquals(10, row.getInt(QUALITY_COLUMN));
+    }
 
-        Map<String, String> properties = row.getJavaMap(6);
+    private void verifyProperties(Row row) {
+        Map<String, String> properties = row.getJavaMap(PROPERTIES_COLUMN);
         assertEquals(2, properties.size());
         assertEquals("value2", properties.get("key2"));
         assertEquals("value1", properties.get("{org:example}key1"));
+    }
 
-        Map<String, String> metadataValues = row.getJavaMap(7);
+    private void verifyMetadataValues(Row row) {
+        Map<String, String> metadataValues = row.getJavaMap(METADATAVALUES_COLUMN);
         assertEquals(2, metadataValues.size());
         assertEquals("value1", metadataValues.get("meta1"));
         assertEquals("value2", metadataValues.get("meta2"));
+    }
+
+    private void verifyColumnsAreNull(Row row, int... indices) {
+        for (int index : indices) {
+            assertTrue(row.isNullAt(index), "Unexpected non-null column: " + index + "; value: " + row.get(index));
+        }
     }
 }

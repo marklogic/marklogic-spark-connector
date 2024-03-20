@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -11,6 +12,8 @@ import org.apache.spark.unsafe.types.UTF8String;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -20,6 +23,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     private final ZipInputStream zipInputStream;
     private final MlcpMetadataConverter mlcpMetadataConverter;
     private final FileContext fileContext;
+    private final List<String> metadataCategories;
     private InternalRow nextRowToReturn;
 
     MlcpArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
@@ -27,6 +31,13 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
         this.fileContext = fileContext;
         this.zipInputStream = new ZipInputStream(fileContext.open(filePartition));
         this.mlcpMetadataConverter = new MlcpMetadataConverter();
+
+        this.metadataCategories = new ArrayList<>();
+        if (fileContext.hasOption(Options.READ_ARCHIVES_CATEGORIES)) {
+            for (String category : fileContext.getStringOption(Options.READ_ARCHIVES_CATEGORIES).split(",")) {
+                this.metadataCategories.add(category.toLowerCase());
+            }
+        }
     }
 
     @Override
@@ -156,11 +167,29 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
         if (mlcpMetadata.getFormat() != null) {
             row[2] = UTF8String.fromString(mlcpMetadata.getFormat().name());
         }
-        DocumentRowSchema.populateCollectionsColumn(row, mlcpMetadata.getMetadata());
-        DocumentRowSchema.populatePermissionsColumn(row, mlcpMetadata.getMetadata());
-        DocumentRowSchema.populateQualityColumn(row, mlcpMetadata.getMetadata());
-        DocumentRowSchema.populatePropertiesColumn(row, mlcpMetadata.getMetadata());
-        DocumentRowSchema.populateMetadataValuesColumn(row, mlcpMetadata.getMetadata());
+        addMetadataToRow(row, mlcpMetadata);
         return new GenericInternalRow(row);
+    }
+
+    private void addMetadataToRow(Object[] row, MlcpMetadata mlcpMetadata) {
+        if (categoryIsIncluded("collections")) {
+            DocumentRowSchema.populateCollectionsColumn(row, mlcpMetadata.getMetadata());
+        }
+        if (categoryIsIncluded("permissions")) {
+            DocumentRowSchema.populatePermissionsColumn(row, mlcpMetadata.getMetadata());
+        }
+        if (categoryIsIncluded("quality")) {
+            DocumentRowSchema.populateQualityColumn(row, mlcpMetadata.getMetadata());
+        }
+        if (categoryIsIncluded("properties")) {
+            DocumentRowSchema.populatePropertiesColumn(row, mlcpMetadata.getMetadata());
+        }
+        if (categoryIsIncluded("metadatavalues")) {
+            DocumentRowSchema.populateMetadataValuesColumn(row, mlcpMetadata.getMetadata());
+        }
+    }
+
+    private boolean categoryIsIncluded(String category) {
+        return this.metadataCategories.isEmpty() || this.metadataCategories.contains(category);
     }
 }
