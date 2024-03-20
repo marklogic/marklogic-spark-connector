@@ -43,13 +43,21 @@ class MlcpMetadataConverter {
         addQuality(mlcpMetadata, restMetadata);
         addMetadataValues(mlcpMetadata, restMetadata);
 
-        Format javaFormat = null;
+        Format javaFormat = getFormat(mlcpMetadata);
+        return new MlcpMetadata(restMetadata, javaFormat);
+    }
+
+    private Format getFormat(Element mlcpMetadata) {
         Element format = mlcpMetadata.getChild("format");
         if (format != null && format.getChild("name") != null) {
-            javaFormat = Format.valueOf(format.getChildText("name").toUpperCase());
+            String value = format.getChildText("name");
+            // MLCP uses "text()" for an unknown reason.
+            if (value.startsWith("text")) {
+                value = "text";
+            }
+            return Format.valueOf(value.toUpperCase());
         }
-
-        return new MlcpMetadata(restMetadata, javaFormat);
+        return null;
     }
 
     /**
