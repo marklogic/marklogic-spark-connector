@@ -67,7 +67,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             final String type = properties.get(Options.READ_FILES_TYPE);
             if ("rdf".equalsIgnoreCase(type)) {
                 return TripleRowSchema.SCHEMA;
-            } else if ("mlcp_archive".equalsIgnoreCase(type)) {
+            } else if ("mlcp_archive".equalsIgnoreCase(type) || "delimited_text".equalsIgnoreCase(type) || "json_lines".equalsIgnoreCase(type)) {
                 return DocumentRowSchema.SCHEMA;
             }
             return FileRowSchema.SCHEMA;

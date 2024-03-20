@@ -35,6 +35,10 @@ dependencies {
     exclude module: 'jackson-dataformat-csv'
   }
 
+  // To support reading CSV files, we need jackson-dataformat-csv, but we are careful to use the version associated
+  // with the version of Spark that we depend on.
+  implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.15.3"
+
   // Need this so that an OkHttpClientConfigurator can be created.
   implementation 'com.squareup.okhttp3:okhttp:4.12.0'
 

@@ -26,6 +26,10 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return createRdfReader(filePartition);
         } else if ("mlcp_archive".equalsIgnoreCase(fileType)) {
             return new MlcpArchiveFileReader(filePartition, fileContext);
+        } else if ("delimited_text".equalsIgnoreCase(fileType)) {
+            return new DelimitedTextFileReader(filePartition, fileContext);
+        } else if ("json_lines".equalsIgnoreCase(fileType)) {
+            return new JsonLinesFileReader(filePartition, fileContext);
         } else if (fileContext.hasOption(Options.READ_AGGREGATES_XML_ELEMENT)) {
             return fileContext.isZip() ?
                 new ZipAggregateXmlFileReader(filePartition, fileContext) :
