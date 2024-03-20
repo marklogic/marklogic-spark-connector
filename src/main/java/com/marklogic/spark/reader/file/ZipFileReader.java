@@ -1,6 +1,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import org.apache.commons.crypto.utils.IoUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -50,8 +51,8 @@ class ZipFileReader implements PartitionReader<InternalRow> {
     }
 
     @Override
-    public void close() throws IOException {
-        this.zipInputStream.close();
+    public void close() {
+        IoUtils.closeQuietly(this.zipInputStream);
     }
 
     private byte[] readZipEntry() {

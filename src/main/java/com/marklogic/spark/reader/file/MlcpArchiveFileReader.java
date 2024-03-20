@@ -4,6 +4,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -82,8 +83,8 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     @Override
-    public void close() throws IOException {
-        this.zipInputStream.close();
+    public void close() {
+        IOUtils.closeQuietly(this.zipInputStream);
     }
 
     private ZipEntry getNextMetadataEntry() {
