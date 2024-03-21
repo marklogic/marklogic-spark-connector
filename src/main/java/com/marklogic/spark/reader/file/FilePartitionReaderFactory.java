@@ -47,6 +47,6 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
         }
         return RdfUtil.isQuadsFile(filePartition.getPath()) ?
             new QuadsFileReader(filePartition, fileContext) :
-            new TriplesFileReader(filePartition, fileContext);
+            new TriplesDocumentRdfReader(filePartition, fileContext);
     }
 }

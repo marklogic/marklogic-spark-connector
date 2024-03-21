@@ -22,6 +22,7 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.FileRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.reader.file.TriplesDocumentRowSchema;
 import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
@@ -66,7 +67,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (isFileOperation(properties)) {
             final String type = properties.get(Options.READ_FILES_TYPE);
             if ("rdf".equalsIgnoreCase(type)) {
-                return TripleRowSchema.SCHEMA;
+                return TriplesDocumentRowSchema.SCHEMA;
             } else if ("mlcp_archive".equalsIgnoreCase(type)) {
                 return DocumentRowSchema.SCHEMA;
             } else if ("archive".equalsIgnoreCase(type)) {
