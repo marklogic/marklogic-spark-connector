@@ -3,14 +3,15 @@ package com.marklogic.spark.reader.document;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 class DocumentScanBuilder implements ScanBuilder, SupportsPushDownLimit {
 
     private final DocumentContext context;
 
-    DocumentScanBuilder(CaseInsensitiveStringMap options) {
-        this.context = new DocumentContext(options);
+    DocumentScanBuilder(CaseInsensitiveStringMap options, StructType schema) {
+        this.context = new DocumentContext(options, schema);
     }
 
     @Override

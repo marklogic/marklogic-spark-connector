@@ -73,11 +73,11 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
                 return DocumentRowSchema.SCHEMA;
             }
             return FileRowSchema.SCHEMA;
-        }
-        if (isReadDocumentsOperation(properties)) {
+        } else if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
-        }
-        if (Util.isReadWithCustomCodeOperation(properties)) {
+        } else if (isReadTriplesOperation(properties)) {
+            return TripleRowSchema.SCHEMA;
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
         return inferSchemaFromOpticQuery(properties);
@@ -92,8 +92,11 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             );
         }
 
+        // We may want a TriplesTable, but let's just jam in a new reader here for now.
         if (isReadDocumentsOperation(properties)) {
-            return new DocumentTable();
+            return new DocumentTable(DocumentRowSchema.SCHEMA);
+        } else if (isReadTriplesOperation(properties)) {
+            return new DocumentTable(TripleRowSchema.SCHEMA);
         } else if (isReadOperation(properties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Creating new table for reading");
@@ -132,6 +135,10 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
             properties.containsKey(Options.READ_DOCUMENTS_OPTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_URIS);
+    }
+
+    private boolean isReadTriplesOperation(Map<String, String> properties) {
+        return properties.containsKey(Options.READ_TRIPLES_COLLECTIONS);
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {

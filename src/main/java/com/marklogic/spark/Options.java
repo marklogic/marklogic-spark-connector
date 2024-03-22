@@ -61,6 +61,12 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    // Not sure about this yet.
+    // If we go this route, we'll need collections, uris, directory, query, string_query, options.
+    // Doesn't seem too bad. Not a lot of benefit in a "graph" option since it's just a collection.
+    public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
+
+
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";

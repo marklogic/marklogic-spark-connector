@@ -5,6 +5,7 @@ import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.HashSet;
@@ -14,9 +15,11 @@ import java.util.Set;
 class DocumentContext extends ContextSupport {
 
     private Integer limit;
+    private final StructType schema;
 
-    DocumentContext(CaseInsensitiveStringMap options) {
+    DocumentContext(CaseInsensitiveStringMap options, StructType schema) {
         super(options.asCaseSensitiveMap());
+        this.schema = schema;
     }
 
     Set<DocumentManager.Metadata> getRequestedMetadata() {
@@ -87,5 +90,9 @@ class DocumentContext extends ContextSupport {
 
     Integer getLimit() {
         return limit;
+    }
+
+    StructType getSchema() {
+        return schema;
     }
 }
