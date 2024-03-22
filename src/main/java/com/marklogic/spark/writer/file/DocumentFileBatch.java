@@ -7,6 +7,7 @@ import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.util.SerializableConfiguration;
 
 import java.util.Map;
@@ -14,9 +15,11 @@ import java.util.Map;
 class DocumentFileBatch implements BatchWrite {
 
     private final Map<String, String> properties;
+    private final StructType schema;
 
-    DocumentFileBatch(Map<String, String> properties) {
+    DocumentFileBatch(Map<String, String> properties, StructType schema) {
         this.properties = properties;
+        this.schema = schema;
     }
 
     @Override
@@ -24,7 +27,7 @@ class DocumentFileBatch implements BatchWrite {
         // This is the last chance we have for accessing the hadoop config, which is needed by the writer.
         // SerializableConfiguration allows for it to be sent to the factory.
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
-        return new DocumentFileWriterFactory(properties, new SerializableConfiguration(config));
+        return new DocumentFileWriterFactory(properties, new SerializableConfiguration(config), schema);
     }
 
     @Override
