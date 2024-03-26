@@ -11,6 +11,7 @@ import org.apache.spark.unsafe.types.UTF8String;
 
 import javax.xml.namespace.QName;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -112,6 +113,29 @@ public abstract class DocumentRowSchema {
         populateQualityColumn(row, documentMetadataHandle);
         populatePropertiesColumn(row, documentMetadataHandle);
         populateMetadataValuesColumn(row, documentMetadataHandle);
+    }
+
+    public static void populateMetadataCategories(Object[] row, DocumentMetadataHandle documentMetadataHandle, List<String> metadataCategories) {
+        if (categoryIsIncluded("collections", metadataCategories)) {
+            DocumentRowSchema.populateCollectionsColumn(row, documentMetadataHandle);
+        }
+
+        if (categoryIsIncluded("permissions", metadataCategories)) {
+            DocumentRowSchema.populatePermissionsColumn(row, documentMetadataHandle);
+        }
+        if (categoryIsIncluded("quality", metadataCategories)) {
+            DocumentRowSchema.populateQualityColumn(row, documentMetadataHandle);
+        }
+        if (categoryIsIncluded("properties", metadataCategories)) {
+            DocumentRowSchema.populatePropertiesColumn(row, documentMetadataHandle);
+        }
+        if (categoryIsIncluded("metadatavalues", metadataCategories)) {
+            DocumentRowSchema.populateMetadataValuesColumn(row, documentMetadataHandle);
+        }
+    }
+
+    private static boolean categoryIsIncluded(String category, List<String> metadataCategories) {
+        return metadataCategories.contains(category);
     }
 
     private static void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
