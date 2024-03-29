@@ -23,6 +23,14 @@ repositories {
   mavenCentral()
 }
 
+configurations {
+  mlcp {
+    attributes {
+      attribute(TargetJvmEnvironment.TARGET_JVM_ENVIRONMENT_ATTRIBUTE, objects.named(TargetJvmEnvironment.class, TargetJvmEnvironment.STANDARD_JVM))
+    }
+  }
+}
+
 dependencies {
   compileOnly 'org.apache.spark:spark-sql_2.12:' + sparkVersion
   implementation ("com.marklogic:marklogic-client-api:6.5.0") {
@@ -47,6 +55,9 @@ dependencies {
 
   implementation "org.apache.jena:jena-arq:4.10.0"
   implementation "org.jdom:jdom2:2.0.6.1"
+
+  // Only needed for loading data into the test-app.
+  mlcp 'com.marklogic:mlcp:11.1.0'
 
   testImplementation 'org.apache.spark:spark-sql_2.12:' + sparkVersion
 
@@ -97,6 +108,24 @@ task reloadTestData(type: com.marklogic.gradle.task.MarkLogicTask) {
   }
 }
 reloadTestData.finalizedBy mlLoadData
+
+task deleteRdfCollection(type: com.marklogic.gradle.task.datamovement.DeleteCollectionsTask) {
+  collections = ["http://marklogic.com/semantics#default-graph"]
+  client = mlAppConfig.newTestDatabaseClient()
+}
+
+task loadTestTriples(type: com.marklogic.gradle.task.MlcpTask) {
+  classpath = configurations.mlcp
+  command = "IMPORT"
+  port = Integer.parseInt(mlTestRestPort)
+  input_file_path = "src/test/resources/rdf/1k.n3"
+  input_file_type = "rdf"
+  output_permissions = "spark-user-role,read,admin,update"
+  output_collections = "http://marklogic.com/semantics#default-graph,test-config"
+}
+loadTestTriples.dependsOn deleteRdfCollection
+mlDeployApp.finalizedBy loadTestTriples
+mlLoadData.finalizedBy loadTestTriples
 
 if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
   test {

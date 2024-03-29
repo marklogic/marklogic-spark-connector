@@ -61,6 +61,14 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
+    public static final String READ_TRIPLES_QUERY = "spark.marklogic.read.triples.query";
+    public static final String READ_TRIPLES_STRING_QUERY = "spark.marklogic.read.triples.stringQuery";
+    public static final String READ_TRIPLES_URIS = "spark.marklogic.read.triples.uris";
+    public static final String READ_TRIPLES_DIRECTORY = "spark.marklogic.read.triples.directory";
+    public static final String READ_TRIPLES_OPTIONS = "spark.marklogic.read.triples.options";
+    public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
+
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
@@ -113,6 +121,9 @@ public abstract class Options {
 
     // Applies to XML and JSON documents.
     public static final String WRITE_FILES_PRETTY_PRINT = "spark.marklogic.write.files.prettyPrint";
+
+    public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
+    public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
     private Options() {
     }

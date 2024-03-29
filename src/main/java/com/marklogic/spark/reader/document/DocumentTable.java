@@ -25,9 +25,15 @@ public class DocumentTable implements SupportsRead, SupportsWrite {
         capabilities.add(TableCapability.BATCH_WRITE);
     }
 
+    private final StructType schema;
+
+    public DocumentTable(StructType schema) {
+        this.schema = schema;
+    }
+
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        return new DocumentScanBuilder(options);
+        return new DocumentScanBuilder(options, this.schema);
     }
 
     @Override
@@ -42,7 +48,7 @@ public class DocumentTable implements SupportsRead, SupportsWrite {
 
     @Override
     public StructType schema() {
-        return DocumentRowSchema.SCHEMA;
+        return this.schema;
     }
 
     @Override
