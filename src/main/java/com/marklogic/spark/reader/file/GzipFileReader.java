@@ -41,9 +41,9 @@ class GzipFileReader implements PartitionReader<InternalRow> {
             gzipInputStream = fileContext.open(filePartition);
             byte[] content = extractGZIPContents(gzipInputStream);
             String uri = makeURI();
-            long length = content.length;
             this.rowToReturn = new GenericInternalRow(new Object[]{
-                UTF8String.fromString(uri), null, length, ByteArray.concat(content)
+                UTF8String.fromString(uri), ByteArray.concat(content),
+                null, null, null, null, null, null
             });
             return true;
         } catch (RuntimeException ex) {

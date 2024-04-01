@@ -71,15 +71,15 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_COMPRESSION, "zip")
             .load(files[0].getAbsolutePath())
-            .orderBy(new Column("path"))
+            .orderBy(new Column("uri"))
             .collectAsList();
 
-        String xml = new String((byte[]) rows.get(0).get(3));
+        String xml = new String((byte[]) rows.get(0).get(1));
         assertEquals("<root>\n" +
             "    <hello>world</hello>\n" +
             "</root>\n", xml);
 
-        String json = new String((byte[]) rows.get(1).get(3));
+        String json = new String((byte[]) rows.get(1).get(1));
         assertEquals("{\n" +
             "  \"hello\" : \"world\"\n" +
             "}", json);

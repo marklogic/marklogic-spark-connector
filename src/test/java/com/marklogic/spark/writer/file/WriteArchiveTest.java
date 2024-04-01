@@ -68,7 +68,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
                 "absolute path of the zip file: " + uri);
 
             if (uri.endsWith(".xml")) {
-                XmlNode doc = new XmlNode(new String((byte[]) row.get(3)));
+                XmlNode doc = new XmlNode(new String((byte[]) row.get(1)));
                 doc.assertElementValue("/hello", "world");
             } else {
                 assertTrue(uri.endsWith(".metadata"));
@@ -78,7 +78,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
     }
 
     private void verifyMetadata(Row row, String metadataValue) {
-        String xml = new String((byte[]) row.get(3));
+        String xml = new String((byte[]) row.get(1));
         XmlNode metadata = new XmlNode(xml,
             Namespace.getNamespace("rapi", "http://marklogic.com/rest-api"),
             Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),

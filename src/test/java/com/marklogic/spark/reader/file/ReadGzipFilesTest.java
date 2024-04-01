@@ -60,7 +60,7 @@ class ReadGzipFilesTest extends AbstractIntegrationTest {
     private void verifyRow(Row row, String expectedUriSuffix, String expectedContent) {
         String uri = row.getString(0);
         assertTrue(uri.endsWith(expectedUriSuffix), "Unexpected URI: " + uri);
-        String content = new String((byte[]) row.get(3));
+        String content = new String((byte[]) row.get(1));
         assertEquals(expectedContent, content);
     }
 }

@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.execution.datasources.PartitioningAwareFileIndex;
@@ -19,7 +20,7 @@ class FileScan implements Scan {
 
     @Override
     public StructType readSchema() {
-        return FileRowSchema.SCHEMA;
+        return DocumentRowSchema.SCHEMA;
     }
 
     @Override

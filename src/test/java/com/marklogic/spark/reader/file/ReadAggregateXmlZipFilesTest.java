@@ -149,9 +149,10 @@ class ReadAggregateXmlZipFilesTest extends AbstractIntegrationTest {
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {
         String uri = row.getString(0);
         assertTrue(uri.endsWith(expectedUriSuffix), String.format("URI %s doesn't end with %s", uri, expectedUriSuffix));
-        String xml = new String((byte[]) row.get(3));
+        String xml = new String((byte[]) row.get(1));
         XmlNode doc = new XmlNode(xml, Namespace.getNamespace("ex", "org:example"));
         doc.assertElementValue(String.format("%sname", rootPath), name);
         doc.assertElementValue(String.format("%sage", rootPath), Integer.toString(age));
+        assertEquals("xml", row.getString(2));
     }
 }

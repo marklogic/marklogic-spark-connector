@@ -20,7 +20,6 @@ import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
-import com.marklogic.spark.reader.file.FileRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
@@ -65,14 +64,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         final Map<String, String> properties = options.asCaseSensitiveMap();
         if (isFileOperation(properties)) {
             final String type = properties.get(Options.READ_FILES_TYPE);
-            if ("rdf".equalsIgnoreCase(type)) {
-                return TripleRowSchema.SCHEMA;
-            } else if ("mlcp_archive".equalsIgnoreCase(type)) {
-                return DocumentRowSchema.SCHEMA;
-            } else if ("archive".equalsIgnoreCase(type)) {
-                return DocumentRowSchema.SCHEMA;
-            }
-            return FileRowSchema.SCHEMA;
+            return "rdf".equalsIgnoreCase(type) ? TripleRowSchema.SCHEMA : DocumentRowSchema.SCHEMA;
         }
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
