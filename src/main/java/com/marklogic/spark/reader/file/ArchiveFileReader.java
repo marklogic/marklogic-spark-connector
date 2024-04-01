@@ -43,16 +43,17 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         String uri = zipEntryName.startsWith("/") ? this.path + zipEntryName : this.path + "/" + zipEntryName;
         try {
             ZipEntry metadataEntry = FileUtil.findNextFileEntry(zipInputStream);
-            if(metadataEntry == null || !metadataEntry.getName().endsWith(".metadata"))
-                throw new RuntimeException("metadata file expected for file "+zipEntryName);
+            if (metadataEntry == null || !metadataEntry.getName().endsWith(".metadata")) {
+                throw new ConnectorException(String.format("Could not find metadata entry for entry %s", zipEntryName));
+            }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
         }
 
         DocumentMetadataHandle documentMetadataHandle = new DocumentMetadataHandle();
         documentMetadataHandle.fromBuffer(readZipEntry());
 
-        return makeRow(uri, content,documentMetadataHandle);
+        return makeRow(uri, content, documentMetadataHandle);
     }
 
     @Override
@@ -68,6 +69,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
                 this.path, e.getMessage()), e);
         }
     }
+
     private InternalRow makeRow(String uri, byte[] content, DocumentMetadataHandle documentMetadataHandle) {
 
         Object[] row = new Object[8];
