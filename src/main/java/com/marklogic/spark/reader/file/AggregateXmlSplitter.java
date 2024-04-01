@@ -19,7 +19,7 @@ import java.util.Map;
 
 /**
  * Knows how to split an aggregate XML document and return a row for each user-defined child element. Each row has
- * a schema matching that of {@code FileRowSchema}.
+ * a schema matching that of {@code DocumentRowSchema}.
  */
 class AggregateXmlSplitter {
 
@@ -64,7 +64,7 @@ class AggregateXmlSplitter {
 
     /**
      * @param pathPrefix used to construct a path if no uriElement was specified
-     * @return a row corresponding to the {@code FileRowSchema}
+     * @return a row corresponding to the {@code DocumentRowSchema}
      */
     InternalRow nextRow(String pathPrefix) {
         String xml;
@@ -83,8 +83,12 @@ class AggregateXmlSplitter {
         rowCounter++;
 
         byte[] content = xml.getBytes();
-        long length = content.length;
-        return new GenericInternalRow(new Object[]{UTF8String.fromString(path), null, length, ByteArray.concat(content)});
+        return new GenericInternalRow(new Object[]{
+            UTF8String.fromString(path),
+            ByteArray.concat(content),
+            UTF8String.fromString("xml"),
+            null, null, null, null, null
+        });
     }
 
     /**

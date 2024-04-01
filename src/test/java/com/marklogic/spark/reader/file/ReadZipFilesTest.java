@@ -27,7 +27,12 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
         Dataset<Row> reader = newZipReader()
             .load("src/test/resources/zip-files/mixed*.zip");
 
-        verifyFileRows(reader.collectAsList());
+        List<Row> rows = reader.collectAsList();
+        assertEquals(4, rows.size(), "Expecting 1 row for each of the 4 entries in the zip.");
+        verifyUriEndsWith(rows.get(0), "mixed-files.zip/mixed-files/hello.json");
+        verifyUriEndsWith(rows.get(1), "mixed-files.zip/mixed-files/hello.txt");
+        verifyUriEndsWith(rows.get(2), "mixed-files.zip/mixed-files/hello.xml");
+        verifyUriEndsWith(rows.get(3), "mixed-files.zip/mixed-files/hello2.txt.gz");
 
         // Now write the rows so we can verify the doc in MarkLogic.
         defaultWrite(reader.write()
@@ -127,24 +132,9 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
             "standard Spark exception that is thrown when a non-existent path is detected.");
     }
 
-    private void verifyFileRows(List<Row> rows) {
-        assertEquals(4, rows.size(), "Expecting 1 row for each of the 4 entries in the zip.");
-        Row row = rows.get(0);
-        assertTrue(row.getString(0).endsWith("mixed-files.zip/mixed-files/hello.json"));
-        assertNull(row.get(1));
-        assertEquals(23, row.getLong(2));
-        row = rows.get(1);
-        assertTrue(row.getString(0).endsWith("mixed-files.zip/mixed-files/hello.txt"));
-        assertNull(row.get(1));
-        assertEquals(12, row.getLong(2));
-        row = rows.get(2);
-        assertTrue(row.getString(0).endsWith("mixed-files.zip/mixed-files/hello.xml"));
-        assertNull(row.get(1));
-        assertEquals(21, row.getLong(2));
-        row = rows.get(3);
-        assertTrue(row.getString(0).endsWith("mixed-files.zip/mixed-files/hello2.txt.gz"));
-        assertNull(row.get(1));
-        assertEquals(43, row.getLong(2));
+    private void verifyUriEndsWith(Row row, String value) {
+        String uri = row.getString(0);
+        assertTrue(uri.endsWith(value), format("URI '%s' does not end with %s", uri, value));
     }
 
     private DataFrameReader newZipReader() {

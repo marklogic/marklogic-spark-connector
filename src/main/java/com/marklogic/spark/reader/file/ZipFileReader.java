@@ -44,9 +44,9 @@ class ZipFileReader implements PartitionReader<InternalRow> {
             this.path + zipEntryName :
             this.path + "/" + zipEntryName;
         byte[] content = readZipEntry();
-        long length = content.length;
         return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(uri), null, length, ByteArray.concat(content)
+            UTF8String.fromString(uri), ByteArray.concat(content),
+            null, null, null, null, null, null
         });
     }
 

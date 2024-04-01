@@ -104,7 +104,8 @@ public abstract class Options {
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
 
-    // For writing rows adhering to {@code FileRowSchema} to MarkLogic.
+    // For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
+    // This was introduced in 2.2.0 and unfortunately uses "fileRows" instead of "binaryFileRows".
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 
     // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.

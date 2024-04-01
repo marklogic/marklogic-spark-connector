@@ -25,7 +25,9 @@ class DocumentRowConverter implements RowConverter {
 
         ObjectNode columnValues = objectMapper.createObjectNode();
         columnValues.put("URI", uri);
-        columnValues.put("format", row.getString(2));
+        if (!row.isNullAt(2)) {
+            columnValues.put("format", row.getString(2));
+        }
 
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
         return Optional.of(new DocBuilder.DocumentInputs(uri, content, columnValues, metadata));
