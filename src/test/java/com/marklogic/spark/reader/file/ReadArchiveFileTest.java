@@ -58,15 +58,15 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             assertEquals("XML", row.get(2));
 
             List<String> collections = JavaConversions.seqAsJavaList(row.getSeq(3));
-            assertEquals(collections.get(0), "collection1");
-            assertEquals(collections.get(1), "collection2");
+            assertEquals("collection1", collections.get(0));
+            assertEquals("collection2", collections.get(1));
 
             Map<String, WrappedArray> permissions = row.getJavaMap(4);
             assertTrue(permissions.get("spark-user-role").toString().contains("READ"));
             assertTrue(permissions.get("spark-user-role").toString().contains("UPDATE"));
             assertTrue(permissions.get("qconsole-user").toString().contains("READ"));
 
-            assertEquals(row.get(5),10);
+            assertEquals(10, row.get(5));
 
             Map<String, String> properties = row.getJavaMap(6);
             assertEquals("value2", properties.get("key2"));
