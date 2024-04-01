@@ -106,14 +106,6 @@ public abstract class DocumentRowSchema {
         row[7] = ArrayBasedMapData.apply(keys, values);
     }
 
-    public static void populateAllMetadata(Object[] row, DocumentMetadataHandle documentMetadataHandle) {
-        populateCollectionsColumn(row, documentMetadataHandle);
-        populatePermissionsColumn(row, documentMetadataHandle);
-        populateQualityColumn(row, documentMetadataHandle);
-        populatePropertiesColumn(row, documentMetadataHandle);
-        populateMetadataValuesColumn(row, documentMetadataHandle);
-    }
-
     private static void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(3)) {
             ArrayData collections = row.getArray(3);
