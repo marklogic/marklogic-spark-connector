@@ -1,0 +1,2 @@
+{"number": 1, Oops this line is invalid!
+{"number": 2, "description": "This is different from the first object."}

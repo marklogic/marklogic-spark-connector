@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
@@ -175,5 +176,14 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected final DocumentMetadataHandle readMetadata(String uri) {
         // This should really be in marklogic-unit-test.
         return getDatabaseClient().newDocumentManager().readMetadata(uri, new DocumentMetadataHandle());
+    }
+
+    protected final JsonNode readJsonFromDocumentRow(Row row) {
+        try {
+            return objectMapper.readTree((byte[]) row.get(1));
+        } catch (IOException e) {
+            fail(String.format("Unable to read JSON from row with URI: %s; cause: %s", row.getString(0), e.getMessage()));
+            return null;
+        }
     }
 }

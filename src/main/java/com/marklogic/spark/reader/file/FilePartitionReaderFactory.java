@@ -28,6 +28,8 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return new MlcpArchiveFileReader(filePartition, fileContext);
         } else if ("archive".equalsIgnoreCase(fileType)) {
             return new ArchiveFileReader(filePartition, fileContext);
+        } else if ("json_lines".equalsIgnoreCase(fileType)) {
+            return new JsonLinesFileReader(filePartition, fileContext);
         } else if (fileContext.hasOption(Options.READ_AGGREGATES_XML_ELEMENT)) {
             return fileContext.isZip() ?
                 new ZipAggregateXmlFileReader(filePartition, fileContext) :
