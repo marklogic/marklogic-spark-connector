@@ -19,6 +19,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
@@ -135,7 +136,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         if (writeContext.isUsingFileSchema()) {
             return new FileRowConverter(writeContext);
         } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
-            return new DocumentRowConverter();
+            return new DocumentRowConverter(writeContext.getStringOption(Options.WRITE_URI_TEMPLATE));
         } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
             return new RdfRowConverter(writeContext);
         }

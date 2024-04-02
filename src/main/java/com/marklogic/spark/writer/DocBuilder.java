@@ -15,7 +15,7 @@
  */
 package com.marklogic.spark.writer;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
@@ -24,7 +24,7 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 public class DocBuilder {
 
     public interface UriMaker {
-        String makeURI(String initialUri, ObjectNode columnValues);
+        String makeURI(String initialUri, JsonNode uriTemplateValues);
     }
 
     /**
@@ -35,16 +35,16 @@ public class DocBuilder {
     public static class DocumentInputs {
         private final String initialUri;
         private final AbstractWriteHandle content;
-        private final ObjectNode columnValuesForUriTemplate;
+        private final JsonNode columnValuesForUriTemplate;
         private final DocumentMetadataHandle initialMetadata;
         private final String graph;
 
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate,
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                               DocumentMetadataHandle initialMetadata) {
             this(initialUri, content, columnValuesForUriTemplate, initialMetadata, null);
         }
 
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, ObjectNode columnValuesForUriTemplate,
+        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                               DocumentMetadataHandle initialMetadata, String graph) {
             this.initialUri = initialUri;
             this.content = content;
@@ -61,7 +61,7 @@ public class DocBuilder {
             return content;
         }
 
-        ObjectNode getColumnValuesForUriTemplate() {
+        JsonNode getColumnValuesForUriTemplate() {
             return columnValuesForUriTemplate;
         }
 
