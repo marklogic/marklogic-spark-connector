@@ -15,11 +15,14 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatch;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.WriteEvent;
+import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
+import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -30,6 +33,7 @@ import org.apache.spark.sql.types.StructType;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -71,25 +75,31 @@ public class WriteContext extends ContextSupport {
             .newWriteBatcher()
             .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
             .withThreadCount(getThreadCount())
-            // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
-            // message from the server. This is intended to always show up and be associated with our Spark connector
-            // and also to be more brief, just capturing the main message from the server.
-            .onBatchFailure((batch, failure) ->
-                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage())
-            );
+            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
 
         if (logger.isDebugEnabled()) {
             writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
         }
-
-        String temporalCollection = getProperties().get(Options.WRITE_TEMPORAL_COLLECTION);
-        if (temporalCollection != null && temporalCollection.trim().length() > 0) {
-            writeBatcher.withTemporalCollection(temporalCollection);
+        Optional<ServerTransform> transform = makeRestTransform();
+        if (transform.isPresent()) {
+            writeBatcher.withTransform(transform.get());
         }
-
-        configureRestTransform(writeBatcher);
-
         return writeBatcher;
+    }
+
+    /**
+     * @param client
+     * @return a {@code GenericDocumentImpl}, which exposes the methods that accept a temporal collection as an input.
+     * Has the same configuration as the {@code WriteBatcher} created by this class as well, thus allowing for documents
+     * in a failed batch to be retried via this document manager.
+     */
+    GenericDocumentImpl newDocumentManager(DatabaseClient client) {
+        GenericDocumentManager mgr = client.newDocumentManager();
+        Optional<ServerTransform> transform = makeRestTransform();
+        if (transform.isPresent()) {
+            mgr.setWriteTransform(transform.get());
+        }
+        return (GenericDocumentImpl) mgr;
     }
 
     DocBuilder newDocBuilder() {
@@ -142,7 +152,7 @@ public class WriteContext extends ContextSupport {
         ));
     }
 
-    private void configureRestTransform(WriteBatcher writeBatcher) {
+    private Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
         if (transformName != null && transformName.trim().length() > 0) {
             ServerTransform transform = new ServerTransform(transformName);
@@ -150,8 +160,9 @@ public class WriteContext extends ContextSupport {
             if (paramsValue != null && paramsValue.trim().length() > 0) {
                 addRestTransformParams(transform, paramsValue);
             }
-            writeBatcher.withTransform(transform);
+            return Optional.of(transform);
         }
+        return Optional.empty();
     }
 
     private void addRestTransformParams(ServerTransform transform, String paramsValue) {

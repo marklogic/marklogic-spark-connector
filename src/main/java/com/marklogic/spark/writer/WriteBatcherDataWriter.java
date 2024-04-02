@@ -19,6 +19,7 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -30,7 +31,6 @@ import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -48,6 +48,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final DatabaseClient databaseClient;
     private final DataMovementManager dataMovementManager;
     private final WriteBatcher writeBatcher;
+    private final BatchRetrier batchRetrier;
+
     private final DocBuilder docBuilder;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
@@ -64,20 +66,17 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.writeFailure = new AtomicReference<>();
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
+        this.rowConverter = determineRowConverter();
+        this.batchRetrier = writeContext.isAbortOnFailure() ? null : makeBatchRetrier();
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         addBatchListeners(this.writeBatcher);
-        this.rowConverter = determineRowConverter();
         this.dataMovementManager.startJob(this.writeBatcher);
     }
 
     @Override
-    public void write(InternalRow row) throws IOException {
+    public void write(InternalRow row) {
         throwWriteFailureIfExists();
-        // We'll need a class here that has a "getLastDoc" method or something like that.
-        // It doesn't seem worth creating a new writer just because we have N rows mapping to 1 document now.
-        // Though maybe it's worth it as we won't have to mess up CommitMessage with a graph property?
-        // Nah, let's keep it here so we can reuse the DMSDK plumbing.
         Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
         if (document.isPresent()) {
             this.writeBatcher.add(this.docBuilder.build(document.get()));
@@ -85,7 +84,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     }
 
     @Override
-    public WriterCommitMessage commit() throws IOException {
+    public WriterCommitMessage commit() {
         List<DocBuilder.DocumentInputs> documentInputs = rowConverter.getRemainingDocumentInputs();
         if (documentInputs != null) {
             documentInputs.forEach(inputs -> {
@@ -125,10 +124,15 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void addBatchListeners(WriteBatcher writeBatcher) {
         writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
         if (writeContext.isAbortOnFailure()) {
-            // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
-            writeBatcher.onBatchFailure((batch, failure) -> this.writeFailure.compareAndSet(null, failure));
+            // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
+            // message from the server. This is intended to always show up and be associated with our Spark connector
+            // and also to be more brief, just capturing the main message from the server.
+            writeBatcher.onBatchFailure((batch, failure) -> {
+                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage());
+                this.writeFailure.compareAndSet(null, failure);
+            });
         } else {
-            writeBatcher.onBatchFailure((batch, failure) -> this.failedItemCount.getAndAdd(batch.getItems().length));
+            writeBatcher.onBatchFailure(this.batchRetrier::retryBatch);
         }
     }
 
@@ -143,11 +147,11 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return new ArbitraryRowConverter(writeContext);
     }
 
-    private synchronized void throwWriteFailureIfExists() throws IOException {
+    private synchronized void throwWriteFailureIfExists() {
         if (writeFailure.get() != null) {
             // Only including the message seems sufficient here, as Spark is logging the stacktrace. And the user
             // most likely only needs to know the message.
-            throw new IOException(writeFailure.get().getMessage());
+            throw new ConnectorException(writeFailure.get().getMessage());
         }
     }
 
@@ -158,5 +162,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         if (this.databaseClient != null) {
             this.databaseClient.release();
         }
+    }
+
+    private BatchRetrier makeBatchRetrier() {
+        return new BatchRetrier(
+            writeContext.newDocumentManager(this.databaseClient),
+            writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
+            (failedDoc, failure) -> {
+                Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", failedDoc.getUri(), failure.getMessage());
+                failedItemCount.incrementAndGet();
+            }
+        );
     }
 }
