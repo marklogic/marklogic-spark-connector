@@ -64,7 +64,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertEquals("XML", row.get(2));
+            assertTrue(row.isNullAt(2));
             verifyCollections(row);
             verifyPermissions(row);
             assertNull(row.get(5), "Quality column should be null.");
@@ -95,7 +95,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertEquals("XML", row.get(2));
+            assertTrue(row.isNullAt(2));
             assertNull(row.get(3), "Collections column should be null.");
             assertNull(row.get(4), "Permissions column should be null.");
             assertEquals(10, row.get(5));
@@ -126,7 +126,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertEquals("XML", row.get(2));
+            assertTrue(row.isNullAt(2));
             verifyCollections(row);
             assertNull(row.get(4), "Permissions column should be null.");
             assertNull(row.get(5), "Quality column should be null.");
@@ -146,7 +146,8 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             Row row = rows.get(i);
             assertTrue(row.getString(0).endsWith("/test/" + (i + 1) + ".xml"));
             verifyContent(row);
-            assertEquals("XML", row.get(2));
+            assertTrue(row.isNullAt(2), "There's no indication in an archive file as to what the format of a " +
+                "content entry is, so the 'format' column should always be null.");
             verifyCollections(row);
             verifyPermissions(row);
             assertEquals(10, row.get(5));
