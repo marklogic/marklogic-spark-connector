@@ -20,12 +20,15 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import com.marklogic.spark.writer.rdf.GraphWriter;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.DataWriterFactory;
 import org.apache.spark.sql.connector.write.PhysicalWriteInfo;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory;
 import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
+import org.apache.spark.util.SerializableConfiguration;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -112,7 +115,11 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
             );
             return new CustomCodeWriterFactory(context);
         }
-        return new WriteBatcherDataWriterFactory(writeContext);
+
+        // This is the last chance we have for accessing the hadoop config, which is needed by the writer.
+        // SerializableConfiguration allows for it to be sent to the factory.
+        Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
+        return new WriteBatcherDataWriterFactory(writeContext, new SerializableConfiguration(config));
     }
 
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {

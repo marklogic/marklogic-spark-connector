@@ -19,7 +19,7 @@ class SerializeWriterObjectsTest extends AbstractIntegrationTest {
         Map<String, String> props = new HashMap<>();
         props.put(Options.CLIENT_URI, makeClientUri());
         WriteContext writeContext = new WriteContext(new StructType().add("myType", DataTypes.StringType), props);
-        WriteBatcherDataWriterFactory factory = new WriteBatcherDataWriterFactory(writeContext);
+        WriteBatcherDataWriterFactory factory = new WriteBatcherDataWriterFactory(writeContext, null);
 
         factory = (WriteBatcherDataWriterFactory) SerializeUtil.serialize(factory);
         WriteBatcherDataWriter writer = (WriteBatcherDataWriter) factory.createWriter(1, 1l);

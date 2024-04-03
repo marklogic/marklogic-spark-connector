@@ -58,8 +58,8 @@ class BatchRetrier {
     private void divideInHalfAndRetryEachBatch(DocumentWriteSet failedWriteSet, Throwable failure) {
         final int docCount = failedWriteSet.size();
         if (docCount == 1) {
-            DocumentWriteOperation failedOp = failedWriteSet.iterator().next();
-            this.failedDocumentConsumer.accept(failedOp, failure);
+            DocumentWriteOperation failedDoc = failedWriteSet.iterator().next();
+            this.failedDocumentConsumer.accept(failedDoc, failure);
             return;
         }
 
