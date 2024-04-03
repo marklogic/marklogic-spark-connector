@@ -13,10 +13,7 @@ import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
-import org.apache.spark.unsafe.types.ByteArray;
-import org.apache.spark.unsafe.types.UTF8String;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -107,29 +104,23 @@ class ForestReader implements PartitionReader<InternalRow> {
     @Override
     public InternalRow get() {
         DocumentRecord document = this.currentDocumentPage.next();
-
-        Object[] row = new Object[8];
-        row[0] = UTF8String.fromString(document.getUri());
+        DocumentRowBuilder builder = new DocumentRowBuilder(requestedMetadata).withUri(document.getUri());
         if (this.contentWasRequested) {
-            row[1] = ByteArray.concat(document.getContent(new BytesHandle()).get());
-            final String format = document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString();
-            row[2] = UTF8String.fromString(format);
+            builder.withContent(document.getContent(new BytesHandle()).get());
+            builder.withFormat(document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString());
         }
-
         if (!requestedMetadata.isEmpty()) {
-            DocumentMetadataHandle metadata = document.getMetadata(new DocumentMetadataHandle());
-            populateMetadataColumns(row, metadata);
+            builder.withMetadata(document.getMetadata(new DocumentMetadataHandle()));
         }
-
         docCount++;
-        return new GenericInternalRow(row);
+        return builder.buildRow();
     }
 
     @Override
     public void close() {
         closeCurrentDocumentPage();
     }
-    
+
     private List<String> getNextBatchOfUris() {
         long start = System.currentTimeMillis();
         List<String> uris = uriBatcher.nextBatchOfUris();
@@ -155,28 +146,6 @@ class ForestReader implements PartitionReader<InternalRow> {
             logger.trace("Retrieved page of documents in {}ms from partition {}", (System.currentTimeMillis() - start), this.forestPartition);
         }
         return page;
-    }
-
-    private void populateMetadataColumns(Object[] row, DocumentMetadataHandle metadata) {
-        if (requestedMetadataHas(DocumentManager.Metadata.COLLECTIONS)) {
-            DocumentRowSchema.populateCollectionsColumn(row, metadata);
-        }
-        if (requestedMetadataHas(DocumentManager.Metadata.PERMISSIONS)) {
-            DocumentRowSchema.populatePermissionsColumn(row, metadata);
-        }
-        if (requestedMetadataHas(DocumentManager.Metadata.QUALITY)) {
-            DocumentRowSchema.populateQualityColumn(row, metadata);
-        }
-        if (requestedMetadataHas(DocumentManager.Metadata.PROPERTIES)) {
-            DocumentRowSchema.populatePropertiesColumn(row, metadata);
-        }
-        if (requestedMetadataHas(DocumentManager.Metadata.METADATAVALUES)) {
-            DocumentRowSchema.populateMetadataValuesColumn(row, metadata);
-        }
-    }
-
-    private boolean requestedMetadataHas(DocumentManager.Metadata metadata) {
-        return requestedMetadata.contains(metadata) || requestedMetadata.contains(DocumentManager.Metadata.ALL);
     }
 
     private void closeCurrentDocumentPage() {
