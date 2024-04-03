@@ -1,7 +1,6 @@
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.ConnectorException;
 
 import java.util.UUID;
