@@ -19,14 +19,14 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 class ArchiveFileReader implements PartitionReader<InternalRow> {
+
     private static final Logger logger = LoggerFactory.getLogger(ArchiveFileReader.class);
     private final String path;
     private final ZipInputStream zipInputStream;
-    private ZipEntry currentZipEntry;
     private final List<String> metadataCategories;
     private InternalRow nextRowToReturn;
 
-    public ArchiveFileReader(FilePartition partition, FileContext fileContext) {
+    ArchiveFileReader(FilePartition partition, FileContext fileContext) {
         this.path = partition.getPath();
         this.zipInputStream = new ZipInputStream(fileContext.open(partition));
         this.metadataCategories = new ArrayList<>();
@@ -39,13 +39,15 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public boolean next() throws IOException {
-        currentZipEntry = FileUtil.findNextFileEntry(zipInputStream);
-        if(currentZipEntry == null)
+        ZipEntry zipEntry = FileUtil.findNextFileEntry(zipInputStream);
+        if (zipEntry == null) {
             return false;
+        }
         byte[] content = readZipEntry();
-        if(content.length == 0)
+        if (content.length == 0) {
             return false;
-        String zipEntryName = currentZipEntry.getName();
+        }
+        String zipEntryName = zipEntry.getName();
         DocumentMetadataHandle documentMetadataHandle = new DocumentMetadataHandle();
         if (logger.isTraceEnabled()) {
             logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
@@ -53,9 +55,10 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         String uri = zipEntryName.startsWith("/") ? this.path + zipEntryName : this.path + "/" + zipEntryName;
         try {
             ZipEntry metadataEntry = FileUtil.findNextFileEntry(zipInputStream);
-            if(metadataEntry == null)
+            if (metadataEntry == null) {
                 return false;
-            if(!metadataEntry.getName().endsWith(".metadata")) {
+            }
+            if (!metadataEntry.getName().endsWith(".metadata")) {
                 throw new ConnectorException(String.format("Could not find metadata entry for entry %s", zipEntryName));
             }
             documentMetadataHandle.fromBuffer(readZipEntry());
@@ -63,7 +66,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
         }
 
-        this.nextRowToReturn = makeRow(uri, content,documentMetadataHandle);
+        this.nextRowToReturn = makeRow(uri, content, documentMetadataHandle);
         return true;
     }
 
@@ -87,18 +90,17 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private InternalRow makeRow(String uri, byte[] content, DocumentMetadataHandle documentMetadataHandle) {
-
         Object[] row = new Object[8];
         row[0] = UTF8String.fromString(uri);
         row[1] = ByteArray.concat(content);
         if (documentMetadataHandle.getFormat() != null) {
             row[2] = UTF8String.fromString(documentMetadataHandle.getFormat().name());
         }
-        if(this.metadataCategories.isEmpty()) {
+        if (this.metadataCategories.isEmpty()) {
             populateAllMetadata(row, documentMetadataHandle);
-        }
-        else
+        } else {
             populateMetadataCategories(row, documentMetadataHandle, metadataCategories);
+        }
         return new GenericInternalRow(row);
     }
 
@@ -115,7 +117,6 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         if (categoryIsIncluded("collections", metadataCategories)) {
             DocumentRowSchema.populateCollectionsColumn(row, documentMetadataHandle);
         }
-
         if (categoryIsIncluded("permissions", metadataCategories)) {
             DocumentRowSchema.populatePermissionsColumn(row, documentMetadataHandle);
         }

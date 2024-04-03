@@ -19,7 +19,8 @@ services:
 
   # Copied from https://docs.sonarsource.com/sonarqube/latest/setup-and-upgrade/install-the-server/#example-docker-compose-configuration .
   sonarqube:
-    image: sonarqube:community
+    # Using 10.2 to avoid requiring Java 17 for now.
+    image: sonarqube:10.2.1-community
     depends_on:
       - postgres
     environment:
