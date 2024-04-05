@@ -19,20 +19,24 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-class ZipFileWriter implements DataWriter<InternalRow> {
+public class ZipFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
     private final ContentWriter contentWriter;
-    private final String path;
+    private final String zipPath;
 
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
 
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
-        this.path = properties.get("path");
-        Path filePath = makeFilePath(path, partitionId);
+        this(properties.get("path"), properties, hadoopConfiguration, partitionId);
+    }
+
+    public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
+        this.zipPath = makeFilePath(path, partitionId);
+        Path filePath = new Path(zipPath);
         if (logger.isDebugEnabled()) {
             logger.debug("Will write to: {}", filePath);
         }
@@ -61,13 +65,13 @@ class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         IOUtils.closeQuietly(zipOutputStream);
     }
 
     @Override
     public WriterCommitMessage commit() {
-        return new ZipCommitMessage(path, zipEntryCounter);
+        return new ZipCommitMessage(zipPath, zipEntryCounter);
     }
 
     @Override
@@ -91,9 +95,12 @@ class ZipFileWriter implements DataWriter<InternalRow> {
      * @param partitionId
      * @return
      */
-    private Path makeFilePath(String path, int partitionId) {
+    private String makeFilePath(String path, int partitionId) {
         final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
-        String filePath = String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
-        return new Path(filePath);
+        return String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
+    }
+
+    public String getZipPath() {
+        return zipPath;
     }
 }

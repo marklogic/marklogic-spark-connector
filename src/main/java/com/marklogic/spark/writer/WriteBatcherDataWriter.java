@@ -19,18 +19,28 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.unsafe.types.ByteArray;
+import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -49,6 +59,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final DataMovementManager dataMovementManager;
     private final WriteBatcher writeBatcher;
     private final BatchRetrier batchRetrier;
+    private final ZipFileWriter archiveWriter;
 
     private final DocBuilder docBuilder;
 
@@ -61,13 +72,22 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
 
-    WriteBatcherDataWriter(WriteContext writeContext) {
+    WriteBatcherDataWriter(WriteContext writeContext, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.writeContext = writeContext;
         this.writeFailure = new AtomicReference<>();
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
         this.rowConverter = determineRowConverter();
-        this.batchRetrier = writeContext.isAbortOnFailure() ? null : makeBatchRetrier();
+
+        if (writeContext.isAbortOnFailure()) {
+            this.batchRetrier = null;
+            this.archiveWriter = null;
+        } else {
+            this.batchRetrier = makeBatchRetrier();
+            this.archiveWriter = writeContext.hasOption(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS) ?
+                createArchiveWriter(hadoopConfiguration, partitionId) : null;
+        }
+
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         addBatchListeners(this.writeBatcher);
@@ -110,6 +130,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void abort() {
         Util.MAIN_LOGGER.warn("Abort called; stopping job");
         stopJobAndRelease();
+        closeArchiveWriter();
         Util.MAIN_LOGGER.info("Finished abort");
     }
 
@@ -119,6 +140,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             logger.debug("Close called; stopping job.");
         }
         stopJobAndRelease();
+        closeArchiveWriter();
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {
@@ -171,7 +193,61 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             (failedDoc, failure) -> {
                 Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", failedDoc.getUri(), failure.getMessage());
                 failedItemCount.incrementAndGet();
+                if (this.archiveWriter != null) {
+                    writeFailedDocumentToArchive(failedDoc);
+                }
             }
         );
+    }
+
+    /**
+     * Need this to be synchronized so that 2 or more WriteBatcher threads don't try to write zip entries at the same
+     * time.
+     *
+     * @param failedDoc
+     */
+    private synchronized void writeFailedDocumentToArchive(DocumentWriteOperation failedDoc) {
+        AbstractWriteHandle contentHandle = failedDoc.getContent();
+        byte[] content = ByteArray.concat(HandleAccessor.contentAsString(contentHandle).getBytes());
+
+        GenericInternalRow row = new DocumentRowBuilder(new ArrayList<>())
+            .withUri(failedDoc.getUri()).withContent(content)
+            .withMetadata((DocumentMetadataHandle) failedDoc.getMetadata())
+            .buildRow();
+
+        try {
+            archiveWriter.write(row);
+        } catch (IOException e) {
+            throw new ConnectorException(String.format(
+                "Unable to write failed documents to archive file at %s; URI of failed document: %s; cause: %s",
+                archiveWriter.getZipPath(), failedDoc.getUri(), e.getMessage()
+            ), e);
+        }
+    }
+
+    /**
+     * If an archive writer cannot be created, we want to fail fast so that the issue isn't discovered after some number
+     * of documents have been successfully created.
+     *
+     * @param hadoopConfiguration
+     * @param partitionId
+     * @return
+     */
+    private ZipFileWriter createArchiveWriter(SerializableConfiguration hadoopConfiguration, int partitionId) {
+        String path = writeContext.getStringOption(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS);
+        try {
+            return new ZipFileWriter(path, writeContext.getProperties(), hadoopConfiguration, partitionId);
+        } catch (Exception e) {
+            // This will trigger both if the directory does not exist, and if the user is not able to to the directory.
+            throw new ConnectorException(String.format("Unable to create archive file for failed documents at path %s; cause: %s",
+                path, e.getMessage()), e);
+        }
+    }
+
+    private void closeArchiveWriter() {
+        if (archiveWriter != null) {
+            Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            archiveWriter.close();
+        }
     }
 }

@@ -77,6 +77,7 @@ public abstract class Options {
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
+    public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
 
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
