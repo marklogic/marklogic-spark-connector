@@ -47,7 +47,7 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.count());
-        assertEquals("Value of 'spark.marklogic.read.documents.partitionsPerForest' option must be numeric.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.documents.partitionsPerForest' must be numeric.", ex.getMessage());
     }
 
     @ParameterizedTest

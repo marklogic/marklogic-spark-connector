@@ -66,7 +66,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
     @Test

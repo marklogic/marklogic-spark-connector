@@ -106,17 +106,15 @@ class WriteRowsWithTransformTest extends AbstractWriteTest {
 
     @Test
     void invalidTransformParams() {
-        SparkException ex = assertThrows(SparkException.class,
+        ConnectorException ex = assertThrowsConnectorException(
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_TRANSFORM_NAME, "withParams")
                 .option(Options.WRITE_TRANSFORM_PARAMS, "param1,value1,param2")
                 .save());
 
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException);
         assertEquals(
             "The spark.marklogic.write.transformParams option must contain an equal number of parameter names and values; received: param1,value1,param2",
-            cause.getMessage()
+            ex.getMessage()
         );
     }
 }

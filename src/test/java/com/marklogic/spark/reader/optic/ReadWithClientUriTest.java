@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
@@ -145,11 +146,8 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
     }
 
     private void verifyClientUriIsInvalid(String clientUri) {
-        IllegalArgumentException ex = assertThrows(
-            IllegalArgumentException.class,
-            () -> readRowsWithClientUri(clientUri)
-        );
-
+        ConnectorException ex = assertThrows(ConnectorException.class,
+            () -> readRowsWithClientUri(clientUri));
         assertEquals(
             "Invalid value for spark.marklogic.client.uri; must be username:password@host:port",
             ex.getMessage()

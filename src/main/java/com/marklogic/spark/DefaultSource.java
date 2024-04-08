@@ -129,7 +129,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
+            throw new ConnectorException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
@@ -138,7 +138,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
             return SchemaInferrer.inferSchema(columnInfoHandle.get());
         } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 

@@ -48,6 +48,6 @@ class BuildSearchQueryTest extends AbstractIntegrationTest {
             .withTransformParams("param1,value1,param2");
 
         IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> builder.buildQuery(client));
-        assertEquals("Transform params must have an equal number of parameter names and values: param1,value1,param2", ex.getMessage());
+        assertEquals("Transform parameters must have an equal number of parameter names and values: param1,value1,param2", ex.getMessage());
     }
 }

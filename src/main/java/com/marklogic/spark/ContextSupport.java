@@ -25,7 +25,9 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class ContextSupport implements Serializable {
@@ -103,22 +105,32 @@ public class ContextSupport implements Serializable {
         return value != null && value.trim().length() > 0;
     }
 
+    public final String getOptionNameForMessage(String option) {
+        // Allows ETL tool to override what's shown in a validation error.
+        // Feels like this should be in another class which can cache the ResourceBundle reference.
+        ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
+        String optionName = bundle.getString(option);
+        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+    }
+
     private void parseClientUri(String clientUri, Map<String, String> connectionProps) {
-        final String errorMessage = String.format("Invalid value for %s; must be username:password@host:port", Options.CLIENT_URI);
+        final String errorMessage = String.format("Invalid value for %s; must be username:password@host:port",
+            getOptionNameForMessage("spark.marklogic.client.uri"));
+
         String[] parts = clientUri.split("@");
         if (parts.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
+            throw new ConnectorException(errorMessage);
         }
         String[] tokens = parts[0].split(":");
         if (tokens.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
+            throw new ConnectorException(errorMessage);
         }
         connectionProps.put(Options.CLIENT_USERNAME, decodeValue(tokens[0], "username"));
         connectionProps.put(Options.CLIENT_PASSWORD, decodeValue(tokens[1], "password"));
 
         tokens = parts[1].split(":");
         if (tokens.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
+            throw new ConnectorException(errorMessage);
         }
         connectionProps.put(Options.CLIENT_HOST, tokens[0]);
         if (tokens[1].contains("/")) {
@@ -134,21 +146,21 @@ public class ContextSupport implements Serializable {
         try {
             return URLDecoder.decode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new ConnectorException(String.format("Unable to decode %s; cause: %s", label, value));
+            throw new ConnectorException(String.format("Unable to decode '%s'; cause: %s", label, value));
         }
     }
 
-    protected long getNumericOption(String optionName, long defaultValue, long minimumValue) {
+    protected final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
             long value = this.getProperties().containsKey(optionName) ?
                 Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
             if (value < minimumValue) {
-                throw new ConnectorException(String.format("Value of '%s' option must be %d or greater.", optionName, minimumValue));
+                throw new ConnectorException(String.format("The value of '%s' must be %d or greater.", getOptionNameForMessage(optionName), minimumValue));
             }
             return value;
         } catch (NumberFormatException ex) {
-            throw new ConnectorException(String.format("Value of '%s' option must be numeric.", optionName), ex);
+            throw new ConnectorException(String.format("The value of '%s' must be numeric.", getOptionNameForMessage(optionName)), ex);
         }
     }
 

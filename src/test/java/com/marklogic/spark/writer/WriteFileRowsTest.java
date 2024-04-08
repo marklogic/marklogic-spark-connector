@@ -148,7 +148,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
         SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertTrue(ex.getCause() instanceof ConnectorException);
         ConnectorException ce = (ConnectorException) ex.getCause();
-        assertEquals("Invalid value for option " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +
+        assertEquals("Invalid value for " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +
             "must be one of 'JSON', 'XML', or 'TEXT'.", ce.getMessage());
     }
 

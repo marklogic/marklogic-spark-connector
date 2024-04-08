@@ -23,6 +23,7 @@ import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -124,7 +125,8 @@ public class WriteContext extends ContextSupport {
      */
     private void configureTemplateUriMaker(DocBuilderFactory factory) {
         String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
-        factory.withUriMaker(new SparkRowUriMaker(uriTemplate));
+        String optionAlias = getOptionNameForMessage(Options.WRITE_URI_TEMPLATE);
+        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias));
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);
             if (value != null && value.trim().length() > 0) {
@@ -170,9 +172,9 @@ public class WriteContext extends ContextSupport {
         String delimiter = delimiterValue != null && delimiterValue.trim().length() > 0 ? delimiterValue : ",";
         String[] params = paramsValue.split(delimiter);
         if (params.length % 2 != 0) {
-            throw new IllegalArgumentException(
+            throw new ConnectorException(
                 String.format("The %s option must contain an equal number of parameter names and values; received: %s",
-                    Options.WRITE_TRANSFORM_PARAMS, paramsValue)
+                    getOptionNameForMessage(Options.WRITE_TRANSFORM_PARAMS), paramsValue)
             );
         }
         for (int i = 0; i < params.length; i += 2) {

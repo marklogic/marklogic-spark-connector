@@ -99,7 +99,7 @@ class WriteRowsTest extends AbstractWriteTest {
     void invalidThreadCount() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
         ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
-        assertEquals("Value of 'spark.marklogic.write.threadCount' option must be 1 or greater.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.write.threadCount' must be 1 or greater.", ex.getMessage());
         verifyNoDocsWereWritten();
     }
 
@@ -107,7 +107,7 @@ class WriteRowsTest extends AbstractWriteTest {
     void invalidBatchSize() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
-        assertEquals("Value of 'spark.marklogic.write.batchSize' option must be 1 or greater.", ex.getMessage(),
+        assertEquals("The value of 'spark.marklogic.write.batchSize' must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
                 "many requests will be made by a partition, and zero is a valid value for reading.");

@@ -111,7 +111,7 @@ public class ReadContext extends ContextSupport {
         if (ex.getMessage().contains(indicatorOfNoRowsExisting)) {
             Util.MAIN_LOGGER.info("No rows were found, so will not create any partitions.");
         } else {
-            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 

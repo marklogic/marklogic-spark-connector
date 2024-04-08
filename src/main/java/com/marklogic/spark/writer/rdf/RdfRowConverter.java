@@ -38,7 +38,8 @@ public class RdfRowConverter implements RowConverter {
         String tempGraphOverride = writeContext.getStringOption(Options.WRITE_GRAPH_OVERRIDE);
         if (graph != null && tempGraphOverride != null) {
             throw new ConnectorException(String.format("Can only specify one of %s and %s.",
-                Options.WRITE_GRAPH, Options.WRITE_GRAPH_OVERRIDE));
+                writeContext.getOptionNameForMessage(Options.WRITE_GRAPH),
+                writeContext.getOptionNameForMessage(Options.WRITE_GRAPH_OVERRIDE)));
         }
         if (graph != null) {
             this.defaultGraph = graph;
