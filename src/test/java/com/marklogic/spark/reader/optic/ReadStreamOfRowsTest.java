@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.streaming.DataStreamReader;
 import org.junit.jupiter.api.Test;
@@ -87,7 +88,7 @@ class ReadStreamOfRowsTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri());
 
-        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> reader.load());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
         assertEquals("No Optic query found; must define spark.marklogic.read.opticQuery", ex.getMessage());
     }
 }

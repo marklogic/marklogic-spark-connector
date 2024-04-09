@@ -152,7 +152,7 @@ public class SearchQueryBuilder {
             String delimiter = transformParamsDelimiter != null && transformParamsDelimiter.trim().length() > 0 ? transformParamsDelimiter : ",";
             String[] params = transformParams.split(delimiter);
             if (params.length % 2 != 0) {
-                throw new IllegalArgumentException("Transform params must have an equal number of parameter names and values: " + transformParams);
+                throw new IllegalArgumentException("Transform parameters must have an equal number of parameter names and values: " + transformParams);
             }
             for (int i = 0; i < params.length; i += 2) {
                 String name = params[i];

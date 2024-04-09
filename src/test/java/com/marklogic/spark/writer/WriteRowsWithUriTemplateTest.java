@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
 import org.junit.jupiter.api.Test;
@@ -100,15 +101,11 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
     }
 
     private void verifyTemplateIsInvalid(String uriTemplate, String expectedMessage) {
-        SparkException ex = assertThrows(
-            SparkException.class,
+        ConnectorException ex = assertThrowsConnectorException(
             () -> newWriter().option(Options.WRITE_URI_TEMPLATE, uriTemplate).save()
         );
 
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause);
-
-        String message = cause.getMessage();
+        String message = ex.getMessage();
         expectedMessage = "Invalid value for " + Options.WRITE_URI_TEMPLATE + ": " + uriTemplate + "; " + expectedMessage;
         assertEquals(expectedMessage, message, "Unexpected error message: " + message);
     }

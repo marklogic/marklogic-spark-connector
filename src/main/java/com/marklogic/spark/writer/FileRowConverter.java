@@ -50,8 +50,9 @@ class FileRowConverter implements RowConverter {
             try {
                 content.withFormat(Format.valueOf(value.toUpperCase()));
             } catch (IllegalArgumentException e) {
-                String message = "Invalid value for option %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
-                throw new ConnectorException(String.format(message, Options.WRITE_FILE_ROWS_DOCUMENT_TYPE, value));
+                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                String optionAlias = writeContext.getOptionNameForMessage(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE);
+                throw new ConnectorException(String.format(message, optionAlias, value));
             }
         }
     }

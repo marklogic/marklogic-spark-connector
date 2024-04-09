@@ -59,6 +59,7 @@ public class CustomCodeContext extends ContextSupport {
             String content = readFileToString(properties.get(callOptions.xqueryFileOptionName));
             call.xquery(content);
         } else {
+            // The ETL tool validates this itself via a validator.
             throw new ConnectorException("Must specify one of the following options: " + Arrays.asList(
                 callOptions.invokeOptionName, callOptions.javascriptOptionName, callOptions.xqueryOptionName
             ));
