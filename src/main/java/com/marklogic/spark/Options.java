@@ -77,7 +77,6 @@ public abstract class Options {
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
-    public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
 
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
@@ -90,6 +89,7 @@ public abstract class Options {
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
     // For writing documents to MarkLogic.
+    public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     public static final String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
     public static final String WRITE_JSON_ROOT_NAME = "spark.marklogic.write.jsonRootName";
@@ -101,7 +101,10 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
-
+    public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
+    public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
+    
+    // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
 
