@@ -136,8 +136,8 @@ public class WriteContext extends ContextSupport {
     }
 
     /**
-     * For rows with an "arbitrary" schema, the URI suffix defaults to ".json" as we know there won't be an initial URI
-     * for these rows.
+     * For rows with an "arbitrary" schema, the URI suffix defaults to ".json" or ".xml" as we know there won't be an
+     * initial URI for these rows.
      *
      * @param factory
      */
@@ -146,7 +146,12 @@ public class WriteContext extends ContextSupport {
         if (hasOption(Options.WRITE_URI_SUFFIX)) {
             uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
         } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
-            uriSuffix = ".json";
+            String xmlRootName = getStringOption(Options.WRITE_XML_ROOT_NAME);
+            if (xmlRootName != null && getStringOption(Options.WRITE_JSON_ROOT_NAME) != null) {
+                throw new ConnectorException(String.format("Cannot specify both %s and %s",
+                    getOptionNameForMessage(Options.WRITE_JSON_ROOT_NAME), getOptionNameForMessage(Options.WRITE_XML_ROOT_NAME)));
+            }
+            uriSuffix = xmlRootName != null ? ".xml" : ".json";
         }
         factory.withUriMaker(new StandardUriMaker(
             getProperties().get(Options.WRITE_URI_PREFIX), uriSuffix,
