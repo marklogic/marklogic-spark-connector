@@ -155,7 +155,9 @@ public class ReadContext extends ContextSupport {
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
         this.opticFilters = opticFilters;
-        addOperatorToPlan(PlanUtil.buildWhere(opticFilters));
+        // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
+        // which Optic does not allow.
+        opticFilters.forEach(filter -> addOperatorToPlan(PlanUtil.buildWhere(filter)));
     }
 
     void pushDownLimit(int limit) {

@@ -129,6 +129,23 @@ class PushDownFilterTest extends AbstractPushDownTest {
         assertRowsReadFromMarkLogic(9);
     }
 
+    /**
+     * Captured in MLE-13771.
+     */
+    @Test
+    void multipleFilters() {
+        Dataset<Row> dataset = newDataset();
+        dataset = dataset
+            .filter(dataset.col("LastName").contains("umbe"))
+            .filter(dataset.col("CitationID").equalTo(5));
+
+        List<Row> rows = dataset.collectAsList();
+        assertEquals(1, rows.size());
+        assertRowsReadFromMarkLogic(1, "The two filters should be tossed into separate Optic 'where' clauses so " +
+            "so that an op.sqlCondition is not improperly added to an op.and, which Optic does not allow. The " +
+            "filters should thus both be pushed down successfully");
+    }
+
     @Test
     void or() {
         assertEquals(8, getCountOfRowsWithFilter("CitationID == 1 OR CitationID == 2"));
@@ -250,6 +267,7 @@ class PushDownFilterTest extends AbstractPushDownTest {
     private Dataset<Row> newDataset() {
         return newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, QUERY_WITH_NO_QUALIFIER)
+            .option(Options.READ_PUSH_DOWN_AGGREGATES, false)
             .load();
     }
 
