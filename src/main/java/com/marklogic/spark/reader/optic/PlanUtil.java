@@ -181,16 +181,8 @@ public abstract class PlanUtil {
             columnName;
     }
 
-    static ObjectNode buildWhere(List<OpticFilter> opticFilters) {
-        return newOperation("where", args -> {
-            // If there's only one filter, can toss it into the "where" clause. Else, toss an "and" into the "where" and
-            // then toss every filter into the "and" clause (which accepts 2 to N args).
-            final ArrayNode targetArgs = opticFilters.size() == 1 ?
-                args :
-                args.addObject().put("ns", "op").put("fn", "and").putArray("args");
-
-            opticFilters.forEach(planFilter -> planFilter.populateArg(targetArgs.addObject()));
-        });
+    static ObjectNode buildWhere(OpticFilter filter) {
+        return newOperation("where", args -> filter.populateArg(args.addObject()));
     }
 
     private static ObjectNode newOperation(String name, Consumer<ArrayNode> withArgs) {
