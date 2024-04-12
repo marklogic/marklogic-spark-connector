@@ -1,8 +1,10 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.BeforeEach;
@@ -105,7 +107,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void testCollectionsAndMetadatavalues(@TempDir Path tempDir) {
+    void testCollectionsAndMetadataValues(@TempDir Path tempDir) {
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "collection1")
@@ -133,6 +135,53 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             assertNull(row.get(6), "Properties column should be null.");
             verifyMetadatavalues(row);
         });
+    }
+
+    @Test
+    void invalidArchiveAndAbort() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load("src/test/resources/archive-files/firstEntryInvalid.zip");
+
+        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        assertTrue(ex.getMessage().startsWith("Could not find metadata entry for entry test/1.xml in file"),
+            "The connector should default to throwing an error when it cannot find a metadata entry; error: " + ex.getMessage());
+    }
+
+    @Test
+    void invalidArchiveDontAbort() {
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load(
+                "src/test/resources/archive-files/firstEntryInvalid.zip",
+                "src/test/resources/archive-files/archive1.zip"
+            )
+            .collectAsList();
+
+        assertEquals(2, rows.size(), "Because the first entry in bad.zip is invalid as it does not have a metadata " +
+            "entry, no rows should be returned for that zip, but the connector should still process the valid " +
+            "zip and return its 2 rows.");
+
+        String uri = rows.get(0).getString(0);
+        assertTrue(uri.endsWith("archive1.zip/test/1.xml"), "Unexpected URI: " + uri);
+        uri = rows.get(1).getString(0);
+        assertTrue(uri.endsWith("archive1.zip/test/2.xml"), "Unexpected URI: " + uri);
+    }
+
+    @Test
+    void secondEntryInvalidDontAbort() {
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .load("src/test/resources/archive-files/secondEntryInvalid.zip")
+            .collectAsList();
+
+        assertEquals(1, rows.size(), "The first entry in the zip is valid, and so a row should be returned for it " +
+            "and its associated metadata entry. The second entry is invalid because it's missing a metadata entry. " +
+            "But no error should be thrown since the connector is configured to not abort on failure.");
+        String uri = rows.get(0).getString(0);
+        assertTrue(uri.endsWith("secondEntryInvalid.zip/test/1.xml"), "Unexpected URI: " + uri);
     }
 
     private void verifyAllMetadata(Path tempDir, int rowCount) {

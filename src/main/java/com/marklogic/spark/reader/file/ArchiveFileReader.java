@@ -3,11 +3,10 @@ package com.marklogic.spark.reader.file;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,14 +16,15 @@ import java.util.zip.ZipInputStream;
 
 class ArchiveFileReader implements PartitionReader<InternalRow> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ArchiveFileReader.class);
     private final String path;
+    private final FileContext fileContext;
     private final ZipInputStream zipInputStream;
     private final List<String> metadataCategories;
     private InternalRow nextRowToReturn;
 
     ArchiveFileReader(FilePartition partition, FileContext fileContext) {
         this.path = partition.getPath();
+        this.fileContext = fileContext;
         this.zipInputStream = new ZipInputStream(fileContext.open(partition));
         this.metadataCategories = new ArrayList<>();
         if (fileContext.hasOption(Options.READ_ARCHIVES_CATEGORIES)) {
@@ -35,37 +35,38 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     @Override
-    public boolean next() throws IOException {
-        ZipEntry zipEntry = FileUtil.findNextFileEntry(zipInputStream);
-        if (zipEntry == null) {
-            return false;
-        }
-        byte[] content = readZipEntry();
-        if (content.length == 0) {
-            return false;
-        }
-        String zipEntryName = zipEntry.getName();
-        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-        if (logger.isTraceEnabled()) {
-            logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
-        }
-        String uri = zipEntryName.startsWith("/") ? this.path + zipEntryName : this.path + "/" + zipEntryName;
+    public boolean next() {
         try {
-            ZipEntry metadataEntry = FileUtil.findNextFileEntry(zipInputStream);
-            if (metadataEntry == null) {
+            ZipEntry contentZipEntry = FileUtil.findNextFileEntry(zipInputStream);
+            if (contentZipEntry == null) {
                 return false;
             }
-            if (!metadataEntry.getName().endsWith(".metadata")) {
-                throw new ConnectorException(String.format("Could not find metadata entry for entry %s", zipEntryName));
+            byte[] content = FileUtil.readBytes(zipInputStream);
+            if (content == null || content.length == 0) {
+                return false;
             }
-            metadata.fromBuffer(readZipEntry());
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
-        }
+            final String zipEntryName = contentZipEntry.getName();
 
-        this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
-            .withUri(uri).withContent(content).withMetadata(metadata).buildRow();
-        return true;
+            byte[] metadataBytes = readMetadataEntry(zipEntryName);
+            if (metadataBytes == null || metadataBytes.length == 0) {
+                return false;
+            }
+
+            final String uri = zipEntryName.startsWith("/") ? this.path + zipEntryName : this.path + "/" + zipEntryName;
+            DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+            metadata.fromBuffer(metadataBytes);
+            this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
+                .withUri(uri).withContent(content).withMetadata(metadata)
+                .buildRow();
+            return true;
+        } catch (IOException e) {
+            String message = String.format("Unable to read archive file at %s; cause: %s", this.path, e.getMessage());
+            if (fileContext.isReadAbortOnFailure()) {
+                throw new ConnectorException(message, e);
+            }
+            Util.MAIN_LOGGER.warn(message);
+            return false;
+        }
     }
 
     @Override
@@ -78,12 +79,16 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         this.zipInputStream.close();
     }
 
-    private byte[] readZipEntry() {
-        try {
-            return FileUtil.readBytes(zipInputStream);
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to read from zip file at %s; cause: %s",
-                this.path, e.getMessage()), e);
+    private byte[] readMetadataEntry(String zipEntryName) throws IOException {
+        ZipEntry metadataEntry = FileUtil.findNextFileEntry(zipInputStream);
+        if (metadataEntry == null || !metadataEntry.getName().endsWith(".metadata")) {
+            String message = String.format("Could not find metadata entry for entry %s in file %s", zipEntryName, this.path);
+            if (fileContext.isReadAbortOnFailure()) {
+                throw new ConnectorException(message);
+            }
+            Util.MAIN_LOGGER.warn(message);
+            return new byte[0];
         }
+        return FileUtil.readBytes(zipInputStream);
     }
 }
