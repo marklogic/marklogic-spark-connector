@@ -147,6 +147,27 @@ class PushDownFilterTest extends AbstractPushDownTest {
     }
 
     @Test
+    void orClauseWithSqlCondition() {
+        assertEquals(2, getCountOfRowsWithFilter("LastName LIKE '%ool%' OR LastName LIKE '%olb%'"));
+        assertRowsReadFromMarkLogic(15, "An OR with a sqlCondition cannot be pushed down.");
+    }
+
+    @Test
+    void notClauseWithSqlCondition() {
+        assertEquals(14, getCountOfRowsWithFilter("NOT LastName LIKE '%ool%'"));
+        assertRowsReadFromMarkLogic(15, "A NOT with a sqlCondition cannot be pushed down.");
+    }
+
+    @Test
+    void andClauseWithSqlCondition() {
+        assertEquals(1, getCountOfRowsWithFilter("LastName LIKE '%ool%' AND ForeName LIKE '%ivi%'"));
+        assertRowsReadFromMarkLogic(1, "Since Spark defaults to AND'ing clauses together, it will not construct " +
+            "an 'AND' operator. Instead, it will just sent the two 'LIKE' expressions as two separate filters to " +
+            "our connector, and our connector will create two separate Optic sqlCondition's, thus pushing both " +
+            "filters down to MarkLogic.");
+    }
+
+    @Test
     void or() {
         assertEquals(8, getCountOfRowsWithFilter("CitationID == 1 OR CitationID == 2"));
         assertRowsReadFromMarkLogic(8);
