@@ -80,7 +80,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         }
         for (Filter filter : filters) {
             OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
-            if (opticFilter != null) {
+            if (opticFilter != null && opticFilter.isValid()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Pushing down filter: {}", filter);
                 }

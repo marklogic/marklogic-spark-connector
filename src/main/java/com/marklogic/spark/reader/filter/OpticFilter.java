@@ -41,4 +41,14 @@ public interface OpticFilter extends Serializable {
      * @return
      */
     PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan);
+
+    /**
+     * Allows the filter to determine if - after having been constructed - it's not a valid Optic expression and thus
+     * cannot be pushed down to MarkLogic.
+     * 
+     * @return
+     */
+    default boolean isValid() {
+        return true;
+    }
 }
