@@ -39,13 +39,13 @@ class OpticMicroBatchStream implements MicroBatchStream {
 
     private static final Logger logger = LoggerFactory.getLogger(OpticMicroBatchStream.class);
 
-    private ReadContext readContext;
+    private OpticReadContext opticReadContext;
     private List<PlanAnalysis.Bucket> allBuckets;
     private int bucketIndex;
 
-    OpticMicroBatchStream(ReadContext readContext) {
-        this.readContext = readContext;
-        this.allBuckets = this.readContext.getPlanAnalysis().getAllBuckets();
+    OpticMicroBatchStream(OpticReadContext opticReadContext) {
+        this.opticReadContext = opticReadContext;
+        this.allBuckets = this.opticReadContext.getPlanAnalysis().getAllBuckets();
     }
 
     @Override
@@ -77,7 +77,7 @@ class OpticMicroBatchStream implements MicroBatchStream {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
-        return new OpticPartitionReaderFactory(this.readContext);
+        return new OpticPartitionReaderFactory(this.opticReadContext);
     }
 
     @Override
