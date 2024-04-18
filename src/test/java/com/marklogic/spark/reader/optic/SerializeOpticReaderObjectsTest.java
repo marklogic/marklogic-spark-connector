@@ -1,6 +1,5 @@
 package com.marklogic.spark.reader.optic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
@@ -38,7 +37,7 @@ class SerializeOpticReaderObjectsTest extends AbstractIntegrationTest {
         Map<String, String> props = new HashMap<>();
         props.put(Options.CLIENT_URI, makeClientUri());
         props.put(Options.READ_OPTIC_QUERY, NO_AUTHORS_QUERY);
-        ReadContext context = new ReadContext(props, new StructType().add("myType", DataTypes.StringType), 1);
+        OpticReadContext context = new OpticReadContext(props, new StructType().add("myType", DataTypes.StringType), 1);
         OpticPartitionReaderFactory factory = new OpticPartitionReaderFactory(context);
 
         factory = (OpticPartitionReaderFactory) SerializeUtil.serialize(factory);

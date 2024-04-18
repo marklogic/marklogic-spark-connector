@@ -33,7 +33,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReader.class);
 
-    private final ReadContext readContext;
+    private final OpticReadContext opticReadContext;
     private final PlanAnalysis.Partition partition;
     private final RowManager rowManager;
 
@@ -52,14 +52,14 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     // are working correctly.
     static Consumer<Long> totalRowCountListener;
 
-    OpticPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
-        this.readContext = readContext;
+    OpticPartitionReader(OpticReadContext opticReadContext, PlanAnalysis.Partition partition) {
+        this.opticReadContext = opticReadContext;
         this.partition = partition;
-        this.rowManager = readContext.connectToMarkLogic().newRowManager();
+        this.rowManager = opticReadContext.connectToMarkLogic().newRowManager();
         // Nested values won't work with the JacksonParser used by JsonRowDeserializer, so we ask for type info to not
         // be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
-        this.jsonRowDeserializer = new JsonRowDeserializer(readContext.getSchema());
+        this.jsonRowDeserializer = new JsonRowDeserializer(opticReadContext.getSchema());
     }
 
     @Override
@@ -86,7 +86,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
             PlanAnalysis.Bucket bucket = partition.getBuckets().get(nextBucketIndex);
             nextBucketIndex++;
             long start = System.currentTimeMillis();
-            this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
+            this.rowIterator = opticReadContext.readRowsInBucket(rowManager, partition, bucket);
             if (logger.isDebugEnabled()) {
                 this.totalDuration += System.currentTimeMillis() - start;
             }

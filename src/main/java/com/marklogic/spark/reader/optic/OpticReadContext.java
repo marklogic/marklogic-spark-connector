@@ -48,15 +48,15 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Captures state - all of which is serializable - that can be calculated at different times based on a user's inputs.
+ * Captures state - all of which is serializable - associated with a read operation involving an Optic query.
  * Also simplifies passing state around to the various Spark-required classes, as we only need one argument instead of
  * N arguments.
  */
-public class ReadContext extends ContextSupport {
+public class OpticReadContext extends ContextSupport {
 
     static final long serialVersionUID = 1;
 
-    private static final Logger logger = LoggerFactory.getLogger(ReadContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(OpticReadContext.class);
 
     // The ideal batch size depends highly on what a user chooses to do after a load() - and of course the user may
     // choose to perform multiple operations on the dataset, each of which may benefit from a fairly different batch
@@ -69,7 +69,7 @@ public class ReadContext extends ContextSupport {
     private long serverTimestamp;
     private List<OpticFilter> opticFilters;
 
-    public ReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
+    public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
         this.schema = schema;
 
