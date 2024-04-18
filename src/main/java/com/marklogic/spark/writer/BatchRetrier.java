@@ -8,6 +8,7 @@ import com.marklogic.client.impl.GenericDocumentImpl;
 
 import java.util.Iterator;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Handles retrying a failed batch from a DMSDK WriteBatcher. The client has no idea how many documents in a batch
@@ -20,18 +21,23 @@ class BatchRetrier {
     private final GenericDocumentImpl documentManager;
     private final String temporalCollection;
     private final BiConsumer<DocumentWriteOperation, Throwable> failedDocumentConsumer;
+    private final Consumer<DocumentWriteSet> successfulBatchConsumer;
 
     /**
-     * @param documentManager        requires the concrete class so that the methods that allow a temporal collection are available.
-     *                               MLE-13453 was created to address this.
-     * @param temporalCollection     optional temporal collection.
-     * @param failedDocumentConsumer client provides an implementation of this to handle whatever logic is required
-     *                               when a failed document is identified.
+     * @param documentManager         requires the concrete class so that the methods that allow a temporal collection are available.
+     *                                MLE-13453 was created to address this.
+     * @param temporalCollection      optional temporal collection.
+     * @param successfulBatchConsumer client provides an implementation of this to optionally perform any processing after a
+     *                                batch is successfully written.
+     * @param failedDocumentConsumer  client provides an implementation of this to handle whatever logic is required
+     *                                when a failed document is identified.
      */
     BatchRetrier(GenericDocumentImpl documentManager, String temporalCollection,
+                 Consumer<DocumentWriteSet> successfulBatchConsumer,
                  BiConsumer<DocumentWriteOperation, Throwable> failedDocumentConsumer) {
         this.documentManager = documentManager;
         this.temporalCollection = temporalCollection;
+        this.successfulBatchConsumer = successfulBatchConsumer;
         this.failedDocumentConsumer = failedDocumentConsumer;
     }
 
@@ -70,6 +76,9 @@ class BatchRetrier {
             if (newWriteSet.size() == docCount / 2 || !failedDocs.hasNext()) {
                 try {
                     this.documentManager.write(newWriteSet, null, null, this.temporalCollection);
+                    if (this.successfulBatchConsumer != null) {
+                        this.successfulBatchConsumer.accept(newWriteSet);
+                    }
                 } catch (Exception ex) {
                     divideInHalfAndRetryEachBatch(newWriteSet, ex);
                 }
