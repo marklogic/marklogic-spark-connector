@@ -6,6 +6,7 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import scala.collection.JavaConversions;
@@ -14,11 +15,18 @@ import scala.collection.mutable.WrappedArray;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
+
+    @AfterEach
+    void afterEach() {
+        MarkLogicWrite.setFailureCountConsumer(null);
+        MarkLogicWrite.setSuccessCountConsumer(null);
+    }
 
     @Test
     void test(@TempDir Path tempDir) {
@@ -44,6 +52,31 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
             .sort(new Column("URI"))
             .collectAsList();
         verifyArchiveRows(rows);
+    }
+
+    /**
+     * Verifies that the success count and failure counts are properly incremented.
+     */
+    @Test
+    void singlePartition(@TempDir Path tempDir) {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
+        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+
+        defaultWrite(newSparkSession().read().format("binaryFile")
+            .load("src/test/resources/mixed-files")
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_URI_SUFFIX, ".json")
+            .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_COLLECTIONS, "single-partition")
+            .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
+        );
+
+        assertCollectionSize("single-partition", 1);
+        assertEquals(1, successCount.get());
+        assertEquals(3, failureCount.get());
     }
 
     @Test

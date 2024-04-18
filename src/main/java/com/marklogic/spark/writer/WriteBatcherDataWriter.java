@@ -190,6 +190,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return new BatchRetrier(
             writeContext.newDocumentManager(this.databaseClient),
             writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
+            successfulBatch -> successItemCount.getAndAdd(successfulBatch.size()),
             (failedDoc, failure) -> {
                 Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", failedDoc.getUri(), failure.getMessage());
                 failedItemCount.incrementAndGet();
