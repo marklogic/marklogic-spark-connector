@@ -114,6 +114,22 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void complexProperties() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load("src/test/resources/mlcp-archive-files/complex-properties.zip")
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+
+        Map<String, String> properties = rows.get(0).getJavaMap(PROPERTIES_COLUMN);
+        assertEquals(5, properties.size(), "The actual properties has 6 elements, but the 6th element is a " +
+            "flexrep:document-status element that we don't support yet. We likely need to change the properties " +
+            "column to be a String instead and capture the XML as a serialized XML string.");
+    }
+
+    @Test
     void notAnMlcpArchive() {
         Dataset<Row> dataset = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)

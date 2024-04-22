@@ -84,7 +84,7 @@ public class DocumentRowBuilder {
         }
         return new GenericInternalRow(row);
     }
-    
+
     private boolean includeCollections() {
         return includeMetadata("collections", DocumentManager.Metadata.COLLECTIONS);
     }
@@ -142,16 +142,27 @@ public class DocumentRowBuilder {
         row[5] = metadata.getQuality();
     }
 
+    // Suppressing
+    @SuppressWarnings("java:S2864")
     private void populatePropertiesColumn(Object[] row, DocumentMetadataHandle metadata) {
         DocumentMetadataHandle.DocumentProperties props = metadata.getProperties();
-        UTF8String[] keys = new UTF8String[props.size()];
-        UTF8String[] values = new UTF8String[props.size()];
-        int index = 0;
-        for (QName key : props.keySet()) {
-            keys[index] = UTF8String.fromString(key.toString());
-            values[index++] = UTF8String.fromString(props.get(key, String.class));
+        List<UTF8String> keys = new ArrayList<>();
+        List<UTF8String> values = new ArrayList<>();
+        for (Map.Entry<QName, Object> entry : props.entrySet()) {
+            final QName key = entry.getKey();
+            if (!(props.get(key) instanceof String)) {
+                // Ignoring complex elements for now. Need to fix this likely by treating properties as a serialized XML
+                // string instead of a Map of strings.
+            } else {
+                keys.add(UTF8String.fromString(key.toString()));
+                final String propValue = props.get(key, String.class);
+                values.add(UTF8String.fromString(propValue));
+            }
         }
-        row[6] = ArrayBasedMapData.apply(keys, values);
+        row[6] = ArrayBasedMapData.apply(
+            keys.toArray(new UTF8String[0]),
+            values.toArray(new UTF8String[0])
+        );
     }
 
     private void populateMetadataValuesColumn(Object[] row, DocumentMetadataHandle metadata) {
