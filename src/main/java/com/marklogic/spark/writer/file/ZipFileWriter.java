@@ -23,35 +23,36 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
-    private final ContentWriter contentWriter;
+    private final Map<String, String> properties;
+    private final SerializableConfiguration hadoopConfiguration;
+
     private final String zipPath;
 
+    // These can be instantiated lazily depending on which constructor is used.
+    private ContentWriter contentWriter;
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
 
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
-        this(properties.get("path"), properties, hadoopConfiguration, partitionId);
+        this(properties.get("path"), properties, hadoopConfiguration, partitionId, true);
     }
 
-    public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
+    public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration,
+                         int partitionId, boolean createZipFileImmediately) {
         this.zipPath = makeFilePath(path, partitionId);
-        Path filePath = new Path(zipPath);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Will write to: {}", filePath);
-        }
-        this.contentWriter = new ContentWriter(properties);
-        try {
-            FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
-            fileSystem.setWriteChecksum(false);
-            zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
-        } catch (IOException e) {
-            throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
+        this.properties = properties;
+        this.hadoopConfiguration = hadoopConfiguration;
+        if (createZipFileImmediately) {
+            createZipFileAndContentWriter();
         }
     }
 
     @Override
     public void write(InternalRow row) throws IOException {
+        if (contentWriter == null) {
+            createZipFileAndContentWriter();
+        }
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
@@ -77,6 +78,21 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     @Override
     public void abort() {
         // No action to take.
+    }
+
+    private void createZipFileAndContentWriter() {
+        Path filePath = new Path(zipPath);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will write to: {}", filePath);
+        }
+        this.contentWriter = new ContentWriter(properties);
+        try {
+            FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
+            fileSystem.setWriteChecksum(false);
+            zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
+        } catch (IOException e) {
+            throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
+        }
     }
 
     private boolean hasMetadata(InternalRow row) {

@@ -39,7 +39,6 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -171,9 +170,13 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private synchronized void throwWriteFailureIfExists() {
         if (writeFailure.get() != null) {
+            Throwable failure = writeFailure.get();
+            if (failure instanceof ConnectorException) {
+                throw (ConnectorException) failure;
+            }
             // Only including the message seems sufficient here, as Spark is logging the stacktrace. And the user
             // most likely only needs to know the message.
-            throw new ConnectorException(writeFailure.get().getMessage());
+            throw new ConnectorException(failure.getMessage());
         }
     }
 
@@ -218,31 +221,21 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
         try {
             archiveWriter.write(row);
-        } catch (IOException e) {
-            throw new ConnectorException(String.format(
+        } catch (Exception e) {
+            ConnectorException ex = new ConnectorException(String.format(
                 "Unable to write failed documents to archive file at %s; URI of failed document: %s; cause: %s",
                 archiveWriter.getZipPath(), failedDoc.getUri(), e.getMessage()
             ), e);
+            this.writeFailure.compareAndSet(null, ex);
+            throw ex;
         }
     }
 
-    /**
-     * If an archive writer cannot be created, we want to fail fast so that the issue isn't discovered after some number
-     * of documents have been successfully created.
-     *
-     * @param hadoopConfiguration
-     * @param partitionId
-     * @return
-     */
     private ZipFileWriter createArchiveWriter(SerializableConfiguration hadoopConfiguration, int partitionId) {
         String path = writeContext.getStringOption(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS);
-        try {
-            return new ZipFileWriter(path, writeContext.getProperties(), hadoopConfiguration, partitionId);
-        } catch (Exception e) {
-            // This will trigger both if the directory does not exist, and if the user is not able to to the directory.
-            throw new ConnectorException(String.format("Unable to create archive file for failed documents at path %s; cause: %s",
-                path, e.getMessage()), e);
-        }
+        // The zip file is expected to be created lazily - i.e. only when a document fails. This avoids creating
+        // empty archive zip files when no errors occur.
+        return new ZipFileWriter(path, writeContext.getProperties(), hadoopConfiguration, partitionId, false);
     }
 
     private void closeArchiveWriter() {

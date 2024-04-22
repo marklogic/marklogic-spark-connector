@@ -12,6 +12,7 @@ import org.junit.jupiter.api.io.TempDir;
 import scala.collection.JavaConversions;
 import scala.collection.mutable.WrappedArray;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,12 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
     }
 
     @Test
-    void test(@TempDir Path tempDir) {
+    void happyPath(@TempDir Path tempDir) {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
+        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+
         SparkSession session = newSparkSession();
 
         defaultWrite(session.read().format("binaryFile")
@@ -44,6 +50,8 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
         assertCollectionSize("Only the JSON document should have succeeded; error messages should have been logged " +
             "for the other 3 documents.", "partial-batch", 1);
+        assertEquals(1, successCount.get());
+        assertEquals(3, failureCount.get());
 
         // Read the archive file back in and verify the contents.
         List<Row> rows = session.read().format(CONNECTOR_IDENTIFIER)
@@ -54,35 +62,29 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
         verifyArchiveRows(rows);
     }
 
-    /**
-     * Verifies that the success count and failure counts are properly incremented.
-     */
     @Test
-    void singlePartition(@TempDir Path tempDir) {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
-        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
-
+    void multiplePartitions(@TempDir Path tempDir) {
         defaultWrite(newSparkSession().read().format("binaryFile")
             .load("src/test/resources/mixed-files")
-            .repartition(1)
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_URI_SUFFIX, ".json")
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
-            .option(Options.WRITE_COLLECTIONS, "single-partition")
+            .option(Options.WRITE_COLLECTIONS, "multiple-partitions")
             .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
         );
 
-        assertCollectionSize("single-partition", 1);
-        assertEquals(1, successCount.get());
-        assertEquals(3, failureCount.get());
+        File[] archiveFiles = tempDir.toFile().listFiles();
+        assertEquals(3, archiveFiles.length, "Each file is read and thus written via a separate partition. We " +
+            "expect 3 files then, 1 for each failed file. We should not get a 4th file for the partition that was " +
+            "able to write a file as a JSON document successfully.");
+        assertCollectionSize("multiple-partitions", 1);
     }
 
     @Test
     void invalidArchivePath() {
         ConnectorException ex = assertThrowsConnectorException(() -> defaultWrite(newSparkSession().read().format("binaryFile")
             .load("src/test/resources/mixed-files")
+            .repartition(1)
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_URI_SUFFIX, ".json")
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
@@ -91,11 +93,14 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
         ));
 
         String message = ex.getMessage();
-        assertTrue(message.startsWith("Unable to create archive file for failed documents at path /invalid/path/doesnt/exist; cause"),
-            "An invalid path or path that cannot be written to is expected to cause an immediate failure before anything " +
-                "is written; unexpected error: " + message);
-
-        assertCollectionSize("should-be-empty", 0);
+        assertTrue(message.startsWith("Unable to write failed documents to archive file at /invalid/path/doesnt/exist"),
+            "The write should have failed because the connector could not write an archive file to the invalid path. " +
+                "To avoid creating empty zip files, we don't try to create a zip file right away. The downside of " +
+                "this is that we don't 'fail fast' - i.e. we don't know that the path is invalid until a document " +
+                "fails to be written, and then we get an error when trying to write that document to an archive " +
+                "zip file. However, this scenario seems rare - a user can be expected to typically provide a valid " +
+                "path for their archive files. The rarity of that seems acceptable in favor of never creating empty " +
+                "zip files, which seems more annoying for a user to deal with. Actual error: " + message);
     }
 
     @Test
