@@ -154,13 +154,10 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private InternalRow makeRow(ZipEntry contentZipEntry, byte[] content, MlcpMetadata mlcpMetadata) {
-        final String zipEntryName = contentZipEntry.getName();
-        final String uri = zipEntryName.startsWith("/") ?
-            this.path + zipEntryName :
-            this.path + "/" + zipEntryName;
-
         DocumentRowBuilder rowBuilder = new DocumentRowBuilder(metadataCategories)
-            .withUri(uri).withContent(content).withMetadata(mlcpMetadata.getMetadata());
+            .withUri(contentZipEntry.getName())
+            .withContent(content)
+            .withMetadata(mlcpMetadata.getMetadata());
 
         if (mlcpMetadata.getFormat() != null) {
             rowBuilder.withFormat(mlcpMetadata.getFormat().name());

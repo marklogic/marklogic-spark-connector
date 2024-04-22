@@ -55,12 +55,21 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
         assertEquals(4, rows.size());
 
-        assertEquals("JSON", rows.get(0).getString(2), "MLCP appears to have a bug where a binary file has its " +
+        rows.forEach(row -> System.out.println(row.prettyJson()));
+
+        assertEquals("/mixed-files/hello.json", rows.get(0).getString(0));
+        assertEquals("JSON", rows.get(0).getString(2));
+
+        assertEquals("/mixed-files/hello.txt", rows.get(1).getString(0));
+        assertEquals("TEXT", rows.get(1).getString(2));
+
+        assertEquals("/mixed-files/hello.xml", rows.get(2).getString(0));
+        assertEquals("XML", rows.get(2).getString(2));
+
+        assertEquals("/mixed-files/hello2.txt.gz", rows.get(3).getString(0));
+        assertEquals("JSON", rows.get(3).getString(2), "MLCP appears to have a bug where a binary file has its " +
             "format captured as JSON. MLE-12923 was created to capture this bug. Once the bug is fixed, this should " +
             "equal BINARY.");
-        assertEquals("JSON", rows.get(1).getString(2));
-        assertEquals("TEXT", rows.get(2).getString(2));
-        assertEquals("XML", rows.get(3).getString(2));
     }
 
     @Test
@@ -189,16 +198,14 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     private void verifyFirstRow(Row row) {
-        final String uri = row.getString(0);
-        assertTrue(uri.endsWith("/files-with-all-metadata.mlcp.zip/test/1.xml"), "Unexpected URI: " + uri);
+        assertEquals("/test/1.xml", row.getString(0));
         XmlNode doc = new XmlNode(new String((byte[]) row.get(1)));
         assertEquals("world", doc.getElementValue("hello"));
         verifyRowMetadata(row);
     }
 
     private void verifySecondRow(Row row) {
-        final String uri = row.getString(0);
-        assertTrue(uri.endsWith("/files-with-all-metadata.mlcp.zip/test/2.xml"), "Unexpected URI: " + uri);
+        assertEquals("/test/2.xml", row.getString(0));
         XmlNode doc = new XmlNode(new String((byte[]) row.get(1)));
         assertEquals("world", doc.getElementValue("hello"));
         verifyRowMetadata(row);

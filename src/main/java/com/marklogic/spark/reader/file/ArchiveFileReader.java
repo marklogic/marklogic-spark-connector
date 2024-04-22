@@ -52,11 +52,10 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
                 return false;
             }
 
-            final String uri = zipEntryName.startsWith("/") ? this.path + zipEntryName : this.path + "/" + zipEntryName;
             DocumentMetadataHandle metadata = new DocumentMetadataHandle();
             metadata.fromBuffer(metadataBytes);
             this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
-                .withUri(uri).withContent(content).withMetadata(metadata)
+                .withUri(zipEntryName).withContent(content).withMetadata(metadata)
                 .buildRow();
             return true;
         } catch (IOException e) {

@@ -163,10 +163,8 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             "entry, no rows should be returned for that zip, but the connector should still process the valid " +
             "zip and return its 2 rows.");
 
-        String uri = rows.get(0).getString(0);
-        assertTrue(uri.endsWith("archive1.zip/test/1.xml"), "Unexpected URI: " + uri);
-        uri = rows.get(1).getString(0);
-        assertTrue(uri.endsWith("archive1.zip/test/2.xml"), "Unexpected URI: " + uri);
+        assertEquals("/test/1.xml", rows.get(0).getString(0));
+        assertEquals("/test/2.xml", rows.get(1).getString(0));
     }
 
     @Test
@@ -180,8 +178,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(1, rows.size(), "The first entry in the zip is valid, and so a row should be returned for it " +
             "and its associated metadata entry. The second entry is invalid because it's missing a metadata entry. " +
             "But no error should be thrown since the connector is configured to not abort on failure.");
-        String uri = rows.get(0).getString(0);
-        assertTrue(uri.endsWith("secondEntryInvalid.zip/test/1.xml"), "Unexpected URI: " + uri);
+        assertEquals("test/1.xml", rows.get(0).getString(0));
     }
 
     private void verifyAllMetadata(Path tempDir, int rowCount) {
