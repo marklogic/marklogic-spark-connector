@@ -67,7 +67,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
                 contentZipEntry.getName(), this.path, ex.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
-                throw new ConnectorException(message);
+                throw new ConnectorException(message, ex);
             }
             Util.MAIN_LOGGER.warn(message);
             return false;
@@ -146,7 +146,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             String message = String.format("Unable to read entry %s from zip file at %s; cause: %s",
                 contentZipEntry.getName(), this.path, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
-                throw new ConnectorException(message);
+                throw new ConnectorException(message, e);
             }
             Util.MAIN_LOGGER.warn(message);
             return new byte[0];
