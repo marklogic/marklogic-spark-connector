@@ -7,6 +7,7 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 import scala.collection.mutable.WrappedArray;
 
@@ -132,10 +133,13 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
         assertEquals(1, rows.size());
 
-        Map<String, String> properties = rows.get(0).getJavaMap(PROPERTIES_COLUMN);
-        assertEquals(5, properties.size(), "The actual properties has 6 elements, but the 6th element is a " +
-            "flexrep:document-status element that we don't support yet. We likely need to change the properties " +
-            "column to be a String instead and capture the XML as a serialized XML string.");
+        XmlNode properties = new XmlNode(rows.get(0).getString(PROPERTIES_COLUMN),
+            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
+            Namespace.getNamespace("flexrep", "http://marklogic.com/xdmp/flexible-replication"));
+        properties.assertElementValue(
+            "This verifies that the properties column can contain any serialized string of XML. This is necessary so " +
+                "that complex XML structures can be read from and written to MarkLogic.",
+            "/prop:properties/flexrep:document-status/flexrep:document-uri", "/equipment/DX06040.json");
     }
 
     @Test
@@ -256,10 +260,10 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     private void verifyProperties(Row row) {
-        Map<String, String> properties = row.getJavaMap(PROPERTIES_COLUMN);
-        assertEquals(2, properties.size());
-        assertEquals("value2", properties.get("key2"));
-        assertEquals("value1", properties.get("{org:example}key1"));
+        XmlNode properties = new XmlNode(row.getString(PROPERTIES_COLUMN),
+            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"), Namespace.getNamespace("ex", "org:example"));
+        properties.assertElementValue("/prop:properties/ex:key1", "value1");
+        properties.assertElementValue("/prop:properties/key2", "value2");
     }
 
     private void verifyMetadataValues(Row row) {

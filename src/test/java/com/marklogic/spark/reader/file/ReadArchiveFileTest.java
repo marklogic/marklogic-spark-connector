@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
@@ -7,6 +8,7 @@ import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -221,9 +223,10 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
     }
 
     private void verifyProperties(Row row) {
-        Map<String, String> properties = row.getJavaMap(6);
-        assertEquals("value2", properties.get("key2"));
-        assertEquals("value1", properties.get("{org:example}key1"));
+        XmlNode properties = new XmlNode(row.getString(6), Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
+            Namespace.getNamespace("ex", "org:example"));
+        properties.assertElementValue("/prop:properties/ex:key1", "value1");
+        properties.assertElementValue("/prop:properties/key2", "value2");
     }
 
     private void verifyMetadatavalues(Row row) {
