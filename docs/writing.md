@@ -66,8 +66,12 @@ documents to MarkLogic:
 4. `collections` is an array of `string`s.
 5. `permissions` is a map with keys of type `string` and values that are arrays of `string`s. 
 6. `quality` is an `integer`.
-7. `properties` is a map with keys and values of type `string`.
+7. `properties` is of type `string` and must be a serialized XML string of MarkLogic properties in the `http://marklogic.com/xdmp/property` namespace.
 8. `metadataValues` is a map with keys and values of type `string`.
+
+Note that in the 2.2.0 release of the connector, the `properties` column was a map with keys and values of type 
+`string`. This approach could not handle complex XML structures and was thus fixed in the 2.3.0 release to be of 
+type `string`. 
 
 Writing rows corresponding to the "document row" schema is largely the same as writing rows of any arbitrary schema, 
 but bear in mind these differences:

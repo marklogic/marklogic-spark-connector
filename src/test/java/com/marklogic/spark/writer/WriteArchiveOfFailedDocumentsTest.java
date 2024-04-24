@@ -18,8 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
@@ -159,8 +158,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
         assertEquals(0, row.getInt(5));
 
-        Map<String, WrappedArray> properties = row.getJavaMap(6);
-        assertEquals(0, properties.size());
+        assertTrue(row.isNullAt(6));
 
         Map<String, WrappedArray> metadataValues = row.getJavaMap(7);
         assertEquals(0, metadataValues.size());

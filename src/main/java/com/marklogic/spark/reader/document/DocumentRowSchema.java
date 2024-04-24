@@ -7,8 +7,6 @@ import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
-import javax.xml.namespace.QName;
-
 public abstract class DocumentRowSchema {
 
     public static final StructType SCHEMA = new StructType()
@@ -21,7 +19,7 @@ public abstract class DocumentRowSchema {
             DataTypes.createArrayType(DataTypes.StringType))
         )
         .add("quality", DataTypes.IntegerType)
-        .add("properties", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType))
+        .add("properties", DataTypes.StringType)
         .add("metadataValues", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
 
     private DocumentRowSchema() {
@@ -76,14 +74,11 @@ public abstract class DocumentRowSchema {
 
     private static void addPropertiesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(6)) {
-            MapData properties = row.getMap(6);
-            ArrayData qnames = properties.keyArray();
-            ArrayData values = properties.valueArray();
-            for (int i = 0; i < qnames.numElements(); i++) {
-                String qname = qnames.get(i, DataTypes.StringType).toString();
-                String value = values.get(i, DataTypes.StringType).toString();
-                metadata.getProperties().put(QName.valueOf(qname), value);
-            }
+            String propertiesXml = row.getString(6);
+            String metadataXml = String.format("<rapi:metadata xmlns:rapi='http://marklogic.com/rest-api'>%s</rapi:metadata>", propertiesXml);
+            DocumentMetadataHandle tempMetadata = new DocumentMetadataHandle();
+            tempMetadata.fromBuffer(metadataXml.getBytes());
+            metadata.setProperties(tempMetadata.getProperties());
         }
     }
 
