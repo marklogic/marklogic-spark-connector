@@ -1,0 +1,10 @@
+<com.marklogic.contentpump.DocumentMetadata>
+  <format>
+    <name>xml</name>
+  </format>
+  <collectionsList class="vector"/>
+  <permissionsList class="vector"/>
+  <quality>0</quality>
+  <properties>&lt;prop:properties xmlns:prop=&quot;http://marklogic.com/xdmp/property&quot;&gt;&lt;prop:directory/&gt;&lt;/prop:properties&gt;</properties>
+  <isNakedProps>true</isNakedProps>
+</com.marklogic.contentpump.DocumentMetadata>
