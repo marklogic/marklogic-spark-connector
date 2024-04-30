@@ -13,6 +13,8 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.UTF8String;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -30,11 +32,13 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     private final DocumentContext documentContext;
     private final RowManager rowManager;
     private final PlanBuilder op;
+    private final String graphBaseIri;
 
     private Iterator<RowRecord> currentRowIterator;
 
     public OpticTriplesReader(ForestPartition forestPartition, DocumentContext context) {
         this.documentContext = context;
+        this.graphBaseIri = context.getStringOption(Options.READ_TRIPLES_BASE_IRI);
         this.databaseClient = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
             context.connectToMarkLogic();
@@ -113,8 +117,25 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
             getString(row, OBJECT_COLUMN),
             getString(row, DATATYPE_COLUMN),
             getString(row, "lang"),
-            getString(row, GRAPH_COLUMN)
+            getGraph(row)
         };
+    }
+
+    private UTF8String getGraph(RowRecord row) {
+        String value = row.getString(GRAPH_COLUMN);
+        if (this.graphBaseIri != null && isGraphRelative(value)) {
+            value = this.graphBaseIri + value;
+        }
+        return value != null && value.trim().length() > 0 ? UTF8String.fromString(value) : null;
+    }
+
+    private boolean isGraphRelative(String value) {
+        try {
+            return value != null && !(new URI(value).isAbsolute());
+        } catch (URISyntaxException e) {
+            // If the graph is not a valid URI, it is not an absolute URI, and thus the base IRI will be prepended.
+            return true;
+        }
     }
 
     private UTF8String getString(RowRecord row, String column) {
