@@ -63,6 +63,11 @@ class TripleStreamReader implements RdfStreamReader {
     private Lang determineLang(String path) {
         if (path.endsWith(".json") || path.endsWith(".json.gz")) {
             return Lang.RDFJSON;
+        } else if (path.endsWith(".thrift")) {
+            return Lang.RDFTHRIFT;
+        } else if (path.endsWith(".binpb")) {
+            // See https://protobuf.dev/programming-guides/techniques/#suffixes .
+            return Lang.RDFPROTO;
         }
         return null;
     }

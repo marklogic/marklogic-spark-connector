@@ -45,7 +45,7 @@ class MarkLogicFileTable extends FileTable {
     @Override
     public WriteBuilder newWriteBuilder(LogicalWriteInfo info) {
         // Need to pass along a serializable object.
-        return new DocumentFileWriteBuilder(this.options.asCaseSensitiveMap());
+        return new DocumentFileWriteBuilder(this.options.asCaseSensitiveMap(), this.schema);
     }
 
     @Override

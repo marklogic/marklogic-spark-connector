@@ -3,15 +3,18 @@ package com.marklogic.spark.writer.file;
 import org.apache.spark.sql.connector.write.BatchWrite;
 import org.apache.spark.sql.connector.write.Write;
 import org.apache.spark.sql.connector.write.WriteBuilder;
+import org.apache.spark.sql.types.StructType;
 
 import java.util.Map;
 
 public class DocumentFileWriteBuilder implements WriteBuilder {
 
     private final Map<String, String> properties;
+    private final StructType schema;
 
-    public DocumentFileWriteBuilder(Map<String, String> properties) {
+    public DocumentFileWriteBuilder(Map<String, String> properties, StructType schema) {
         this.properties = properties;
+        this.schema = schema;
     }
 
     @Override
@@ -19,7 +22,7 @@ public class DocumentFileWriteBuilder implements WriteBuilder {
         return new Write() {
             @Override
             public BatchWrite toBatch() {
-                return new DocumentFileBatch(properties);
+                return new DocumentFileBatch(properties, schema);
             }
         };
     }

@@ -27,7 +27,8 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
         final String subject = "http://vocabulary.worldbank.org/taxonomy/451";
         verifyRow(rows.get(0), subject, "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "http://www.w3.org/2004/02/skos/core#Concept");
         verifyRow(rows.get(1), subject, "http://purl.org/dc/terms/creator", "wb", "http://www.w3.org/2001/XMLSchema#string", null);
-        verifyRow(rows.get(4), subject, "http://www.w3.org/2004/02/skos/core#prefLabel", "Debt Management", null, "en");
+        verifyRow(rows.get(4), subject, "http://www.w3.org/2004/02/skos/core#prefLabel", "Debt Management",
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "en");
     }
 
     @Test
@@ -110,7 +111,7 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
             "http://www.w3.org/1999/02/22-rdf-syntax-ns#List");
         verifyRow(rows.get(14), "http://purl.org/dc/elements/1.1/", "http://purl.org/dc/elements/1.1/description",
             "The Dublin Core Element Set v1.1 namespace provides URIs for the Dublin Core Elements v1.1. Entries are declared using RDF Schema language to support RDF applications.",
-            null, "en-US", null);
+            "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "en-US", null);
         verifyRow(rows.get(24), "http://purl.org/dc/elements/1.1/", "http://purl.org/dc/terms/modified", "2003-03-24",
             "http://www.w3.org/2001/XMLSchema#string", null, null);
     }
@@ -125,7 +126,7 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
         verifyRow(rows.get(0), "http://www.w3.org/2001/sw/RDFCore/ntriples/", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
             "http://xmlns.com/foaf/0.1/Document");
         verifyRow(rows.get(1), "http://www.w3.org/2001/sw/RDFCore/ntriples/", "http://purl.org/dc/terms/title",
-            "N-Triples", null, "en-US", null);
+            "N-Triples", "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString", "en-US", null);
         verifyRow(rows.get(7), "BLANK", "http://xmlns.com/foaf/0.1/name", "Dave Beckett",
             "http://www.w3.org/2001/XMLSchema#string", null, null);
     }
