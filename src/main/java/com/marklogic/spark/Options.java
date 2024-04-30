@@ -69,6 +69,7 @@ public abstract class Options {
     public static final String READ_TRIPLES_DIRECTORY = "spark.marklogic.read.triples.directory";
     public static final String READ_TRIPLES_OPTIONS = "spark.marklogic.read.triples.options";
     public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
+    public static final String READ_TRIPLES_BASE_IRI = "spark.marklogic.read.triples.baseIri";
 
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
