@@ -61,6 +61,15 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    public static final String READ_TRIPLES_GRAPHS = "spark.marklogic.read.triples.graphs";
+    public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
+    public static final String READ_TRIPLES_QUERY = "spark.marklogic.read.triples.query";
+    public static final String READ_TRIPLES_STRING_QUERY = "spark.marklogic.read.triples.stringQuery";
+    public static final String READ_TRIPLES_URIS = "spark.marklogic.read.triples.uris";
+    public static final String READ_TRIPLES_DIRECTORY = "spark.marklogic.read.triples.directory";
+    public static final String READ_TRIPLES_OPTIONS = "spark.marklogic.read.triples.options";
+    public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
+
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
@@ -103,7 +112,7 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
     public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
     public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
-    
+
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";

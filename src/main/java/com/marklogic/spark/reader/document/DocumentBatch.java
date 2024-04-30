@@ -6,6 +6,7 @@ import com.marklogic.client.io.SearchHandle;
 import com.marklogic.client.query.QueryManager;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
@@ -29,7 +30,10 @@ class DocumentBatch implements Batch {
         DatabaseClient client = this.context.connectToMarkLogic();
         Forest[] forests = client.newDataMovementManager().readForestConfig().listForests();
 
-        SearchQueryDefinition query = this.context.buildSearchQuery(client);
+        SearchQueryDefinition query = TripleRowSchema.SCHEMA.equals(context.getSchema()) ?
+            this.context.buildTriplesSearchQuery(client) :
+            this.context.buildSearchQuery(client);
+        
         // Must null this out so SearchHandle still works below.
         query.setResponseTransform(null);
 
