@@ -1,0 +1,42 @@
+<sem:triples xmlns:sem="http://marklogic.com/semantics">
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://www.w3.org/1999/02/22-rdf-syntax-ns#type</sem:predicate>
+    <sem:object>http://www.w3.org/2004/02/skos/core#Concept</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://purl.org/dc/terms/creator</sem:predicate>
+    <sem:object datatype="http://www.w3.org/2001/XMLSchema#string">wb</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://purl.org/dc/terms/created</sem:predicate>
+    <sem:object datatype="http://www.w3.org/2001/XMLSchema#dateTime">2013-05-21T15:49:55Z</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://purl.org/dc/terms/hasVersion</sem:predicate>
+    <sem:object datatype="http://www.w3.org/2001/XMLSchema#int">0</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://www.w3.org/2004/02/skos/core#prefLabel</sem:predicate>
+    <sem:object xml:lang="en">Debt Management</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://www.w3.org/2004/02/skos/core#broader</sem:predicate>
+    <sem:object>http://vocabulary.worldbank.org/taxonomy/450</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://www.w3.org/2004/02/skos/core#narrower</sem:predicate>
+    <sem:object>http://vocabulary.worldbank.org/taxonomy/1137</sem:object>
+  </sem:triple>
+  <sem:triple>
+    <sem:subject>http://vocabulary.worldbank.org/taxonomy/451</sem:subject>
+    <sem:predicate>http://www.w3.org/2004/02/skos/core#narrower</sem:predicate>
+    <sem:object>http://vocabulary.worldbank.org/taxonomy/1107</sem:object>
+  </sem:triple>
+</sem:triples>

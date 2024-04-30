@@ -4,4 +4,9 @@
       <json-property>CitationID</json-property>
     </range>
   </constraint>
+  <constraint name="tripleObject">
+    <value>
+      <element ns="http://marklogic.com/semantics" name="object"/>
+    </value>
+  </constraint>
 </options>

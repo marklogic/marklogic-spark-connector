@@ -68,8 +68,9 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         }
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
-        }
-        if (Util.isReadWithCustomCodeOperation(properties)) {
+        } else if (isReadTriplesOperation(properties)) {
+            return TripleRowSchema.SCHEMA;
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
         return inferSchemaFromOpticQuery(properties);
@@ -85,16 +86,16 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         }
 
         if (isReadDocumentsOperation(properties)) {
-            return new DocumentTable();
+            return new DocumentTable(DocumentRowSchema.SCHEMA);
+        } else if (isReadTriplesOperation(properties)) {
+            return new DocumentTable(TripleRowSchema.SCHEMA);
         } else if (isReadOperation(properties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Creating new table for reading");
             }
             return new MarkLogicTable(schema, properties);
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new table for writing");
-        }
+
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 
@@ -124,6 +125,17 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
             properties.containsKey(Options.READ_DOCUMENTS_OPTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_URIS);
+    }
+
+    private boolean isReadTriplesOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.READ_TRIPLES_GRAPHS,
+            Options.READ_TRIPLES_COLLECTIONS,
+            Options.READ_TRIPLES_QUERY,
+            Options.READ_TRIPLES_STRING_QUERY,
+            Options.READ_TRIPLES_URIS,
+            Options.READ_TRIPLES_DIRECTORY
+        );
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
