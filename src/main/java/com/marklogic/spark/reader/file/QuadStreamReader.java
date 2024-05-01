@@ -1,7 +1,6 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
-import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFParserBuilder;
 import org.apache.jena.riot.RiotException;
 import org.apache.jena.riot.system.AsyncParser;
@@ -23,10 +22,9 @@ class QuadStreamReader implements RdfStreamReader {
 
     QuadStreamReader(String path, InputStream inputStream) {
         this.path = path;
-        final Lang lang = RdfUtil.isTrigFile(path) ? Lang.TRIG : Lang.NQ;
         this.quadStream = AsyncParser.of(RDFParserBuilder.create()
             .source(inputStream)
-            .lang(lang)
+            .lang(RdfUtil.getQuadsLang(path))
             .errorHandler(new RdfErrorHandler(path))
             .base(path)
         ).streamQuads().iterator();

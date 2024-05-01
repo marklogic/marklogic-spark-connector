@@ -128,6 +128,9 @@ public abstract class Options {
     // Applies to XML and JSON documents.
     public static final String WRITE_FILES_PRETTY_PRINT = "spark.marklogic.write.files.prettyPrint";
 
+    public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
+    public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
+
     private Options() {
     }
 }
