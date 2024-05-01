@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
 
@@ -28,8 +29,13 @@ class DocumentRowConverter implements RowConverter {
 
     @Override
     public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
-        String uri = row.getString(0);
-        BytesHandle content = new BytesHandle(row.getBinary(1));
+        final String uri = row.getString(0);
+        if (row.isNullAt(1)) {
+            Util.MAIN_LOGGER.warn("Not writing document with URI {} as it has null content; this will be supported " +
+                "once the MarkLogic Java Client 6.6.1 is available.", uri);
+            return Optional.empty();
+        }
+        final BytesHandle content = new BytesHandle(row.getBinary(1));
         String format = row.isNullAt(2) ? null : row.getString(2);
         Optional<JsonNode> uriTemplateValues = deserializeContentToJson(uri, content, format);
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
@@ -42,7 +48,7 @@ class DocumentRowConverter implements RowConverter {
     }
 
     private Optional<JsonNode> deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
-        if (this.uriTemplate == null || this.uriTemplate.trim().length() == 0) {
+        if (this.uriTemplate == null || this.uriTemplate.trim().length() == 0 || contentHandle == null) {
             return Optional.empty();
         }
         try {

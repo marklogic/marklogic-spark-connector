@@ -1,5 +1,6 @@
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -50,27 +51,31 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        ZipEntry contentZipEntry = getContentEntry(metadataZipEntry);
-        if (contentZipEntry == null) {
-            return false;
-        }
-
-        byte[] content = readBytesFromContentEntry(contentZipEntry);
-        if (content == null || content.length == 0) {
-            return false;
-        }
-
-        try {
-            nextRowToReturn = makeRow(contentZipEntry, content, mlcpMetadata);
-            return true;
-        } catch (Exception ex) {
-            String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
-                contentZipEntry.getName(), this.path, ex.getMessage());
-            if (fileContext.isReadAbortOnFailure()) {
-                throw new ConnectorException(message, ex);
+        if (metadataZipEntry.getName().endsWith(".naked")) {
+            return readNakedEntry(metadataZipEntry, mlcpMetadata);
+        } else {
+            ZipEntry contentZipEntry = getContentEntry(metadataZipEntry);
+            if (contentZipEntry == null) {
+                return false;
             }
-            Util.MAIN_LOGGER.warn(message);
-            return false;
+
+            byte[] content = readBytesFromContentEntry(contentZipEntry);
+            if (content == null || content.length == 0) {
+                return false;
+            }
+
+            try {
+                nextRowToReturn = makeRow(contentZipEntry, content, mlcpMetadata);
+                return true;
+            } catch (Exception ex) {
+                String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
+                    contentZipEntry.getName(), this.path, ex.getMessage());
+                if (fileContext.isReadAbortOnFailure()) {
+                    throw new ConnectorException(message, ex);
+                }
+                Util.MAIN_LOGGER.warn(message);
+                return false;
+            }
         }
     }
 
@@ -151,6 +156,37 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             Util.MAIN_LOGGER.warn(message);
             return new byte[0];
         }
+    }
+
+    /**
+     * A "naked" entry refers to a properties fragment with no associate document. MLCP supports exporting these, and
+     * so we need to support reading them in from an MLCP archive file.
+     */
+    private boolean readNakedEntry(ZipEntry metadataZipEntry, MlcpMetadata mlcpMetadata) {
+        try {
+            nextRowToReturn = makeNakedRow(metadataZipEntry, mlcpMetadata);
+            return true;
+        } catch (Exception ex) {
+            String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
+                metadataZipEntry.getName(), this.path, ex.getMessage());
+            if (fileContext.isReadAbortOnFailure()) {
+                throw new ConnectorException(message, ex);
+            }
+            Util.MAIN_LOGGER.warn(message);
+            return false;
+        }
+    }
+
+    private InternalRow makeNakedRow(ZipEntry metadataZipEntry, MlcpMetadata mlcpMetadata) {
+        DocumentMetadataHandle metadata = mlcpMetadata.getMetadata();
+        metadata.getCollections().clear();
+        metadata.getPermissions().clear();
+        metadata.getMetadataValues().clear();
+        metadata.setQuality(0);
+        return new DocumentRowBuilder(metadataCategories)
+            .withUri(metadataZipEntry.getName())
+            .withMetadata(metadata)
+            .buildRow();
     }
 
     private InternalRow makeRow(ZipEntry contentZipEntry, byte[] content, MlcpMetadata mlcpMetadata) {
