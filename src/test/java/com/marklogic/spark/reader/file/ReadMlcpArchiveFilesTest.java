@@ -7,6 +7,7 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 import scala.collection.mutable.WrappedArray;
@@ -15,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
@@ -199,6 +199,56 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
             "as it's the second metadata entry that is missing a content entry. It should also get 2 rows from " +
             "files-with-all-metadata.mlcp.zip. And the error from the missing content entry should be logged but " +
             "not thrown.");
+    }
+
+    @Test
+    void nakedProperties() {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load("src/test/resources/mlcp-archive-files/naked1.zip");
+
+        List<Row> rows = dataset.collectAsList();
+        assertEquals(2, rows.size(), "The example.xml.naked entry should have produced 1 row.");
+
+        Row nakedRow = rows.get(0);
+        final String expectedNakedPropertiesUrl = "mlcp/naked/example.xml.naked";
+        assertEquals(expectedNakedPropertiesUrl, nakedRow.getString(0));
+        assertTrue(nakedRow.isNullAt(1), "Content should be null.");
+        assertTrue(nakedRow.isNullAt(2), "Format should be null, since there's no content.");
+        assertEquals(0, nakedRow.getList(COLLECTIONS_COLUMN).size(), "Collections list should be empty since they " +
+            "cannot be written for a naked properties fragment.");
+        assertEquals(0, nakedRow.getJavaMap(PERMISSIONS_COLUMN).size(), "Permissions should be empty since they " +
+            "cannot be written for a naked properties fragment.");
+        assertEquals(0, nakedRow.getInt(QUALITY_COLUMN));
+        assertEquals(0, nakedRow.getJavaMap(METADATAVALUES_COLUMN).size(), "Metadata values should be empty since " +
+            "they cannot be written for a naked properties fragment");
+
+        XmlNode properties = new XmlNode(nakedRow.getString(PROPERTIES_COLUMN),
+            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"));
+        properties.assertElementValue("/prop:properties/priority", "1");
+
+        Row normalRow = rows.get(1);
+        assertEquals("mlcp/xml/1.xml", normalRow.getString(0));
+
+        // Now write it to verify the outcome.
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "naked-test")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        List<String> uris = getUrisInCollection("naked-test", 1);
+        assertEquals("mlcp/xml/1.xml", uris.get(0));
+
+        String nakedProperties = getDatabaseClient().newServerEval()
+            .xquery(String.format("xdmp:document-properties('%s')", expectedNakedPropertiesUrl))
+            .evalAs(String.class);
+        assertNull(nakedProperties, "The naked properties row should have been ignored during the write, as " +
+            "Java Client 6.6.0 and earlier do not support writing a document with null content via WriteBatcher. " +
+            "This will be fixed in the Java Client 6.6.1 release, at which point we can start writing naked " +
+            "properties fragments correctly.");
     }
 
     private void verifyFirstRow(Row row) {
