@@ -74,7 +74,9 @@ class RdfFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() throws IOException {
-        this.stream.finish();
+        if (this.stream != null) {
+            this.stream.finish();
+        }
         return null;
     }
 
