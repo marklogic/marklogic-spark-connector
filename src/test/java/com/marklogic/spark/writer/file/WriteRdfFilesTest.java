@@ -2,6 +2,7 @@ package com.marklogic.spark.writer.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
@@ -102,6 +103,25 @@ class WriteRdfFilesTest extends AbstractIntegrationTest {
         List<Row> rows = readRdfFiles(tempDir);
         verifyEachRowHasGraph(rows, "use-this-graph");
     }
+
+    @Test
+    void noTriplesFound(@TempDir Path tempDir) {
+        Dataset<Row> dataset = newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_TRIPLES_URIS, "/not-a-document.json")
+            .load();
+
+        assertEquals(0, dataset.count());
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        assertEquals(0, tempDir.toFile().listFiles().length, "No files should have been written since no triples " +
+            "were found.");
+    }
+
 
     private void writeExampleGraphToFiles(Path tempDir, String format) {
         writeExampleGraphToFiles(tempDir, format, format);
