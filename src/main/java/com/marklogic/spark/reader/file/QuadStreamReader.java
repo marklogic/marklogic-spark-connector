@@ -35,8 +35,7 @@ class QuadStreamReader implements RdfStreamReader {
         try {
             return this.quadStream.hasNext();
         } catch (RiotException e) {
-            throw new ConnectorException(String.format("Unable to read file at %s; cause: %s",
-                this.path, e.getMessage()), e);
+            throw new ConnectorException(String.format("Unable to read %s; cause: %s", this.path, e.getMessage()), e);
         }
     }
 

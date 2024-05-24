@@ -1,8 +1,12 @@
 package com.marklogic.spark.reader.file;
 
+import org.apache.spark.sql.connector.read.InputPartition;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -28,5 +32,27 @@ public interface FileUtil {
             return null;
         }
         return !entry.isDirectory() ? entry : findNextFileEntry(zipInputStream);
+    }
+
+    static FilePartition[] makeFilePartitions(String[] files, int numPartitions) {
+        int filesPerPartition = (int) Math.ceil((double) files.length / (double) numPartitions);
+        if (files.length < numPartitions) {
+            numPartitions = files.length;
+        }
+        final FilePartition[] partitions = new FilePartition[numPartitions];
+        List<String> currentPartition = new ArrayList<>();
+        int partitionIndex = 0;
+        for (int i = 0; i < files.length; i++) {
+            if (currentPartition.size() == filesPerPartition) {
+                partitions[partitionIndex] = new FilePartition(currentPartition);
+                partitionIndex++;
+                currentPartition = new ArrayList<>();
+            }
+            currentPartition.add(files[i]);
+        }
+        if (!currentPartition.isEmpty()) {
+            partitions[partitionIndex] = new FilePartition(currentPartition);
+        }
+        return partitions;
     }
 }

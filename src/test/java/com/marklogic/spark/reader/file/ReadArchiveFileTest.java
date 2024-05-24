@@ -183,6 +183,23 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals("test/1.xml", rows.get(0).getString(0));
     }
 
+    @Test
+    void threeZipsOnePartition() {
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .load(
+                "src/test/resources/archive-files/archive1.zip",
+                "src/test/resources/archive-files/firstEntryInvalid.zip",
+                "src/test/resources/archive-files/secondEntryInvalid.zip"
+            )
+            .collectAsList();
+
+        assertEquals(3, rows.size(), "Expecting 2 rows from archive1.zip, none from firstEntryInvalid.zip, " +
+            "and 1 from secondEntryInvalid.zip.");
+    }
+
     private void verifyAllMetadata(Path tempDir, int rowCount) {
         List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "archive")

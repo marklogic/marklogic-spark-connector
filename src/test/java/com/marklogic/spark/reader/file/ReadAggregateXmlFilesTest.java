@@ -21,6 +21,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
         List<Row> rows = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_NUM_PARTITIONS, 1)
             .load("src/test/resources/aggregates")
             .collectAsList();
 
@@ -144,6 +145,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
     void ignoreUriElementNotFound() {
         long count = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
             .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "id")
             .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
@@ -158,6 +160,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
     void ignoreInvalidXmlFile() {
         long count = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_NUM_PARTITIONS, 1)
             .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
             .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
             .load("src/test/resources/junit-platform.properties", "src/test/resources/aggregates/employees.xml")

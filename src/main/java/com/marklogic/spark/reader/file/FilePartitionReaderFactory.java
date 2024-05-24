@@ -19,11 +19,14 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
-        FilePartition filePartition = (FilePartition) partition;
-
+        final FilePartition filePartition = (FilePartition) partition;
         final String fileType = fileContext.getStringOption(Options.READ_FILES_TYPE);
+        
         if ("rdf".equalsIgnoreCase(fileType)) {
-            return createRdfReader(filePartition);
+            if (fileContext.isZip()) {
+                return new RdfZipFileReader(filePartition, fileContext);
+            }
+            return new RdfFileReader(filePartition, fileContext);
         } else if ("mlcp_archive".equalsIgnoreCase(fileType)) {
             return new MlcpArchiveFileReader(filePartition, fileContext);
         } else if ("archive".equalsIgnoreCase(fileType)) {
@@ -38,15 +41,6 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
             return new GzipFileReader(filePartition, fileContext);
         }
 
-        throw new ConnectorException(String.format("File is not supported: %s", filePartition.getPath()));
-    }
-
-    private PartitionReader<InternalRow> createRdfReader(FilePartition filePartition) {
-        if (fileContext.isZip()) {
-            return new RdfZipFileReader(filePartition, fileContext);
-        }
-        return RdfUtil.isQuadsFile(filePartition.getPath()) ?
-            new QuadsFileReader(filePartition, fileContext) :
-            new TriplesFileReader(filePartition, fileContext);
+        throw new ConnectorException(String.format("Files are not supported: %s", filePartition.getPaths()));
     }
 }

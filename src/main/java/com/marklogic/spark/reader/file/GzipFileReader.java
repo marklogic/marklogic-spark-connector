@@ -21,26 +21,27 @@ class GzipFileReader implements PartitionReader<InternalRow> {
     private final FilePartition filePartition;
     private final FileContext fileContext;
 
-    private InternalRow rowToReturn = null;
+    private int nextFilePathIndex;
+    private InternalRow rowToReturn;
 
-    GzipFileReader(FilePartition partition, FileContext fileContext) {
-        this.filePartition = partition;
+    GzipFileReader(FilePartition filePartition, FileContext fileContext) {
+        this.filePartition = filePartition;
         this.fileContext = fileContext;
     }
 
     @Override
     public boolean next() {
-        if (rowToReturn != null) {
+        if (nextFilePathIndex >= filePartition.getPaths().size()) {
             return false;
         }
 
-        // Must capture the row here so that if an error occurs and it should not cause a failure, it can be logged here
-        // and false can be returned.
+        String currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
+        nextFilePathIndex++;
         InputStream gzipInputStream = null;
         try {
-            gzipInputStream = fileContext.open(filePartition);
-            byte[] content = extractGZIPContents(gzipInputStream);
-            String uri = makeURI();
+            gzipInputStream = fileContext.openFile(currentFilePath);
+            byte[] content = extractGZIPContents(currentFilePath, gzipInputStream);
+            String uri = makeURI(currentFilePath);
             this.rowToReturn = new GenericInternalRow(new Object[]{
                 UTF8String.fromString(uri), ByteArray.concat(content),
                 null, null, null, null, null, null
@@ -50,8 +51,8 @@ class GzipFileReader implements PartitionReader<InternalRow> {
             if (fileContext.isReadAbortOnFailure()) {
                 throw ex;
             }
-            Util.MAIN_LOGGER.warn("Unable to read file at {}; cause: {}", this.filePartition.getPath(), ex.getMessage());
-            return false;
+            Util.MAIN_LOGGER.warn("Unable to read file at {}; cause: {}", currentFilePath, ex.getMessage());
+            return next();
         } finally {
             IOUtils.closeQuietly(gzipInputStream);
         }
@@ -67,17 +68,16 @@ class GzipFileReader implements PartitionReader<InternalRow> {
         // Nothing to close.
     }
 
-    private byte[] extractGZIPContents(InputStream gzipInputStream) {
+    private byte[] extractGZIPContents(String currentFilePath, InputStream gzipInputStream) {
         try {
             return FileUtil.readBytes(gzipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from gzip file at %s; cause: %s",
-                this.filePartition, e.getMessage()), e);
+                currentFilePath, e.getMessage()), e);
         }
     }
 
-    private String makeURI() {
-        String path = filePartition.getPath();
+    private String makeURI(String path) {
         // Copied from MLCP.
         return path.endsWith(".gzip") || path.endsWith(".gz") ?
             path.substring(0, path.lastIndexOf(".")) :

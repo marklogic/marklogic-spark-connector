@@ -17,9 +17,7 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
     private static final Logger logger = LoggerFactory.getLogger(ZipAggregateXmlFileReader.class);
 
     private final FileContext fileContext;
-    private final ZipInputStream zipInputStream;
-    private final String path;
-
+    private final FilePartition filePartition;
     private AggregateXmlSplitter aggregateXMLSplitter;
 
     // Used solely for a default URI prefix.
@@ -27,10 +25,14 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
 
     private InternalRow rowToReturn;
 
+    private int nextFilePathIndex = 0;
+    private String currentFilePath;
+    private ZipInputStream currentZipInputStream;
+
     ZipAggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.fileContext = fileContext;
-        this.path = filePartition.getPath();
-        this.zipInputStream = new ZipInputStream(fileContext.open(filePartition));
+        this.filePartition = filePartition;
+        this.openNextFile();
     }
 
     /**
@@ -40,13 +42,17 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
      * @throws IOException
      */
     @Override
-    public boolean next() throws IOException {
+    public boolean next() {
         while (true) {
             // If we don't already have a splitter open on a zip entry, find the next valid zip entry to process.
             if (aggregateXMLSplitter == null) {
                 boolean foundZipEntry = findNextValidZipEntry();
                 if (!foundZipEntry) {
-                    return false;
+                    close();
+                    if (nextFilePathIndex >= filePartition.getPaths().size()) {
+                        return false;
+                    }
+                    this.openNextFile();
                 }
             }
 
@@ -66,8 +72,14 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
     }
 
     @Override
-    public void close() throws IOException {
-        IOUtils.closeQuietly(this.zipInputStream);
+    public void close() {
+        IOUtils.closeQuietly(this.currentZipInputStream);
+    }
+
+    private void openNextFile() {
+        this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
+        nextFilePathIndex++;
+        this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
     }
 
     /**
@@ -82,9 +94,9 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
             // Once we no longer have any valid zip entries, we're done.
             ZipEntry zipEntry;
             try {
-                zipEntry = FileUtil.findNextFileEntry(zipInputStream);
+                zipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
             } catch (IOException e) {
-                String message = String.format("Unable to read zip entry from %s; cause: %s", this.path, e.getMessage());
+                String message = String.format("Unable to read zip entry from %s; cause: %s", this.currentFilePath, e.getMessage());
                 if (fileContext.isReadAbortOnFailure()) {
                     throw new ConnectorException(message, e);
                 }
@@ -96,13 +108,13 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
                 return false;
             }
             if (logger.isTraceEnabled()) {
-                logger.trace("Reading entry {} in {}", zipEntry.getName(), this.path);
+                logger.trace("Reading entry {} in {}", zipEntry.getName(), this.currentFilePath);
             }
             entryCounter++;
-            String identifierForError = "entry " + zipEntry.getName() + " in " + this.path;
+            String identifierForError = "entry " + zipEntry.getName() + " in " + this.currentFilePath;
 
             try {
-                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.zipInputStream, this.fileContext.getProperties());
+                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.currentZipInputStream, this.fileContext.getProperties());
                 // Fail fast if the next entry is not valid XML.
                 aggregateXMLSplitter.hasNext();
                 return true;
@@ -133,7 +145,7 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
             }
 
             try {
-                this.rowToReturn = this.aggregateXMLSplitter.nextRow(this.path + "-" + entryCounter);
+                this.rowToReturn = this.aggregateXMLSplitter.nextRow(this.currentFilePath + "-" + entryCounter);
                 return true;
             } catch (Exception ex) {
                 if (fileContext.isReadAbortOnFailure()) {

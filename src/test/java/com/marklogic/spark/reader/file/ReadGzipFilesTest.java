@@ -31,6 +31,19 @@ class ReadGzipFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void threeFilesOnePartition() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "gzip")
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .option("recursiveFileLookup", "true")
+            .load("src/test/resources/gzip-files")
+            .collectAsList();
+
+        assertEquals(3, rows.size());
+    }
+
+    @Test
     void filesNotGzipped() {
         Dataset<Row> dataset = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)

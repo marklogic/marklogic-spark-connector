@@ -46,6 +46,21 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void twoArchivesOnePartition() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load(
+                "src/test/resources/mlcp-archive-files/complex-properties.zip",
+                "src/test/resources/mlcp-archive-files/files-with-all-metadata.mlcp.zip"
+            )
+            .collectAsList();
+
+        assertEquals(3, rows.size(), "A single partition reader should iterate over the two files and get " +
+            "2 rows from files-with-all-metadata and 1 row from complex-properties.");
+    }
+
+    @Test
     void mlcpArchivesContainingAllFourTypesOfDocuments() {
         List<Row> rows = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
@@ -172,6 +187,7 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "mlcp_archive")
             .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .option(Options.READ_NUM_PARTITIONS, 1)
             .load(
                 "src/test/resources/zip-files/mixed-files.zip",
                 "src/test/resources/mlcp-archive-files/files-with-all-metadata.mlcp.zip"
