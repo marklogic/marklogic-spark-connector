@@ -30,15 +30,15 @@ class FileContext extends ContextSupport implements Serializable {
         return "gzip".equalsIgnoreCase(getStringOption(Options.READ_FILES_COMPRESSION));
     }
 
-    InputStream open(FilePartition filePartition) {
+    InputStream openFile(String filePath) {
         try {
-            Path hadoopPath = new Path(filePartition.getPath());
+            Path hadoopPath = new Path(filePath);
             FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
             FSDataInputStream inputStream = fileSystem.open(hadoopPath);
             return this.isGzip() ? new GZIPInputStream(inputStream) : inputStream;
         } catch (Exception e) {
             throw new ConnectorException(String.format(
-                "Unable to read file at %s; cause: %s", filePartition, e.getMessage()), e);
+                "Unable to read file at %s; cause: %s", filePath, e.getMessage()), e);
         }
     }
 

@@ -34,7 +34,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
         verifyUriEndsWith(rows.get(2), "mixed-files.zip/mixed-files/hello.xml");
         verifyUriEndsWith(rows.get(3), "mixed-files.zip/mixed-files/hello2.txt.gz");
 
-        // Now write the rows so we can verify the doc in MarkLogic.
+        // Now write the rows so that we can verify the doc in MarkLogic.
         defaultWrite(reader.write()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_URI_REPLACE, ".*/mixed-files.zip,''")
@@ -56,6 +56,7 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
     void readViaMultiplePaths() {
         List<Row> rows = newZipReader()
             .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_NUM_PARTITIONS, 1)
             .load(
                 "src/test/resources/zip-files/mixed-files.zip",
                 "src/test/resources/zip-files/child/logback.zip"

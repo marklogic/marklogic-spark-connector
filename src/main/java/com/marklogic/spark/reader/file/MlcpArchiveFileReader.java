@@ -18,17 +18,19 @@ import java.util.zip.ZipInputStream;
 
 class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
-    private final String path;
-    private final ZipInputStream zipInputStream;
+    private final FilePartition filePartition;
     private final MlcpMetadataConverter mlcpMetadataConverter;
     private final FileContext fileContext;
     private final List<String> metadataCategories;
+
+    private String currentFilePath;
+    private ZipInputStream currentZipInputStream;
+    private int nextFilePathIndex;
     private InternalRow nextRowToReturn;
 
     MlcpArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
-        this.path = filePartition.getPath();
+        this.filePartition = filePartition;
         this.fileContext = fileContext;
-        this.zipInputStream = new ZipInputStream(fileContext.open(filePartition));
         this.mlcpMetadataConverter = new MlcpMetadataConverter();
 
         this.metadataCategories = new ArrayList<>();
@@ -37,45 +39,50 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
                 this.metadataCategories.add(category.toLowerCase());
             }
         }
+
+        openNextFile();
     }
 
     @Override
     public boolean next() {
         ZipEntry metadataZipEntry = getNextMetadataEntry();
         if (metadataZipEntry == null) {
-            return false;
+            return openNextFileAndReadNextEntry();
         }
 
         MlcpMetadata mlcpMetadata = readMetadataEntry(metadataZipEntry);
         if (mlcpMetadata == null) {
-            return false;
+            return openNextFileAndReadNextEntry();
         }
 
         if (metadataZipEntry.getName().endsWith(".naked")) {
-            return readNakedEntry(metadataZipEntry, mlcpMetadata);
-        } else {
-            ZipEntry contentZipEntry = getContentEntry(metadataZipEntry);
-            if (contentZipEntry == null) {
-                return false;
-            }
-
-            byte[] content = readBytesFromContentEntry(contentZipEntry);
-            if (content == null || content.length == 0) {
-                return false;
-            }
-
-            try {
-                nextRowToReturn = makeRow(contentZipEntry, content, mlcpMetadata);
+            if (readNakedEntry(metadataZipEntry, mlcpMetadata)) {
                 return true;
-            } catch (Exception ex) {
-                String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
-                    contentZipEntry.getName(), this.path, ex.getMessage());
-                if (fileContext.isReadAbortOnFailure()) {
-                    throw new ConnectorException(message, ex);
-                }
-                Util.MAIN_LOGGER.warn(message);
-                return false;
             }
+            return openNextFileAndReadNextEntry();
+        }
+
+        ZipEntry contentZipEntry = getContentEntry(metadataZipEntry);
+        if (contentZipEntry == null) {
+            return openNextFileAndReadNextEntry();
+        }
+
+        byte[] content = readBytesFromContentEntry(contentZipEntry);
+        if (content == null || content.length == 0) {
+            return openNextFileAndReadNextEntry();
+        }
+
+        try {
+            nextRowToReturn = makeRow(contentZipEntry, content, mlcpMetadata);
+            return true;
+        } catch (Exception ex) {
+            String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
+                contentZipEntry.getName(), this.currentFilePath, ex.getMessage());
+            if (fileContext.isReadAbortOnFailure()) {
+                throw new ConnectorException(message, ex);
+            }
+            Util.MAIN_LOGGER.warn(message);
+            return openNextFileAndReadNextEntry();
         }
     }
 
@@ -86,16 +93,31 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public void close() {
-        IOUtils.closeQuietly(this.zipInputStream);
+        IOUtils.closeQuietly(this.currentZipInputStream);
+    }
+
+    private void openNextFile() {
+        this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
+        nextFilePathIndex++;
+        this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+    }
+
+    private boolean openNextFileAndReadNextEntry() {
+        close();
+        if (nextFilePathIndex >= this.filePartition.getPaths().size()) {
+            return false;
+        }
+        openNextFile();
+        return next();
     }
 
     private ZipEntry getNextMetadataEntry() {
         // MLCP always includes a metadata entry, even if the user asks for no metadata. And the metadata entry is
         // always first.
         try {
-            return FileUtil.findNextFileEntry(zipInputStream);
+            return FileUtil.findNextFileEntry(currentZipInputStream);
         } catch (IOException e) {
-            String message = String.format("Unable to read from zip file: %s; cause: %s", this.path, e.getMessage());
+            String message = String.format("Unable to read from zip file: %s; cause: %s", this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, e);
             }
@@ -106,10 +128,10 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private MlcpMetadata readMetadataEntry(ZipEntry metadataZipEntry) {
         try {
-            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(FileUtil.readBytes(zipInputStream)));
+            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(FileUtil.readBytes(currentZipInputStream)));
         } catch (Exception e) {
             String message = String.format("Unable to read metadata for entry: %s; file: %s; cause: %s",
-                metadataZipEntry.getName(), this.path, e.getMessage());
+                metadataZipEntry.getName(), this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, e);
             }
@@ -123,9 +145,9 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     private ZipEntry getContentEntry(ZipEntry metadataZipEntry) {
         ZipEntry contentZipEntry;
         try {
-            contentZipEntry = FileUtil.findNextFileEntry(zipInputStream);
+            contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
         } catch (IOException e) {
-            String message = String.format("Unable to read content entry from file: %s; cause: %s", this.path, e.getMessage());
+            String message = String.format("Unable to read content entry from file: %s; cause: %s", this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, e);
             }
@@ -134,7 +156,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
         }
 
         if (contentZipEntry == null) {
-            String message = String.format("No content entry found for metadata entry: %s; file: %s", metadataZipEntry.getName(), this.path);
+            String message = String.format("No content entry found for metadata entry: %s; file: %s", metadataZipEntry.getName(), this.currentFilePath);
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message);
             }
@@ -146,10 +168,10 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private byte[] readBytesFromContentEntry(ZipEntry contentZipEntry) {
         try {
-            return FileUtil.readBytes(zipInputStream);
+            return FileUtil.readBytes(currentZipInputStream);
         } catch (IOException e) {
             String message = String.format("Unable to read entry %s from zip file at %s; cause: %s",
-                contentZipEntry.getName(), this.path, e.getMessage());
+                contentZipEntry.getName(), this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, e);
             }
@@ -168,7 +190,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             return true;
         } catch (Exception ex) {
             String message = String.format("Unable to process entry %s from zip file at %s; cause: %s",
-                metadataZipEntry.getName(), this.path, ex.getMessage());
+                metadataZipEntry.getName(), this.currentFilePath, ex.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, ex);
             }

@@ -16,6 +16,7 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
     private InputStream inputStream;
     private AggregateXmlSplitter aggregateXMLSplitter;
     private InternalRow nextRowToReturn;
+    private int filePathIndex = 0;
 
     AggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
@@ -32,18 +33,22 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
         while (true) {
             try {
                 if (!this.aggregateXMLSplitter.hasNext()) {
-                    return false;
+                    aggregateXMLSplitter = null;
+                    filePathIndex++;
+                    return next();
                 }
             } catch (ConnectorException ex) {
                 if (fileContext.isReadAbortOnFailure()) {
                     throw ex;
                 }
                 Util.MAIN_LOGGER.warn(ex.getMessage());
-                return false;
+                aggregateXMLSplitter = null;
+                filePathIndex++;
+                return next();
             }
 
             try {
-                nextRowToReturn = this.aggregateXMLSplitter.nextRow(filePartition.getPath());
+                nextRowToReturn = this.aggregateXMLSplitter.nextRow(filePartition.getPaths().get(filePathIndex));
                 return true;
             } catch (RuntimeException ex) {
                 // Error is expected to be friendly already.
@@ -66,9 +71,14 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
     }
 
     private boolean initializeAggregateXMLSplitter() {
+        if (filePathIndex >= filePartition.getPaths().size()) {
+            return false;
+        }
+
+        final String filePath = filePartition.getPaths().get(filePathIndex);
         try {
-            this.inputStream = fileContext.open(filePartition);
-            String identifierForError = "file " + filePartition.getPath();
+            this.inputStream = fileContext.openFile(filePath);
+            String identifierForError = "file " + filePath;
             this.aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.inputStream, fileContext.getProperties());
             return true;
         } catch (ConnectorException ex) {
@@ -76,14 +86,16 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
                 throw ex;
             }
             Util.MAIN_LOGGER.warn(ex.getMessage());
-            return false;
+            filePathIndex++;
+            return initializeAggregateXMLSplitter();
         } catch (Exception ex) {
-            String message = String.format("Unable to read file at %s; cause: %s", filePartition.getPath(), ex.getMessage());
+            String message = String.format("Unable to read file at %s; cause: %s", filePath, ex.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
                 throw new ConnectorException(message, ex);
             }
             Util.MAIN_LOGGER.warn(ex.getMessage());
-            return false;
+            filePathIndex++;
+            return initializeAggregateXMLSplitter();
         }
     }
 }

@@ -35,6 +35,23 @@ class ReadAggregateXmlZipFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void twoZipsOnePartition() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .load(
+                "src/test/resources/aggregate-zips/employee-aggregates.zip",
+                "src/test/resources/aggregate-zips/employee-aggregates-copy.zip"
+            )
+            .collectAsList();
+
+        assertEquals(8, rows.size(), "The two zip files, each containing 4 rows, should be read by a single " +
+            "partition reader that iterates over the two file paths.");
+    }
+
+    @Test
     void uriElementHasMixedContent() {
         Dataset<Row> dataset = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)

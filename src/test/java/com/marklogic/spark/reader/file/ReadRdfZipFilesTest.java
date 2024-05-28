@@ -1,8 +1,10 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadRdfZipFilesTest extends AbstractIntegrationTest {
 
@@ -26,6 +29,17 @@ class ReadRdfZipFilesTest extends AbstractIntegrationTest {
         Map<String, Integer> subjectCounts = getSubjectCounts(rows);
         assertEquals(4, subjectCounts.get("http://marklogicsparql.com/id#1111"));
         assertEquals(8, subjectCounts.get("http://vocabulary.worldbank.org/taxonomy/451"));
+    }
+
+    @Test
+    void twoFilesOnePartition() {
+        List<Row> rows = startRead()
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .load("src/test/resources/rdf/two-rdf-files.zip", "src/test/resources/rdf/two-rdf-files.zip")
+            .collectAsList();
+
+        assertEquals(80, rows.size(), "A single partition reader should get 40 triples from each of the files - " +
+            "and this shows you can also pass in the same path twice, which was a little surprising.");
     }
 
     @Test
@@ -64,6 +78,30 @@ class ReadRdfZipFilesTest extends AbstractIntegrationTest {
             "Verifies that semantics.nq was read correctly.");
         assertEquals(6, subjectCounts.get("http://www.example.org/exampleDocument#Monica"),
             "Verifies that three-quads.trig was read correctly.");
+    }
+
+    @Test
+    void abortOnBadEntry() {
+        Dataset<Row> dataset = startRead().load("src/test/resources/rdf/good-and-bad-rdf.zip");
+        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        assertTrue(ex.getMessage().contains("Unable to read bad-quads.trig; cause: "),
+            "Unexpected error: " + ex.getMessage());
+    }
+
+    @Test
+    void zipWithBadAndGoodEntry() {
+        List<Row> rows = startRead()
+            .option(Options.READ_FILES_ABORT_ON_FAILURE, false)
+            .option(Options.READ_NUM_PARTITIONS, 1)
+            .load(
+                "src/test/resources/rdf/good-and-bad-rdf.zip",
+                "src/test/resources/rdf/has-empty-entry.zip"
+            )
+            .collectAsList();
+
+        assertEquals(68, rows.size(), "Expecting 4 quads to be read from the 'bad' entry until an error occurs, " +
+            "and expecting 32 triples to be read from the 'good' entry. Then expecting 32 more triples to be " +
+            "read from has-empty-entry.zip.");
     }
 
     private DataFrameReader startRead() {
