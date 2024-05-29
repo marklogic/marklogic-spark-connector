@@ -37,7 +37,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
         SparkSession session = newSparkSession();
 
-        defaultWrite(session.read().format("binaryFile")
+        defaultWrite(session.read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files")
             .repartition(1) // Forces a single partition writer and thus a single archive file being written.
             .write().format(CONNECTOR_IDENTIFIER)
@@ -63,7 +63,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
     @Test
     void multiplePartitions(@TempDir Path tempDir) {
-        defaultWrite(newSparkSession().read().format("binaryFile")
+        defaultWrite(newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_URI_SUFFIX, ".json")
@@ -81,7 +81,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
     @Test
     void invalidArchivePath() {
-        ConnectorException ex = assertThrowsConnectorException(() -> defaultWrite(newSparkSession().read().format("binaryFile")
+        ConnectorException ex = assertThrowsConnectorException(() -> defaultWrite(newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files")
             .repartition(1)
             .write().format(CONNECTOR_IDENTIFIER)

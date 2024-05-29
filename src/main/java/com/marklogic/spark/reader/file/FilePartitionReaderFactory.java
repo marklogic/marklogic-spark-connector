@@ -1,6 +1,5 @@
 package com.marklogic.spark.reader.file;
 
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.InputPartition;
@@ -21,7 +20,7 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
         final FilePartition filePartition = (FilePartition) partition;
         final String fileType = fileContext.getStringOption(Options.READ_FILES_TYPE);
-        
+
         if ("rdf".equalsIgnoreCase(fileType)) {
             if (fileContext.isZip()) {
                 return new RdfZipFileReader(filePartition, fileContext);
@@ -40,7 +39,6 @@ class FilePartitionReaderFactory implements PartitionReaderFactory {
         } else if (fileContext.isGzip()) {
             return new GzipFileReader(filePartition, fileContext);
         }
-
-        throw new ConnectorException(String.format("Files are not supported: %s", filePartition.getPaths()));
+        return new GenericFileReader(filePartition, fileContext);
     }
 }
