@@ -1,7 +1,5 @@
 package com.marklogic.spark.reader.file;
 
-import org.apache.spark.sql.connector.read.InputPartition;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

@@ -12,7 +12,7 @@ class WritePartialBatchTest extends AbstractWriteTest {
 
     @Test
     void threeOutOfFourShouldFail() {
-        defaultWrite(newSparkSession().read().format("binaryFile")
+        defaultWrite(newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files")
             .repartition(1) // Forces all 4 docs to be written in a single batch.
             .write().format(CONNECTOR_IDENTIFIER)
@@ -28,7 +28,7 @@ class WritePartialBatchTest extends AbstractWriteTest {
 
     @Test
     void shouldThrowError() {
-        DataFrameWriter writer = newSparkSession().read().format("binaryFile")
+        DataFrameWriter writer = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_URI_SUFFIX, ".json")
