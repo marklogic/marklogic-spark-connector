@@ -36,4 +36,20 @@ class ReadRowsFromTempViewTest extends AbstractIntegrationTest {
         assertEquals(0, rows.size(), "No rows are expected since the only row with a Base64Value has a CitationID of 1.");
     }
 
+    @Test
+    void sqlWithLocate() {
+        newDefaultReader()
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors', 'test')")
+            .load()
+            .createOrReplaceTempView("Author");
+
+        List<Row> rows = sparkSession
+            .sql("select `test.CitationID`, `test.LastName` from Author where locate('umb', `test.LastName`) >= 1")
+            .collectAsList();
+        assertEquals(1, rows.size());
+        assertEquals(5, rows.get(0).getLong(0));
+        assertEquals("Humbee", rows.get(0).getString(1));
+    }
+
+
 }
