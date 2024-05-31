@@ -31,6 +31,7 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.filter.OpticFilter;
+import com.marklogic.spark.reader.filter.SingleValueFilter;
 import org.apache.spark.sql.connector.expressions.Expression;
 import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.connector.expressions.aggregate.*;
@@ -44,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -68,10 +70,41 @@ public class OpticReadContext extends ContextSupport {
     private StructType schema;
     private long serverTimestamp;
     private List<OpticFilter> opticFilters;
+    private final Map<String, String> userDefinedParams;
+    private final Map<String, String> columnParamDefaults;
+    private Map<String, String> columnParamValues;
 
     public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
         this.schema = schema;
+
+        // Stash a map of the user-defined parameters (if any) so that they aren't calculated on every call.
+        this.userDefinedParams = properties.keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_PARAMS_PREFIX))
+            .collect(Collectors.toMap(
+                key -> key.substring(Options.READ_PARAMS_PREFIX.length()),
+                properties::get
+            ));
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Using user params: {}", userDefinedParams);
+        }
+
+        this.columnParamDefaults = properties.keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_COLUMN_PARAMS_PREFIX))
+            .collect(Collectors.toMap(
+                key -> key.substring(Options.READ_COLUMN_PARAMS_PREFIX.length()),
+                properties::get
+            ));
+
+        // This is necessary because Collectors.toMap doesn't support null.
+        // See https://stackoverflow.com/questions/24630963/nullpointerexception-in-collectors-tomap-with-null-entry-values
+        this.columnParamValues = columnParamDefaults.keySet().stream()
+            .collect(HashMap::new, (map, value) -> map.put(value, null), HashMap::putAll);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Using param columns: {}", columnParamDefaults.keySet());
+        }
 
         final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
         final long batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
@@ -104,6 +137,12 @@ public class OpticReadContext extends ContextSupport {
                 logger.debug("Will use server timestamp: {}", serverTimestamp);
             }
         }
+
+        // Param columns need to be added before filters
+        // TODO: this can be done as a single bind operation with an array
+        for (String key : columnParamValues.keySet()) {
+            addOperatorToPlan(PlanUtil.buildBind(key, PlanUtil.buildParam(key)));
+        }
     }
 
     private void handlePlanAnalysisError(String query, FailedRequestException ex) {
@@ -128,6 +167,7 @@ public class OpticReadContext extends ContextSupport {
         }
 
         PlanBuilder.Plan plan = buildPlanForBucket(rowManager, bucket);
+
         JacksonHandle jsonHandle = new JacksonHandle();
         jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
         // Remarkably, the use of resultDoc has consistently proven to be a few percentage points faster than using
@@ -144,10 +184,31 @@ public class OpticReadContext extends ContextSupport {
             .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
             .bindParam("ML_UPPER_BOUND", bucket.upperBound);
 
+        // Add user-defined parameters from options
+        for(Map.Entry<String, String> entry : this.userDefinedParams.entrySet()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding user param: {}", entry);
+            }
+            plan = plan.bindParam(entry.getKey(), entry.getValue());
+        }
+
         if (opticFilters != null) {
             for (OpticFilter opticFilter : opticFilters) {
                 plan = opticFilter.bindFilterValue(plan);
             }
+        }
+
+        for (Map.Entry<String, String> entry : columnParamValues.entrySet()) {
+            if (entry.getValue() == null) {
+                entry.setValue(columnParamDefaults.get(entry.getKey()));
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Setting default param column: {}", entry);
+                }
+            } else if (logger.isDebugEnabled()) {
+                logger.debug("Setting param column: {}", entry);
+            }
+
+            plan = plan.bindParam(entry.getKey(), entry.getValue());
         }
 
         return plan;
@@ -157,7 +218,21 @@ public class OpticReadContext extends ContextSupport {
         this.opticFilters = opticFilters;
         // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
         // which Optic does not allow.
-        opticFilters.forEach(filter -> addOperatorToPlan(PlanUtil.buildWhere(filter)));
+        opticFilters.forEach(filter -> {
+            // If the filter is a dynamic variable, we need to assign it
+            if (
+                filter instanceof SingleValueFilter &&
+                columnParamValues.containsKey(((SingleValueFilter)filter).getColumnName())
+            ) {
+                // TODO: support types other than string
+                columnParamValues.put(
+                    ((SingleValueFilter)filter).getColumnName(),
+                    ((SingleValueFilter)filter).getCompareValue().toString()
+                );
+            }
+
+            addOperatorToPlan(PlanUtil.buildWhere(filter));
+        });
     }
 
     void pushDownLimit(int limit) {

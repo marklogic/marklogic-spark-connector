@@ -142,6 +142,21 @@ public abstract class PlanUtil {
         });
     }
 
+    static ObjectNode buildBind(String column, ObjectNode value) {
+        return newOperation("bind", args -> {
+            ArrayNode innerArgs = args.addArray();
+            ObjectNode innerObject = innerArgs.addObject();
+            ArrayNode asArray = innerObject.put("ns", "op").put("fn", "as").putArray("args");
+            asArray.add(column).add(value);
+        });
+    }
+
+    static ObjectNode buildParam(String paramName) {
+        return newOperation("param", args -> {
+            args.add(paramName);
+        });
+    }
+
     /**
      * Knows how to handle any of 3 variations of a column name: 1) no qualifier - "CitationID"; 2) view qualifier -
      * "myView.CitationID"; and 3) schema+view qualifier - "mySchema.myView.CitationID".

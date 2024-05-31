@@ -38,6 +38,7 @@ import scala.collection.JavaConverters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
@@ -139,19 +140,42 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Inferring Optic schema with options: {}", caseSensitiveOptions);
+        }
+
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
             throw new ConnectorException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
+
+        StructType schema;
+        
         try {
             // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            return SchemaInferrer.inferSchema(columnInfoHandle.get());
+
+            schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
         } catch (Exception ex) {
             throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
+
+        List<String> paramColumns = caseSensitiveOptions.keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_COLUMN_PARAMS_PREFIX))
+            .map(key -> key.substring(Options.READ_COLUMN_PARAMS_PREFIX.length()))
+            .collect(Collectors.toList());
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("Adding param columns to schema: {}", paramColumns);
+        }
+
+        for(String column : paramColumns) {
+            schema = schema.add(column, DataTypes.StringType, false);
+        }
+
+        return schema;
     }
 
     private List<String> getPaths(Map<String, String> properties) {

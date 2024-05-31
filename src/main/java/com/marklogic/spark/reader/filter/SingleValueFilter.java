@@ -25,7 +25,7 @@ import java.util.UUID;
 /**
  * Can be used for any Optic operation that requires a single column name and value.
  */
-class SingleValueFilter implements OpticFilter {
+public class SingleValueFilter implements OpticFilter {
 
     static final long serialVersionUID = 1;
 
@@ -87,5 +87,13 @@ class SingleValueFilter implements OpticFilter {
             return plan.bindParam(paramName, (Byte) value);
         }
         return plan.bindParam(paramName, value.toString());
+    }
+
+    public String getColumnName() {
+        return columnName;
+    }
+
+    public Object getCompareValue() {
+        return value;
     }
 }

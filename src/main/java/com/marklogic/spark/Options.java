@@ -33,6 +33,8 @@ public abstract class Options {
     public static final String READ_XQUERY = "spark.marklogic.read.xquery";
     public static final String READ_XQUERY_FILE = "spark.marklogic.read.xqueryFile";
     public static final String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
+    public static final String READ_PARAMS_PREFIX = "spark.marklogic.read.params.";
+    public static final String READ_COLUMN_PARAMS_PREFIX = "spark.marklogic.read.columnParams.";
 
     public static final String READ_PARTITIONS_INVOKE = "spark.marklogic.read.partitions.invoke";
     public static final String READ_PARTITIONS_JAVASCRIPT = "spark.marklogic.read.partitions.javascript";
