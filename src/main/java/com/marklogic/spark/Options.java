@@ -122,7 +122,7 @@ public abstract class Options {
     // This was introduced in 2.2.0 and unfortunately uses "fileRows" instead of "binaryFileRows".
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 
-    // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.
+    // For writing rows adhering to {@code DocumentRowSchema} or {@code TripleRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
 
     // Applies to XML and JSON documents.
