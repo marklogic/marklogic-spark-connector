@@ -55,8 +55,8 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
 
     @Override
     public Scan build() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new scan");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating new scan");
         }
         return new OpticScan(opticReadContext);
     }

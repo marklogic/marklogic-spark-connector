@@ -45,8 +45,8 @@ class OpticScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new batch");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating new batch");
         }
         return new OpticBatch(opticReadContext);
     }
