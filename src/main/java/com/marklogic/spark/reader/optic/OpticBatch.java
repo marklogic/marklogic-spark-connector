@@ -43,8 +43,8 @@ class OpticBatch implements Batch {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new partition reader factory");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating new partition reader factory");
         }
         return new OpticPartitionReaderFactory(opticReadContext);
     }

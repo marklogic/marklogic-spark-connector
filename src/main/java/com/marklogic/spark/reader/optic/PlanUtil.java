@@ -29,9 +29,7 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -72,7 +70,13 @@ public abstract class PlanUtil {
     private PlanUtil() {
     }
 
-    static ObjectNode buildGroupByAggregation(List<String> columnNames, Aggregation aggregation) {
+    /**
+     * @param columnNames a set of unique column names is needed as Optic will otherwise throw an error via a
+     *                    "duplicate check" per a fix for https://bugtrack.marklogic.com/56662 .
+     * @param aggregation
+     * @return
+     */
+    static ObjectNode buildGroupByAggregation(Set<String> columnNames, Aggregation aggregation) {
         return newOperation("group-by", groupByArgs -> {
             ArrayNode columns = groupByArgs.addArray();
             columnNames.forEach(columnName -> populateSchemaCol(columns.addObject(), columnName));

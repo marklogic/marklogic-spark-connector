@@ -40,10 +40,7 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -174,7 +171,10 @@ public class OpticReadContext extends ContextSupport {
             .map(PlanUtil::expressionToColumnName)
             .collect(Collectors.toList());
 
-        addOperatorToPlan(PlanUtil.buildGroupByAggregation(groupByColumnNames, aggregation));
+        if (logger.isDebugEnabled()) {
+            logger.debug("groupBy column names: {}", groupByColumnNames);
+        }
+        addOperatorToPlan(PlanUtil.buildGroupByAggregation(new HashSet(groupByColumnNames), aggregation));
 
         StructType newSchema = buildSchemaWithColumnNames(groupByColumnNames);
 
@@ -213,6 +213,9 @@ public class OpticReadContext extends ContextSupport {
             this.planAnalysis = new PlanAnalysis(planAnalysis.getBoundedPlan(), mergedPartitions);
         }
 
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Schema after pushing down aggregation: {}", newSchema);
+        }
         this.schema = newSchema;
     }
 

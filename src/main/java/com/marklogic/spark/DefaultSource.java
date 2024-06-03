@@ -90,9 +90,6 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         } else if (isReadTriplesOperation(properties)) {
             return new DocumentTable(TripleRowSchema.SCHEMA);
         } else if (isReadOperation(properties)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Creating new table for reading");
-            }
             return new MarkLogicTable(schema, properties);
         }
 
@@ -148,7 +145,11 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         try {
             // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            return SchemaInferrer.inferSchema(columnInfoHandle.get());
+            StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+            }
+            return schema;
         } catch (Exception ex) {
             throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
