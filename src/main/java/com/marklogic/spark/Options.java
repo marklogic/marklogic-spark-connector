@@ -118,9 +118,19 @@ public abstract class Options {
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
 
-    // For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
-    // This was introduced in 2.2.0 and unfortunately uses "fileRows" instead of "binaryFileRows".
+    /**
+     * For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
+     *
+     * @deprecated since 2.3.0
+     */
+    @Deprecated(since = "2.3.0", forRemoval = true)
+    // We don't need Sonar to remind us of this deprecation.
+    @SuppressWarnings("java:S1133")
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
+
+    // Forces a document type when writing rows corresponding to our document row schema. Used when the URI extension
+    // does not result in MarkLogic choosing the correct document type.
+    public static final String WRITE_DOCUMENT_TYPE = "spark.marklogic.write.documentType";
 
     // For writing rows adhering to {@code DocumentRowSchema} or {@code TripleRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";

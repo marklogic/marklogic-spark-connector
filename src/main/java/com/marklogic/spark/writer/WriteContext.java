@@ -23,6 +23,7 @@ import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
+import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
@@ -115,6 +116,41 @@ public class WriteContext extends ContextSupport {
         }
 
         return factory.newDocBuilder();
+    }
+
+    Format getDocumentFormat() {
+        if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
+            String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
+            try {
+                return Format.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                String optionAlias = getOptionNameForMessage(Options.WRITE_DOCUMENT_TYPE);
+                throw new ConnectorException(String.format(message, optionAlias, value));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @deprecated since 2.3.0; users should use getDocumentFormat instead.
+     */
+    @Deprecated(since = "2.3.0")
+    // We don't need Sonar to remind us of this deprecation.
+    @SuppressWarnings("java:S1133")
+    Format getDeprecatedFileRowsDocumentFormat() {
+        final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
+        if (hasOption(deprecatedOption)) {
+            String value = getStringOption(deprecatedOption);
+            try {
+                return Format.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                String optionAlias = getOptionNameForMessage(deprecatedOption);
+                throw new ConnectorException(String.format(message, optionAlias, value));
+            }
+        }
+        return null;
     }
 
     /**
