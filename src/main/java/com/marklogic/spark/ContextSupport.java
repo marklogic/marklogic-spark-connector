@@ -122,7 +122,7 @@ public class ContextSupport implements Serializable {
             long value = this.getProperties().containsKey(optionName) ?
                 Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
-            if (value < minimumValue) {
+            if (value != defaultValue && value < minimumValue) {
                 throw new ConnectorException(String.format("The value of '%s' must be %d or greater.", getOptionNameForMessage(optionName), minimumValue));
             }
             return value;

@@ -47,6 +47,9 @@ public class WriteContext extends ContextSupport {
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
 
+    // This unfortunately is not final as we don't know it when this object is created.
+    private int numPartitions;
+
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
         this.schema = schema;
@@ -71,11 +74,27 @@ public class WriteContext extends ContextSupport {
         return (int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
     }
 
+    int getTotalThreadCount() {
+        return (int) getNumericOption(Options.WRITE_TOTAL_THREAD_COUNT, 0, 1);
+    }
+
+    int getThreadCountPerPartition() {
+        int totalThreadCount = getTotalThreadCount();
+        if (totalThreadCount > 0 && this.numPartitions > 0) {
+            return (int) Math.ceil((double) totalThreadCount / (double) numPartitions);
+        }
+        return 0;
+    }
+
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
+        final int threadCount = getTotalThreadCount() > 0 ?
+            getThreadCountPerPartition() : getThreadCount();
+        final int batchSize = (int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1);
+        Util.MAIN_LOGGER.info("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
-            .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
-            .withThreadCount(getThreadCount())
+            .withBatchSize(batchSize)
+            .withThreadCount(threadCount)
             .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
 
         if (logger.isDebugEnabled()) {
@@ -211,5 +230,9 @@ public class WriteContext extends ContextSupport {
 
     int getFileSchemaPathPosition() {
         return fileSchemaPathPosition;
+    }
+
+    public void setNumPartitions(int numPartitions) {
+        this.numPartitions = numPartitions;
     }
 }
