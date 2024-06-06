@@ -174,7 +174,7 @@ public class OpticReadContext extends ContextSupport {
         if (logger.isDebugEnabled()) {
             logger.debug("groupBy column names: {}", groupByColumnNames);
         }
-        addOperatorToPlan(PlanUtil.buildGroupByAggregation(new HashSet(groupByColumnNames), aggregation));
+        addOperatorToPlan(PlanUtil.buildGroupByAggregation(new HashSet<>(groupByColumnNames), aggregation));
 
         StructType newSchema = buildSchemaWithColumnNames(groupByColumnNames);
 

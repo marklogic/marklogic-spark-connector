@@ -48,7 +48,7 @@ public class ConnectionString {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new ConnectorException(String.format(
-                "Invalid value for %s; port must be numeric, but was '%s'", optionNameForErrorMessage, value, value
+                "Invalid value for %s; port must be numeric, but was '%s'", optionNameForErrorMessage, value
             ));
         }
     }
@@ -57,7 +57,7 @@ public class ConnectionString {
         try {
             return URLDecoder.decode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new ConnectorException(String.format("Unable to decode '%s'; cause: %s", label, value));
+            throw new ConnectorException(String.format("Unable to decode '%s'; cause: %s", label, e.getMessage()));
         }
     }
 
