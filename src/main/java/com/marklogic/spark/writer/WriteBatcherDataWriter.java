@@ -161,7 +161,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         if (writeContext.isUsingFileSchema()) {
             return new FileRowConverter(writeContext);
         } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
-            return new DocumentRowConverter(writeContext.getStringOption(Options.WRITE_URI_TEMPLATE));
+            return new DocumentRowConverter(writeContext);
         } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
             return new RdfRowConverter(writeContext);
         }

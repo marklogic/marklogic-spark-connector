@@ -4,8 +4,10 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
+import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -72,6 +74,57 @@ class WriteDocumentRowsToMarkLogicTest extends AbstractIntegrationTest {
         assertCollectionSize("backup-docs", 2);
         assertInCollections("/backup/test/1.xml", "backup-docs");
         assertInCollections("/backup/test/2.xml", "backup-docs");
+    }
+
+    @Test
+    void writeXmlAsBinary() {
+        readTheTwoTestDocuments()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_SUFFIX, ".unknown")
+            .mode(SaveMode.Append)
+            .save();
+
+        Stream.of("/test/1.xml.unknown", "/test/2.xml.unknown").forEach(uri -> {
+            String kind = getDatabaseClient().newServerEval()
+                .xquery(String.format("xdmp:node-kind(fn:doc('%s')/node())", uri))
+                .evalAs(String.class);
+            assertEquals("binary", kind, "Verifying that MarkLogic stores the document as binary since it does not " +
+                "recognize the 'unknown' extension.");
+        });
+    }
+
+    @Test
+    void forceDocumentType() {
+        readTheTwoTestDocuments()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_SUFFIX, ".unknown")
+            .option(Options.WRITE_DOCUMENT_TYPE, "xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        Stream.of("/test/1.xml.unknown", "/test/2.xml.unknown").forEach(uri -> {
+            String kind = getDatabaseClient().newServerEval()
+                .xquery(String.format("xdmp:node-kind(fn:doc('%s')/node())", uri))
+                .evalAs(String.class);
+            assertEquals("element", kind, "MarkLogic should write each document as XML, as it doesn't recognize the " +
+                "URI extension but the WRITE_DOCUMENT_TYPE option should force the document type in that scenario.");
+        });
+    }
+
+    @Test
+    void invalidDocumentType() {
+        DataFrameWriter writer = readTheTwoTestDocuments()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_SUFFIX, ".unknown")
+            .option(Options.WRITE_DOCUMENT_TYPE, "notvalid")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Invalid value for spark.marklogic.write.documentType: notvalid; must be one of 'JSON', 'XML', or 'TEXT'.",
+            ex.getMessage());
     }
 
     @Test
