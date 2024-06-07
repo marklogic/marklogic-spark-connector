@@ -53,11 +53,15 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        int partitions = info.numPartitions();
-        int threadCount = writeContext.getThreadCount();
-        Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
-            partitions, threadCount, partitions * threadCount);
-        return (DataWriterFactory) determineWriterFactory();
+        int numPartitions = info.numPartitions();
+        writeContext.setNumPartitions(numPartitions);
+        DataWriterFactory dataWriterFactory = determineWriterFactory();
+        if (dataWriterFactory instanceof WriteBatcherDataWriterFactory) {
+            logPartitionAndThreadCounts(numPartitions);
+        } else {
+            Util.MAIN_LOGGER.info("Number of partitions: {}", numPartitions);
+        }
+        return dataWriterFactory;
     }
 
     @Override
@@ -107,7 +111,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         abort(messages);
     }
 
-    private Object determineWriterFactory() {
+    private DataWriterFactory determineWriterFactory() {
         if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
             Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE)) {
             CustomCodeContext context = new CustomCodeContext(
@@ -120,6 +124,19 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         // SerializableConfiguration allows for it to be sent to the factory.
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
         return new WriteBatcherDataWriterFactory(writeContext, new SerializableConfiguration(config));
+    }
+
+    private void logPartitionAndThreadCounts(int numPartitions) {
+        int totalThreadCount = writeContext.getTotalThreadCount();
+        if (totalThreadCount > 0) {
+            int threadCountPerPartition = writeContext.getThreadCountPerPartition();
+            Util.MAIN_LOGGER.info("Number of partitions: {}; total thread count: {}; thread count per partition: {}",
+                numPartitions, totalThreadCount, threadCountPerPartition);
+        } else {
+            int threadCount = writeContext.getThreadCount();
+            Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
+                numPartitions, threadCount, numPartitions * threadCount);
+        }
     }
 
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {

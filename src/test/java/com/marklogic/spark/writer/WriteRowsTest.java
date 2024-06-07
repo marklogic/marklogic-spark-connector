@@ -23,7 +23,6 @@ import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,7 +55,10 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void twoPartitions() {
-        newWriter(2).save();
+        newWriter(2)
+            .option(Options.WRITE_TOTAL_THREAD_COUNT, 16)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .save();
 
         // Just verifies that the operation succeeds with multiple partitions. Check the logging to see that two
         // partitions were in fact created, each with its own WriteBatcher.
@@ -122,9 +124,9 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void userNotPermittedToWriteAndFailOnCommit() {
         ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
-                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
-                .option(Options.WRITE_BATCH_SIZE, 500)
-                .save()
+            .option(Options.CLIENT_USERNAME, "spark-no-write-user")
+            .option(Options.WRITE_BATCH_SIZE, 500)
+            .save()
         );
 
         verifyFailureIsDueToLackOfPermission(ex);
@@ -152,10 +154,10 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void userNotPermittedToWriteAndFailOnWrite() {
         ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
-                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
-                .option(Options.WRITE_BATCH_SIZE, 1)
-                .option(Options.WRITE_THREAD_COUNT, 1)
-                .save()
+            .option(Options.CLIENT_USERNAME, "spark-no-write-user")
+            .option(Options.WRITE_BATCH_SIZE, 1)
+            .option(Options.WRITE_THREAD_COUNT, 1)
+            .save()
         );
 
         verifyFailureIsDueToLackOfPermission(ex);
