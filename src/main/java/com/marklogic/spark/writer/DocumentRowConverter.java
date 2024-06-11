@@ -7,7 +7,6 @@ import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
 
@@ -34,10 +33,11 @@ class DocumentRowConverter implements RowConverter {
     @Override
     public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         final String uri = row.getString(0);
+
         if (row.isNullAt(1)) {
-            Util.MAIN_LOGGER.warn("Not writing document with URI {} as it has null content; this will be supported " +
-                "once the MarkLogic Java Client 6.6.1 is available.", uri);
-            return Optional.empty();
+            DocumentMetadataHandle onlyProperties = new DocumentMetadataHandle();
+            DocumentRowSchema.addPropertiesToMetadata(row, onlyProperties);
+            return Optional.of(new DocBuilder.DocumentInputs(uri, null, null, onlyProperties));
         }
 
         final BytesHandle content = new BytesHandle(row.getBinary(1));

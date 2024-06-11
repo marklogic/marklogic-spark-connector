@@ -98,7 +98,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
         Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
         if (document.isPresent()) {
-            this.writeBatcher.add(this.docBuilder.build(document.get()));
+            DocumentWriteOperation writeOp = this.docBuilder.build(document.get());
+            this.writeBatcher.add(writeOp);
         }
     }
 

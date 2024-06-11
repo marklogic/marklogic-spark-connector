@@ -16,7 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
@@ -218,11 +219,54 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void naked() {
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load("src/test/resources/mlcp-archive-files/naked-properties.zip")
+            .show();
+
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load("src/test/resources/mlcp-archive-files/naked-properties.zip")
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "naked")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+    }
+
+    @Test
+    void naked2() {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "mlcp_archive")
+            .load("src/test/resources/mlcp-archive-files/naked-only.zip");
+
+        dataset.show();
+
+        dataset.write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "naked")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+    }
+
+    @Test
     void nakedProperties() {
+        final Namespace PROPERTIES_NAMESPACE = Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property");
+
         Dataset<Row> dataset = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "mlcp_archive")
             .load("src/test/resources/mlcp-archive-files/naked1.zip");
+
+        dataset.show();
 
         List<Row> rows = dataset.collectAsList();
         assertEquals(2, rows.size(), "The example.xml.naked entry should have produced 1 row.");
@@ -240,8 +284,7 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
         assertEquals(0, nakedRow.getJavaMap(METADATAVALUES_COLUMN).size(), "Metadata values should be empty since " +
             "they cannot be written for a naked properties fragment");
 
-        XmlNode properties = new XmlNode(nakedRow.getString(PROPERTIES_COLUMN),
-            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"));
+        XmlNode properties = new XmlNode(nakedRow.getString(PROPERTIES_COLUMN), PROPERTIES_NAMESPACE);
         properties.assertElementValue("/prop:properties/priority", "1");
 
         Row normalRow = rows.get(1);
@@ -258,13 +301,23 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
         List<String> uris = getUrisInCollection("naked-test", 1);
         assertEquals("mlcp/xml/1.xml", uris.get(0));
 
-        String nakedProperties = getDatabaseClient().newServerEval()
+        String evalResponse = getDatabaseClient().newServerEval()
             .xquery(String.format("xdmp:document-properties('%s')", expectedNakedPropertiesUrl))
             .evalAs(String.class);
-        assertNull(nakedProperties, "The naked properties row should have been ignored during the write, as " +
-            "Java Client 6.6.0 and earlier do not support writing a document with null content via WriteBatcher. " +
-            "This will be fixed in the Java Client 6.6.1 release, at which point we can start writing naked " +
-            "properties fragments correctly.");
+
+        XmlNode nakedProperties = new XmlNode(evalResponse, PROPERTIES_NAMESPACE);
+        nakedProperties.assertElementValue(
+            "As of Java Client 6.6.1, a DMSDK WriteBatcher now allows for a document to have a null content handle, " +
+                "which allows for 'naked properties' URIs to be written.",
+            "/prop:properties/priority", "1");
+
+        System.out.println(getDatabaseClient().newServerEval()
+            .xquery(String.format("xdmp:document-get-permissions('%s')", expectedNakedPropertiesUrl))
+            .evalAs(String.class));
+
+        System.out.println(getDatabaseClient().newServerEval()
+            .xquery(String.format("xdmp:document-get-collections('%s')", expectedNakedPropertiesUrl))
+            .evalAs(String.class));
     }
 
     private void verifyFirstRow(Row row) {

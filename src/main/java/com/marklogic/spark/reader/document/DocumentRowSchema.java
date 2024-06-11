@@ -72,7 +72,7 @@ public abstract class DocumentRowSchema {
         }
     }
 
-    private static void addPropertiesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
+    public static void addPropertiesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(6)) {
             String propertiesXml = row.getString(6);
             String metadataXml = String.format("<rapi:metadata xmlns:rapi='http://marklogic.com/rest-api'>%s</rapi:metadata>", propertiesXml);

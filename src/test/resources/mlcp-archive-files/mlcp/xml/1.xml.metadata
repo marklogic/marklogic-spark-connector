@@ -1,0 +1,11 @@
+<com.marklogic.contentpump.DocumentMetadata>
+  <format>
+    <name>xml</name>
+  </format>
+  <collectionsList class="vector">
+    <string>bug18908</string>
+  </collectionsList>
+  <permissionsList class="vector"/>
+  <quality>0</quality>
+  <isNakedProps>false</isNakedProps>
+</com.marklogic.contentpump.DocumentMetadata>

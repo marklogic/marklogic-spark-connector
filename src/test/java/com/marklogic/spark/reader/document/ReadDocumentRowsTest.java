@@ -2,16 +2,7 @@ package com.marklogic.spark.reader.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.MarkLogicIOException;
-import com.marklogic.client.document.DocumentWriteSet;
-import com.marklogic.client.document.XMLDocumentManager;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.JacksonHandle;
-import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.query.QueryManager;
-import com.marklogic.client.query.StructuredQueryDefinition;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
@@ -28,56 +19,6 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ReadDocumentRowsTest extends AbstractIntegrationTest {
-
-    @Test
-    void writeNakedDoc() {
-        DatabaseClient client = DatabaseClientFactory.newClient("localhost", 8016, new DatabaseClientFactory.DigestAuthContext("admin", "admin"));
-        XMLDocumentManager mgr = client.newXMLDocumentManager();
-        DocumentWriteSet writeSet = mgr.newWriteSet();
-        writeSet.add("/a.xml", new DocumentMetadataHandle().withProperty("hello", "world"),
-            (StringHandle) null);
-        mgr.write(writeSet);
-    }
-
-    @Override
-    public void deleteDocumentsBeforeTestRuns() {
-        //
-    }
-
-    @Test
-    void readNakedDoc() {
-        DatabaseClient client = DatabaseClientFactory.newClient("localhost", 8016, new DatabaseClientFactory.DigestAuthContext("admin", "admin"));
-        QueryManager qm = client.newQueryManager();
-        StructuredQueryDefinition query = qm.newStructuredQueryBuilder("properties").term("world");
-        JsonNode results = qm.search(query, new JacksonHandle()).get();
-        System.out.println(results.toPrettyString());
-
-    }
-
-    @Test
-    void sparkReadNakedDoc() {
-        String query = "<cts:word-query xmlns:cts=\"http://marklogic.com/cts\">\n" +
-            "<cts:text xml:lang=\"en\">world</cts:text>\n" +
-            "</cts:word-query>";
-
-        startRead()
-            .option(Options.CLIENT_URI, "admin:admin@localhost:8016")
-            .option(Options.READ_DOCUMENTS_QUERY, query)
-            .option(Options.READ_DOCUMENTS_OPTIONS, "properties")
-            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
-            .load()
-            .show();
-    }
-
-    @Test
-    void naked() {
-        startRead()
-            .option(Options.CLIENT_URI, "admin:admin@localhost:8000")
-            //.option(Options.READ_DOCUMENTS_QUERY, "<cts:true-query xmlns:cts='http://marklogic.com/cts'/>")
-            .option(Options.READ_DOCUMENTS_URIS, "/bug18908/naked/example.xml")
-            .load()
-            .show();
-    }
 
     @Test
     void readByCollection() {

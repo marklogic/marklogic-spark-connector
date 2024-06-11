@@ -87,6 +87,11 @@ public class DocBuilder {
         final String graph = inputs.getGraph();
         final DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
 
+        final boolean isNakedProperties = inputs.getContent() == null;
+        if (isNakedProperties) {
+            return new DocumentWriteOperationImpl(uri, initialMetadata, null);
+        }
+
         if (initialMetadata != null) {
             overrideInitialMetadata(initialMetadata);
             if (graph != null) {
