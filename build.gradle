@@ -146,38 +146,6 @@ task perfTest(type: JavaExec) {
   args mlHost
 }
 
-task dockerBuildCache(type: Exec) {
-  description = "Creates an image named 'marklogic-spark-cache' containing a cache of the Gradle dependencies."
-  commandLine 'docker', 'build', '--no-cache', '-t', 'marklogic-spark-cache', '.'
-}
-
-task dockerTest(type: Exec) {
-  description = "Run all of the tests within a Docker environment."
-  commandLine 'docker', 'run',
-    // Allows for communicating with the MarkLogic cluster that is setup via docker-compose.yaml.
-    '--network=marklogic_spark_external_net',
-    // Map the project directory into the Docker container.
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    // Working directory for the Gradle tasks below.
-    '-w', '/root/project',
-    // Remove the container after it finishes running.
-    '--rm',
-    // Use the output of dockerBuildCache to avoid downloading all the Gradle dependencies.
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'test'
-}
-
-task dockerPerfTest(type: Exec) {
-  description = "Run PerformanceTester a Docker environment."
-  commandLine 'docker', 'run',
-    '--network=marklogic_spark_external_net',
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    '-w', '/root/project',
-    '--rm',
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'perfTest'
-}
-
 task sourcesJar(type: Jar, dependsOn: classes) {
   archiveClassifier = "sources"
   from sourceSets.main.allSource
