@@ -24,26 +24,6 @@ The above will result in a new MarkLogic instance with a single node.
 Alternatively, if you would like to test against a 3-node MarkLogic cluster with a load balancer in front of it, 
 run `docker-compose -f docker-compose-3nodes.yaml up -d --build`.
 
-## Accessing MarkLogic logs in Grafana
-
-This project's `docker-compose-3nodes.yaml` file includes 
-[Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of 
-collecting MarkLogic log files and allowing them to be viewed and searched via Grafana. 
-
-Once you have run `docker-compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to 
-access MarkLogic logging data:
-
-1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to 
-   http://localhost:3000/explore . 
-2. Verify that "Loki" is the default data source - you should see it selected in the upper left hand corner below 
-   the "Home" link.
-3. Click on the "Select label" dropdown and choose `job`. Click on the "Select value" label for this filter and 
-   select `marklogic` as the value.
-4. Click on the blue "Run query" button in the upper right hand corner.
-
-You should now see logs from all 3 nodes in the MarkLogic cluster. 
-
-
 ## Deploying the test application
 
 To deploy the test application, first create `./gradle-local.properties` and add the following to it:
@@ -62,20 +42,6 @@ index page for the test application server.
 To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
-
-If you installed MarkLogic using this project's `docker-compose.yaml` file, you can also run the tests from within the 
-Docker environment by first running the following task:
-
-    ./gradlew dockerBuildCache
-
-The above task is a mostly one-time step to build a Docker image that contains all of this project's Gradle 
-dependencies. This will allow the next step to run much more quickly. You'll only need to run this again when the 
-project's Gradle dependencies change.
-
-You can then run the tests from within the Docker environment via the following task:
-
-    ./gradlew dockerTest
-
 
 ## Generating code quality reports with SonarQube
 
@@ -116,6 +82,25 @@ you've introduced on the feature branch you're working on. You can then click on
 
 Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
+
+## Accessing MarkLogic logs in Grafana
+
+This project's `docker-compose-3nodes.yaml` file includes
+[Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of
+collecting MarkLogic log files and allowing them to be viewed and searched via Grafana.
+
+Once you have run `docker-compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
+access MarkLogic logging data:
+
+1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to
+   http://localhost:3000/explore .
+2. Verify that "Loki" is the default data source - you should see it selected in the upper left hand corner below
+   the "Home" link.
+3. Click on the "Select label" dropdown and choose `job`. Click on the "Select value" label for this filter and
+   select `marklogic` as the value.
+4. Click on the blue "Run query" button in the upper right hand corner.
+
+You should now see logs from all 3 nodes in the MarkLogic cluster.
 
 # Testing with PySpark
 
