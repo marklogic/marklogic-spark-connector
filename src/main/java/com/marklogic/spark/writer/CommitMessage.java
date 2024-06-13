@@ -13,7 +13,6 @@ public class CommitMessage implements WriterCommitMessage {
     /**
      * @param successItemCount
      * @param failedItemCount
-     * @param partitionId
      * @param graphs           zero or more MarkLogic Semantics graph names, each of which is associated with a
      *                         graph document in MarkLogic that must be created after all the documents have been
      *                         written.
