@@ -68,7 +68,13 @@ public class ContextSupport implements Serializable {
         }
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
-            throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
+            if (result.getStatusCode() == 404) {
+                throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: 404; ensure that " +
+                    "you are attempting to connect to a MarkLogic REST API app server. See the MarkLogic documentation on " +
+                    "REST API app servers for more information."));
+            }
+            throw new ConnectorException(String.format(
+                "Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
         }
         return client;
     }
