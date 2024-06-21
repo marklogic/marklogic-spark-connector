@@ -11,10 +11,11 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
+
+    private static final String ISO_8859_1_ENCODED_FILE = "src/test/resources/encoding/medline.iso-8859-1.xml";
 
     @Test
     void noNamespace() {
@@ -167,6 +168,46 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
             .count();
 
         assertEquals(3, count);
+    }
+
+    @Test
+    void encoding() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "MedlineCitation")
+            .option(Options.READ_FILES_ENCODING, "ISO-8859-1")
+            .load(ISO_8859_1_ENCODED_FILE)
+            .collectAsList();
+
+        assertEquals(2, rows.size(), "This verifies that the encoded file can be parsed correctly when the user " +
+            "specifies the associated encoding as an option.");
+    }
+
+    @Test
+    void wrongEncoding() {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "MedlineCitation")
+            .option(Options.READ_FILES_ENCODING, "UTF-16")
+            .load(ISO_8859_1_ENCODED_FILE);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> dataset.show());
+        assertTrue(ex.getMessage().contains("Failed to traverse document"), "When an incorrect encoding is used, " +
+            "the connector should throw an error stating that it cannot read the document. The stacktrace has more " +
+            "detail in it. Actual error: " + ex.getMessage());
+    }
+
+    @Test
+    void invalidEncoding() {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "MedlineCitation")
+            .option(Options.READ_FILES_ENCODING, "Not-a-real-encoding")
+            .load(ISO_8859_1_ENCODED_FILE);
+
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.show());
+        assertTrue(ex.getMessage().contains("Unsupported encoding value: Not-a-real-encoding"),
+            "Actual error: " + ex.getMessage());
     }
 
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {

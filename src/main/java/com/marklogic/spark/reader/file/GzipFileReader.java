@@ -70,7 +70,7 @@ class GzipFileReader implements PartitionReader<InternalRow> {
 
     private byte[] extractGZIPContents(String currentFilePath, InputStream gzipInputStream) {
         try {
-            return FileUtil.readBytes(gzipInputStream);
+            return fileContext.readBytes(gzipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from gzip file at %s; cause: %s",
                 currentFilePath, e.getMessage()), e);

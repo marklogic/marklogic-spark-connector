@@ -37,7 +37,7 @@ class GenericFileReader implements PartitionReader<InternalRow> {
         filePathIndex++;
         try {
             try (InputStream inputStream = fileContext.openFile(path)) {
-                byte[] content = FileUtil.readBytes(inputStream);
+                byte[] content = fileContext.readBytes(inputStream);
                 nextRowToReturn = new GenericInternalRow(new Object[]{
                     UTF8String.fromString(path),
                     ByteArray.concat(content),

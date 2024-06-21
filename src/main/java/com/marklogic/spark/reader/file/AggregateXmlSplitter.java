@@ -9,13 +9,13 @@ import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
 
+import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import java.util.Map;
 
 /**
  * Knows how to split an aggregate XML document and return a row for each user-defined child element. Each row has
@@ -32,20 +32,37 @@ class AggregateXmlSplitter {
 
     private int rowCounter = 1;
 
+    private static XMLInputFactory xmlInputFactory;
+
+    static {
+        xmlInputFactory = XMLInputFactory.newFactory();
+        // The following prevents XXE attacks, per Sonar java:S2755 rule.
+        // Note that setting XMLConstants.ACCESS_EXTERNAL_DTD and XMLConstants.ACCESS_EXTERNAL_SCHEMA to empty
+        // strings is also suggested by the Sonar S2755 docs and will work fine in this connector project - but it
+        // will result in warnings in the Flux application that oddly cause no data to be read. So do not set those
+        // to empty strings here. The below config satisfies Sonar in terms of preventing XXE attacks and does not
+        // impact functionality.
+        xmlInputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, Boolean.FALSE);
+        xmlInputFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+    }
+
     /**
      * @param identifierForErrors allows the caller of this class to provide a useful description to be included in
      *                            any errors to help users with debugging.
      * @param inputStream         the stream of aggregate XML data
-     * @param properties          connector properties
+     * @param fileContext
      */
-    AggregateXmlSplitter(String identifierForErrors, InputStream inputStream, Map<String, String> properties) {
+    AggregateXmlSplitter(String identifierForErrors, InputStream inputStream, FileContext fileContext) {
         this.identifierForErrors = identifierForErrors;
-        this.uriElement = properties.get(Options.READ_AGGREGATES_XML_URI_ELEMENT);
-        this.uriNamespace = properties.get(Options.READ_AGGREGATES_XML_URI_NAMESPACE);
-        String namespace = properties.get(Options.READ_AGGREGATES_XML_NAMESPACE);
-        String element = properties.get(Options.READ_AGGREGATES_XML_ELEMENT);
+        this.uriElement = fileContext.getStringOption(Options.READ_AGGREGATES_XML_URI_ELEMENT);
+        this.uriNamespace = fileContext.getStringOption(Options.READ_AGGREGATES_XML_URI_NAMESPACE);
+        final String namespace = fileContext.getStringOption(Options.READ_AGGREGATES_XML_NAMESPACE);
+        final String element = fileContext.getStringOption(Options.READ_AGGREGATES_XML_ELEMENT);
+        final String encoding = fileContext.getStringOption(Options.READ_FILES_ENCODING);
+
         try {
-            this.contentStream = XMLSplitter.makeSplitter(namespace, element).split(inputStream).iterator();
+            XMLStreamReader reader = xmlInputFactory.createXMLStreamReader(inputStream, encoding);
+            this.contentStream = XMLSplitter.makeSplitter(namespace, element).split(reader).iterator();
         } catch (IOException | XMLStreamException e) {
             throw new ConnectorException(
                 String.format("Unable to read XML at %s; cause: %s", this.identifierForErrors, e.getMessage()), e
