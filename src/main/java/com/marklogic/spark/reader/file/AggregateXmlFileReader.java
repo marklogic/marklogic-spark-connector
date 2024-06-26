@@ -79,7 +79,7 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
         try {
             this.inputStream = fileContext.openFile(filePath);
             String identifierForError = "file " + filePath;
-            this.aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.inputStream, fileContext.getProperties());
+            this.aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.inputStream, fileContext);
             return true;
         } catch (ConnectorException ex) {
             if (fileContext.isReadAbortOnFailure()) {

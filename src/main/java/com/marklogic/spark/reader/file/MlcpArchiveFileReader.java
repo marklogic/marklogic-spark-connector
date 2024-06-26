@@ -128,7 +128,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private MlcpMetadata readMetadataEntry(ZipEntry metadataZipEntry) {
         try {
-            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(FileUtil.readBytes(currentZipInputStream)));
+            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(fileContext.readBytes(currentZipInputStream)));
         } catch (Exception e) {
             String message = String.format("Unable to read metadata for entry: %s; file: %s; cause: %s",
                 metadataZipEntry.getName(), this.currentFilePath, e.getMessage());
@@ -168,7 +168,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private byte[] readBytesFromContentEntry(ZipEntry contentZipEntry) {
         try {
-            return FileUtil.readBytes(currentZipInputStream);
+            return fileContext.readBytes(currentZipInputStream);
         } catch (IOException e) {
             String message = String.format("Unable to read entry %s from zip file at %s; cause: %s",
                 contentZipEntry.getName(), this.currentFilePath, e.getMessage());

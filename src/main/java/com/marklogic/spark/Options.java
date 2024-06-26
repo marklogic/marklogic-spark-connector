@@ -73,6 +73,7 @@ public abstract class Options {
 
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
+    public static final String READ_FILES_ENCODING = "spark.marklogic.read.files.encoding";
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
     public static final String READ_ARCHIVES_CATEGORIES = "spark.marklogic.read.archives.categories";
 

@@ -114,7 +114,7 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
             String identifierForError = "entry " + zipEntry.getName() + " in " + this.currentFilePath;
 
             try {
-                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.currentZipInputStream, this.fileContext.getProperties());
+                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.currentZipInputStream, this.fileContext);
                 // Fail fast if the next entry is not valid XML.
                 aggregateXMLSplitter.hasNext();
                 return true;

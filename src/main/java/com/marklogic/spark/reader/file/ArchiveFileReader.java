@@ -46,7 +46,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             if (contentZipEntry == null) {
                 return openNextFileAndReadNextEntry();
             }
-            byte[] content = FileUtil.readBytes(currentZipInputStream);
+            byte[] content = fileContext.readBytes(currentZipInputStream);
             if (content == null || content.length == 0) {
                 return openNextFileAndReadNextEntry();
             }
@@ -108,6 +108,6 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             Util.MAIN_LOGGER.warn(message);
             return new byte[0];
         }
-        return FileUtil.readBytes(currentZipInputStream);
+        return fileContext.readBytes(currentZipInputStream);
     }
 }
