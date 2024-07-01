@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class ReadGenericFilesTest extends AbstractIntegrationTest {
 
-    private static final String ISO_8859_1_ENCODED_FILE = "src/test/resources/encoding/medline.iso-8859-1.xml";
+    private static final String ISO_8859_1_ENCODED_FILE = "src/test/resources/encoding/medline.iso-8859-1.txt";
 
     @Test
     void readAndWriteMixedFiles() {
