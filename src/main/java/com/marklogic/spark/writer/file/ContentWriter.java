@@ -57,7 +57,14 @@ class ContentWriter {
     }
 
     void writeMetadata(InternalRow row, OutputStream outputStream) throws IOException {
-        outputStream.write(DocumentRowSchema.makeDocumentMetadata(row).toString().getBytes());
+        String metadataXml = DocumentRowSchema.makeDocumentMetadata(row).toString();
+        // Must honor the encoding here as well, as a user could easily have values that require encoding in metadata
+        // values or in a properties fragment.
+        if (this.encoding != null) {
+            outputStream.write(metadataXml.getBytes(this.encoding));
+        } else {
+            outputStream.write(metadataXml.getBytes());
+        }
     }
 
     private Charset determineEncoding(Map<String, String> properties) {
