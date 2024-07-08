@@ -63,6 +63,6 @@ class FileContext extends ContextSupport implements Serializable {
 
     byte[] readBytes(InputStream inputStream) throws IOException {
         byte[] bytes = FileUtil.readBytes(inputStream);
-        return this.encoding != null ? new String(bytes).getBytes(encoding) : bytes;
+        return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
     }
 }

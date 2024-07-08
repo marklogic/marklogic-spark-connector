@@ -81,13 +81,14 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_COLLECTIONS, "encoding-test")
+            .option(Options.WRITE_URI_TEMPLATE, "/iso-doc.xml")
             .mode(SaveMode.Append)
             .save();
 
-        String uri = getUrisInCollection("encoding-test", 1).get(0);
-        XmlNode doc = readXmlDocument(uri);
+        XmlNode doc = readXmlDocument("/iso-doc.xml");
         doc.assertElementExists("/MedlineCitationSet");
+        doc.assertElementValue("/MedlineCitationSet/MedlineCitation/Affiliation",
+            "Istituto di Anatomia e Istologia Patologica, Università di Ferrara, Italy.");
     }
 
     @Test
