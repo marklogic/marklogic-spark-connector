@@ -259,8 +259,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
     }
 
     private void verifyProperties(Row row) {
-        XmlNode properties = new XmlNode(row.getString(6), Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
-            Namespace.getNamespace("ex", "org:example"));
+        XmlNode properties = new XmlNode(row.getString(6), PROPERTIES_NAMESPACE, Namespace.getNamespace("ex", "org:example"));
         properties.assertElementValue("/prop:properties/ex:key1", "value1");
         properties.assertElementValue("/prop:properties/key2", "value2");
     }

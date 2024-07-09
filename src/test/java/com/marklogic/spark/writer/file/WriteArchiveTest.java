@@ -81,7 +81,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
         String xml = new String((byte[]) row.get(1));
         XmlNode metadata = new XmlNode(xml,
             Namespace.getNamespace("rapi", "http://marklogic.com/rest-api"),
-            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
+            PROPERTIES_NAMESPACE,
             Namespace.getNamespace("ex", "org:example"));
 
         switch (metadataValue) {
