@@ -23,9 +23,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class ContextSupport implements Serializable {
@@ -107,11 +105,7 @@ public class ContextSupport implements Serializable {
     }
 
     public final String getOptionNameForMessage(String option) {
-        // Allows ETL tool to override what's shown in a validation error.
-        // Feels like this should be in another class which can cache the ResourceBundle reference.
-        ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
-        String optionName = bundle.getString(option);
-        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+        return Util.getOptionNameForErrorMessage(option);
     }
 
     private void parseConnectionString(String value, Map<String, String> connectionProps) {

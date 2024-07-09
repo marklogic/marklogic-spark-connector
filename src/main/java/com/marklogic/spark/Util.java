@@ -20,9 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import scala.collection.immutable.HashMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 public interface Util {
@@ -79,5 +77,19 @@ public interface Util {
             Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT,
             Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE
         );
+    }
+
+    /**
+     * Allows Flux to override what's shown in a validation error. The connector is fine showing option names
+     * such as "spark.marklogic.read.opticQuery", but that is meaningless to a Flux user. This can also be used to
+     * access any key in the messages properties file.
+     *
+     * @param option
+     * @return
+     */
+    static String getOptionNameForErrorMessage(String option) {
+        ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
+        String optionName = bundle.getString(option);
+        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
     }
 }
