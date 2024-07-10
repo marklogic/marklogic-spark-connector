@@ -1,6 +1,5 @@
 package com.marklogic.spark.reader.file;
 
-import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -200,14 +199,9 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private InternalRow makeNakedRow(ZipEntry metadataZipEntry, MlcpMetadata mlcpMetadata) {
-        DocumentMetadataHandle metadata = mlcpMetadata.getMetadata();
-        metadata.getCollections().clear();
-        metadata.getPermissions().clear();
-        metadata.getMetadataValues().clear();
-        metadata.setQuality(0);
         return new DocumentRowBuilder(metadataCategories)
             .withUri(metadataZipEntry.getName())
-            .withMetadata(metadata)
+            .withMetadata(mlcpMetadata.getMetadata())
             .buildRow();
     }
 
