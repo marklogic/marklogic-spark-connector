@@ -66,6 +66,26 @@ class WriteRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    void insufficientPrivilegeForOtherDatabase() {
+        DataFrameWriter writer = newWriter(2)
+            .option(Options.WRITE_TOTAL_THREAD_COUNT, 16)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .option(Options.CLIENT_URI, "spark-test-user:spark@localhost:8016/Documents");
+
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        assertNull(ex.getCause(), "Surprisingly, in this scenario where the exception is thrown during the " +
+            "construction of WriteBatcherDataWriter, Spark does not populate the 'cause' of the exception but rather " +
+            "shoves the entire stacktrace of the exception into the exception message. This is not a good UX for " +
+            "connector or Flux users, as it puts an ugly stacktrace right into their face. I have not figured out " +
+            "how to avoid this yet, so this test is capturing this behavior in the hopes that an upgraded version of " +
+            "Spark will properly set the cause instead.");
+        assertTrue(ex.getMessage().contains("at com.marklogic.client.impl.OkHttpServices"), "This is confirming that " +
+            "the exception message contains the stacktrace of the MarkLogic exception - which we don't want. Hoping " +
+            "this assertion breaks during a future upgrade of Spark and we have a proper exception message " +
+            "instead. Actual message: " + ex.getMessage());
+    }
+
+    @Test
     void temporalTest() {
         newWriterWithDefaultConfig("temporal-data.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
