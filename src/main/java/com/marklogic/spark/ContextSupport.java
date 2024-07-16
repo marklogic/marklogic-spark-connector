@@ -114,7 +114,11 @@ public class ContextSupport implements Serializable {
         connectionProps.put(Options.CLIENT_PASSWORD, connectionString.getPassword());
         connectionProps.put(Options.CLIENT_HOST, connectionString.getHost());
         connectionProps.put(Options.CLIENT_PORT, connectionString.getPort() + "");
-        connectionProps.put(Options.CLIENT_DATABASE, connectionString.getDatabase());
+
+        String db = connectionString.getDatabase();
+        if (db != null && db.trim().length() > 0) {
+            connectionProps.put(Options.CLIENT_DATABASE, db);
+        }
     }
 
     protected final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
