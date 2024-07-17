@@ -41,6 +41,22 @@ class BuildConnectionPropertiesTest {
     }
 
     @Test
+    void clientUriWithDatabase() {
+        properties.put(Options.CLIENT_DATABASE, "Documents");
+        properties.put(Options.CLIENT_URI, "user:password@host:8016");
+        Map<String, String> connectionProps = new ContextSupport(properties).buildConnectionProperties();
+
+        assertEquals("Documents", connectionProps.get(Options.CLIENT_DATABASE), "If the user does not specify a " +
+            "database in the connection string, then the database value specified separately should still be used. " +
+            "This avoids a potential issue where the user is not aware that the connection string accepts a database " +
+            "and thus specifies it via the database option.");
+        assertEquals("user", connectionProps.get(Options.CLIENT_USERNAME));
+        assertEquals("password", connectionProps.get(Options.CLIENT_PASSWORD));
+        assertEquals("host", connectionProps.get(Options.CLIENT_HOST));
+        assertEquals("8016", connectionProps.get(Options.CLIENT_PORT));
+    }
+
+    @Test
     void overrideDefaults() {
         properties.put(AUTH_TYPE, "basic");
         properties.put(CONNECTION_TYPE, "direct");
