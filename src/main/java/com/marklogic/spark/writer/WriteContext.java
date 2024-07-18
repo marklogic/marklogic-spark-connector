@@ -102,11 +102,9 @@ public class WriteContext extends ContextSupport {
             .newWriteBatcher()
             .withBatchSize(batchSize)
             .withThreadCount(threadCount)
-            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
+            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
+            .onBatchSuccess(this::logBatchOnSuccess);
 
-        if (logger.isDebugEnabled()) {
-            writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
-        }
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
@@ -254,7 +252,6 @@ public class WriteContext extends ContextSupport {
             WriteEvent firstEvent = batch.getItems()[0];
             // If the first event is the item added by DMSDK for the default metadata object, ignore it when showing
             // the count of documents in the batch.
-            // the count of documents in the batch.
             if (firstEvent.getTargetUri() == null && firstEvent.getMetadata() != null) {
                 docCount--;
             }
@@ -262,15 +259,19 @@ public class WriteContext extends ContextSupport {
         if (this.logProgress > 0) {
             logProgressIfNecessary(docCount);
         }
-        logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+        if (logger.isDebugEnabled()) {
+            logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+        }
     }
 
     private void logProgressIfNecessary(int docCount) {
         int sum = progressTracker.addAndGet(docCount);
-        int lowerBound = sum / (this.logProgress);
-        int upperBound = (lowerBound * this.logProgress) + this.batchSize;
-        if (sum >= lowerBound && sum < upperBound) {
-            Util.MAIN_LOGGER.info("Documents written: {}", sum);
+        if (sum >= logProgress) {
+            int lowerBound = sum / (this.logProgress);
+            int upperBound = (lowerBound * this.logProgress) + this.batchSize;
+            if (sum >= lowerBound && sum < upperBound) {
+                Util.MAIN_LOGGER.info("Documents written: {}", sum);
+            }
         }
     }
 
