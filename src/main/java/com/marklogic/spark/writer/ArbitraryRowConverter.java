@@ -12,6 +12,7 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.json.JSONObject;
 import org.json.XML;
@@ -20,12 +21,15 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Handles building a document from an "arbitrary" row - i.e. one with an unknown schema, where the row will be
  * serialized by Spark to a JSON object.
  */
 class ArbitraryRowConverter implements RowConverter {
+
+    private static final String MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME = "marklogic_spark_file_path";
 
     private final ObjectMapper objectMapper;
 
@@ -35,8 +39,12 @@ class ArbitraryRowConverter implements RowConverter {
     private final String xmlRootName;
     private final String xmlNamespace;
 
+    private final int filePathIndex;
+
     ArbitraryRowConverter(WriteContext writeContext) {
         this.schema = writeContext.getSchema();
+        this.filePathIndex = determineFilePathIndex();
+
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.jsonRootName = writeContext.getStringOption(Options.WRITE_JSON_ROOT_NAME);
         this.xmlRootName = writeContext.getStringOption(Options.WRITE_XML_ROOT_NAME);
@@ -46,6 +54,12 @@ class ArbitraryRowConverter implements RowConverter {
 
     @Override
     public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+        String initialUri = null;
+        if (this.filePathIndex > -1) {
+            initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
+            row.setNullAt(this.filePathIndex);
+        }
+
         final String json = convertRowToJSONString(row);
         AbstractWriteHandle contentHandle = this.xmlRootName != null ?
             new StringHandle(convertJsonToXml(json)).withFormat(Format.XML) :
@@ -66,12 +80,32 @@ class ArbitraryRowConverter implements RowConverter {
                 }
             }
         }
-        return Optional.of(new DocBuilder.DocumentInputs(null, contentHandle, uriTemplateValues, null));
+        return Optional.of(new DocBuilder.DocumentInputs(initialUri, contentHandle, uriTemplateValues, null));
     }
 
     @Override
     public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
         return new ArrayList<>();
+    }
+
+    /**
+     * A Spark user can add a column via:
+     * withColumn("marklogic_spark_file_path", new Column("_metadata.file_path"))
+     * <p>
+     * This allows access to the file path when using a Spark data source - e.g. CSV, Parquet - to read a file.
+     * The column will be used to generate an initial URI for the corresponding document, and the column will then
+     * be removed after that so that it's not included in the document.
+     *
+     * @return
+     */
+    private int determineFilePathIndex() {
+        StructField[] fields = schema.fields();
+        for (int i = 0; i < fields.length; i++) {
+            if (MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME.equals(fields[i].name())) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     private ObjectNode readTree(String json) {
