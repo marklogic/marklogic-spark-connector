@@ -90,6 +90,9 @@ public abstract class Options {
     public static final String WRITE_TOTAL_THREAD_COUNT = "spark.marklogic.write.totalThreadCount";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
+    // For logging progress when writing documents or processing with custom code.
+    public static final String WRITE_LOG_PROGRESS = "spark.marklogic.write.logProgress";
+
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
     public static final String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";

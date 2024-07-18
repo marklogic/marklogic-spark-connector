@@ -39,6 +39,18 @@ class WriteRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    void logProgressTest() {
+        newWriter(2)
+            // Including these options here to ensure they don't cause any issues, though we're not yet able to
+            // assert on the info-level log entries that they add.
+            .option(Options.WRITE_BATCH_SIZE, 8)
+            .option(Options.WRITE_LOG_PROGRESS, 50)
+            .save();
+
+        verifyTwoHundredDocsWereWritten();
+    }
+
+    @Test
     void batchSizeGreaterThanNumberOfRowsToWrite() {
         newWriter()
             .option(Options.WRITE_BATCH_SIZE, 1000)
@@ -128,7 +140,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void invalidBatchSize() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
         assertEquals("The value of 'spark.marklogic.write.batchSize' must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
