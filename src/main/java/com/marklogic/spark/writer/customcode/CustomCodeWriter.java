@@ -24,16 +24,19 @@ import org.slf4j.LoggerFactory;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 class CustomCodeWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
+    private static final AtomicInteger progressTracker = new AtomicInteger();
 
     private final DatabaseClient databaseClient;
     private final CustomCodeContext customCodeContext;
 
     private final int batchSize;
+    private final int logProgress;
     private final List<String> currentBatch = new ArrayList<>();
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
@@ -46,8 +49,8 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         this.customCodeContext = customCodeContext;
         this.databaseClient = customCodeContext.connectToMarkLogic();
 
-        this.batchSize = customCodeContext.optionExists(Options.WRITE_BATCH_SIZE) ?
-            Integer.parseInt(customCodeContext.getProperties().get(Options.WRITE_BATCH_SIZE)) : 1;
+        this.batchSize = (int) customCodeContext.getNumericOption(Options.WRITE_BATCH_SIZE, 1, 1);
+        this.logProgress = (int) customCodeContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 10000, 0);
 
         this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
@@ -64,7 +67,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             row.getString(0);
 
         this.currentBatch.add(rowValue);
-
         if (this.currentBatch.size() >= this.batchSize) {
             flush();
         }
@@ -104,8 +106,8 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             return;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Calling custom code in MarkLogic");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Calling custom code in MarkLogic");
         }
         final int itemCount = currentBatch.size();
         ServerEvaluationCall call = customCodeContext.buildCall(
@@ -164,12 +166,24 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         try {
             call.evalAs(String.class);
             this.successItemCount += itemCount;
+            if (this.logProgress > 0) {
+                logProgressIfNecessary(itemCount);
+            }
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;
             }
             this.failedItemCount += itemCount;
             Util.MAIN_LOGGER.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
+        }
+    }
+
+    private void logProgressIfNecessary(int itemCount) {
+        int sum = progressTracker.addAndGet(itemCount);
+        int lowerBound = sum / (this.logProgress);
+        int upperBound = (lowerBound * this.logProgress) + this.batchSize;
+        if (sum >= lowerBound && sum < upperBound) {
+            Util.MAIN_LOGGER.info("Items processed: {}", sum);
         }
     }
 }
