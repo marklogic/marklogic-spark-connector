@@ -13,7 +13,6 @@ import scala.Function1;
 import scala.Function2;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
-import scala.compat.java8.JFunction;
 
 import java.util.ArrayList;
 
@@ -33,17 +32,10 @@ public class JsonRowDeserializer {
     private final Function2<JsonFactory, String, JsonParser> jsonParserCreator;
     private final Function1<String, UTF8String> utf8StringCreator;
 
-    // Ignoring warnings about JFunction.func until an alternative can be found.
-    @SuppressWarnings("java:S1874")
     public JsonRowDeserializer(StructType schema) {
         this.jacksonParser = newJacksonParser(schema);
-
-        // Used https://github.com/scala/scala-java8-compat in the DHF Spark 2 connector. Per the README for
-        // scala-java8-compat, we should be able to use scala.jdk.FunctionConverters since those are part of Scala
-        // 2.13. However, that is not yet working within PySpark. So sticking with this "legacy" approach as it seems
-        // to work fine in both vanilla Spark (i.e. JUnit tests) and PySpark.
-        this.jsonParserCreator = JFunction.func(CreateJacksonParser::string);
-        this.utf8StringCreator = JFunction.func(UTF8String::fromString);
+        this.jsonParserCreator = CreateJacksonParser::string;
+        this.utf8StringCreator = UTF8String::fromString;
     }
 
     public InternalRow deserializeJson(String json) {
