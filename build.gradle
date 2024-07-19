@@ -57,13 +57,6 @@ dependencies {
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
 
-  // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
-  // See https://github.com/scala/scala-java8-compat for more information
-  shadowDependencies("org.scala-lang.modules:scala-java8-compat_2.12:1.0.2") {
-    // Prefer the Scala libraries used within the user's Spark runtime.
-    exclude module: "scala-library"
-  }
-
   shadowDependencies ("org.apache.jena:jena-arq:4.10.0") {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
