@@ -45,7 +45,9 @@ class WriteRowsWithFilePathTest extends AbstractWriteTest {
 
             JsonNode doc = readJsonDocument(uri);
             assertEquals(2, doc.size(), "The marklogic_spark_file_path column should not have been used when " +
-                "constructing the JSON document.");
+                "constructing the JSON document. This includes when ignoreNullFields is set to false. We still want " +
+                "the column removed as the column is an implementation detail that should not be exposed to the user. " +
+                "If we ever want the file path to be included in the document, we'll add an explicit feature for that.");
             assertTrue(doc.has("docNum"));
             assertTrue(doc.has("docName"));
         });
