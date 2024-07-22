@@ -127,15 +127,13 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     private void logPartitionAndThreadCounts(int numPartitions) {
-        int totalThreadCount = writeContext.getTotalThreadCount();
-        if (totalThreadCount > 0) {
-            int threadCountPerPartition = writeContext.getThreadCountPerPartition();
+        int userDefinedPartitionThreadCount = writeContext.getUserDefinedThreadCountPerPartition();
+        if (userDefinedPartitionThreadCount > 0) {
             Util.MAIN_LOGGER.info("Number of partitions: {}; total thread count: {}; thread count per partition: {}",
-                numPartitions, totalThreadCount, threadCountPerPartition);
+                numPartitions, numPartitions * userDefinedPartitionThreadCount, userDefinedPartitionThreadCount);
         } else {
-            int threadCount = writeContext.getThreadCount();
-            Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
-                numPartitions, threadCount, numPartitions * threadCount);
+            Util.MAIN_LOGGER.info("Number of partitions: {}; total threads used for writing: {}",
+                numPartitions, writeContext.getTotalThreadCount());
         }
     }
 
