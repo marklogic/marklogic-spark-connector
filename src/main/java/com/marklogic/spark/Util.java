@@ -15,10 +15,8 @@
  */
 package com.marklogic.spark;
 
-import org.apache.spark.sql.catalyst.json.JSONOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.immutable.HashMap;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -30,19 +28,6 @@ public interface Util {
      * messages.
      */
     Logger MAIN_LOGGER = LoggerFactory.getLogger("com.marklogic.spark");
-
-    JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
-        new HashMap<>(),
-
-        // As verified via tests, this default timezone ID is overridden by a user via the spark.sql.session.timeZone option.
-        "Z",
-
-        // We don't expect corrupted records - i.e. corrupted values - to be present in the index. But Spark
-        // requires this to be set. See
-        // https://medium.com/@sasidharan-r/how-to-handle-corrupt-or-bad-record-in-apache-spark-custom-logic-pyspark-aws-430ddec9bb41
-        // for more information.
-        "_corrupt_record"
-    );
 
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
