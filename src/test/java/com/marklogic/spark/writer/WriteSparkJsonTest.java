@@ -32,6 +32,7 @@ class WriteSparkJsonTest extends AbstractWriteTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/spark-json/{number}.json")
+            .option(Options.WRITE_JSON_SERIALIZATION_OPTION_PREFIX + "ignoreNullFields", "true")
             .mode(SaveMode.Append)
             .save();
 
@@ -58,6 +59,7 @@ class WriteSparkJsonTest extends AbstractWriteTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/spark-json/{number}.json")
+            .option(Options.WRITE_JSON_SERIALIZATION_OPTION_PREFIX + "ignoreNullFields", "true")
             .mode(SaveMode.Append)
             .save();
 
@@ -80,6 +82,7 @@ class WriteSparkJsonTest extends AbstractWriteTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/spark-json/{number}.json")
+            .option(Options.WRITE_JSON_SERIALIZATION_OPTION_PREFIX + "ignoreNullFields", "true")
             .mode(SaveMode.Append)
             .save();
 

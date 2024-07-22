@@ -61,6 +61,8 @@ public class JsonRowSerializer {
      */
     private Map<String, String> buildOptionsForJsonOptions(Map<String, String> connectorProperties) {
         Map<String, String> options = new HashMap<>();
+        // Default to include null fields, as they are easily queried in MarkLogic.
+        options.put("ignoreNullFields", "false");
         connectorProperties.forEach((key, value) -> {
             if (key.startsWith(Options.WRITE_JSON_SERIALIZATION_OPTION_PREFIX)) {
                 String optionName = key.substring(Options.WRITE_JSON_SERIALIZATION_OPTION_PREFIX.length());
