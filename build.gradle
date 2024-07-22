@@ -50,9 +50,8 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // For XML support; supports converting a string of JSON into a string of XML.
-  // See ArbitraryRowConverter for more information.
-  shadowDependencies "org.json:json:20240303"
+  // Required for converting JSON to XML. Using 2.14.2 to align with Spark 3.4.1.
+  shadowDependencies "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'

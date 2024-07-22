@@ -119,6 +119,12 @@ public abstract class Options {
     public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
     public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
 
+    // For serializing a row into JSON. Intent is to allow for other constants defined in the Spark
+    // JSONOptions.scala class to be used after "spark.marklogic.write.json."
+    // Example - "spark.marklogic.write.json.ignoreNullFields=false.
+    public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
+
+
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";

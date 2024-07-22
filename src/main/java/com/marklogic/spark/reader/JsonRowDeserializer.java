@@ -2,9 +2,10 @@ package com.marklogic.spark.reader;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
-import com.marklogic.spark.Util;
+import com.marklogic.spark.JsonRowSerializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.CreateJacksonParser;
+import org.apache.spark.sql.catalyst.json.JSONOptions;
 import org.apache.spark.sql.catalyst.json.JacksonParser;
 import org.apache.spark.sql.sources.Filter;
 import org.apache.spark.sql.types.StructType;
@@ -15,6 +16,7 @@ import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Handles deserializing a JSON object into a Spark InternalRow. This is accomplished via Spark's JacksonParser.
@@ -45,6 +47,7 @@ public class JsonRowDeserializer {
     private JacksonParser newJacksonParser(StructType schema) {
         final boolean allowArraysAsStructs = true;
         final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList<Filter>().iterator()).toSeq();
-        return new JacksonParser(schema, Util.DEFAULT_JSON_OPTIONS, allowArraysAsStructs, filters);
+        JSONOptions jsonOptions = new JsonRowSerializer(schema, new HashMap<>()).getJsonOptions();
+        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
     }
 }
