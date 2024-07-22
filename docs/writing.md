@@ -244,8 +244,15 @@ The connector uses MarkLogic's
 following options can be set to adjust how the connector performs when writing data:
 
 - `spark.marklogic.write.batchSize` = the number of documents written in one call to MarkLogic; defaults to 100.
-- `spark.marklogic.write.threadCount` = the number of threads used by each partition to write documents to MarkLogic;
+- `spark.marklogic.write.threadCount` = the number of threads used across all partitions to write documents to MarkLogic;
   defaults to 4.
+- `spark.marklogic.write.threadCountPerPartition` = the number of threads to use per partition to write documents to
+MarkLogic. If set, will be used instead of `spark.marklogic.write.threadCount`. 
+
+Prior to the 2.3.0 release, `spark.marklogic.write.threadCount` configured a number of threads per partition. Based on 
+feedback, this was changed to the number of total threads used across all partitions to match what users typically 
+expect "thread count" to mean in the context of writing to MarkLogic. `spark.marklogic.write.threadCountPerPartition`
+was then added for users who do wish to configure a number of threads per Spark partition.
 
 These options are in addition to the number of partitions within the Spark DataFrame that is being written to
 MarkLogic. For each partition in the DataFrame, a separate instance of a MarkLogic batch writer is created, each
@@ -264,7 +271,7 @@ the connector can directly connect to each host in the cluster.
 
 The rule of thumb above can thus be expressed as:
 
-    Number of partitions * Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
+    Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
 
 ### Using a load balancer
 

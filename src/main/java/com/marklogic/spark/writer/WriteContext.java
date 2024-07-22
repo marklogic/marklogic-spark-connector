@@ -77,25 +77,41 @@ public class WriteContext extends ContextSupport {
         return schema;
     }
 
-    int getThreadCount() {
+    /**
+     * @return the total number of threads to use across all partitions. This is typically how a user thinks in terms
+     * of, as they are not likely to know how many partitions will be created. But they will typically know how many
+     * hosts are in their MarkLogic cluster and how many threads are available to an app server on each host.
+     */
+    int getTotalThreadCount() {
         return (int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
     }
 
-    int getTotalThreadCount() {
-        return (int) getNumericOption(Options.WRITE_TOTAL_THREAD_COUNT, 0, 1);
+    /**
+     * @return the thread count to use per partition where a user has specified the total thread count across all
+     * partitions.
+     */
+    int getCalculatedThreadCountPerPartition() {
+        int threadCount = getTotalThreadCount();
+        if (this.numPartitions > 0) {
+            return (int) Math.ceil((double) threadCount / (double) numPartitions);
+        }
+        return threadCount;
     }
 
-    int getThreadCountPerPartition() {
-        int totalThreadCount = getTotalThreadCount();
-        if (totalThreadCount > 0 && this.numPartitions > 0) {
-            return (int) Math.ceil((double) totalThreadCount / (double) numPartitions);
-        }
-        return 0;
+    /**
+     * @return the thread count to use per partition where a user has used an option to explicitly define how many
+     * threads should be used by a partition.
+     */
+    int getUserDefinedThreadCountPerPartition() {
+        return (int) getNumericOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
     }
 
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
-        final int threadCount = getTotalThreadCount() > 0 ?
-            getThreadCountPerPartition() : getThreadCount();
+        // If the user told us how many threads they want per partition (we expect this to be rare), then use that.
+        // Otherwise, use the calculated number of threads per partition based on the total thread count that either
+        // the user configured or using the default value for that option.
+        final int threadCount = getUserDefinedThreadCountPerPartition() > 0 ?
+            getUserDefinedThreadCountPerPartition() : getCalculatedThreadCountPerPartition();
 
         Util.MAIN_LOGGER.info("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
         WriteBatcher writeBatcher = dataMovementManager

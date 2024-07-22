@@ -68,7 +68,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void twoPartitions() {
         newWriter(2)
-            .option(Options.WRITE_TOTAL_THREAD_COUNT, 16)
+            .option(Options.WRITE_THREAD_COUNT_PER_PARTITION, 8)
             .option(Options.WRITE_BATCH_SIZE, 10)
             .save();
 
@@ -80,7 +80,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void insufficientPrivilegeForOtherDatabase() {
         DataFrameWriter writer = newWriter(2)
-            .option(Options.WRITE_TOTAL_THREAD_COUNT, 16)
+            .option(Options.WRITE_THREAD_COUNT_PER_PARTITION, 8)
             .option(Options.WRITE_BATCH_SIZE, 10)
             .option(Options.CLIENT_URI, "spark-test-user:spark@localhost:8016/Documents");
 

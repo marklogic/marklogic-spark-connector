@@ -87,7 +87,7 @@ public abstract class Options {
 
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
-    public static final String WRITE_TOTAL_THREAD_COUNT = "spark.marklogic.write.totalThreadCount";
+    public static final String WRITE_THREAD_COUNT_PER_PARTITION = "spark.marklogic.write.threadCountPerPartition";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
     // For logging progress when writing documents or processing with custom code.
