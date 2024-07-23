@@ -113,7 +113,9 @@ public class WriteContext extends ContextSupport {
         final int threadCount = getUserDefinedThreadCountPerPartition() > 0 ?
             getUserDefinedThreadCountPerPartition() : getCalculatedThreadCountPerPartition();
 
-        Util.MAIN_LOGGER.info("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
+        }
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize(batchSize)
