@@ -71,6 +71,11 @@ public abstract class Options {
     public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
     public static final String READ_TRIPLES_BASE_IRI = "spark.marklogic.read.triples.baseIri";
 
+    // For logging progress when reading documents, rows, or items via custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
+    public static final String READ_LOG_PROGRESS = "spark.marklogic.read.logProgress";
+
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
     public static final String READ_FILES_ENCODING = "spark.marklogic.read.files.encoding";

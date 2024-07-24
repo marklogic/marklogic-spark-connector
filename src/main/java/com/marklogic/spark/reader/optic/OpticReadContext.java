@@ -65,13 +65,14 @@ public class OpticReadContext extends ContextSupport {
     private StructType schema;
     private long serverTimestamp;
     private List<OpticFilter> opticFilters;
+    private final long batchSize;
 
     public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
         this.schema = schema;
 
         final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
-        final long batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
+        this.batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
 
         final String dslQuery = properties.get(Options.READ_OPTIC_QUERY);
         if (dslQuery == null || dslQuery.trim().length() < 1) {
@@ -282,5 +283,9 @@ public class OpticReadContext extends ContextSupport {
 
     long getBucketCount() {
         return planAnalysis != null ? planAnalysis.getAllBuckets().size() : 0;
+    }
+
+    long getBatchSize() {
+        return batchSize;
     }
 }

@@ -79,17 +79,23 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
+            // Not yet supporting progress logging for file operations.
             return new MarkLogicFileTable(SparkSession.active(),
                 new CaseInsensitiveStringMap(properties),
                 JavaConverters.asScalaBuffer(getPaths(properties)), schema
             );
         }
 
+        // The appropriate progress logger is reset here so that when the connector is used repeatedly in an
+        // environment like PySpark, the counts start with zero on each new Spark job.
         if (isReadDocumentsOperation(properties)) {
+            ReadProgressLogger.progressCounter.set(0);
             return new DocumentTable(DocumentRowSchema.SCHEMA);
         } else if (isReadTriplesOperation(properties)) {
+            ReadProgressLogger.progressCounter.set(0);
             return new DocumentTable(TripleRowSchema.SCHEMA);
-        } else if (isReadOperation(properties)) {
+        } else if (properties.get(Options.READ_OPTIC_QUERY) != null || Util.isReadWithCustomCodeOperation(properties)) {
+            ReadProgressLogger.progressCounter.set(0);
             return new MarkLogicTable(schema, properties);
         }
 
@@ -110,10 +116,6 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private boolean isFileOperation(Map<String, String> properties) {
         return properties.containsKey("path") || properties.containsKey("paths");
-    }
-
-    private boolean isReadOperation(Map<String, String> properties) {
-        return properties.get(Options.READ_OPTIC_QUERY) != null || Util.isReadWithCustomCodeOperation(properties);
     }
 
     private boolean isReadDocumentsOperation(Map<String, String> properties) {
