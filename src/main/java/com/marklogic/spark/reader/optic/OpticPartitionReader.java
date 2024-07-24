@@ -20,6 +20,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.Options;
+import com.marklogic.spark.ProgressLogger;
+import com.marklogic.spark.ReadProgressLogger;
 import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -46,6 +49,9 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     // Used solely for logging metrics
     private long totalRowCount;
     private long totalDuration;
+    private long progressCounter;
+    private final long batchSize;
+    private final ProgressLogger progressLogger;
 
     // Used solely for testing purposes; is never expected to be used in production. Intended to provide a way for
     // a test to get the count of rows returned from MarkLogic, which is important for ensuring that pushdown operations
@@ -54,12 +60,18 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
 
     OpticPartitionReader(OpticReadContext opticReadContext, PlanAnalysis.Partition partition) {
         this.opticReadContext = opticReadContext;
+        this.batchSize = opticReadContext.getBatchSize();
         this.partition = partition;
         this.rowManager = opticReadContext.connectToMarkLogic().newRowManager();
         // Nested values won't work with the JacksonParser used by JsonRowDeserializer, so we ask for type info to not
         // be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
         this.jsonRowDeserializer = new JsonRowDeserializer(opticReadContext.getSchema());
+
+        this.progressLogger = new ReadProgressLogger(
+            opticReadContext.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0),
+            (int) opticReadContext.getBatchSize(), "Read rows: {}"
+        );
     }
 
     @Override
@@ -101,6 +113,11 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     public InternalRow get() {
         this.currentBucketRowCount++;
         this.totalRowCount++;
+        this.progressCounter++;
+        if (this.progressCounter >= this.batchSize) {
+            progressLogger.logProgressIfNecessary(this.progressCounter);
+            this.progressCounter = 0;
+        }
         JsonNode row = rowIterator.next();
         return this.jsonRowDeserializer.deserializeJson(row.toString());
     }
