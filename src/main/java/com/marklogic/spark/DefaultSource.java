@@ -93,6 +93,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             return new MarkLogicTable(schema, properties);
         }
 
+        WriteProgressLogger.progressCounter.set(0);
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 

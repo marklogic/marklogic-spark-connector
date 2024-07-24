@@ -24,10 +24,7 @@ import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.ContextSupport;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
+import com.marklogic.spark.*;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
@@ -36,18 +33,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
 
     static final long serialVersionUID = 1;
-    private static final AtomicInteger progressTracker = new AtomicInteger();
 
     private final StructType schema;
     private final boolean usingFileSchema;
     private final int batchSize;
-    private final int logProgress;
+    private final ProgressLogger progressLogger;
 
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
@@ -59,7 +54,8 @@ public class WriteContext extends ContextSupport {
         super(properties);
         this.schema = schema;
         this.batchSize = (int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1);
-        this.logProgress = (int) getNumericOption(Options.WRITE_LOG_PROGRESS, 10000, 0);
+        this.progressLogger = new WriteProgressLogger(getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0),
+            batchSize, "Documents written: {}");
 
         // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
         // so that reader can be reused for loading files as-is.
@@ -274,22 +270,9 @@ public class WriteContext extends ContextSupport {
                 docCount--;
             }
         }
-        if (this.logProgress > 0) {
-            logProgressIfNecessary(docCount);
-        }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
-        }
-    }
-
-    private void logProgressIfNecessary(int docCount) {
-        int sum = progressTracker.addAndGet(docCount);
-        if (sum >= logProgress) {
-            int lowerBound = sum / (this.logProgress);
-            int upperBound = (lowerBound * this.logProgress) + this.batchSize;
-            if (sum >= lowerBound && sum < upperBound) {
-                Util.MAIN_LOGGER.info("Documents written: {}", sum);
-            }
+        progressLogger.logProgressIfNecessary(docCount);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
         }
     }
 
