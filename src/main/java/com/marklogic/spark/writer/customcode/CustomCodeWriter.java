@@ -30,7 +30,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final CustomCodeContext customCodeContext;
     private final JsonRowSerializer jsonRowSerializer;
     private final int batchSize;
-    private final ProgressLogger progressLogger;
 
     private final List<String> currentBatch = new ArrayList<>();
     private final String externalVariableDelimiter;
@@ -46,8 +45,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         this.jsonRowSerializer = new JsonRowSerializer(customCodeContext.getSchema(), customCodeContext.getProperties());
 
         this.batchSize = (int) customCodeContext.getNumericOption(Options.WRITE_BATCH_SIZE, 1, 1);
-        this.progressLogger = new WriteProgressLogger(customCodeContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0),
-            this.batchSize, "Items processed: {}");
 
         this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
@@ -151,7 +148,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         try {
             call.evalAs(String.class);
             this.successItemCount += itemCount;
-            this.progressLogger.logProgressIfNecessary(itemCount);
+            WriteProgressLogger.logProgressIfNecessary(itemCount);
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;

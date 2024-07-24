@@ -42,7 +42,6 @@ public class WriteContext extends ContextSupport {
     private final StructType schema;
     private final boolean usingFileSchema;
     private final int batchSize;
-    private final ProgressLogger progressLogger;
 
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
@@ -54,8 +53,6 @@ public class WriteContext extends ContextSupport {
         super(properties);
         this.schema = schema;
         this.batchSize = (int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1);
-        this.progressLogger = new WriteProgressLogger(getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0),
-            batchSize, "Documents written: {}");
 
         // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
         // so that reader can be reused for loading files as-is.
@@ -270,7 +267,7 @@ public class WriteContext extends ContextSupport {
                 docCount--;
             }
         }
-        progressLogger.logProgressIfNecessary(docCount);
+        WriteProgressLogger.logProgressIfNecessary(docCount);
         if (logger.isTraceEnabled()) {
             logger.trace("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
         }

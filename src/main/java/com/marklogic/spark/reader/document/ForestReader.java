@@ -12,7 +12,6 @@ import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.ProgressLogger;
 import com.marklogic.spark.ReadProgressLogger;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -40,7 +39,6 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final Integer limit;
 
     // Only used for logging.
-    private final ProgressLogger progressLogger;
     private final ForestPartition forestPartition;
     private long startTime;
 
@@ -74,11 +72,6 @@ class ForestReader implements PartitionReader<InternalRow> {
         this.requestedMetadata = context.getRequestedMetadata();
         this.documentManager.setMetadataCategories(this.requestedMetadata);
         this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
-
-        this.progressLogger = new ReadProgressLogger(
-            context.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0),
-            context.getBatchSize(), "Read documents: {}"
-        );
     }
 
     @Override
@@ -153,7 +146,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         if (logger.isTraceEnabled()) {
             logger.trace("Retrieved page of documents in {}ms from partition {}", (System.currentTimeMillis() - start), this.forestPartition);
         }
-        this.progressLogger.logProgressIfNecessary(page.getPageSize());
+        ReadProgressLogger.logProgressIfNecessary(page.getPageSize());
         return page;
     }
 
