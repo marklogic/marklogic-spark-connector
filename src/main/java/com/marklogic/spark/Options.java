@@ -90,7 +90,9 @@ public abstract class Options {
     public static final String WRITE_THREAD_COUNT_PER_PARTITION = "spark.marklogic.write.threadCountPerPartition";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
 
-    // For logging progress when writing documents or processing with custom code.
+    // For logging progress when writing documents or processing with custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
     public static final String WRITE_LOG_PROGRESS = "spark.marklogic.write.logProgress";
 
     // For writing via custom code.

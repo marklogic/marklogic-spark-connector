@@ -9,10 +9,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.JsonRowSerializer;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
+import com.marklogic.spark.*;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.CommitMessage;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -23,19 +20,18 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 class CustomCodeWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
-    private static final AtomicInteger progressTracker = new AtomicInteger();
 
     private final DatabaseClient databaseClient;
     private final CustomCodeContext customCodeContext;
     private final JsonRowSerializer jsonRowSerializer;
     private final int batchSize;
-    private final int logProgress;
+    private final ProgressLogger progressLogger;
+
     private final List<String> currentBatch = new ArrayList<>();
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
@@ -50,7 +46,8 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         this.jsonRowSerializer = new JsonRowSerializer(customCodeContext.getSchema(), customCodeContext.getProperties());
 
         this.batchSize = (int) customCodeContext.getNumericOption(Options.WRITE_BATCH_SIZE, 1, 1);
-        this.logProgress = (int) customCodeContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 10000, 0);
+        this.progressLogger = new WriteProgressLogger(customCodeContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0),
+            this.batchSize, "Items processed: {}");
 
         this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
@@ -154,24 +151,13 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         try {
             call.evalAs(String.class);
             this.successItemCount += itemCount;
-            if (this.logProgress > 0) {
-                logProgressIfNecessary(itemCount);
-            }
+            this.progressLogger.logProgressIfNecessary(itemCount);
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;
             }
             this.failedItemCount += itemCount;
             Util.MAIN_LOGGER.error(String.format("Unable to process row; cause: %s", ex.getMessage()));
-        }
-    }
-
-    private void logProgressIfNecessary(int itemCount) {
-        int sum = progressTracker.addAndGet(itemCount);
-        int lowerBound = sum / (this.logProgress);
-        int upperBound = (lowerBound * this.logProgress) + this.batchSize;
-        if (sum >= lowerBound && sum < upperBound) {
-            Util.MAIN_LOGGER.info("Items processed: {}", sum);
         }
     }
 }

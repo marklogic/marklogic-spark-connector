@@ -48,6 +48,12 @@ class WriteRowsTest extends AbstractWriteTest {
             .save();
 
         verifyTwoHundredDocsWereWritten();
+
+        // For manual inspection, run it again to ensure that the progress counter was reset.
+        newWriter(2)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .option(Options.WRITE_LOG_PROGRESS, 40)
+            .save();
     }
 
     @Test

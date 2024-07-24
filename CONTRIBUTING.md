@@ -156,6 +156,20 @@ df2.head()
 json.loads(df2.head()['content'])
 ```
 
+For a quick test of writing documents, use the following:
+
+```
+
+spark.read.option("header", True).csv("src/test/resources/data.csv")\
+    .repartition(2)\
+    .write.format("marklogic")\
+    .option("spark.marklogic.client.uri", "spark-test-user:spark@localhost:8000")\
+    .option("spark.marklogic.write.permissions", "spark-user-role,read,spark-user-role,update")\
+    .option("spark.marklogic.write.logProgress", 50)\
+    .option("spark.marklogic.write.batchSize", 10)\
+    .mode("append")\
+    .save()
+```
 
 # Testing against a local Spark cluster
 
