@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.row.RowManager;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.ProgressLogger;
 import com.marklogic.spark.ReadProgressLogger;
 import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -51,7 +49,6 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     private long totalDuration;
     private long progressCounter;
     private final long batchSize;
-    private final ProgressLogger progressLogger;
 
     // Used solely for testing purposes; is never expected to be used in production. Intended to provide a way for
     // a test to get the count of rows returned from MarkLogic, which is important for ensuring that pushdown operations
@@ -67,11 +64,6 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
         // be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
         this.jsonRowDeserializer = new JsonRowDeserializer(opticReadContext.getSchema());
-
-        this.progressLogger = new ReadProgressLogger(
-            opticReadContext.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0),
-            (int) opticReadContext.getBatchSize(), "Read rows: {}"
-        );
     }
 
     @Override
@@ -115,7 +107,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
         this.totalRowCount++;
         this.progressCounter++;
         if (this.progressCounter >= this.batchSize) {
-            progressLogger.logProgressIfNecessary(this.progressCounter);
+            ReadProgressLogger.logProgressIfNecessary(this.progressCounter);
             this.progressCounter = 0;
         }
         JsonNode row = rowIterator.next();

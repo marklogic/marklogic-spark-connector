@@ -86,20 +86,29 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             );
         }
 
+        final ContextSupport tempContext = new ContextSupport(properties);
+
         // The appropriate progress logger is reset here so that when the connector is used repeatedly in an
         // environment like PySpark, the counts start with zero on each new Spark job.
+        final long readProgressInterval = tempContext.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0);
         if (isReadDocumentsOperation(properties)) {
-            ReadProgressLogger.progressCounter.set(0);
+            ReadProgressLogger.initialize(readProgressInterval, "Documents read: {}");
             return new DocumentTable(DocumentRowSchema.SCHEMA);
         } else if (isReadTriplesOperation(properties)) {
-            ReadProgressLogger.progressCounter.set(0);
+            ReadProgressLogger.initialize(readProgressInterval, "Triples read: {}");
             return new DocumentTable(TripleRowSchema.SCHEMA);
-        } else if (properties.get(Options.READ_OPTIC_QUERY) != null || Util.isReadWithCustomCodeOperation(properties)) {
-            ReadProgressLogger.progressCounter.set(0);
+        } else if (properties.get(Options.READ_OPTIC_QUERY) != null) {
+            ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
+            return new MarkLogicTable(schema, properties);
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
+            // Not yet logging progress for reading with custom code, as it's assumed the user will then write with
+            // custom code.
             return new MarkLogicTable(schema, properties);
         }
 
-        WriteProgressLogger.progressCounter.set(0);
+        final long writeProgressInterval = tempContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0);
+        String message = Util.isReadWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
+        WriteProgressLogger.initialize(writeProgressInterval, message);
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 

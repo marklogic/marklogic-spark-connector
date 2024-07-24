@@ -40,11 +40,12 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void logProgressTest() {
-        newWriter(2)
+        newWriter(4)
             // Including these options here to ensure they don't cause any issues, though we're not yet able to
             // assert on the info-level log entries that they add.
             .option(Options.WRITE_BATCH_SIZE, 8)
-            .option(Options.WRITE_LOG_PROGRESS, 50)
+            .option(Options.WRITE_THREAD_COUNT, 8)
+            .option(Options.WRITE_LOG_PROGRESS, 20)
             .save();
 
         verifyTwoHundredDocsWereWritten();
