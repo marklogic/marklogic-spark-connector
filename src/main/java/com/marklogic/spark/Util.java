@@ -64,6 +64,13 @@ public interface Util {
         );
     }
 
+    static boolean isWriteWithCustomCodeOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
+            Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE
+        );
+    }
+
     /**
      * Allows Flux to override what's shown in a validation error. The connector is fine showing option names
      * such as "spark.marklogic.read.opticQuery", but that is meaningless to a Flux user. This can also be used to
