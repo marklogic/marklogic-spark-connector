@@ -84,7 +84,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Close called; stopping job.");
+            logger.debug("Close called.");
         }
         if (databaseClient != null) {
             databaseClient.release();
