@@ -107,7 +107,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         }
 
         final long writeProgressInterval = tempContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0);
-        String message = Util.isReadWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
+        String message = Util.isWriteWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
         WriteProgressLogger.initialize(writeProgressInterval, message);
         return new MarkLogicTable(new WriteContext(schema, properties));
     }

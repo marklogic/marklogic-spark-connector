@@ -112,8 +112,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     private DataWriterFactory determineWriterFactory() {
-        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
-            Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE)) {
+        if (Util.isWriteWithCustomCodeOperation(writeContext.getProperties())) {
             CustomCodeContext context = new CustomCodeContext(
                 writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
             );
