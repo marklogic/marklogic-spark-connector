@@ -101,8 +101,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
             return new MarkLogicTable(schema, properties);
         } else if (Util.isReadWithCustomCodeOperation(properties)) {
-            // Not yet logging progress for reading with custom code, as it's assumed the user will then write with
-            // custom code.
+            ReadProgressLogger.initialize(readProgressInterval, "Items read: {}");
             return new MarkLogicTable(schema, properties);
         }
 
