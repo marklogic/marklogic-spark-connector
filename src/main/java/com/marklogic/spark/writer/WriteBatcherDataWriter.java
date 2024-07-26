@@ -127,16 +127,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        Util.MAIN_LOGGER.warn("Abort called; stopping job");
+        Util.MAIN_LOGGER.warn("Abort called.");
         stopJobAndRelease();
         closeArchiveWriter();
-        Util.MAIN_LOGGER.info("Finished abort");
+        Util.MAIN_LOGGER.info("Finished abort.");
     }
 
     @Override
     public void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Close called; stopping job.");
+            logger.debug("Close called.");
         }
         stopJobAndRelease();
         closeArchiveWriter();
