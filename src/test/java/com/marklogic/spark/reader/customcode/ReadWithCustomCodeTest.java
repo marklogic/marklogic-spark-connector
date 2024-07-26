@@ -197,6 +197,8 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
     private List<Row> readRows(String option, String value) {
         return startRead()
             .option(option, value)
+            // Adding these only for manual inspection of logging and to ensure they don't cause errors.
+            .option(Options.READ_LOG_PROGRESS, "1")
             .load()
             .collectAsList();
     }
