@@ -1,47 +1,44 @@
 package com.marklogic.spark.reader.file;
 
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
-import org.apache.spark.util.SerializableConfiguration;
-
-import java.util.Map;
 
 class FilePartitionReaderFactory implements PartitionReaderFactory {
 
     static final long serialVersionUID = 1;
 
-    private final Map<String, String> properties;
-    private final SerializableConfiguration hadoopConfiguration;
+    private final FileContext fileContext;
 
-    FilePartitionReaderFactory(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
-        this.properties = properties;
-        this.hadoopConfiguration = hadoopConfiguration;
+    FilePartitionReaderFactory(FileContext fileContext) {
+        this.fileContext = fileContext;
     }
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
-        FilePartition filePartition = (FilePartition) partition;
-        String compression = this.properties.get(Options.READ_FILES_COMPRESSION);
-        final boolean isZip = "zip".equalsIgnoreCase(compression);
-        final boolean isGzip = "gzip".equalsIgnoreCase(compression);
+        final FilePartition filePartition = (FilePartition) partition;
+        final String fileType = fileContext.getStringOption(Options.READ_FILES_TYPE);
 
-        String aggregateXmlElement = this.properties.get(Options.READ_AGGREGATES_XML_ELEMENT);
-        if (aggregateXmlElement != null && !aggregateXmlElement.trim().isEmpty()) {
-            if (isZip) {
-                return new ZipAggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
-            } else if (isGzip) {
-                return new GZIPAggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
+        if ("rdf".equalsIgnoreCase(fileType)) {
+            if (fileContext.isZip()) {
+                return new RdfZipFileReader(filePartition, fileContext);
             }
-            return new AggregateXMLFileReader(filePartition, properties, hadoopConfiguration);
-        } else if (isZip) {
-            return new ZipFileReader(filePartition, hadoopConfiguration);
-        } else if (isGzip) {
-            return new GZIPFileReader(filePartition, hadoopConfiguration);
+            return new RdfFileReader(filePartition, fileContext);
+        } else if ("mlcp_archive".equalsIgnoreCase(fileType)) {
+            return new MlcpArchiveFileReader(filePartition, fileContext);
+        } else if ("archive".equalsIgnoreCase(fileType)) {
+            return new ArchiveFileReader(filePartition, fileContext);
+        } else if (fileContext.hasOption(Options.READ_AGGREGATES_XML_ELEMENT)) {
+            return fileContext.isZip() ?
+                new ZipAggregateXmlFileReader(filePartition, fileContext) :
+                new AggregateXmlFileReader(filePartition, fileContext);
+        } else if (fileContext.isZip()) {
+            return new ZipFileReader(filePartition, fileContext);
+        } else if (fileContext.isGzip()) {
+            return new GzipFileReader(filePartition, fileContext);
         }
-        throw new ConnectorException("Only zip and gzip files supported, more to come before 2.2.0 release.");
+        return new GenericFileReader(filePartition, fileContext);
     }
 }

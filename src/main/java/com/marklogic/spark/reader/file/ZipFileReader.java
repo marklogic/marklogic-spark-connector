@@ -1,14 +1,12 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.apache.commons.crypto.utils.IoUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
-import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,57 +19,66 @@ class ZipFileReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileReader.class);
 
-    private final String path;
-    private final ZipInputStream zipInputStream;
+    private final FilePartition filePartition;
+    private final FileContext fileContext;
+    private int nextFilePathIndex;
+    private String currentFilePath;
+    private ZipInputStream currentZipInputStream;
     private ZipEntry currentZipEntry;
 
-    ZipFileReader(FilePartition partition, SerializableConfiguration hadoopConfiguration) {
-        this.path = partition.getPath();
-        try {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Reading zip file {}", this.path);
-            }
-            Path hadoopPath = new Path(this.path);
-            FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
-            this.zipInputStream = new ZipInputStream(fileSystem.open(hadoopPath));
-        } catch (IOException e) {
-            throw new ConnectorException(String.format("Unable to read zip file at %s; cause: %s", this.path, e.getMessage()), e);
-        }
+    ZipFileReader(FilePartition filePartition, FileContext fileContext) {
+        this.filePartition = filePartition;
+        this.fileContext = fileContext;
+        openNextFile();
     }
 
     @Override
     public boolean next() throws IOException {
-        currentZipEntry = FileUtil.findNextFileEntry(zipInputStream);
-        return currentZipEntry != null;
+        currentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
+        if (currentZipEntry != null) {
+            return true;
+        }
+        close();
+        if (nextFilePathIndex == filePartition.getPaths().size()) {
+            return false;
+        }
+        openNextFile();
+        return next();
     }
 
     @Override
     public InternalRow get() {
         String zipEntryName = currentZipEntry.getName();
         if (logger.isTraceEnabled()) {
-            logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.path);
+            logger.trace("Reading zip entry {} from zip file {}.", zipEntryName, this.currentFilePath);
         }
         String uri = zipEntryName.startsWith("/") ?
-            this.path + zipEntryName :
-            this.path + "/" + zipEntryName;
+            this.currentFilePath + zipEntryName :
+            this.currentFilePath + "/" + zipEntryName;
         byte[] content = readZipEntry();
-        long length = content.length;
         return new GenericInternalRow(new Object[]{
-            UTF8String.fromString(uri), null, length, ByteArray.concat(content)
+            UTF8String.fromString(uri), ByteArray.concat(content),
+            null, null, null, null, null, null
         });
     }
 
     @Override
-    public void close() throws IOException {
-        this.zipInputStream.close();
+    public void close() {
+        IoUtils.closeQuietly(this.currentZipInputStream);
+    }
+
+    private void openNextFile() {
+        this.currentFilePath = this.filePartition.getPaths().get(nextFilePathIndex);
+        nextFilePathIndex++;
+        this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
     }
 
     private byte[] readZipEntry() {
         try {
-            return FileUtil.readBytes(zipInputStream);
+            return fileContext.readBytes(currentZipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from zip file at %s; cause: %s",
-                this.path, e.getMessage()), e);
+                this.currentFilePath, e.getMessage()), e);
         }
     }
 }

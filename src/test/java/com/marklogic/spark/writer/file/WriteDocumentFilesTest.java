@@ -1,7 +1,6 @@
 package com.marklogic.spark.writer.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.document.DocumentWriteSet;
 import com.marklogic.client.document.TextDocumentManager;
 import com.marklogic.client.io.DocumentMetadataHandle;
@@ -84,5 +83,37 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
         assertEquals("URI without leading slash", content);
         content = new String(FileCopyUtils.copyToByteArray(files[filenames.indexOf("example2.txt")]));
         assertEquals("Opaque URI", content);
+    }
+
+    @Test
+    void uriHasSpace(@TempDir Path tempDir) {
+        final String uri = "/has space.json";
+
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/spark-json/single-object.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "char-test")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, uri)
+            .mode(SaveMode.Append)
+            .save();
+
+        sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, uri)
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        File dir = tempDir.toFile();
+        assertEquals(1, dir.listFiles().length);
+        String filename = dir.listFiles()[0].getName();
+        System.out.println(filename);
+        assertEquals("has space.json", filename,
+            "Just like MLCP, if the connector cannot construct a java.net.URI from the document URI (it will fail " +
+                "due to a space), the error should be logged and the file should be written with its unaltered " +
+                "document URI used for the file path.");
     }
 }

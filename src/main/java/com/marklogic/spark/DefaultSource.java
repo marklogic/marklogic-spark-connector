@@ -20,7 +20,7 @@ import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
-import com.marklogic.spark.reader.file.FileRowSchema;
+import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
@@ -63,12 +63,14 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     public StructType inferSchema(CaseInsensitiveStringMap options) {
         final Map<String, String> properties = options.asCaseSensitiveMap();
         if (isFileOperation(properties)) {
-            return FileRowSchema.SCHEMA;
+            final String type = properties.get(Options.READ_FILES_TYPE);
+            return "rdf".equalsIgnoreCase(type) ? TripleRowSchema.SCHEMA : DocumentRowSchema.SCHEMA;
         }
         if (isReadDocumentsOperation(properties)) {
             return DocumentRowSchema.SCHEMA;
-        }
-        if (isReadWithCustomCodeOperation(properties)) {
+        } else if (isReadTriplesOperation(properties)) {
+            return TripleRowSchema.SCHEMA;
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
         return inferSchemaFromOpticQuery(properties);
@@ -77,24 +79,35 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
+            // Not yet supporting progress logging for file operations.
             return new MarkLogicFileTable(SparkSession.active(),
                 new CaseInsensitiveStringMap(properties),
                 JavaConverters.asScalaBuffer(getPaths(properties)), schema
             );
         }
 
+        final ContextSupport tempContext = new ContextSupport(properties);
+
+        // The appropriate progress logger is reset here so that when the connector is used repeatedly in an
+        // environment like PySpark, the counts start with zero on each new Spark job.
+        final long readProgressInterval = tempContext.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0);
         if (isReadDocumentsOperation(properties)) {
-            return new DocumentTable();
-        }
-        else if (isReadOperation(properties)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Creating new table for reading");
-            }
+            ReadProgressLogger.initialize(readProgressInterval, "Documents read: {}");
+            return new DocumentTable(DocumentRowSchema.SCHEMA);
+        } else if (isReadTriplesOperation(properties)) {
+            ReadProgressLogger.initialize(readProgressInterval, "Triples read: {}");
+            return new DocumentTable(TripleRowSchema.SCHEMA);
+        } else if (properties.get(Options.READ_OPTIC_QUERY) != null) {
+            ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
+            return new MarkLogicTable(schema, properties);
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
+            ReadProgressLogger.initialize(readProgressInterval, "Items read: {}");
             return new MarkLogicTable(schema, properties);
         }
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new table for writing");
-        }
+
+        final long writeProgressInterval = tempContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0);
+        String message = Util.isWriteWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
+        WriteProgressLogger.initialize(writeProgressInterval, message);
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 
@@ -113,35 +126,43 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return properties.containsKey("path") || properties.containsKey("paths");
     }
 
-    private boolean isReadOperation(Map<String, String> properties) {
-        return properties.get(Options.READ_OPTIC_QUERY) != null || isReadWithCustomCodeOperation(properties);
-    }
-
     private boolean isReadDocumentsOperation(Map<String, String> properties) {
         return properties.containsKey(Options.READ_DOCUMENTS_QUERY) ||
             properties.containsKey(Options.READ_DOCUMENTS_STRING_QUERY) ||
             properties.containsKey(Options.READ_DOCUMENTS_COLLECTIONS) ||
             properties.containsKey(Options.READ_DOCUMENTS_DIRECTORY) ||
-            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS);
+            properties.containsKey(Options.READ_DOCUMENTS_OPTIONS) ||
+            properties.containsKey(Options.READ_DOCUMENTS_URIS);
     }
 
-    private boolean isReadWithCustomCodeOperation(Map<String, String> properties) {
-        return Util.hasOption(properties, Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT);
+    private boolean isReadTriplesOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.READ_TRIPLES_GRAPHS,
+            Options.READ_TRIPLES_COLLECTIONS,
+            Options.READ_TRIPLES_QUERY,
+            Options.READ_TRIPLES_STRING_QUERY,
+            Options.READ_TRIPLES_URIS,
+            Options.READ_TRIPLES_DIRECTORY
+        );
     }
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
+            throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
         try {
             // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            return SchemaInferrer.inferSchema(columnInfoHandle.get());
+            StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+            }
+            return schema;
         } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic DSL query %s; cause: %s", query, ex.getMessage()), ex);
+            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 

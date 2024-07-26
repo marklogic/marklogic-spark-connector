@@ -86,7 +86,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
         DataFrameReader reader = newDefaultReader().option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'ViewNotFound')");
         RuntimeException ex = assertThrows(RuntimeException.class, () -> reader.load());
 
-        assertTrue(ex.getMessage().startsWith("Unable to run Optic DSL query op.fromView('Medical', 'ViewNotFound'); cause: "),
+        assertTrue(ex.getMessage().startsWith("Unable to run Optic query op.fromView('Medical', 'ViewNotFound'); cause: "),
             "If the query throws an error for any reason other than no rows being found, the error should be wrapped " +
                 "in a new error with a message containing the user's query to assist with debugging; actual " +
                 "message: " + ex.getMessage());
@@ -109,7 +109,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .option(Options.READ_NUM_PARTITIONS, "abc")
             .load();
         ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be numeric.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.numPartitions' must be numeric.", ex.getMessage());
     }
 
     @Test
@@ -119,7 +119,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.numPartitions' option must be 1 or greater.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.numPartitions' must be 1 or greater.", ex.getMessage());
     }
 
     @Test
@@ -129,7 +129,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
     @Test
@@ -138,6 +138,6 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .option(Options.READ_BATCH_SIZE, "-1")
             .load();
         ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be 0 or greater.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.batchSize' must be 0 or greater.", ex.getMessage());
     }
 }

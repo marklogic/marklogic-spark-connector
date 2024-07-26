@@ -22,8 +22,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +66,13 @@ public class ContextSupport implements Serializable {
         }
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
-            throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
+            if (result.getStatusCode() == 404) {
+                throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: 404; ensure that " +
+                    "you are attempting to connect to a MarkLogic REST API app server. See the MarkLogic documentation on " +
+                    "REST API app servers for more information."));
+            }
+            throw new ConnectorException(String.format(
+                "Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
         }
         return client;
     }
@@ -86,15 +90,12 @@ public class ContextSupport implements Serializable {
         connectionProps.put("spark.marklogic.client.authType", "digest");
         connectionProps.put("spark.marklogic.client.connectionType", "gateway");
         connectionProps.putAll(this.properties);
-
         if (optionExists(Options.CLIENT_URI)) {
-            parseClientUri(properties.get(Options.CLIENT_URI), connectionProps);
+            parseConnectionString(properties.get(Options.CLIENT_URI), connectionProps);
         }
-
         if ("true".equalsIgnoreCase(properties.get(Options.CLIENT_SSL_ENABLED))) {
             connectionProps.put("spark.marklogic.client.sslProtocol", "default");
         }
-
         return connectionProps;
     }
 
@@ -103,52 +104,34 @@ public class ContextSupport implements Serializable {
         return value != null && value.trim().length() > 0;
     }
 
-    private void parseClientUri(String clientUri, Map<String, String> connectionProps) {
-        final String errorMessage = String.format("Invalid value for %s; must be username:password@host:port", Options.CLIENT_URI);
-        String[] parts = clientUri.split("@");
-        if (parts.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-        String[] tokens = parts[0].split(":");
-        if (tokens.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-        connectionProps.put(Options.CLIENT_USERNAME, decodeValue(tokens[0], "username"));
-        connectionProps.put(Options.CLIENT_PASSWORD, decodeValue(tokens[1], "password"));
+    public final String getOptionNameForMessage(String option) {
+        return Util.getOptionNameForErrorMessage(option);
+    }
 
-        tokens = parts[1].split(":");
-        if (tokens.length != 2) {
-            throw new IllegalArgumentException(errorMessage);
-        }
-        connectionProps.put(Options.CLIENT_HOST, tokens[0]);
-        if (tokens[1].contains("/")) {
-            tokens = tokens[1].split("/");
-            connectionProps.put(Options.CLIENT_PORT, tokens[0]);
-            connectionProps.put(Options.CLIENT_DATABASE, tokens[1]);
-        } else {
-            connectionProps.put(Options.CLIENT_PORT, tokens[1]);
+    private void parseConnectionString(String value, Map<String, String> connectionProps) {
+        ConnectionString connectionString = new ConnectionString(value, getOptionNameForMessage("spark.marklogic.client.uri"));
+        connectionProps.put(Options.CLIENT_USERNAME, connectionString.getUsername());
+        connectionProps.put(Options.CLIENT_PASSWORD, connectionString.getPassword());
+        connectionProps.put(Options.CLIENT_HOST, connectionString.getHost());
+        connectionProps.put(Options.CLIENT_PORT, connectionString.getPort() + "");
+
+        String db = connectionString.getDatabase();
+        if (db != null && db.trim().length() > 0) {
+            connectionProps.put(Options.CLIENT_DATABASE, db);
         }
     }
 
-    private String decodeValue(String value, String label) {
-        try {
-            return URLDecoder.decode(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new ConnectorException(String.format("Unable to decode %s; cause: %s", label, value));
-        }
-    }
-
-    protected long getNumericOption(String optionName, long defaultValue, long minimumValue) {
+    public final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
             long value = this.getProperties().containsKey(optionName) ?
                 Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
-            if (value < minimumValue) {
-                throw new ConnectorException(String.format("Value of '%s' option must be %d or greater.", optionName, minimumValue));
+            if (value != defaultValue && value < minimumValue) {
+                throw new ConnectorException(String.format("The value of '%s' must be %d or greater.", getOptionNameForMessage(optionName), minimumValue));
             }
             return value;
         } catch (NumberFormatException ex) {
-            throw new ConnectorException(String.format("Value of '%s' option must be numeric.", optionName), ex);
+            throw new ConnectorException(String.format("The value of '%s' must be numeric.", getOptionNameForMessage(optionName)), ex);
         }
     }
 
@@ -168,6 +151,10 @@ public class ContextSupport implements Serializable {
 
     public final boolean hasOption(String... options) {
         return Util.hasOption(this.properties, options);
+    }
+
+    public final String getStringOption(String option) {
+        return hasOption(option) ? properties.get(option).trim() : null;
     }
 
     public Map<String, String> getProperties() {

@@ -1,9 +1,11 @@
 package com.marklogic.spark.reader.document;
 
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Row;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import scala.collection.JavaConverters;
@@ -123,10 +125,10 @@ class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
 
         assertEquals(10, row.getInt(5));
 
-        Map<String, String> properties = JavaConverters.mapAsJavaMap((scala.collection.immutable.Map) row.get(6));
-        assertEquals(2, properties.size());
-        assertEquals("value1", properties.get("{org:example}key1"));
-        assertEquals("value2", properties.get("key2"));
+        XmlNode properties = new XmlNode(row.getString(6), Namespace.getNamespace("ex", "org:example"),
+            PROPERTIES_NAMESPACE);
+        properties.assertElementValue("/prop:properties/ex:key1", "value1");
+        properties.assertElementValue("/prop:properties/key2", "value2");
 
         Map<String, String> metadataValues = JavaConverters.mapAsJavaMap((scala.collection.immutable.Map) row.get(7));
         assertEquals(2, metadataValues.size());

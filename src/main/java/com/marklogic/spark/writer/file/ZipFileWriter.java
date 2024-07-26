@@ -19,47 +19,84 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-class ZipFileWriter implements DataWriter<InternalRow> {
+public class ZipFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
+    private final Map<String, String> properties;
+    private final SerializableConfiguration hadoopConfiguration;
+
+    private final String zipPath;
+
+    // These can be instantiated lazily depending on which constructor is used.
+    private ContentWriter contentWriter;
     private ZipOutputStream zipOutputStream;
 
+    private int zipEntryCounter;
+
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
-        Path path = makeFilePath(properties, partitionId);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Will write to: {}", path);
-        }
-        try {
-            FileSystem fileSystem = path.getFileSystem(hadoopConfiguration.value());
-            fileSystem.setWriteChecksum(false);
-            zipOutputStream = new ZipOutputStream(fileSystem.create(path, true));
-        } catch (IOException e) {
-            throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
+        this(properties.get("path"), properties, hadoopConfiguration, partitionId, true);
+    }
+
+    public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration,
+                         int partitionId, boolean createZipFileImmediately) {
+        this.zipPath = makeFilePath(path, partitionId);
+        this.properties = properties;
+        this.hadoopConfiguration = hadoopConfiguration;
+        if (createZipFileImmediately) {
+            createZipFileAndContentWriter();
         }
     }
 
     @Override
     public void write(InternalRow row) throws IOException {
+        if (contentWriter == null) {
+            createZipFileAndContentWriter();
+        }
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        zipOutputStream.write(row.getBinary(1));
+        this.contentWriter.writeContent(row, zipOutputStream);
+        zipEntryCounter++;
+        if (hasMetadata(row)) {
+            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            this.contentWriter.writeMetadata(row, zipOutputStream);
+            zipEntryCounter++;
+        }
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         IOUtils.closeQuietly(zipOutputStream);
     }
 
     @Override
     public WriterCommitMessage commit() {
-        return null;
+        return new ZipCommitMessage(zipPath, zipEntryCounter);
     }
 
     @Override
     public void abort() {
         // No action to take.
+    }
+
+    private void createZipFileAndContentWriter() {
+        Path filePath = new Path(zipPath);
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will write to: {}", filePath);
+        }
+        this.contentWriter = new ContentWriter(properties);
+        try {
+            FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
+            fileSystem.setWriteChecksum(false);
+            zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
+        } catch (IOException e) {
+            throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
+        }
+    }
+
+    private boolean hasMetadata(InternalRow row) {
+        return !row.isNullAt(3) || !row.isNullAt(4) || !row.isNullAt(5) || !row.isNullAt(6) || !row.isNullAt(7);
     }
 
     /**
@@ -70,13 +107,16 @@ class ZipFileWriter implements DataWriter<InternalRow> {
      * Additionally, a user can arrive at that outcome if desired by using Spark to repartion the dataset based on
      * the "format" column.
      *
-     * @param properties
+     * @param path
      * @param partitionId
      * @return
      */
-    private Path makeFilePath(Map<String, String> properties, int partitionId) {
+    private String makeFilePath(String path, int partitionId) {
         final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
-        String path = String.format("%s%s%s-%d.zip", properties.get("path"), File.separator, timestamp, partitionId);
-        return new Path(path);
+        return String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
+    }
+
+    public String getZipPath() {
+        return zipPath;
     }
 }

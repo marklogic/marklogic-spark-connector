@@ -88,6 +88,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             "'schema-specific part', which is just example/123.xml.");
     }
 
+
     private Dataset<Row> readAuthorCollection() {
         return newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
@@ -125,10 +126,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             assertTrue(uri.startsWith(expectedUriPrefix), "Unexpected URI, which is expected to start with the " +
                 "absolute path of the zip file: " + uri);
 
-            long length = row.getLong(2);
-            assertTrue(length > 0, "Length wasn't set to something greater than zero: " + length);
-
-            JsonNode doc = objectMapper.readTree((byte[]) row.get(3));
+            JsonNode doc = objectMapper.readTree((byte[]) row.get(1));
             assertTrue(doc.has("CitationID"), "Unexpected JSON: " + doc);
         }
     }

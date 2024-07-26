@@ -52,6 +52,28 @@ class ParentFilter implements OpticFilter {
         this.filters = filters;
     }
 
+    /**
+     * Per the docs at https://docs.marklogic.com/op.sqlCondition, an Optic sqlCondition returns a "filterdef"
+     * instead of a boolean expression and thus cannot be used in an Optic and/or/not clause. Thus, if this filter
+     * contains a SqlConditionFilter at any depth, it is not valid and cannot be pushed down.
+     *
+     * @return
+     */
+    @Override
+    public boolean isValid() {
+        for (OpticFilter filter : filters) {
+            if (filter instanceof SqlConditionFilter) {
+                return false;
+            } else if (filter instanceof ParentFilter) {
+                boolean valid = filter.isValid();
+                if (!valid) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     @Override
     public void populateArg(ObjectNode arg) {
         ArrayNode args = arg.put("ns", "op").put("fn", this.functionName).putArray("args");

@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.MarkLogicNamespaceProvider;
 import com.marklogic.junit5.NamespaceProvider;
 import com.marklogic.junit5.XmlNode;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
 import org.junit.jupiter.api.Test;
@@ -93,32 +94,27 @@ class WriteRowsWithTransformTest extends AbstractWriteTest {
 
     @Test
     void invalidTransform() {
-        SparkException ex = assertThrows(SparkException.class,
-            () -> newWriterForSingleRow()
+        ConnectorException ex = assertThrowsConnectorException(() -> newWriterForSingleRow()
                 .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
                 .save());
 
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IOException);
-        assertTrue(cause.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
+        assertTrue(ex.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
             "The connector can't easily validate that a REST transform is valid, but the expectation is that the " +
                 "error message from the REST API will make the problem evident to the user; " +
-                "unexpected message: " + cause.getMessage());
+                "unexpected message: " + ex.getMessage());
     }
 
     @Test
     void invalidTransformParams() {
-        SparkException ex = assertThrows(SparkException.class,
+        ConnectorException ex = assertThrowsConnectorException(
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_TRANSFORM_NAME, "withParams")
                 .option(Options.WRITE_TRANSFORM_PARAMS, "param1,value1,param2")
                 .save());
 
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException);
         assertEquals(
             "The spark.marklogic.write.transformParams option must contain an equal number of parameter names and values; received: param1,value1,param2",
-            cause.getMessage()
+            ex.getMessage()
         );
     }
 }

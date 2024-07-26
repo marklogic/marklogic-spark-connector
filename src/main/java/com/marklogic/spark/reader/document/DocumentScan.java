@@ -7,14 +7,16 @@ import org.apache.spark.sql.types.StructType;
 class DocumentScan implements Scan {
 
     private final DocumentBatch batch;
+    private final DocumentContext context;
 
     DocumentScan(DocumentContext context) {
+        this.context = context;
         this.batch = new DocumentBatch(context);
     }
 
     @Override
     public StructType readSchema() {
-        return DocumentRowSchema.SCHEMA;
+        return context.getSchema();
     }
 
     @Override

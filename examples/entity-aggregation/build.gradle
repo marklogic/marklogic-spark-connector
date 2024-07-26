@@ -7,9 +7,9 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.apache.spark:spark-sql_2.12:3.4.1'
+  implementation 'org.apache.spark:spark-sql_2.12:3.4.3'
   implementation "com.marklogic:marklogic-spark-connector:2.2.0"
-  implementation "org.postgresql:postgresql:42.6.0"
+  implementation "org.postgresql:postgresql:42.6.2"
 }
 
 task importCustomers(type: JavaExec) {

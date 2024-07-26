@@ -40,7 +40,6 @@ pipeline{
     buildDiscarder logRotator(artifactDaysToKeepStr: '7', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '')
   }
   environment{
-    JAVA8_HOME_DIR="/home/builder/java/openjdk-1.8.0-262"
     JAVA11_HOME_DIR="/home/builder/java/jdk-11.0.2"
     GRADLE_DIR   =".gradle"
     DMC_USER     = credentials('MLBUILD_USER')

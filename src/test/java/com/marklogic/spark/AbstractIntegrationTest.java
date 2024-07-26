@@ -17,11 +17,13 @@ package com.marklogic.spark;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -49,6 +51,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected static final String CONNECTOR_IDENTIFIER = "marklogic";
     protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
     protected static final String DEFAULT_PERMISSIONS = "spark-user-role,read,spark-user-role,update";
+    protected static final Namespace PROPERTIES_NAMESPACE = Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property");
 
     protected static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -175,5 +178,13 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected final DocumentMetadataHandle readMetadata(String uri) {
         // This should really be in marklogic-unit-test.
         return getDatabaseClient().newDocumentManager().readMetadata(uri, new DocumentMetadataHandle());
+    }
+
+    @Override
+    protected XmlNode readDocumentProperties(String uri) {
+        // This should be fixed in marklogic-unit-test to include the properties namespace by default.
+        XmlNode props = super.readDocumentProperties(uri);
+        props.setNamespaces(new Namespace[]{PROPERTIES_NAMESPACE});
+        return props;
     }
 }

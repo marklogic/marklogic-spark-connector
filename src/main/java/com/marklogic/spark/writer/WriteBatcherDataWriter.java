@@ -18,18 +18,33 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
+import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.writer.file.ZipFileWriter;
+import com.marklogic.spark.writer.rdf.RdfRowConverter;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.unsafe.types.ByteArray;
+import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -42,93 +57,126 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final DatabaseClient databaseClient;
     private final DataMovementManager dataMovementManager;
     private final WriteBatcher writeBatcher;
+    private final BatchRetrier batchRetrier;
+    private final ZipFileWriter archiveWriter;
+
     private final DocBuilder docBuilder;
-    private final int partitionId;
-    private final long taskId;
-    private final long epochId;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
     private final AtomicReference<Throwable> writeFailure;
 
-    private final Function<InternalRow, DocBuilder.DocumentInputs> rowToDocumentFunction;
+    private final RowConverter rowConverter;
 
     // Updated as batches are processed.
-    private AtomicInteger successItemCount = new AtomicInteger(0);
-    private AtomicInteger failedItemCount = new AtomicInteger(0);
+    private final AtomicInteger successItemCount = new AtomicInteger(0);
+    private final AtomicInteger failedItemCount = new AtomicInteger(0);
 
-    WriteBatcherDataWriter(WriteContext writeContext, int partitionId, long taskId, long epochId) {
+    WriteBatcherDataWriter(WriteContext writeContext, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.writeContext = writeContext;
-        this.partitionId = partitionId;
-        this.taskId = taskId;
-        this.epochId = epochId;
         this.writeFailure = new AtomicReference<>();
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
+        this.rowConverter = determineRowConverter();
+
+        if (writeContext.isAbortOnFailure()) {
+            this.batchRetrier = null;
+            this.archiveWriter = null;
+        } else {
+            this.batchRetrier = makeBatchRetrier();
+            this.archiveWriter = writeContext.hasOption(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS) ?
+                createArchiveWriter(hadoopConfiguration, partitionId) : null;
+        }
+
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
-        addBatchListeners();
+        addBatchListeners(this.writeBatcher);
         this.dataMovementManager.startJob(this.writeBatcher);
+    }
 
-        if (writeContext.isUsingFileSchema()) {
-            rowToDocumentFunction = new FileRowFunction(writeContext);
-        } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
-            rowToDocumentFunction = new DocumentRowFunction();
-        } else {
-            rowToDocumentFunction = new ArbitraryRowFunction(writeContext);
+    @Override
+    public void write(InternalRow row) {
+        throwWriteFailureIfExists();
+        Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
+        if (document.isPresent()) {
+            this.writeBatcher.add(this.docBuilder.build(document.get()));
         }
     }
 
     @Override
-    public void write(InternalRow row) throws IOException {
-        throwWriteFailureIfExists();
-        DocBuilder.DocumentInputs inputs = rowToDocumentFunction.apply(row);
-        this.writeBatcher.add(this.docBuilder.build(inputs));
-    }
-
-    @Override
-    public WriterCommitMessage commit() throws IOException {
+    public WriterCommitMessage commit() {
+        List<DocBuilder.DocumentInputs> documentInputs = rowConverter.getRemainingDocumentInputs();
+        if (documentInputs != null) {
+            documentInputs.forEach(inputs -> {
+                DocumentWriteOperation writeOp = this.docBuilder.build(inputs);
+                this.writeBatcher.add(writeOp);
+            });
+        }
         this.writeBatcher.flushAndWait();
-        CommitMessage message = new CommitMessage(successItemCount.get(), failedItemCount.get(), partitionId, taskId, epochId);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Committing {}", message);
-        }
+
         throwWriteFailureIfExists();
-        return message;
+
+        // Need this hack so that the complete set of graphs can be reported back to MarkLogicWrite, which handles
+        // creating the graphs after all documents have been written.
+        Set<String> graphs = null;
+        if (this.rowConverter instanceof RdfRowConverter) {
+            graphs = ((RdfRowConverter) rowConverter).getGraphs();
+        }
+
+        return new CommitMessage(successItemCount.get(), failedItemCount.get(), graphs);
     }
 
     @Override
     public void abort() {
-        Util.MAIN_LOGGER.warn("Abort called; stopping job");
+        Util.MAIN_LOGGER.warn("Abort called.");
         stopJobAndRelease();
+        closeArchiveWriter();
+        Util.MAIN_LOGGER.info("Finished abort.");
     }
 
     @Override
     public void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Close called; stopping job.");
+            logger.debug("Close called.");
         }
         stopJobAndRelease();
+        closeArchiveWriter();
     }
 
-    private void addBatchListeners() {
-        this.writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
+    private void addBatchListeners(WriteBatcher writeBatcher) {
+        writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
         if (writeContext.isAbortOnFailure()) {
-            // Logging not needed here, as WriteBatcherImpl already logs this at the warning level.
-            this.writeBatcher.onBatchFailure((batch, failure) ->
-                this.writeFailure.compareAndSet(null, failure)
-            );
+            // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
+            // message from the server. This is intended to always show up and be associated with our Spark connector
+            // and also to be more brief, just capturing the main message from the server.
+            writeBatcher.onBatchFailure((batch, failure) -> {
+                Util.MAIN_LOGGER.error("Failed to write documents: {}", failure.getMessage());
+                this.writeFailure.compareAndSet(null, failure);
+            });
         } else {
-            this.writeBatcher.onBatchFailure((batch, failure) ->
-                this.failedItemCount.getAndAdd(batch.getItems().length)
-            );
+            writeBatcher.onBatchFailure(this.batchRetrier::retryBatch);
         }
     }
 
-    private synchronized void throwWriteFailureIfExists() throws IOException {
+    private RowConverter determineRowConverter() {
+        if (writeContext.isUsingFileSchema()) {
+            return new FileRowConverter(writeContext);
+        } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+            return new DocumentRowConverter(writeContext);
+        } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+            return new RdfRowConverter(writeContext);
+        }
+        return new ArbitraryRowConverter(writeContext);
+    }
+
+    private synchronized void throwWriteFailureIfExists() {
         if (writeFailure.get() != null) {
+            Throwable failure = writeFailure.get();
+            if (failure instanceof ConnectorException) {
+                throw (ConnectorException) failure;
+            }
             // Only including the message seems sufficient here, as Spark is logging the stacktrace. And the user
             // most likely only needs to know the message.
-            throw new IOException(writeFailure.get().getMessage());
+            throw new ConnectorException(failure.getMessage());
         }
     }
 
@@ -138,6 +186,62 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         if (this.databaseClient != null) {
             this.databaseClient.release();
+        }
+    }
+
+    private BatchRetrier makeBatchRetrier() {
+        return new BatchRetrier(
+            writeContext.newDocumentManager(this.databaseClient),
+            writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
+            successfulBatch -> successItemCount.getAndAdd(successfulBatch.size()),
+            (failedDoc, failure) -> {
+                Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", failedDoc.getUri(), failure.getMessage());
+                failedItemCount.incrementAndGet();
+                if (this.archiveWriter != null) {
+                    writeFailedDocumentToArchive(failedDoc);
+                }
+            }
+        );
+    }
+
+    /**
+     * Need this to be synchronized so that 2 or more WriteBatcher threads don't try to write zip entries at the same
+     * time.
+     *
+     * @param failedDoc
+     */
+    private synchronized void writeFailedDocumentToArchive(DocumentWriteOperation failedDoc) {
+        AbstractWriteHandle contentHandle = failedDoc.getContent();
+        byte[] content = ByteArray.concat(HandleAccessor.contentAsString(contentHandle).getBytes());
+
+        GenericInternalRow row = new DocumentRowBuilder(new ArrayList<>())
+            .withUri(failedDoc.getUri()).withContent(content)
+            .withMetadata((DocumentMetadataHandle) failedDoc.getMetadata())
+            .buildRow();
+
+        try {
+            archiveWriter.write(row);
+        } catch (Exception e) {
+            ConnectorException ex = new ConnectorException(String.format(
+                "Unable to write failed documents to archive file at %s; URI of failed document: %s; cause: %s",
+                archiveWriter.getZipPath(), failedDoc.getUri(), e.getMessage()
+            ), e);
+            this.writeFailure.compareAndSet(null, ex);
+            throw ex;
+        }
+    }
+
+    private ZipFileWriter createArchiveWriter(SerializableConfiguration hadoopConfiguration, int partitionId) {
+        String path = writeContext.getStringOption(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS);
+        // The zip file is expected to be created lazily - i.e. only when a document fails. This avoids creating
+        // empty archive zip files when no errors occur.
+        return new ZipFileWriter(path, writeContext.getProperties(), hadoopConfiguration, partitionId, false);
+    }
+
+    private void closeArchiveWriter() {
+        if (archiveWriter != null) {
+            Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            archiveWriter.close();
         }
     }
 }

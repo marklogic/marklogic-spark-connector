@@ -126,7 +126,9 @@ The following options control how the connector reads rows from MarkLogic via cu
 | --- | --- |
 | spark.marklogic.read.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.javascript | JavaScript code to execute. |
+| spark.marklogic.read.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.xquery | XQuery code to execute. |
+| spark.marklogic.read.xqueryFile | Local file path containing XQuery code to execute. |
 | spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
 
 If you are using Spark's streaming support with custom code, or you need to break up your custom code query into 
@@ -136,7 +138,9 @@ multiple queries, the following options can also be used to control how partitio
 | --- | --- |
 | spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
+| spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
+| spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute. |
 
 ### Read options for documents
 
@@ -156,6 +160,22 @@ The following options control how the connector reads document rows from MarkLog
 | spark.marklogic.read.documents.transformParams | Comma-delimited sequence of transform parameter names and values - e.g. `param1,value1,param2,value`. |
 | spark.marklogic.read.documents.transformParamsDelimiter | Delimiter for transform parameters; defaults to a comma. |
 
+### Read options for files
+
+As of the 2.3.0 release, the connector supports reading aggregate XML files, RDF files, and ZIP files. The following
+options control how the connector reads files:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.read.aggregates.xml.element | Required when reading aggregate XML files; defines the name of the element for selecting elements to convert into Spark rows. |
+| spark.marklogic.read.aggregates.xml.namespace | Optional namespace for the element identified by `spark.marklogic.read.aggregates.xml.element`. |
+| spark.marklogic.read.aggregates.xml.uriElement | Optional element name for constructing a URI based on an element value. |
+| spark.marklogic.read.aggregates.xml.uriNamespace | Optional namespace for the element identified by `spark.marklogic.read.aggregates.xml.uriElement`. |
+| spark.marklogic.read.files.abortOnFailure | Set to `false` so that the connector logs errors and continues processing files. Defaults to `true`. |
+| spark.marklogic.read.files.compression | Set to `gzip` or `zip` when reading compressed files. |
+| spark.marklogic.read.files.type | Set to `rdf` when reading RDF files. This option only needs to be set when the connector is otherwise unable to detect that it should perform some sort of handling for the file. |
+
+
 ## Write options
 
 See [the guide on writing](writing.md) for more information on how data is written to MarkLogic.
@@ -171,8 +191,10 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
 | spark.marklogic.write.fileRows.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
+| spark.marklogic.write.jsonRootName | As of 2.3.0, specifies a root field name when writing JSON documents based on arbitrary rows. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
-| spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
+| spark.marklogic.write.threadCount | The number of threads used across all partitions to send documents to MarkLogic; defaults to 4. |
+| spark.marklogic.write.threadCountPerPartition | New in 2.3.0; the number of threads used per partition to send documents to MarkLogic. |
 | spark.marklogic.write.transform | Name of a REST transform to apply to each document. |
 | spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 . |
 | spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option. |
@@ -191,7 +213,9 @@ The following options control how rows can be processed with custom code in Mark
 | spark.marklogic.write.batchSize | The number of rows sent in a call to MarkLogic; defaults to 1. |
 | spark.marklogic.write.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.write.javascript | JavaScript code to execute. |
+| spark.marklogic.write.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.write.xquery | XQuery code to execute. |
+| spark.marklogic.write.xqueryFile | Local file path containing XQuery code to execute. |
 | spark.marklogic.write.externalVariableName | Name of the external variable in custom code that is populated with row values; defaults to `URI`. |
 | spark.marklogic.write.externalVariableDelimiter | Delimiter used when multiple row values are sent in a single call; defaults to a comma. |
 | spark.marklogic.write.vars. | Prefix for user-defined variables to be sent to the custom code. |

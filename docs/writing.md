@@ -66,8 +66,12 @@ documents to MarkLogic:
 4. `collections` is an array of `string`s.
 5. `permissions` is a map with keys of type `string` and values that are arrays of `string`s. 
 6. `quality` is an `integer`.
-7. `properties` is a map with keys and values of type `string`.
+7. `properties` is of type `string` and must be a serialized XML string of MarkLogic properties in the `http://marklogic.com/xdmp/property` namespace.
 8. `metadataValues` is a map with keys and values of type `string`.
+
+Note that in the 2.2.0 release of the connector, the `properties` column was a map with keys and values of type 
+`string`. This approach could not handle complex XML structures and was thus fixed in the 2.3.0 release to be of 
+type `string`. 
 
 Writing rows corresponding to the "document row" schema is largely the same as writing rows of any arbitrary schema, 
 but bear in mind these differences:
@@ -104,6 +108,27 @@ the parameter values contains a comma:
     .option("spark.marklogic.write.transformParams", "my-param;has,commas")
     .option("spark.marklogic.write.transformParamsDelimiter", ";")
 
+### Setting a JSON root name
+
+As of 2.3.0, when writing JSON documents based on arbitrary rows, you can specify a root field name to be inserted 
+at the top level of the document. Each column value will then be included in an object assigned to that root field name.
+This can be useful when you want your JSON data to be more self-documenting. For example, a document representing an 
+employee may be easier to understand if it has a single root field named "Employee" with every property of the employee
+captured in an object assigned to the "Employee" field.
+
+The following will produce JSON documents that each have a single root field named "myRootField", with all column
+values in a row assigned to an object associated with "myRootField":
+
+```
+df.write.format("marklogic") \
+  .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+  .option("spark.marklogic.write.permissions", "rest-reader,read,rest-writer,update") \
+  .option("spark.marklogic.write.uriPrefix", "/write/") \
+  .option("spark.marklogic.write.jsonRootName", "myRootField") \
+  .mode("append") \
+  .save()
+```
+
 ### Controlling document URIs
 
 By default, the connector will construct a URI for each document beginning with a UUID and ending with `.json`. A 
@@ -134,6 +159,14 @@ The following template would construct URIs based on those two columns:
 
 Both columns should have values in each row in the DataFrame. If the connector encounters a row that does not have a 
 value for any column in the URI template, an error will be thrown.
+
+As of the 2.3.0 release, you can also use a [JSONPointer](https://www.rfc-editor.org/rfc/rfc6901) expression to 
+reference a value. This is often useful in conjunction with the `spark.marklogic.write.jsonRootName` option. For 
+example, if `spark.marklogic.write.jsonRootName` is set to "Employee", and you wish to include the `employee_id`
+value in a URI, you would use the following configuration:
+
+    .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{/Employee/employee_id}.json")
+
 
 If you are writing file rows that conform to 
 [Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 
@@ -211,8 +244,15 @@ The connector uses MarkLogic's
 following options can be set to adjust how the connector performs when writing data:
 
 - `spark.marklogic.write.batchSize` = the number of documents written in one call to MarkLogic; defaults to 100.
-- `spark.marklogic.write.threadCount` = the number of threads used by each partition to write documents to MarkLogic;
+- `spark.marklogic.write.threadCount` = the number of threads used across all partitions to write documents to MarkLogic;
   defaults to 4.
+- `spark.marklogic.write.threadCountPerPartition` = the number of threads to use per partition to write documents to
+MarkLogic. If set, will be used instead of `spark.marklogic.write.threadCount`. 
+
+Prior to the 2.3.0 release, `spark.marklogic.write.threadCount` configured a number of threads per partition. Based on 
+feedback, this was changed to the number of total threads used across all partitions to match what users typically 
+expect "thread count" to mean in the context of writing to MarkLogic. `spark.marklogic.write.threadCountPerPartition`
+was then added for users who do wish to configure a number of threads per Spark partition.
 
 These options are in addition to the number of partitions within the Spark DataFrame that is being written to
 MarkLogic. For each partition in the DataFrame, a separate instance of a MarkLogic batch writer is created, each
@@ -231,7 +271,7 @@ the connector can directly connect to each host in the cluster.
 
 The rule of thumb above can thus be expressed as:
 
-    Number of partitions * Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
+    Value of spark.marklogic.write.threadCount <= Number of hosts * number of app server threads
 
 ### Using a load balancer
 
@@ -316,6 +356,12 @@ spark.read.format("marklogic") \
     .mode("append") \
     .save()
 ```
+
+As of the 2.3.0 release, you can also specify a local file path containing either JavaScript or XQuery code via
+the `spark.marklogic.write.javascriptFile` and `spark.marklogic.write.xqueryFile` options. The value of the option
+must be a file path that can be resolved by the Spark environment running the connector. The file will not be loaded
+into your application's modules database. Its content will be read in and then evaluated in the same fashion as
+when specifying code via `spark.marklogic.write.javascript` or `spark.marklogic.write.xquery`.
 
 ### Processing multiple rows in a single call
 

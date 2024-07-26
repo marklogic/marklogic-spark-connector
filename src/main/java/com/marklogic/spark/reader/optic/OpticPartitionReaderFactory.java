@@ -27,10 +27,10 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
     static final long serialVersionUID = 1;
 
     private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReaderFactory.class);
-    private final ReadContext readContext;
+    private final OpticReadContext opticReadContext;
 
-    OpticPartitionReaderFactory(ReadContext readContext) {
-        this.readContext = readContext;
+    OpticPartitionReaderFactory(OpticReadContext opticReadContext) {
+        this.opticReadContext = opticReadContext;
     }
 
     @Override
@@ -38,6 +38,6 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
         if (logger.isDebugEnabled()) {
             logger.debug("Creating reader for partition: {}", partition);
         }
-        return new OpticPartitionReader(this.readContext, (PlanAnalysis.Partition) partition);
+        return new OpticPartitionReader(this.opticReadContext, (PlanAnalysis.Partition) partition);
     }
 }

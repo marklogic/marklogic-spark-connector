@@ -21,23 +21,28 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(DocumentFileWriter.class);
 
-    private final Map<String, String> properties;
     private final SerializableConfiguration hadoopConfiguration;
+    private final ContentWriter contentWriter;
+
+    private final String path;
+    private int fileCounter;
 
     DocumentFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
-        this.properties = properties;
+        this.path = properties.get("path");
         this.hadoopConfiguration = hadoopConfiguration;
+        this.contentWriter = new ContentWriter(properties);
     }
 
     @Override
     public void write(InternalRow row) throws IOException {
-        final Path path = makePath(row);
+        final Path filePath = makeFilePath(row);
         if (logger.isTraceEnabled()) {
-            logger.trace("Will write to: {}", path);
+            logger.trace("Will write to: {}", filePath);
         }
-        OutputStream outputStream = makeOutputStream(path);
+        OutputStream outputStream = makeOutputStream(filePath);
         try {
-            outputStream.write(row.getBinary(1));
+            this.contentWriter.writeContent(row, outputStream);
+            fileCounter++;
         } finally {
             IOUtils.closeQuietly(outputStream);
         }
@@ -45,7 +50,7 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        return null;
+        return new FileCommitMessage(this.path, fileCounter);
     }
 
     @Override
@@ -58,11 +63,10 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
         // Nothing to close.
     }
 
-    private Path makePath(InternalRow row) {
-        String dir = properties.get("path");
+    private Path makeFilePath(InternalRow row) {
         final String uri = row.getString(0);
-        String path = makeFilePath(uri);
-        return path.charAt(0) == '/' ? new Path(dir + path) : new Path(dir, path);
+        String filePath = makeFilePath(uri);
+        return filePath.charAt(0) == '/' ? new Path(this.path + filePath) : new Path(this.path, filePath);
     }
 
     // Protected so it can be overridden by subclass.

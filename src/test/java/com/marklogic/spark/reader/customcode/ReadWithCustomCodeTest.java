@@ -3,6 +3,7 @@ package com.marklogic.spark.reader.customcode;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.MarkLogicIOException;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameReader;
@@ -31,6 +32,16 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void evalJavaScriptFile() {
+        List<Row> rows = readRows(Options.READ_JAVASCRIPT_FILE, "src/test/resources/custom-code/my-reader.js");
+
+        assertEquals(2, rows.size());
+        assertEquals("firstValue", rows.get(0).getString(0));
+        assertEquals("secondValue", rows.get(1).getString(0));
+        verifyUriSchemaIsUsed(rows);
+    }
+
+    @Test
     void evalXQuery() {
         List<Row> rows = readRows(Options.READ_XQUERY, "(1,2,3)");
 
@@ -39,6 +50,25 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
         assertEquals("2", rows.get(1).getString(0));
         assertEquals("3", rows.get(2).getString(0));
         verifyUriSchemaIsUsed(rows);
+    }
+
+    @Test
+    void evalXQueryFile() {
+        List<Row> rows = readRows(Options.READ_XQUERY_FILE, "src/test/resources/custom-code/my-reader.xqy");
+
+        assertEquals(3, rows.size(), "Expected 3 rows; actual rows: " + rowsToString(rows));
+        assertEquals("1", rows.get(0).getString(0));
+        assertEquals("2", rows.get(1).getString(0));
+        assertEquals("3", rows.get(2).getString(0));
+        verifyUriSchemaIsUsed(rows);
+    }
+
+    @Test
+    void evalXQueryFileMissing() {
+        ConnectorException ex = assertThrowsConnectorException(
+            () -> readRows(Options.READ_XQUERY_FILE, "doesnt-exist.xqy"));
+
+        assertEquals("Cannot read from file doesnt-exist.xqy; cause: doesnt-exist.xqy was not found.", ex.getMessage());
     }
 
     @Test
@@ -108,9 +138,23 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void partitionsFromJavaScriptFile() {
+        verifyRowsAreReadFromEachForest(
+            Options.READ_PARTITIONS_JAVASCRIPT_FILE, "src/test/resources/custom-code/my-partitions.js"
+        );
+    }
+
+    @Test
     void partitionsFromXQuery() {
         verifyRowsAreReadFromEachForest(
             Options.READ_PARTITIONS_XQUERY, "xdmp:database-forests(xdmp:database())"
+        );
+    }
+
+    @Test
+    void partitionsFromXQueryFile() {
+        verifyRowsAreReadFromEachForest(
+            Options.READ_PARTITIONS_XQUERY_FILE, "src/test/resources/custom-code/my-partitions.xqy"
         );
     }
 
@@ -129,7 +173,8 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
             .load();
 
         RuntimeException ex = assertThrows(RuntimeException.class, () -> dataset.collectAsList());
-        assertEquals("Unable to retrieve partitions", ex.getMessage());
+        assertTrue(ex.getMessage().contains("Unable to retrieve partitions; cause: Local message: failed to apply resource at eval"),
+            "Unexpected error: " + ex.getMessage());
         assertTrue(ex.getCause() instanceof FailedRequestException, "Unexpected cause: " + ex.getCause());
     }
 
@@ -152,6 +197,8 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
     private List<Row> readRows(String option, String value) {
         return startRead()
             .option(option, value)
+            // Adding these only for manual inspection of logging and to ensure they don't cause errors.
+            .option(Options.READ_LOG_PROGRESS, "1")
             .load()
             .collectAsList();
     }

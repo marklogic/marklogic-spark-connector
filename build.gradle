@@ -2,7 +2,7 @@ plugins {
   id 'java-library'
   id 'net.saliman.properties' version '1.5.2'
   id 'com.github.johnrengelman.shadow' version '8.1.1'
-  id "com.marklogic.ml-gradle" version "4.6.0"
+  id "com.marklogic.ml-gradle" version "4.7.0"
   id 'maven-publish'
   id 'signing'
   id "jacoco"
@@ -10,53 +10,66 @@ plugins {
 }
 
 group 'com.marklogic'
-version '2.2.0'
+version '2.3.0.rc1'
 
 java {
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
+  // To support reading RDF files, Apache Jena is used - but that requires Java 11. If we want to do a 2.2.0 release
+  // without requiring Java 11, we'll remove the support for reading RDF files along with the Jena dependency.
+  sourceCompatibility = 11
+  targetCompatibility = 11
 }
 
 repositories {
   mavenCentral()
 }
 
+configurations {
+  // Defines all the implementation dependencies, but in such a way that they are not included as dependencies in the
+  // library's pom.xml file. This is due to the shadow jar being published instead of a jar only containing this
+  // project's classes. The shadow jar is published due to the need to relocate several packages to avoid conflicts
+  // with Spark.
+  shadowDependencies
+
+  // This approach allows for all of the dependencies to be available for compilation and for running tests.
+  compileOnly.extendsFrom(shadowDependencies)
+  testImplementation.extendsFrom(compileOnly)
+}
+
 dependencies {
-  compileOnly 'org.apache.spark:spark-sql_2.12:' + sparkVersion
-  implementation ("com.marklogic:marklogic-client-api:6.5.0") {
+  // This is compileOnly as any environment this is used in will provide the Spark dependencies itself.
+  compileOnly ('org.apache.spark:spark-sql_2.12:' + sparkVersion) {
+    // Excluded from our ETL tool for size reasons, so excluded here as well to ensure we don't need it.
+    exclude module: "rocksdbjni"
+  }
+
+  shadowDependencies ("com.marklogic:marklogic-client-api:6.6.1") {
     // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
     // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
     // So the 4 Jackson modules are excluded to allow for Spark's to be used.
-    exclude module: 'jackson-core'
-    exclude module: 'jackson-databind'
-    exclude module: 'jackson-annotations'
-    exclude module: 'jackson-dataformat-csv'
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
   }
+
+  // Required for converting JSON to XML. Using 2.14.2 to align with Spark 3.4.1.
+  shadowDependencies "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 
   // Need this so that an OkHttpClientConfigurator can be created.
-  implementation 'com.squareup.okhttp3:okhttp:4.12.0'
+  shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
 
-  // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
-  // See https://github.com/scala/scala-java8-compat for more information
-  implementation("org.scala-lang.modules:scala-java8-compat_2.12:1.0.2") {
-    // Prefer the Scala libraries used within the user's Spark runtime.
-    exclude module: "scala-library"
+  shadowDependencies ("org.apache.jena:jena-arq:4.10.0") {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  testImplementation 'org.apache.spark:spark-sql_2.12:' + sparkVersion
+  shadowDependencies "org.jdom:jdom2:2.0.6.1"
 
-  // The exclusions in these two modules ensure that we use the Jackson libraries from spark-sql when running the tests.
-  testImplementation ('com.marklogic:ml-app-deployer:4.6.0') {
-    exclude module: 'jackson-core'
-    exclude module: 'jackson-databind'
-    exclude module: 'jackson-annotations'
-    exclude module: 'jackson-dataformat-csv'
+  testImplementation ('com.marklogic:ml-app-deployer:4.7.0') {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
   }
   testImplementation ('com.marklogic:marklogic-junit5:1.4.0') {
-    exclude module: 'jackson-core'
-    exclude module: 'jackson-databind'
-    exclude module: 'jackson-annotations'
-    exclude module: 'jackson-dataformat-csv'
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
   }
 
   testImplementation "ch.qos.logback:logback-classic:1.3.14"
@@ -105,7 +118,11 @@ if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
 }
 
 shadowJar {
-  // "all" is the default; no need for that in the connector filename.
+  configurations = [project.configurations.shadowDependencies]
+
+  // "all" is the default; no need for that in the connector filename. This also results in this becoming the library
+  // artifact that is published as a dependency. That is desirable as it includes the relocated packages listed below,
+  // which a dependent would otherwise have to manage themselves.
   archiveClassifier.set("")
 
   // Spark uses an older version of OkHttp; see
@@ -119,38 +136,6 @@ task perfTest(type: JavaExec) {
   mainClass = "com.marklogic.spark.reader.PerformanceTester"
   classpath = sourceSets.test.runtimeClasspath
   args mlHost
-}
-
-task dockerBuildCache(type: Exec) {
-  description = "Creates an image named 'marklogic-spark-cache' containing a cache of the Gradle dependencies."
-  commandLine 'docker', 'build', '--no-cache', '-t', 'marklogic-spark-cache', '.'
-}
-
-task dockerTest(type: Exec) {
-  description = "Run all of the tests within a Docker environment."
-  commandLine 'docker', 'run',
-    // Allows for communicating with the MarkLogic cluster that is setup via docker-compose.yaml.
-    '--network=marklogic_spark_external_net',
-    // Map the project directory into the Docker container.
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    // Working directory for the Gradle tasks below.
-    '-w', '/root/project',
-    // Remove the container after it finishes running.
-    '--rm',
-    // Use the output of dockerBuildCache to avoid downloading all the Gradle dependencies.
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'test'
-}
-
-task dockerPerfTest(type: Exec) {
-  description = "Run PerformanceTester a Docker environment."
-  commandLine 'docker', 'run',
-    '--network=marklogic_spark_external_net',
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    '-w', '/root/project',
-    '--rm',
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'perfTest'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

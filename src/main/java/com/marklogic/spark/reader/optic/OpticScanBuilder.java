@@ -35,7 +35,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
 
     private static final Logger logger = LoggerFactory.getLogger(OpticScanBuilder.class);
 
-    private final ReadContext readContext;
+    private final OpticReadContext opticReadContext;
     private List<Filter> pushedFilters;
 
     private static final Set<Class<? extends AggregateFunc>> SUPPORTED_AGGREGATE_FUNCTIONS = new HashSet<>();
@@ -49,16 +49,16 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         SUPPORTED_AGGREGATE_FUNCTIONS.add(Sum.class);
     }
 
-    public OpticScanBuilder(ReadContext readContext) {
-        this.readContext = readContext;
+    public OpticScanBuilder(OpticReadContext opticReadContext) {
+        this.opticReadContext = opticReadContext;
     }
 
     @Override
     public Scan build() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new scan");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating new scan");
         }
-        return new OpticScan(readContext);
+        return new OpticScan(opticReadContext);
     }
 
     /**
@@ -69,7 +69,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
     @Override
     public Filter[] pushFilters(Filter[] filters) {
         pushedFilters = new ArrayList<>();
-        if (readContext.planAnalysisFoundNoRows()) {
+        if (opticReadContext.planAnalysisFoundNoRows()) {
             return filters;
         }
 
@@ -80,7 +80,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         }
         for (Filter filter : filters) {
             OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
-            if (opticFilter != null) {
+            if (opticFilter != null && opticFilter.isValid()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Pushing down filter: {}", filter);
                 }
@@ -94,7 +94,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             }
         }
 
-        readContext.pushDownFiltersIntoOpticQuery(opticFilters);
+        opticReadContext.pushDownFiltersIntoOpticQuery(opticFilters);
         return unsupportedFilters.toArray(new Filter[0]);
     }
 
@@ -108,19 +108,19 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
 
     @Override
     public boolean pushLimit(int limit) {
-        if (readContext.planAnalysisFoundNoRows()) {
+        if (opticReadContext.planAnalysisFoundNoRows()) {
             return false;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down limit: {}", limit);
         }
-        readContext.pushDownLimit(limit);
+        opticReadContext.pushDownLimit(limit);
         return true;
     }
 
     @Override
     public boolean pushTopN(SortOrder[] orders, int limit) {
-        if (readContext.planAnalysisFoundNoRows()) {
+        if (opticReadContext.planAnalysisFoundNoRows()) {
             return false;
         }
         // This will be invoked when the user calls both orderBy and limit in their Spark program. If the user only
@@ -129,7 +129,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down topN: {}; limit: {}", Arrays.asList(orders), limit);
         }
-        readContext.pushDownTopN(orders, limit);
+        opticReadContext.pushDownTopN(orders, limit);
         return true;
     }
 
@@ -138,7 +138,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         // If a single bucket exists - i.e. a single call will be made to MarkLogic - then any limit/orderBy can be
         // fully pushed down to MarkLogic. Otherwise, we also need Spark to apply the limit/orderBy to the returned rows
         // to ensure that the user receives the correct response.
-        return readContext.getBucketCount() > 1;
+        return opticReadContext.getBucketCount() > 1;
     }
 
     /**
@@ -152,7 +152,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
      */
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
-        if (readContext.planAnalysisFoundNoRows() || pushDownAggregatesIsDisabled()) {
+        if (opticReadContext.planAnalysisFoundNoRows() || pushDownAggregatesIsDisabled()) {
             return false;
         }
 
@@ -164,7 +164,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             return false;
         }
 
-        if (readContext.getBucketCount() > 1) {
+        if (opticReadContext.getBucketCount() > 1) {
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
                     describeAggregation(aggregation));
@@ -179,7 +179,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         // For the initial 2.0 release, there aren't any known unsupported aggregate functions that can be called
         // after a "groupBy". If one is detected though, the aggregation won't be pushed down as it's uncertain if
         // pushing it down would produce the correct results.
-        if (readContext.planAnalysisFoundNoRows() || hasUnsupportedAggregateFunction(aggregation)) {
+        if (opticReadContext.planAnalysisFoundNoRows() || hasUnsupportedAggregateFunction(aggregation)) {
             return false;
         }
 
@@ -191,16 +191,16 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down aggregation: {}", describeAggregation(aggregation));
         }
-        readContext.pushDownAggregation(aggregation);
+        opticReadContext.pushDownAggregation(aggregation);
         return true;
     }
 
     @Override
     public void pruneColumns(StructType requiredSchema) {
-        if (readContext.planAnalysisFoundNoRows()) {
+        if (opticReadContext.planAnalysisFoundNoRows()) {
             return;
         }
-        if (requiredSchema.equals(readContext.getSchema())) {
+        if (requiredSchema.equals(opticReadContext.getSchema())) {
             if (logger.isDebugEnabled()) {
                 logger.debug("The schema to push down is equal to the existing schema, so not pushing it down.");
             }
@@ -209,7 +209,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             if (logger.isDebugEnabled()) {
                 logger.debug("Pushing down required schema: {}", requiredSchema.json());
             }
-            readContext.pushDownRequiredSchema(requiredSchema);
+            opticReadContext.pushDownRequiredSchema(requiredSchema);
         }
     }
 
@@ -226,6 +226,6 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
     }
 
     private boolean pushDownAggregatesIsDisabled() {
-        return "false".equalsIgnoreCase(readContext.getProperties().get(Options.READ_PUSH_DOWN_AGGREGATES));
+        return "false".equalsIgnoreCase(opticReadContext.getProperties().get(Options.READ_PUSH_DOWN_AGGREGATES));
     }
 }

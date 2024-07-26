@@ -83,7 +83,7 @@ public abstract class SchemaInferrer {
                 }
                 schema = schema.add(makeColumnName(column), determineSparkType(column), isColumnNullable(column));
             } catch (JsonProcessingException e) {
-                throw new ConnectorException(String.format("Unable to parse JSON: %s; cause: %s", columnInfo, e.getMessage()), e);
+                throw new ConnectorException(String.format("Unable to parse schema JSON: %s; cause: %s", columnInfo, e.getMessage()), e);
             }
         }
         return schema;

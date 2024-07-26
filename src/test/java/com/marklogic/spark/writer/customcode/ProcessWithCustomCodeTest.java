@@ -17,6 +17,25 @@ import static org.junit.jupiter.api.Assertions.*;
 class ProcessWithCustomCodeTest extends AbstractWriteTest {
 
     @Test
+    void logProgressTest() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_XQUERY, "for $i in 1 to 100 return $i")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            // With "uneven" numbers like this, the user will still see 5 progress entries, but the counts won't even -
+            // they'll be 24, 40, 64, 80, and 100.
+            .option(Options.WRITE_BATCH_SIZE, 8)
+            .option(Options.WRITE_LOG_PROGRESS, 20)
+            .option(Options.WRITE_JAVASCRIPT, "var URI; console.log('Nothing to do here.')")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertTrue(true, "No assertion needed, this test is only for manual inspection of the progress log entries.");
+    }
+
+    @Test
     void invokeJavaScript() {
         newWriterWithDefaultConfig("three-uris.csv", 2)
             .option(Options.WRITE_INVOKE, "/processUri.sjs")
@@ -32,6 +51,15 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
             .option(Options.WRITE_JAVASCRIPT, "declareUpdate(); var URI; " +
                 "xdmp.documentInsert(URI + '.json', {\"hello\":\"world\"}, " +
                 "{\"permissions\": [xdmp.permission(\"spark-user-role\", \"read\"), xdmp.permission(\"spark-user-role\", \"update\")]});")
+            .save();
+
+        verifyThreeJsonDocumentsWereWritten();
+    }
+
+    @Test
+    void evalJavaScriptFile() {
+        newWriterWithDefaultConfig("three-uris.csv", 2)
+            .option(Options.WRITE_JAVASCRIPT_FILE, "src/test/resources/custom-code/my-writer.js")
             .save();
 
         verifyThreeJsonDocumentsWereWritten();
@@ -55,6 +83,15 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
                 "(xdmp:permission(\"spark-user-role\", \"read\"),\n" +
                 "xdmp:permission(\"spark-user-role\", \"update\")\n" +
                 "));")
+            .save();
+
+        verifyThreeXmlDocumentsWereWritten();
+    }
+
+    @Test
+    void evalXQueryFile() {
+        newWriterWithDefaultConfig("three-uris.csv", 1)
+            .option(Options.WRITE_XQUERY_FILE, "src/test/resources/custom-code/my-writer.xqy")
             .save();
 
         verifyThreeXmlDocumentsWereWritten();

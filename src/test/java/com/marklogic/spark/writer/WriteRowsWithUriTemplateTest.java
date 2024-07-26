@@ -15,6 +15,7 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
 import org.junit.jupiter.api.Test;
@@ -72,12 +73,12 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
 
         Throwable cause = getCauseFromWriterException(ex);
         assertTrue(cause instanceof RuntimeException, "Unexpected cause: " + cause);
-        final String expectedMessage = "Did not find column 'doesntExist' in row: " +
+        final String expectedMessage = "Expression 'doesntExist' did not resolve to a value in row: " +
             "{\"id\":\"1\",\"content\":\"hello world\"," +
             "\"systemStart\":\"2014-04-03T11:00:00\",\"systemEnd\":\"2014-04-03T16:00:00\"," +
             "\"validStart\":\"2014-04-03T11:00:00\",\"validEnd\":\"2014-04-03T16:00:00\"," +
             "\"columnWithOnlyWhitespace\":\"   \"}; " +
-            "column is required by URI template: /test/{id}/{doesntExist}.json";
+            "expression is required by URI template: /test/{id}/{doesntExist}.json";
 
         assertEquals(expectedMessage, cause.getMessage(), "The entire JSON row is being included in the error " +
             "message so that the user is able to figure out what a column they chose in the URI template isn't " +
@@ -100,15 +101,11 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
     }
 
     private void verifyTemplateIsInvalid(String uriTemplate, String expectedMessage) {
-        SparkException ex = assertThrows(
-            SparkException.class,
+        ConnectorException ex = assertThrowsConnectorException(
             () -> newWriter().option(Options.WRITE_URI_TEMPLATE, uriTemplate).save()
         );
 
-        Throwable cause = getCauseFromWriterException(ex);
-        assertTrue(cause instanceof IllegalArgumentException, "Unexpected cause: " + cause);
-
-        String message = cause.getMessage();
+        String message = ex.getMessage();
         expectedMessage = "Invalid value for " + Options.WRITE_URI_TEMPLATE + ": " + uriTemplate + "; " + expectedMessage;
         assertEquals(expectedMessage, message, "Unexpected error message: " + message);
     }

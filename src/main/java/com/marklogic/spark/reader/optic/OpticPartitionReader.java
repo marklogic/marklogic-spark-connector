@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.ReadProgressLogger;
 import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -33,7 +34,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReader.class);
 
-    private final ReadContext readContext;
+    private final OpticReadContext opticReadContext;
     private final PlanAnalysis.Partition partition;
     private final RowManager rowManager;
 
@@ -46,20 +47,23 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     // Used solely for logging metrics
     private long totalRowCount;
     private long totalDuration;
+    private long progressCounter;
+    private final long batchSize;
 
     // Used solely for testing purposes; is never expected to be used in production. Intended to provide a way for
     // a test to get the count of rows returned from MarkLogic, which is important for ensuring that pushdown operations
     // are working correctly.
     static Consumer<Long> totalRowCountListener;
 
-    OpticPartitionReader(ReadContext readContext, PlanAnalysis.Partition partition) {
-        this.readContext = readContext;
+    OpticPartitionReader(OpticReadContext opticReadContext, PlanAnalysis.Partition partition) {
+        this.opticReadContext = opticReadContext;
+        this.batchSize = opticReadContext.getBatchSize();
         this.partition = partition;
-        this.rowManager = readContext.connectToMarkLogic().newRowManager();
+        this.rowManager = opticReadContext.connectToMarkLogic().newRowManager();
         // Nested values won't work with the JacksonParser used by JsonRowDeserializer, so we ask for type info to not
         // be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
-        this.jsonRowDeserializer = new JsonRowDeserializer(readContext.getSchema());
+        this.jsonRowDeserializer = new JsonRowDeserializer(opticReadContext.getSchema());
     }
 
     @Override
@@ -86,7 +90,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
             PlanAnalysis.Bucket bucket = partition.getBuckets().get(nextBucketIndex);
             nextBucketIndex++;
             long start = System.currentTimeMillis();
-            this.rowIterator = readContext.readRowsInBucket(rowManager, partition, bucket);
+            this.rowIterator = opticReadContext.readRowsInBucket(rowManager, partition, bucket);
             if (logger.isDebugEnabled()) {
                 this.totalDuration += System.currentTimeMillis() - start;
             }
@@ -101,6 +105,11 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     public InternalRow get() {
         this.currentBucketRowCount++;
         this.totalRowCount++;
+        this.progressCounter++;
+        if (this.progressCounter >= this.batchSize) {
+            ReadProgressLogger.logProgressIfNecessary(this.progressCounter);
+            this.progressCounter = 0;
+        }
         JsonNode row = rowIterator.next();
         return this.jsonRowDeserializer.deserializeJson(row.toString());
     }

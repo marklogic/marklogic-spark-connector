@@ -16,7 +16,7 @@
 package com.marklogic.spark;
 
 import com.marklogic.spark.reader.optic.OpticScanBuilder;
-import com.marklogic.spark.reader.optic.ReadContext;
+import com.marklogic.spark.reader.optic.OpticReadContext;
 import com.marklogic.spark.reader.customcode.CustomCodeScanBuilder;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;
@@ -75,7 +75,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
      */
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
-        if (Util.hasOption(readProperties, Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY)) {
+        if (Util.isReadWithCustomCodeOperation(readProperties)) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Will read rows via custom code");
             }
@@ -91,7 +91,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
         // This is needed by the Optic partition reader; capturing it in the ReadContext so that the reader does not
         // have a dependency on an active Spark session, which makes certain kinds of tests easier.
         int defaultMinPartitions = SparkSession.active().sparkContext().defaultMinPartitions();
-        return new OpticScanBuilder(new ReadContext(readProperties, readSchema, defaultMinPartitions));
+        return new OpticScanBuilder(new OpticReadContext(readProperties, readSchema, defaultMinPartitions));
     }
 
     @Override
@@ -107,7 +107,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
     /**
      * @deprecated Marked as deprecated in the Table interface.
      */
-    @SuppressWarnings("java:S1133")
+    @SuppressWarnings({"java:S1133", "java:S6355"})
     @Deprecated
     @Override
     public StructType schema() {

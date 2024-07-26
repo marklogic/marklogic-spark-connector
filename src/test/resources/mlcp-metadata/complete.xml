@@ -1,0 +1,46 @@
+<com.marklogic.contentpump.DocumentMetadata>
+  <format>
+    <name>xml</name>
+  </format>
+  <collectionsList class="vector">
+    <string>collection1</string>
+    <string>collection2</string>
+  </collectionsList>
+  <permissionsList class="vector">
+    <com.marklogic.xcc.ContentPermission>
+      <capability>
+        <name>read</name>
+        <symbol>R</symbol>
+      </capability>
+      <role>spark-user-role</role>
+      <roleId>3908672739498265499</roleId>
+    </com.marklogic.xcc.ContentPermission>
+    <com.marklogic.xcc.ContentPermission>
+      <capability reference="../../com.marklogic.xcc.ContentPermission/capability"/>
+      <role>qconsole-user</role>
+      <roleId>16675984334178111809</roleId>
+    </com.marklogic.xcc.ContentPermission>
+    <com.marklogic.xcc.ContentPermission>
+      <capability>
+        <name>update</name>
+        <symbol>U</symbol>
+      </capability>
+      <role>spark-user-role</role>
+      <roleId>3908672739498265499</roleId>
+    </com.marklogic.xcc.ContentPermission>
+  </permissionsList>
+  <permString>&lt;perms&gt;&lt;sec:permission xmlns:sec=&quot;http://marklogic.com/xdmp/security&quot;&gt;&lt;sec:capability&gt;read&lt;/sec:capability&gt;&lt;sec:role-id&gt;3908672739498265499&lt;/sec:role-id&gt;&lt;/sec:permission&gt;&lt;sec:permission xmlns:sec=&quot;http://marklogic.com/xdmp/security&quot;&gt;&lt;sec:capability&gt;read&lt;/sec:capability&gt;&lt;sec:role-id&gt;16675984334178111809&lt;/sec:role-id&gt;&lt;/sec:permission&gt;&lt;sec:permission xmlns:sec=&quot;http://marklogic.com/xdmp/security&quot;&gt;&lt;sec:capability&gt;update&lt;/sec:capability&gt;&lt;sec:role-id&gt;3908672739498265499&lt;/sec:role-id&gt;&lt;/sec:permission&gt;&lt;/perms&gt;</permString>
+  <quality>10</quality>
+  <meta>
+    <entry>
+      <string>meta2</string>
+      <string>value2</string>
+    </entry>
+    <entry>
+      <string>meta1</string>
+      <string>value1</string>
+    </entry>
+  </meta>
+  <properties>&lt;prop:properties xmlns:prop=&quot;http://marklogic.com/xdmp/property&quot;&gt;&lt;key2 xsi:type=&quot;xs:string&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;value2&lt;/key2&gt;&lt;key1 xsi:type=&quot;xs:string&quot; xmlns=&quot;org:example&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;&gt;value1&lt;/key1&gt;&lt;/prop:properties&gt;</properties>
+  <isNakedProps>false</isNakedProps>
+</com.marklogic.contentpump.DocumentMetadata>

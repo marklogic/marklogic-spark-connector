@@ -16,6 +16,7 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
@@ -134,6 +135,22 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
         verifyClientUriIsInvalid("user:password@host:port:something");
     }
 
+    @Test
+    void nonNumericPort() {
+        ConnectorException ex = assertThrows(ConnectorException.class,
+            () -> readRowsWithClientUri("user:password@host:nonNumericPort"));
+        assertEquals("Invalid value for spark.marklogic.client.uri; port must be numeric, but was 'nonNumericPort'",
+            ex.getMessage());
+    }
+
+    @Test
+    void nonNumericPortWithDatabase() {
+        ConnectorException ex = assertThrows(ConnectorException.class,
+            () -> readRowsWithClientUri("user:password@host:nonNumericPort/database"));
+        assertEquals("Invalid value for spark.marklogic.client.uri; port must be numeric, but was 'nonNumericPort'",
+            ex.getMessage());
+    }
+
     private List<Row> readRowsWithClientUri(String clientUri) {
         return newSparkSession()
             .read()
@@ -145,13 +162,10 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
     }
 
     private void verifyClientUriIsInvalid(String clientUri) {
-        IllegalArgumentException ex = assertThrows(
-            IllegalArgumentException.class,
-            () -> readRowsWithClientUri(clientUri)
-        );
-
+        ConnectorException ex = assertThrows(ConnectorException.class,
+            () -> readRowsWithClientUri(clientUri));
         assertEquals(
-            "Invalid value for spark.marklogic.client.uri; must be username:password@host:port",
+            "Invalid value for spark.marklogic.client.uri; must be username:password@host:port/optionalDatabaseName",
             ex.getMessage()
         );
     }

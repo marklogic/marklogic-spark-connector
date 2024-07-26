@@ -6,6 +6,7 @@ import com.marklogic.client.MarkLogicIOException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.AbstractWriteTest;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
@@ -18,7 +19,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class ReadDocumentRowsTest extends AbstractIntegrationTest {
+class ReadDocumentRowsTest extends AbstractWriteTest {
 
     @Test
     void readByCollection() {
@@ -35,6 +36,20 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
         // Verify just a couple fields to ensure the JSON object is correct.
         assertEquals(4, doc.get("CitationID").asInt());
         assertEquals("Vivianne", doc.get("ForeName").asText());
+    }
+
+    @Test
+    void logProgress() {
+        newWriter().save();
+
+        Dataset<Row> rows = startRead()
+            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "write-test")
+            .option(Options.READ_BATCH_SIZE, 10)
+            .option(Options.READ_LOG_PROGRESS, 50)
+            .load();
+
+        assertEquals(200, rows.count());
     }
 
     @Test
@@ -66,7 +81,7 @@ class ReadDocumentRowsTest extends AbstractIntegrationTest {
             .load();
 
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
-        assertEquals("Value of 'spark.marklogic.read.batchSize' option must be numeric.", ex.getMessage());
+        assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
     @Test

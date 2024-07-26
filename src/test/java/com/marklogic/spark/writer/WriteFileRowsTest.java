@@ -1,12 +1,12 @@
 package com.marklogic.spark.writer;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.JSONDocumentManager;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
@@ -16,7 +16,6 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import java.io.File;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -89,28 +88,26 @@ class WriteFileRowsTest extends AbstractWriteTest {
 
     @Test
     void uriTemplate() {
-        File f = new File("src/test/resources/mixed-files/hello.json");
-
         Dataset<Row> dataset = newSparkSession()
             .read()
             .format("binaryFile")
-            .load("src/test/resources/mixed-files/*.json");
+            .load("src/test/resources/mixed-files/*.xml");
 
         Row row = dataset.collectAsList().get(0);
         // For as-yet unknown reasons, the timestamp in an InternalRow - which the connector writer receives - will
         // have 000 appended to it, thus capturing microseconds. But a Row will have the same value that the JVM
         // returns when getting lastModified for a File. This does not seem like an issue for a user, we just need to
         // account for it in our test.
-        final String expectedURI = String.format("/testfile/%d000/%d.json", row.getTimestamp(1).getTime(), row.getLong(2));
+        final String expectedURI = String.format("/testfile/%d000/%d.xml", row.getTimestamp(1).getTime(), row.getLong(2));
 
         defaultWrite(dataset.write()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_COLLECTIONS, "template-test")
-            .option(Options.WRITE_URI_TEMPLATE, "/testfile/{modificationTime}/{length}.json")
+            .option(Options.WRITE_URI_TEMPLATE, "/testfile/{modificationTime}/{length}.xml")
         );
 
-        JsonNode doc = readJsonDocument(expectedURI);
-        assertEquals("world", doc.get("hello").asText());
+        XmlNode doc = readXmlDocument(expectedURI);
+        doc.assertElementValue("/hello", "world");
     }
 
     @Test
@@ -151,7 +148,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
         SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertTrue(ex.getCause() instanceof ConnectorException);
         ConnectorException ce = (ConnectorException) ex.getCause();
-        assertEquals("Invalid value for option " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +
+        assertEquals("Invalid value for " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +
             "must be one of 'JSON', 'XML', or 'TEXT'.", ce.getMessage());
     }
 

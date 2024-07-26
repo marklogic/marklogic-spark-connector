@@ -27,15 +27,15 @@ class OpticScan implements Scan {
 
     private static final Logger logger = LoggerFactory.getLogger(OpticScan.class);
 
-    private ReadContext readContext;
+    private OpticReadContext opticReadContext;
 
-    OpticScan(ReadContext readContext) {
-        this.readContext = readContext;
+    OpticScan(OpticReadContext opticReadContext) {
+        this.opticReadContext = opticReadContext;
     }
 
     @Override
     public StructType readSchema() {
-        return readContext.getSchema();
+        return opticReadContext.getSchema();
     }
 
     @Override
@@ -45,14 +45,14 @@ class OpticScan implements Scan {
 
     @Override
     public Batch toBatch() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating new batch");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Creating new batch");
         }
-        return new OpticBatch(readContext);
+        return new OpticBatch(opticReadContext);
     }
 
     @Override
     public MicroBatchStream toMicroBatchStream(String checkpointLocation) {
-        return new OpticMicroBatchStream(readContext);
+        return new OpticMicroBatchStream(opticReadContext);
     }
 }

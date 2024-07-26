@@ -1,5 +1,7 @@
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.read.Batch;
@@ -22,13 +24,17 @@ class FileBatch implements Batch {
 
     @Override
     public InputPartition[] planInputPartitions() {
-        // TBD For gzipped files, we may want a different approach that isn't one partition per file.
-        String[] files = fileIndex.inputFiles();
-        InputPartition[] result = new InputPartition[files.length];
-        for (int i = 0; i < result.length; i++) {
-            result[i] = new FilePartition(files[i]);
+        String[] inputFiles = fileIndex.inputFiles();
+        int numPartitions = inputFiles.length;
+        if (properties.containsKey(Options.READ_NUM_PARTITIONS)) {
+            String value = properties.get(Options.READ_NUM_PARTITIONS);
+            try {
+                numPartitions = Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new ConnectorException(String.format("Invalid value for number of partitions: %s", value));
+            }
         }
-        return result;
+        return FileUtil.makeFilePartitions(inputFiles, numPartitions);
     }
 
     @Override
@@ -36,6 +42,7 @@ class FileBatch implements Batch {
         // This config is needed to resolve file paths. This is our last chance to access it and provide a serialized
         // version to the factory, which must be serializable itself.
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
-        return new FilePartitionReaderFactory(properties, new SerializableConfiguration(config));
+        FileContext fileContext = new FileContext(properties, new SerializableConfiguration(config));
+        return new FilePartitionReaderFactory(fileContext);
     }
 }

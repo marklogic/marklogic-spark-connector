@@ -29,12 +29,16 @@ public abstract class Options {
 
     public static final String READ_INVOKE = "spark.marklogic.read.invoke";
     public static final String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
+    public static final String READ_JAVASCRIPT_FILE = "spark.marklogic.read.javascriptFile";
     public static final String READ_XQUERY = "spark.marklogic.read.xquery";
+    public static final String READ_XQUERY_FILE = "spark.marklogic.read.xqueryFile";
     public static final String READ_VARS_PREFIX = "spark.marklogic.read.vars.";
 
     public static final String READ_PARTITIONS_INVOKE = "spark.marklogic.read.partitions.invoke";
     public static final String READ_PARTITIONS_JAVASCRIPT = "spark.marklogic.read.partitions.javascript";
+    public static final String READ_PARTITIONS_JAVASCRIPT_FILE = "spark.marklogic.read.partitions.javascriptFile";
     public static final String READ_PARTITIONS_XQUERY = "spark.marklogic.read.partitions.xquery";
+    public static final String READ_PARTITIONS_XQUERY_FILE = "spark.marklogic.read.partitions.xqueryFile";
 
     public static final String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     public static final String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
@@ -55,8 +59,28 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM = "spark.marklogic.read.documents.transform";
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS = "spark.marklogic.read.documents.transformParams";
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
+    public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    public static final String READ_TRIPLES_GRAPHS = "spark.marklogic.read.triples.graphs";
+    public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
+    public static final String READ_TRIPLES_QUERY = "spark.marklogic.read.triples.query";
+    public static final String READ_TRIPLES_STRING_QUERY = "spark.marklogic.read.triples.stringQuery";
+    public static final String READ_TRIPLES_URIS = "spark.marklogic.read.triples.uris";
+    public static final String READ_TRIPLES_DIRECTORY = "spark.marklogic.read.triples.directory";
+    public static final String READ_TRIPLES_OPTIONS = "spark.marklogic.read.triples.options";
+    public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
+    public static final String READ_TRIPLES_BASE_IRI = "spark.marklogic.read.triples.baseIri";
+
+    // For logging progress when reading documents, rows, or items via custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
+    public static final String READ_LOG_PROGRESS = "spark.marklogic.read.logProgress";
+
+    public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
+    public static final String READ_FILES_ENCODING = "spark.marklogic.read.files.encoding";
+    public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
+    public static final String READ_ARCHIVES_CATEGORIES = "spark.marklogic.read.archives.categories";
 
     // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.
     // "xml" is included in the name in anticipation of eventually supporting "aggregate JSON" - i.e. an array of N
@@ -68,19 +92,29 @@ public abstract class Options {
 
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
+    public static final String WRITE_THREAD_COUNT_PER_PARTITION = "spark.marklogic.write.threadCountPerPartition";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
+
+    // For logging progress when writing documents or processing with custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
+    public static final String WRITE_LOG_PROGRESS = "spark.marklogic.write.logProgress";
 
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
     public static final String WRITE_JAVASCRIPT = "spark.marklogic.write.javascript";
+    public static final String WRITE_JAVASCRIPT_FILE = "spark.marklogic.write.javascriptFile";
     public static final String WRITE_XQUERY = "spark.marklogic.write.xquery";
+    public static final String WRITE_XQUERY_FILE = "spark.marklogic.write.xqueryFile";
     public static final String WRITE_EXTERNAL_VARIABLE_NAME = "spark.marklogic.write.externalVariableName";
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
     // For writing documents to MarkLogic.
+    public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     public static final String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
+    public static final String WRITE_JSON_ROOT_NAME = "spark.marklogic.write.jsonRootName";
     public static final String WRITE_TEMPORAL_COLLECTION = "spark.marklogic.write.temporalCollection";
     public static final String WRITE_URI_PREFIX = "spark.marklogic.write.uriPrefix";
     public static final String WRITE_URI_REPLACE = "spark.marklogic.write.uriReplace";
@@ -89,12 +123,44 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
+    public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
+    public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
 
-    // For writing rows adhering to {@code FileRowSchema} to MarkLogic.
+    // For serializing a row into JSON. Intent is to allow for other constants defined in the Spark
+    // JSONOptions.scala class to be used after "spark.marklogic.write.json."
+    // Example - "spark.marklogic.write.json.ignoreNullFields=false.
+    public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
+
+
+    // For writing RDF
+    public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
+    public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
+
+    /**
+     * For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
+     *
+     * @deprecated since 2.3.0
+     */
+    @Deprecated(since = "2.3.0", forRemoval = true)
+    // We don't need Sonar to remind us of this deprecation.
+    @SuppressWarnings("java:S1133")
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 
-    // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.
+    // Forces a document type when writing rows corresponding to our document row schema. Used when the URI extension
+    // does not result in MarkLogic choosing the correct document type.
+    public static final String WRITE_DOCUMENT_TYPE = "spark.marklogic.write.documentType";
+
+    // For writing rows adhering to {@code DocumentRowSchema} or {@code TripleRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
+
+    // Applies to XML and JSON documents.
+    public static final String WRITE_FILES_PRETTY_PRINT = "spark.marklogic.write.files.prettyPrint";
+
+    // Applies to writing documents as files, gzipped files, and as entries in zips/archives.
+    public static final String WRITE_FILES_ENCODING = "spark.marklogic.write.files.encoding";
+
+    public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
+    public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
     private Options() {
     }
