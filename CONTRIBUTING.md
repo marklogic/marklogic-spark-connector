@@ -116,7 +116,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-2.3.0.rc1.jar
+    pyspark --jars build/libs/marklogic-spark-connector-2.3.0.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -192,7 +192,7 @@ The Spark master GUI is at <http://localhost:8080>. You can use this to view det
 
 Now that you have a Spark cluster running, you just need to tell PySpark to connect to it:
 
-    pyspark --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3.0.rc1.jar
+    pyspark --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3.0.jar
 
 You can then run the same commands as shown in the PySpark section above. The Spark master GUI will allow you to 
 examine details of each of the commands that you run.
@@ -211,12 +211,12 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3.0.rc1.jar src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3.0.jar src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
 to `src/main/java`. Then run `./gradlew clean shadowJar` to rebuild the connector jar. Then run the following:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.3.0.rc1.jar
+    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.3.0.jar
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 
 
