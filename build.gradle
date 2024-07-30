@@ -21,6 +21,9 @@ java {
 
 repositories {
   mavenCentral()
+  maven {
+    url "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
+  }
 }
 
 configurations {
@@ -42,7 +45,7 @@ dependencies {
     exclude module: "rocksdbjni"
   }
 
-  shadowDependencies ("com.marklogic:marklogic-client-api:6.6.1") {
+  shadowDependencies ("com.marklogic:marklogic-client-api:7.0-SNAPSHOT") {
     // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
     // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
     // So the 4 Jackson modules are excluded to allow for Spark's to be used.
@@ -63,13 +66,20 @@ dependencies {
 
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 
-  testImplementation ('com.marklogic:ml-app-deployer:4.7.0') {
+  testImplementation ('com.marklogic:ml-app-deployer:4.8.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared above.
+    exclude module: "marklogic-client-api"
   }
+
   testImplementation ('com.marklogic:marklogic-junit5:1.4.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared above.
+    exclude module: "marklogic-client-api"
   }
 
   testImplementation "ch.qos.logback:logback-classic:1.3.14"
