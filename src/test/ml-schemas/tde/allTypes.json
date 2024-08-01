@@ -109,6 +109,13 @@
             "nullable": true
           },
           {
+            "name": "collatedStringValue",
+            "scalarType": "string",
+            "collation": "http://marklogic.com/collation/",
+            "val": "collatedStringValue",
+            "nullable": true
+          },
+          {
             "name": "anyURIValue",
             "scalarType": "anyURI",
             "val": "anyURIValue",

@@ -54,6 +54,7 @@ public abstract class SchemaInferrer {
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("yearMonthDuration", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("dayTimeDuration", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("string", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("collatedString", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("anyUri", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("point", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("boolean", DataTypes.BooleanType);
