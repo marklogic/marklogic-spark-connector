@@ -18,6 +18,7 @@
       "yearMonthDurationValue": "P2Y6M",
       "dayTimeDurationValue": "PT1M",
       "stringValue": "hello",
+      "collatedStringValue": "hello collated",
       "anyURIValue": "http://example.org/",
       "pointValue": "50 50",
       "longLatPointValue": "50 50",

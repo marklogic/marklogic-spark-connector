@@ -73,25 +73,26 @@ class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals("P2Y6M", row.getString(14)); // yearMonthDuration
         assertEquals("PT1M", row.getString(15)); // dayTimeDuration
         assertEquals("hello", row.getString(16));
-        assertEquals("http://example.org/", row.getString(17)); // anyURI
-        assertEquals("50,50", row.getString(18)); // point
-        assertEquals("50,50", row.getString(19)); // longLatPoint
-        assertTrue(row.getBoolean(20));
-        assertEquals("c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l", row.getString(21)); // base64Binary
-        assertEquals("499602D2", row.getString(22)); // hexBinary
-        assertEquals("1", row.getString(23), "Because MarkLogic defines the type of 'byte' as 'none', the Spark " +
+        assertEquals("hello collated", row.getString(17));
+        assertEquals("http://example.org/", row.getString(18)); // anyURI
+        assertEquals("50,50", row.getString(19)); // point
+        assertEquals("50,50", row.getString(20)); // longLatPoint
+        assertTrue(row.getBoolean(21));
+        assertEquals("c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l", row.getString(22)); // base64Binary
+        assertEquals("499602D2", row.getString(23)); // hexBinary
+        assertEquals("1", row.getString(24), "Because MarkLogic defines the type of 'byte' as 'none', the Spark " +
             "connector treats it as a string."); // byte
-        assertEquals("PT1M", row.getString(24)); // duration
-        assertEquals("--04-18", row.getString(25)); // gMonthDay
-        assertEquals(1, row.getInt(26));
-        assertEquals(-1, row.getInt(27)); // negativeInteger
-        assertEquals(11, row.getInt(28)); // nonNegativeInteger
-        assertEquals(-11, row.getInt(29)); // nonPositiveInteger
-        assertEquals(20, row.getInt(30)); // positiveInteger
-        assertEquals(7, row.getInt(31)); // short
-        assertEquals(4, row.getInt(32)); // unsignedByte
-        assertEquals(8, row.getInt(33)); // unsignedShort
-        assertEquals("http://example.org/", row.getString(34)); // IRI
+        assertEquals("PT1M", row.getString(25)); // duration
+        assertEquals("--04-18", row.getString(26)); // gMonthDay
+        assertEquals(1, row.getInt(27));
+        assertEquals(-1, row.getInt(28)); // negativeInteger
+        assertEquals(11, row.getInt(29)); // nonNegativeInteger
+        assertEquals(-11, row.getInt(30)); // nonPositiveInteger
+        assertEquals(20, row.getInt(31)); // positiveInteger
+        assertEquals(7, row.getInt(32)); // short
+        assertEquals(4, row.getInt(33)); // unsignedByte
+        assertEquals(8, row.getInt(34)); // unsignedShort
+        assertEquals("http://example.org/", row.getString(35)); // IRI
     }
 
     @Test
@@ -106,9 +107,9 @@ class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals(1, rows.size());
 
         Row row = rows.get(0);
-        assertEquals(35, row.size(), "Expecting all 35 columns to still exist, even though all but one have a null value");
+        assertEquals(36, row.size(), "Expecting all 36 columns to still exist, even though all but one have a null value");
         assertEquals(2, row.getInt(0));
-        for (int i = 1; i < 35; i++) {
+        for (int i = 1; i < 36; i++) {
             assertNull(row.get(i));
         }
     }

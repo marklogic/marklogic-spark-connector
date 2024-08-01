@@ -36,7 +36,7 @@ class InferSchemaTest extends AbstractIntegrationTest {
         String columnInfoResponse = readClasspathFile("allTypes-columnInfo-response.txt");
         StructType schema = SchemaInferrer.inferSchema(columnInfoResponse);
 
-        assertEquals(35, schema.size(), "The TDE has 35 columns, and the hidden 'rowid' column that's returned " +
+        assertEquals(36, schema.size(), "The TDE has 36 columns, and the hidden 'rowid' column that's returned " +
             "by /v1/rows should not be included in the Spark schema, as it will never be populated with a value.");
 
         String actualJson = schema.prettyJson();
