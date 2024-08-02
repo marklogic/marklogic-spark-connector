@@ -4,7 +4,7 @@ import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.util.List;
 
-class FilePartition implements InputPartition {
+public class FilePartition implements InputPartition {
 
     static final long serialVersionUID = 1;
 
@@ -14,7 +14,7 @@ class FilePartition implements InputPartition {
         this.paths = paths;
     }
 
-    List<String> getPaths() {
+    public List<String> getPaths() {
         return paths;
     }
 

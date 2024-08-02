@@ -1,14 +1,16 @@
-package com.marklogic.spark.reader.file;
+package com.marklogic.spark.reader.file.xml;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.file.FileContext;
+import com.marklogic.spark.reader.file.FilePartition;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 
 import java.io.InputStream;
 
-class AggregateXmlFileReader implements PartitionReader<InternalRow> {
+public class AggregateXmlFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
@@ -18,7 +20,7 @@ class AggregateXmlFileReader implements PartitionReader<InternalRow> {
     private InternalRow nextRowToReturn;
     private int filePathIndex = 0;
 
-    AggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
+    public AggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
     }
