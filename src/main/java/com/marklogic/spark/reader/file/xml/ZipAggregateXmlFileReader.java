@@ -1,7 +1,10 @@
-package com.marklogic.spark.reader.file;
+package com.marklogic.spark.reader.file.xml;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.file.FileContext;
+import com.marklogic.spark.reader.file.FilePartition;
+import com.marklogic.spark.reader.file.FileUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -12,7 +15,7 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
+public class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipAggregateXmlFileReader.class);
 
@@ -29,7 +32,7 @@ class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
     private String currentFilePath;
     private ZipInputStream currentZipInputStream;
 
-    ZipAggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
+    public ZipAggregateXmlFileReader(FilePartition filePartition, FileContext fileContext) {
         this.fileContext = fileContext;
         this.filePartition = filePartition;
         this.openNextFile();

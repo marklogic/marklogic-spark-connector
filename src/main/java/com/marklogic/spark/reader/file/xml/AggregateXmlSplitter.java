@@ -1,9 +1,10 @@
-package com.marklogic.spark.reader.file;
+package com.marklogic.spark.reader.file.xml;
 
 import com.marklogic.client.datamovement.XMLSplitter;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.file.FileContext;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.unsafe.types.ByteArray;

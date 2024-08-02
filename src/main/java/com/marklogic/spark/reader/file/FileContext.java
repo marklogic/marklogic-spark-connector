@@ -16,12 +16,12 @@ import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-class FileContext extends ContextSupport implements Serializable {
+public class FileContext extends ContextSupport implements Serializable {
 
     private SerializableConfiguration hadoopConfiguration;
     private final String encoding;
 
-    FileContext(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
+    public FileContext(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
         super(properties);
         this.hadoopConfiguration = hadoopConfiguration;
         this.encoding = getStringOption(Options.READ_FILES_ENCODING);
@@ -42,7 +42,7 @@ class FileContext extends ContextSupport implements Serializable {
         return "gzip".equalsIgnoreCase(getStringOption(Options.READ_FILES_COMPRESSION));
     }
 
-    InputStream openFile(String filePath) {
+    public InputStream openFile(String filePath) {
         try {
             Path hadoopPath = new Path(filePath);
             FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
@@ -54,7 +54,7 @@ class FileContext extends ContextSupport implements Serializable {
         }
     }
 
-    boolean isReadAbortOnFailure() {
+    public boolean isReadAbortOnFailure() {
         if (hasOption(Options.READ_FILES_ABORT_ON_FAILURE)) {
             return Boolean.parseBoolean(getStringOption(Options.READ_FILES_ABORT_ON_FAILURE));
         }
