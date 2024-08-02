@@ -100,17 +100,20 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
 
     @Test
     void uriElementHasMixedContent() {
-        Dataset<Row> dataset = newSparkSession().read()
+        List<Row> rows = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
             .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "mixed")
-            .load("src/test/resources/aggregates/employees.xml");
+            .load("src/test/resources/aggregates/employees.xml")
+            .collectAsList();
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
-        String message = ex.getMessage();
-        assertTrue(message.startsWith("Unable to get text from URI element 'mixed' found in aggregate element 1 in file"),
-            "The error should identify the URI element that text could not be retrieved from along with which aggregate " +
-                "element produced the failure; actual message: " + message);
+        rows.forEach(row -> {
+            String uri = row.getString(0);
+            assertEquals("has mixed content", uri, "We don't have a good reason to throw an exception when the user " +
+                "specifies a URI element with mixed content. While MLCP carefully reconstructs the XML, and thus may " +
+                "not want to deal with the complexity of mixed content, our connector plucks the URI element value " +
+                "while the element is transformed into a string via a standard Java Transformer.");
+        });
     }
 
     @Test
