@@ -21,7 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
@@ -62,6 +63,18 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
             .sort(new Column("URI"))
             .collectAsList();
         verifyArchiveRows(rows);
+    }
+
+    @Test
+    void noFailures(@TempDir Path tempDir) {
+        newWriter(1)
+            .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
+            .save();
+
+        assertCollectionSize("This test is for manual inspection of the logs to ensure that no message is " +
+                "logged indicating that an archive file of failed documents was written when there are no errors.",
+            COLLECTION, 200);
     }
 
     @Test
