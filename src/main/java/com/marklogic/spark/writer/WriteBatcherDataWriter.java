@@ -228,7 +228,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private void closeArchiveWriter() {
         if (archiveWriter != null) {
-            Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            if (failedItemCount.get() > 0) {
+                Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            }
             archiveWriter.close();
         }
     }
