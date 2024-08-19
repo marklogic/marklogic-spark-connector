@@ -9,13 +9,9 @@ import com.marklogic.junit5.NamespaceProvider;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import org.apache.spark.SparkException;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteRowsWithTransformTest extends AbstractWriteTest {

@@ -14,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 class MarkLogicVersion {
 
-    private int major;
-    private Integer minor;
+    private int majorNumber;
+    private Integer minorNumber;
     private boolean nightly;
 
     private static final String VERSION_WITH_PATCH_PATTERN = "^.*-(.+)\\..*";
@@ -27,28 +27,28 @@ class MarkLogicVersion {
         if (version.matches(nightlyPattern)) {
             this.nightly = true;
         } else if (version.matches(majorWithMinorPattern)) {
-            this.minor = version.matches(VERSION_WITH_PATCH_PATTERN) ?
+            this.minorNumber = version.matches(VERSION_WITH_PATCH_PATTERN) ?
                     parseMinorWithPatch(version) :
                     Integer.parseInt(version.replaceAll(majorWithMinorPattern, "$1") + "00");
         }
-        this.major = major;
+        this.majorNumber = major;
     }
 
     private int parseMinorWithPatch(String version) {
-        final int minorNumber = Integer.parseInt(version.replaceAll(VERSION_WITH_PATCH_PATTERN, "$1"));
+        final int minorValue = Integer.parseInt(version.replaceAll(VERSION_WITH_PATCH_PATTERN, "$1"));
         final int patch = Integer.parseInt(version.replaceAll("^.*-(.+)\\.(.*)", "$2"));
         final String leftPaddedPatchNumber = patch < 10 ?
                 StringUtils.leftPad(String.valueOf(patch), 2, "0") :
                 String.valueOf(patch);
-        return Integer.parseInt(minorNumber + leftPaddedPatchNumber);
+        return Integer.parseInt(minorValue + leftPaddedPatchNumber);
     }
 
-    public int getMajor() {
-        return major;
+    public int getMajorNumber() {
+        return majorNumber;
     }
 
-    public Integer getMinor() {
-        return minor;
+    public Integer getMinorNumber() {
+        return minorNumber;
     }
 
     public boolean isNightly() {

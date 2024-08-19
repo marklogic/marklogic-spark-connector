@@ -37,7 +37,7 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
     @Test
     void zeroPartitions() {
         Dataset<Row> dataset = readAuthors(0);
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.count());
+        assertThrows(ConnectorException.class, () -> dataset.count());
     }
 
     @Test

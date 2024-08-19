@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.reader.optic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.mgmt.ManageClient;
 import com.marklogic.mgmt.ManageConfig;
 import com.marklogic.mgmt.resource.appservers.ServerManager;

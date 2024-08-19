@@ -22,8 +22,6 @@ class PerformanceTester {
     public static void main(String[] args) {
         final int sparkConcurrentTaskCount = 16;
         final String query = "op.fromView('demo','employee')";
-//        final String query = "op.fromView('demo','employee').where(op.eq(op.col('job_description'), 'Technician'))";
-//        final String query = "op.fromView('demo', 'employee').where(op.le(op.col('person_id'), 8))";
         final long partitionCount = 8;
         final long batchSize = 100000;
 
@@ -48,6 +46,5 @@ class PerformanceTester {
         long duration = System.currentTimeMillis() - now;
         logger.info("Duration: {}; row count: {}; rows per second: {}", duration, count,
             (double) count / ((double) duration / 1000));
-//        rows.forEach(row -> logger.info(row.prettyJson()));
     }
 }
