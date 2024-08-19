@@ -4,7 +4,6 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.Options;
-import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 

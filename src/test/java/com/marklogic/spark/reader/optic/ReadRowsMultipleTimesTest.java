@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.reader.optic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
@@ -22,7 +21,7 @@ class ReadRowsMultipleTimesTest extends AbstractIntegrationTest {
      * Log statements are included here so it's easy to see what classes get created based on different Spark API calls.
      */
     @Test
-    void twoReadsWithInsertInBetween() throws Exception {
+    void twoReadsWithInsertInBetween() {
         logger.info("Creating reader");
         Dataset<Row> dataset = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, "op.fromView('sparkTest', 'allTypes')")

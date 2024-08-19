@@ -120,7 +120,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
             String version = getDatabaseClient().newServerEval().javascript("xdmp.version()").evalAs(String.class);
             markLogicVersion = new MarkLogicVersion(version);
         }
-        return markLogicVersion.getMajor() == 10;
+        return markLogicVersion.getMajorNumber() == 10;
     }
 
     protected final boolean isSpark340OrHigher() {

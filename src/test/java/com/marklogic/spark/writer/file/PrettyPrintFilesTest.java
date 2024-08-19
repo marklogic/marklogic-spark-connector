@@ -50,7 +50,7 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void zipWithXmlAndJson(@TempDir Path tempDir) throws Exception {
+    void zipWithXmlAndJson(@TempDir Path tempDir) {
         SparkSession session = newSparkSession();
 
         session.read()

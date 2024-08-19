@@ -3,9 +3,9 @@
  */
 package com.marklogic.spark;
 
-import com.marklogic.spark.reader.optic.OpticScanBuilder;
-import com.marklogic.spark.reader.optic.OpticReadContext;
 import com.marklogic.spark.reader.customcode.CustomCodeScanBuilder;
+import com.marklogic.spark.reader.optic.OpticReadContext;
+import com.marklogic.spark.reader.optic.OpticScanBuilder;
 import com.marklogic.spark.writer.MarkLogicWriteBuilder;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;

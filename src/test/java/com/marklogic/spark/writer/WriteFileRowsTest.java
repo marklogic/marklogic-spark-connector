@@ -114,6 +114,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    @Deprecated
     void forceDocumentType() {
         newSparkSession()
             .read()
@@ -137,6 +138,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    @Deprecated
     void invalidDocumentType() {
         DataFrameWriter writer = newSparkSession()
             .read()

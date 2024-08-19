@@ -37,7 +37,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
         "properties",
         "metadatavalues"
     })
-    void writeAllMetadata(String metadata, @TempDir Path tempDir) throws Exception {
+    void writeAllMetadata(String metadata, @TempDir Path tempDir) {
         newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())

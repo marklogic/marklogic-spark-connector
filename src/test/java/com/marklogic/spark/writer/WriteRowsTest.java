@@ -99,7 +99,7 @@ class WriteRowsTest extends AbstractWriteTest {
             .save();
 
         String uri = getUrisInCollection(COLLECTION, 1).get(0);
-        // Temporal doc is written to the temporal collection; "latest" since it's the latest version for that URI;
+        // Temporal doc is written to the temporal collection and 'latest' since it's the latest version for that URI,
         // and to a collection matching the URI of the document.
         assertInCollections(uri, COLLECTION, TEMPORAL_COLLECTION, "latest", uri);
     }

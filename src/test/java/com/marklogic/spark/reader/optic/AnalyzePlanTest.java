@@ -10,8 +10,6 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.AbstractIntegrationTest;
-import com.marklogic.spark.reader.optic.PlanAnalysis;
-import com.marklogic.spark.reader.optic.PlanAnalyzer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -47,7 +45,7 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
         "5,15"
     })
     void partitionCountAndBatchSize(long partitionCount, long batchSize) {
-        logger.info(partitionCount + ":" + batchSize);
+        logger.info("{}:{}", partitionCount, batchSize);
 
         PlanAnalysis planAnalysis = analyzePlan(partitionCount, batchSize);
         verifyBucketsCoverAllUnsignedLongs(planAnalysis);
@@ -58,8 +56,6 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
         RawQueryDSLPlan userPlan = rowManager.newRawQueryDSLPlan(new StringHandle("op.fromView('Medical', 'Authors').select(['LastName', 'rowID'])"));
         PlanAnalyzer partitioner = new PlanAnalyzer((DatabaseClientImpl) getDatabaseClient());
         PlanAnalysis planAnalysis = partitioner.analyzePlan(userPlan.getHandle(), partitionCount, batchSize);
-//        System.out.println("BUCKET COUNT: " + planAnalysis.getAllBuckets().size());
-//        System.out.println(planAnalysis.boundedPlan.toPrettyString());
         assertEquals(partitionCount, planAnalysis.getPartitions().size());
         return planAnalysis;
     }
@@ -96,7 +92,6 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
         JacksonHandle initialHandle = new JacksonHandle();
         runPlan(planAnalysis, planAnalysis.getPartitions().get(0).getBuckets().get(0), initialHandle);
         final long serverTimestamp = initialHandle.getServerTimestamp();
-//        System.out.println("ST: " + serverTimestamp);
         // Now run the plan on each bucket and keep track of the total number of rows returned.
         // This uses a thread pool solely to improve the performance of the test.
         ExecutorService executor = Executors.newFixedThreadPool(planAnalysis.getAllBuckets().size());
@@ -114,15 +109,12 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
                     if (result != null) {
                         JsonNode rows = result.get("rows");
                         for (int i = 0; i < rows.size(); i++) {
-//                            System.out.println(rows.get(i).toPrettyString());
                             String name = rows.get(i).get("Medical.Authors.LastName").get("value").asText();
                             names.add(name);
                             bucketNames.add(name + ":" + rows.get(i).get("Medical.Authors.rowid").get("value").asText());
                         }
-                        // Scarsbrick:14992830574179162536:4435912200092073691
                         returnedRowCount.addAndGet(rows.size());
                     }
-//                    System.out.println(bucket + ": " + bucketNames);
                 }));
             }
         }
@@ -136,8 +128,6 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
             }
         });
 
-//        System.out.println("NAMES: " + names);
-//        System.out.println("NAME COUNT: " + names.size());
         assertEquals(15, returnedRowCount.get(),
             "All 15 author rows should have been returned; we can't assume how many will be in a bucket since the " +
                 "row ID of each row is random, we just know we should get 15 back.");
