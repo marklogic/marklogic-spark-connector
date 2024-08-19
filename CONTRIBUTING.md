@@ -83,6 +83,10 @@ you've introduced on the feature branch you're working on. You can then click on
 Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
 
+Our Sonar instance is also configured to scan for dependency vulnerabilities 
+[via the dependency-check plugin](https://github.com/dependency-check/dependency-check-sonar-plugin). For more 
+information, see the `dependencyCheck` block in this project's `build.gradle` file.
+
 ## Accessing MarkLogic logs in Grafana
 
 This project's `docker-compose-3nodes.yaml` file includes

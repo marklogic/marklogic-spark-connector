@@ -16,5 +16,7 @@ logs
 .ipynb_checkpoints
 venv
 .venv
-docker
+docker/marklogic
+docker/sonarqube/data
+docker/sonarqube/logs
 export
