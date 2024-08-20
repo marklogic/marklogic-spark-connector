@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
@@ -34,8 +22,6 @@ class PerformanceTester {
     public static void main(String[] args) {
         final int sparkConcurrentTaskCount = 16;
         final String query = "op.fromView('demo','employee')";
-//        final String query = "op.fromView('demo','employee').where(op.eq(op.col('job_description'), 'Technician'))";
-//        final String query = "op.fromView('demo', 'employee').where(op.le(op.col('person_id'), 8))";
         final long partitionCount = 8;
         final long batchSize = 100000;
 
@@ -60,6 +46,5 @@ class PerformanceTester {
         long duration = System.currentTimeMillis() - now;
         logger.info("Duration: {}; row count: {}; rows per second: {}", duration, count,
             (double) count / ((double) duration / 1000));
-//        rows.forEach(row -> logger.info(row.prettyJson()));
     }
 }

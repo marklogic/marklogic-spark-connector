@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -47,7 +50,7 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void zipWithXmlAndJson(@TempDir Path tempDir) throws Exception {
+    void zipWithXmlAndJson(@TempDir Path tempDir) {
         SparkSession session = newSparkSession();
 
         session.read()

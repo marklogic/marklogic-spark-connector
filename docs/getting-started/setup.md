@@ -31,10 +31,10 @@ have an instance of MarkLogic running, you can skip step 4 below, but ensure tha
 extracted directory contains valid connection properties for your instance of MarkLogic.
 
 1. From [this repository's Releases page](https://github.com/marklogic/marklogic-spark-connector/releases), select 
-   the latest release and download the `marklogic-spark-getting-started-2.2.0.zip` file.
+   the latest release and download the `marklogic-spark-getting-started-2.3.1.zip` file.
 2. Extract the contents of the downloaded zip file. 
 3. Open a terminal window and go to the directory created by extracting the zip file; the directory should have a 
-   name of "marklogic-spark-getting-started-2.2.0".
+   name of "marklogic-spark-getting-started-2.3.1".
 4. Run `docker-compose up -d` to start an instance of MarkLogic
 5. Ensure that the `./gradlew` file is executable; depending on your operating system, you may need to run
    `chmod 755 gradlew` to make the file executable.

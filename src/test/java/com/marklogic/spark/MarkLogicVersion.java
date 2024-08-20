@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -26,8 +14,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 class MarkLogicVersion {
 
-    private int major;
-    private Integer minor;
+    private int majorNumber;
+    private Integer minorNumber;
     private boolean nightly;
 
     private static final String VERSION_WITH_PATCH_PATTERN = "^.*-(.+)\\..*";
@@ -39,28 +27,28 @@ class MarkLogicVersion {
         if (version.matches(nightlyPattern)) {
             this.nightly = true;
         } else if (version.matches(majorWithMinorPattern)) {
-            this.minor = version.matches(VERSION_WITH_PATCH_PATTERN) ?
+            this.minorNumber = version.matches(VERSION_WITH_PATCH_PATTERN) ?
                     parseMinorWithPatch(version) :
                     Integer.parseInt(version.replaceAll(majorWithMinorPattern, "$1") + "00");
         }
-        this.major = major;
+        this.majorNumber = major;
     }
 
     private int parseMinorWithPatch(String version) {
-        final int minorNumber = Integer.parseInt(version.replaceAll(VERSION_WITH_PATCH_PATTERN, "$1"));
+        final int minorValue = Integer.parseInt(version.replaceAll(VERSION_WITH_PATCH_PATTERN, "$1"));
         final int patch = Integer.parseInt(version.replaceAll("^.*-(.+)\\.(.*)", "$2"));
         final String leftPaddedPatchNumber = patch < 10 ?
                 StringUtils.leftPad(String.valueOf(patch), 2, "0") :
                 String.valueOf(patch);
-        return Integer.parseInt(minorNumber + leftPaddedPatchNumber);
+        return Integer.parseInt(minorValue + leftPaddedPatchNumber);
     }
 
-    public int getMajor() {
-        return major;
+    public int getMajorNumber() {
+        return majorNumber;
     }
 
-    public Integer getMinor() {
-        return minor;
+    public Integer getMinorNumber() {
+        return minorNumber;
     }
 
     public boolean isNightly() {

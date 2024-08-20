@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import java.io.ByteArrayOutputStream;

@@ -1,6 +1,11 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.file.xml.AggregateXmlFileReader;
+import com.marklogic.spark.reader.file.xml.ZipAggregateXmlFileReader;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReader;

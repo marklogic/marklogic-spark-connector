@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.junit5.XmlNode;
@@ -53,21 +56,17 @@ class ReadAggregateXmlZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void uriElementHasMixedContent() {
-        Dataset<Row> dataset = newSparkSession().read()
+        List<Row> rows = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_AGGREGATES_XML_ELEMENT, "Employee")
             .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "mixed")
             .option(Options.READ_FILES_COMPRESSION, "zip")
-            .load("src/test/resources/aggregate-zips/employee-aggregates.zip");
+            .load("src/test/resources/aggregate-zips/employee-aggregates.zip")
+            .collectAsList();
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
-        String message = ex.getMessage();
-        assertTrue(
-            message.startsWith(
-                "Unable to get text from URI element 'mixed' found in aggregate element 1 in entry employees.xml in file:///"
-            ),
-            "The error should identify the URI element that text could not be retrieved from along with which aggregate " +
-                "element and which zip entry produced the failure; actual message: " + message
+        rows.forEach(row ->
+            assertEquals("has mixed content", row.getString(0),
+                "Mixed content is supported by the connector in a URI element.")
         );
     }
 
