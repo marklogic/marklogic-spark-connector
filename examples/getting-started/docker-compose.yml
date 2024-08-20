@@ -5,7 +5,7 @@ name: marklogic_spark_getting_started
 services:
 
   marklogic:
-    image: "marklogicdb/marklogic-db:11.1.0-centos-1.1.0"
+    image: "marklogicdb/marklogic-db:latest-11"
     platform: linux/amd64
     environment:
       - MARKLOGIC_INIT=true
