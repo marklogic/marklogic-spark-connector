@@ -85,7 +85,10 @@ without having to re-run the tests.
 
 Our Sonar instance is also configured to scan for dependency vulnerabilities 
 [via the dependency-check plugin](https://github.com/dependency-check/dependency-check-sonar-plugin). For more 
-information, see the `dependencyCheck` block in this project's `build.gradle` file.
+information, see the `dependencyCheck` block in this project's `build.gradle` file. To include dependency check results,
+just run the following (it's not included by default when running the `sonar` task):
+
+    ./gradlew dependencyCheckAnalyze sonar
 
 ## Accessing MarkLogic logs in Grafana
 
