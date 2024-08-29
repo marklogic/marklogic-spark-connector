@@ -21,7 +21,7 @@ public abstract class SchemaInferrer {
 
     // "Column info types" = the possible set of types returned by the columnInfo call to /v1/rows. Note that this is
     // not equivalent to the set of TDE types; for example, /v1/rows returns "none" as a column type for several TDE types.
-    private static final Map<String, DataType> COLUMN_INFO_TYPES_TO_SPARK_TYPES = new HashMap<>();
+    public static final Map<String, DataType> COLUMN_INFO_TYPES_TO_SPARK_TYPES = new HashMap<>();
     static {
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("int", DataTypes.IntegerType);
         // Including "short" here, but a TDE column of type "short" reports "int" as its type in column info. So not
