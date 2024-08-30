@@ -33,8 +33,12 @@ class ContentWriter {
     private final Charset encoding;
 
     ContentWriter(Map<String, String> properties) {
+        this(properties, "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT)));
+    }
+
+    ContentWriter(Map<String, String> properties, boolean prettyPrint) {
+        this.prettyPrint = prettyPrint;
         this.encoding = determineEncoding(properties);
-        this.prettyPrint = "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT));
         if (this.prettyPrint) {
             this.objectMapper = new ObjectMapper();
             this.transformer = newTransformer();

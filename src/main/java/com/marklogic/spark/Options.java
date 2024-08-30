@@ -119,6 +119,8 @@ public abstract class Options {
     // Example - "spark.marklogic.write.json.ignoreNullFields=false.
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
+    public static final String WRITE_AGGREGATES_XML_ELEMENT = "spark.marklogic.write.aggregates.xml.element";
+    public static final String WRITE_AGGREGATES_XML_NAMESPACE = "spark.marklogic.write.aggregates.xml.namespace";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
