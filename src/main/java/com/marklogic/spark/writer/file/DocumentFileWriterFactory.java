@@ -33,6 +33,15 @@ class DocumentFileWriterFactory implements DataWriterFactory {
             return new RdfFileWriter(properties, hadoopConfiguration, partitionId);
         }
 
+        /**
+         * How does a user ask for aggregate JSON? They just need to say they want it. Don't think there's any
+         * config decision they need to make.
+         * spark.marklogic.write.aggregates.json=true?
+         */
+        if ("true".equals(this.properties.get(Options.WRITE_AGGREGATES_JSON))) {
+            return new AggregateJsonFileWriter(properties, hadoopConfiguration, partitionId);
+        }
+        
         String xmlElement = this.properties.get(Options.WRITE_AGGREGATES_XML_ELEMENT);
         if (xmlElement != null && xmlElement.trim().length() > 0) {
             return new AggregateXmlFileWriter(properties, hadoopConfiguration, partitionId);

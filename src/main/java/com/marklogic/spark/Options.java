@@ -122,6 +122,8 @@ public abstract class Options {
     public static final String WRITE_AGGREGATES_XML_ELEMENT = "spark.marklogic.write.aggregates.xml.element";
     public static final String WRITE_AGGREGATES_XML_NAMESPACE = "spark.marklogic.write.aggregates.xml.namespace";
 
+    public static final String WRITE_AGGREGATES_JSON = "spark.marklogic.write.aggregates.json";
+
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";

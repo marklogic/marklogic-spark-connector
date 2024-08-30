@@ -22,7 +22,7 @@
     <appender-ref ref="STDOUT"/>
   </logger>
 
-  <logger name="com.marklogic.spark" level="DEBUG" additivity="false">
+  <logger name="com.marklogic.spark" level="INFO" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
 
