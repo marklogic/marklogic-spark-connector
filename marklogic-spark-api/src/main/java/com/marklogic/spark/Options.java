@@ -133,6 +133,8 @@ public abstract class Options {
      * @since 2.5.0
      */
     public static final String WRITE_SPLITTER_XPATH = "spark.marklogic.write.splitter.xpath";
+    public static final String WRITE_AGGREGATES_XML_ELEMENT = "spark.marklogic.write.aggregates.xml.element";
+    public static final String WRITE_AGGREGATES_XML_NAMESPACE = "spark.marklogic.write.aggregates.xml.namespace";
 
     /**
      * Enables the splitter feature by defining one or more newline-delimited JSON Pointer expressions for selecting

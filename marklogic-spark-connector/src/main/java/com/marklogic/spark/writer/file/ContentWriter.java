@@ -43,9 +43,13 @@ class ContentWriter {
     private final GenericDocumentManager documentManager;
 
     ContentWriter(Map<String, String> properties) {
+        this(properties, "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT)));
+    }
+
+    ContentWriter(Map<String, String> properties, boolean prettyPrint) {
+        this.prettyPrint = prettyPrint;
         ContextSupport context = new ContextSupport(properties);
         this.encoding = determineEncoding(context);
-        this.prettyPrint = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_FILES_PRETTY_PRINT));
         if (this.prettyPrint) {
             this.objectMapper = new ObjectMapper();
             this.transformer = newTransformer();

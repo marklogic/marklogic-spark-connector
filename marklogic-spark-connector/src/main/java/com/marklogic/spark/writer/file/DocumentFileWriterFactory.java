@@ -33,6 +33,11 @@ class DocumentFileWriterFactory implements DataWriterFactory {
             return new RdfFileWriter(properties, hadoopConfiguration, partitionId);
         }
 
+        String xmlElement = this.properties.get(Options.WRITE_AGGREGATES_XML_ELEMENT);
+        if (xmlElement != null && xmlElement.trim().length() > 0) {
+            return new AggregateXmlFileWriter(properties, hadoopConfiguration, partitionId);
+        }
+
         String compression = this.properties.get(Options.WRITE_FILES_COMPRESSION);
         if (compression != null && compression.length() > 0) {
             return "zip".equalsIgnoreCase(compression) ?
