@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.customcode;
 
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -19,6 +20,9 @@ public class CustomCodeWriterFactory implements DataWriterFactory, StreamingData
 
     @Override
     public DataWriter<InternalRow> createWriter(int partitionId, long taskId) {
+        if (Util.isWriteWithUrisOperation(customCodeContext.getProperties())) {
+            return new UrisWriter(customCodeContext);
+        }
         return new CustomCodeWriter(customCodeContext);
     }
 

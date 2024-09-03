@@ -98,6 +98,57 @@ public abstract class Options {
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
+    // For reading URIs without writing code
+    // spark.marklogic.read.uris.collections=
+    // spark.marklogic.read.uris.directory=
+    // And query and stringQuery, and options for the stringQuery
+
+    // For generating custom code?
+    // spark.marklogic.write.uris.collections.add=
+    // spark.marklogic.write.uris.collections.remove=
+    // spark.marklogic.write.uris.collections.set=
+    // spark.marklogic.write.uris.permissions.add=
+
+    // Impl - can write a for loop on the URI array/sequence.
+    // Then add a line of code for each option the user specifies.
+    // How about for Flux?
+    // ./bin/flux reprocess-uris --collections --directory -- etc.
+    // Can always specify a "--read", but not also one of the query options too.
+    // Then for how to write
+    // --collections-add c1,c2,c3 --collections-remove
+    // --permissions-add role,cap,role,cap
+    // --delete to just delete the URIs
+    // So to delete a collection:
+    // reprocess --collections employees --delete
+    // To add a collection:
+    // reprocess --directory "/employee/" --collections-add new1
+    // To set permissions:
+    // reprocess --string-query orange --permissions-set rest-reader,read,rest-writer,update
+    // To delete everything with a word in it:
+    // reprocess --string-query orange --delete
+    // May throw an error if "--delete" is specified along with any other write operation.
+    // Also throw an error if any "--write" option is specified, as we're generating the custom code.
+    public static final String WRITE_URIS_COLLECTIONS_ADD = "spark.marklogic.write.uris.collections.add";
+    public static final String WRITE_URIS_COLLECTIONS_REMOVE = "spark.marklogic.write.uris.collections.remove";
+    public static final String WRITE_URIS_COLLECTIONS_SET = "spark.marklogic.write.uris.collections.set";
+    public static final String WRITE_URIS_PERMISSIONS_ADD = "spark.marklogic.write.uris.permissions.add";
+    public static final String WRITE_URIS_PERMISSIONS_REMOVE = "spark.marklogic.write.uris.permissions.remove";
+    public static final String WRITE_URIS_PERMISSIONS_SET = "spark.marklogic.write.uris.permissions.set";
+    public static final String WRITE_URIS_PATCH = "spark.marklogic.write.uris.patch";
+
+    /*
+    So the design basically is - we're adding options to "reprocess" so that you don't have to write code
+    as often.
+
+    Maybe even do that for partitioning based on forest?
+     */
+    /*
+    Would this work for just saying "The incoming rows have URIs that should be deleted". Doesn't matter where the URIs
+    came from - a collection, a complex query.
+    */
+    // spark.marklogic.write.uris.delete
+
+
     // For writing documents to MarkLogic.
     public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";

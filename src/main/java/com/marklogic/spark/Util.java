@@ -56,6 +56,16 @@ public interface Util {
         return Util.hasOption(properties,
             Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
             Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE
+        ) || isWriteWithUrisOperation(properties);
+    }
+
+    static boolean isWriteWithUrisOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.WRITE_URIS_COLLECTIONS_ADD, Options.WRITE_URIS_COLLECTIONS_REMOVE,
+            Options.WRITE_URIS_COLLECTIONS_SET,
+            Options.WRITE_URIS_PERMISSIONS_ADD, Options.WRITE_URIS_PERMISSIONS_REMOVE,
+            Options.WRITE_URIS_PERMISSIONS_SET,
+            Options.WRITE_URIS_PATCH
         );
     }
 

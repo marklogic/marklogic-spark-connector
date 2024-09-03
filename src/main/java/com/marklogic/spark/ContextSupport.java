@@ -145,6 +145,15 @@ public class ContextSupport implements Serializable {
         return hasOption(option) ? properties.get(option).trim() : null;
     }
 
+    public final String[] getStringArrayOption(String option) {
+        return getStringArrayOption(option, ",");
+    }
+
+    public final String[] getStringArrayOption(String option, String delimiter) {
+        String value = getStringOption(option);
+        return value != null ? value.split(delimiter) : null;
+    }
+
     public Map<String, String> getProperties() {
         return properties;
     }
