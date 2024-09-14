@@ -164,6 +164,10 @@ public abstract class Options {
      */
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
 
+    public static final String WRITE_DOCUMENT_SPLITTER_FIELD_NAME = "spark.marklogic.write.documentSplitter.fieldName";
+    public static final String WRITE_DOCUMENT_SPLITTER_MAX_SEGMENT_SIZE = "spark.marklogic.write.documentSplitter.maxSegmentSize";
+    public static final String WRITE_DOCUMENT_SPLITTER_MAX_OVERLAP = "spark.marklogic.write.documentSplitter.maxOverlap";
+
     private Options() {
     }
 }

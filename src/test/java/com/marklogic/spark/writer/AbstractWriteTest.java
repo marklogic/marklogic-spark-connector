@@ -36,6 +36,7 @@ public abstract class AbstractWriteTest extends AbstractIntegrationTest {
         return newSparkSession().read()
             .option("header", true)
             .format("csv")
+            .option("sep", ";")
             .csv("src/test/resources/" + csvFilename)
             .repartition(partitionCount)
             .write()

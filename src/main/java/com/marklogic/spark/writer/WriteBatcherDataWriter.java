@@ -35,8 +35,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -51,7 +55,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final WriteBatcher writeBatcher;
     private final BatchRetrier batchRetrier;
     private final ZipFileWriter archiveWriter;
-
+    private final Function<List<DocumentWriteOperation>, List<DocumentWriteOperation>> documentProcessor;
     private final DocBuilder docBuilder;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
@@ -85,6 +89,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 createArchiveWriter(hadoopConfiguration, partitionId) : null;
         }
 
+        this.documentProcessor = writeContext.hasOption(Options.WRITE_DOCUMENT_SPLITTER_FIELD_NAME) ?
+            new JsonDocumentSplitterAdapter(writeContext) : null;
+
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         addBatchListeners(this.writeBatcher);
@@ -114,14 +121,26 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
     }
 
+    private void addDocumentToWriteBatcher(DocBuilder.DocumentInputs documentInputs) {
+        DocumentWriteOperation writeOp = this.docBuilder.build(documentInputs);
+        if (this.documentProcessor != null) {
+            documentProcessor.apply(Arrays.asList(writeOp)).forEach(writeBatcher::add);
+        } else {
+            this.writeBatcher.add(writeOp);
+        }
+    }
+
     @Override
     public WriterCommitMessage commit() {
         List<DocBuilder.DocumentInputs> documentInputs = rowConverter.getRemainingDocumentInputs();
         if (documentInputs != null) {
-            documentInputs.forEach(inputs -> {
-                DocumentWriteOperation writeOp = this.docBuilder.build(inputs);
-                this.writeBatcher.add(writeOp);
-            });
+            documentInputs.forEach(this::addDocumentToWriteBatcher);
+        }
+        // Before we do this - if we have a processor, and it implements supplier, get all the leftover stuff.
+        if (documentProcessor instanceof Supplier) {
+            // Need a try/catch on this. This is weird, the instance could be some other kind of Supplier.
+            Supplier<Stream<DocumentWriteOperation>> supplier = (Supplier<Stream<DocumentWriteOperation>>) documentProcessor;
+            supplier.get().forEach(writeBatcher::add);
         }
         this.writeBatcher.flushAndWait();
 
