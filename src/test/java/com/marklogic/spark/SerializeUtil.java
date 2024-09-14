@@ -8,7 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
-import static org.springframework.test.util.AssertionErrors.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public interface SerializeUtil {
 

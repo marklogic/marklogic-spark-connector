@@ -27,12 +27,12 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -47,7 +47,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final WriteBatcher writeBatcher;
     private final BatchRetrier batchRetrier;
     private final ZipFileWriter archiveWriter;
-
+    private final Function<List<DocumentWriteOperation>, List<DocumentWriteOperation>> documentProcessor;
     private final DocBuilder docBuilder;
 
     // Used to capture the first failure that occurs during a request to MarkLogic.
@@ -75,6 +75,30 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 createArchiveWriter(hadoopConfiguration, partitionId) : null;
         }
 
+        if (writeContext.hasOption(Options.WRITE_DOCUMENT_PROCESSOR)) {
+            String className = writeContext.getStringOption(Options.WRITE_DOCUMENT_PROCESSOR);
+            Map<String, String> processorOptions = new HashMap<>();
+            writeContext.getProperties().entrySet().stream()
+                .filter(entry -> entry.getKey().startsWith(Options.WRITE_DOCUMENT_PROCESSOR_OPTIONS))
+                .forEach(entry -> processorOptions.put(
+                    entry.getKey().substring(Options.WRITE_DOCUMENT_PROCESSOR_OPTIONS.length() + 1),
+                    entry.getValue())
+                );
+
+            logger.warn("PROCESSOR CLASS: " + className);
+            logger.warn("PROCESSOR OPTIONS: " + processorOptions);
+            try {
+                this.documentProcessor = (Function<List<DocumentWriteOperation>, List<DocumentWriteOperation>>)
+                    Class.forName(className).getDeclaredConstructor(Map.class).newInstance(processorOptions);
+            } catch (Exception ex) {
+                throw new ConnectorException("Bad times with: " + className + "; cause: " + ex.getMessage(), ex);
+            }
+        } else if (writeContext.hasOption(Options.WRITE_DOCUMENT_SPLITTER_FIELD_NAME)) {
+            this.documentProcessor = new JsonDocumentSplitterAdapter(writeContext);
+        } else {
+            this.documentProcessor = null;
+        }
+
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         addBatchListeners(this.writeBatcher);
@@ -86,7 +110,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
         Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
         if (document.isPresent()) {
-            this.writeBatcher.add(this.docBuilder.build(document.get()));
+            addDocumentToWriteBatcher(document.get());
+        }
+    }
+
+    private void addDocumentToWriteBatcher(DocBuilder.DocumentInputs documentInputs) {
+        DocumentWriteOperation writeOp = this.docBuilder.build(documentInputs);
+        if (this.documentProcessor != null) {
+            documentProcessor.apply(Arrays.asList(writeOp)).forEach(writeBatcher::add);
+        } else {
+            this.writeBatcher.add(writeOp);
         }
     }
 
@@ -94,10 +127,13 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public WriterCommitMessage commit() {
         List<DocBuilder.DocumentInputs> documentInputs = rowConverter.getRemainingDocumentInputs();
         if (documentInputs != null) {
-            documentInputs.forEach(inputs -> {
-                DocumentWriteOperation writeOp = this.docBuilder.build(inputs);
-                this.writeBatcher.add(writeOp);
-            });
+            documentInputs.forEach(this::addDocumentToWriteBatcher);
+        }
+        // Before we do this - if we have a processor, and it implements supplier, get all the leftover stuff.
+        if (documentProcessor instanceof Supplier) {
+            // Need a try/catch on this. This is weird, the instance could be some other kind of Supplier.
+            Supplier<Stream<DocumentWriteOperation>> supplier = (Supplier<Stream<DocumentWriteOperation>>) documentProcessor;
+            supplier.get().forEach(writeBatcher::add);
         }
         this.writeBatcher.flushAndWait();
 

@@ -11,7 +11,7 @@ plugins {
 }
 
 group 'com.marklogic'
-version '2.3-SNAPSHOT'
+version '2.4-SNAPSHOT'
 
 java {
   // To support reading RDF files, Apache Jena is used - but that requires Java 11. If we want to do a 2.2.0 release
@@ -65,6 +65,10 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
+
+  shadowDependencies "com.marklogic:marklogic-langchain4j:0.1-SNAPSHOT"
+//  shadowDependencies "dev.langchain4j:langchain4j:0.34.0"
+//  testImplementation "dev.langchain4j:langchain4j-azure-open-ai:0.34.0"
 
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 

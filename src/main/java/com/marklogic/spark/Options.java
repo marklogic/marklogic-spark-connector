@@ -150,6 +150,13 @@ public abstract class Options {
     public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
     public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
+    public static final String WRITE_DOCUMENT_SPLITTER_FIELD_NAME = "spark.marklogic.write.documentSplitter.fieldName";
+    public static final String WRITE_DOCUMENT_SPLITTER_MAX_SEGMENT_SIZE = "spark.marklogic.write.documentSplitter.maxSegmentSize";
+    public static final String WRITE_DOCUMENT_SPLITTER_MAX_OVERLAP = "spark.marklogic.write.documentSplitter.maxOverlap";
+
+    public static final String WRITE_DOCUMENT_PROCESSOR = "spark.marklogic.write.documentProcessor.className";
+    public static final String WRITE_DOCUMENT_PROCESSOR_OPTIONS = "spark.marklogic.write.documentProcessor.options";
+
     private Options() {
     }
 }
