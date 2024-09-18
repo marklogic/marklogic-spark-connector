@@ -1,18 +1,18 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.writer;
+package com.marklogic.spark.writer.splitter;
 
-import com.marklogic.langchain4j.document.splitter.JsonDocumentSplitter;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.WriteContext;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 
 /**
  * Extends {@code JsonDocumentSplitter} so it can be constructed based on Spark options.
  */
-class JsonDocumentSplitterAdapter extends JsonDocumentSplitter {
+public class JsonDocumentSplitterAdapter extends JsonDocumentSplitter {
 
-    JsonDocumentSplitterAdapter(WriteContext context) {
+    public JsonDocumentSplitterAdapter(WriteContext context) {
         super(
             DocumentSplitters.recursive(
                 (int) context.getNumericOption(Options.WRITE_DOCUMENT_SPLITTER_MAX_SEGMENT_SIZE, 1000, 0),

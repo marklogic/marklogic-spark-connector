@@ -63,12 +63,7 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  shadowDependencies ("com.marklogic:marklogic-langchain4j:0.1-SNAPSHOT") {
-    exclude group: "com.fasterxml.jackson.databind"
-  }
-
-//  shadowDependencies "dev.langchain4j:langchain4j:0.34.0"
-//  testImplementation "dev.langchain4j:langchain4j-azure-open-ai:0.34.0"
+  shadowDependencies "dev.langchain4j:langchain4j:0.34.0"
 
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 

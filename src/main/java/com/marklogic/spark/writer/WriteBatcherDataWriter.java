@@ -21,6 +21,8 @@ import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
 import org.apache.commons.io.IOUtils;
+import com.marklogic.spark.writer.splitter.JsonDocumentSplitterAdapter;
+import com.marklogic.spark.writer.splitter.TextDocumentSplitterAdapter;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -89,8 +91,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 createArchiveWriter(hadoopConfiguration, partitionId) : null;
         }
 
-        this.documentProcessor = writeContext.hasOption(Options.WRITE_DOCUMENT_SPLITTER_FIELD_NAME) ?
-            new JsonDocumentSplitterAdapter(writeContext) : null;
+        // TODO Gotta figure out the interface here.
+        if ("text".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_DOCUMENT_SPLITTER_DOCUMENT_TYPE))) {
+            this.documentProcessor = new TextDocumentSplitterAdapter(writeContext);
+        } else if (writeContext.hasOption(Options.WRITE_DOCUMENT_SPLITTER_FIELD_NAME)) {
+            this.documentProcessor = new JsonDocumentSplitterAdapter(writeContext);
+        } else {
+            this.documentProcessor = null;
+        }
 
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
