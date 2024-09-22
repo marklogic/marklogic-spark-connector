@@ -11,6 +11,8 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,18 +42,33 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save(tempDir.toFile().getAbsolutePath());
 
-        for (int i = 1; i <= 15; i++) {
-            File expectedFile = Paths.get(
-                tempDir.toFile().getAbsolutePath(),
-                "author", "author" + i + ".json"
-            ).toFile();
-            assertTrue(expectedFile.exists(), "Expected file at: " + expectedFile);
+        verifyAuthorFilesWereCorrectlyWritten(tempDir);
+    }
 
-            // Verify the JSON is valid.
-            JsonNode doc = objectMapper.readTree(expectedFile);
-            assertTrue(doc.has("CitationID"));
-            assertTrue(doc.has("LastName"));
-        }
+    @Test
+    void streamAuthorDocuments(@TempDir Path tempDir) throws Exception {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .load();
+
+        assertEquals(15, dataset.count());
+
+        dataset.collectAsList().forEach(row -> assertTrue(row.isNullAt(1),
+            "When the 'stream files' option is used when reading documents, the 'content' column should be null " +
+                "for each row. When each row is written to a file, the document corresponding to the URI in the " +
+                "'uri' column should be retrieved and streamed to file, thus avoiding ever reading the entire " +
+                "document into memory."));
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        verifyAuthorFilesWereCorrectlyWritten(tempDir);
     }
 
     @Test
@@ -118,5 +135,20 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
             "Just like MLCP, if the connector cannot construct a java.net.URI from the document URI (it will fail " +
                 "due to a space), the error should be logged and the file should be written with its unaltered " +
                 "document URI used for the file path.");
+    }
+
+    private void verifyAuthorFilesWereCorrectlyWritten(Path tempDir) throws Exception {
+        for (int i = 1; i <= 15; i++) {
+            File expectedFile = Paths.get(
+                tempDir.toFile().getAbsolutePath(),
+                "author", "author" + i + ".json"
+            ).toFile();
+            assertTrue(expectedFile.exists(), "Expected file at: " + expectedFile);
+
+            // Verify the JSON is valid.
+            JsonNode doc = objectMapper.readTree(expectedFile);
+            assertTrue(doc.has("CitationID"));
+            assertTrue(doc.has("LastName"));
+        }
     }
 }

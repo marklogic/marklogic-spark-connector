@@ -43,6 +43,9 @@ class DocumentContext extends ContextSupport {
     }
 
     boolean contentWasRequested() {
+        if ("true".equals(getStringOption(Options.STREAM_FILES))) {
+            return false;
+        }
         if (!hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
             return true;
         }
