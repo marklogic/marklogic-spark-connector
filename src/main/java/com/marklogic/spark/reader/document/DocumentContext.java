@@ -28,7 +28,7 @@ class DocumentContext extends ContextSupport {
     Set<DocumentManager.Metadata> getRequestedMetadata() {
         Set<DocumentManager.Metadata> set = new HashSet<>();
         if (hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
-            for (String category : getProperties().get(Options.READ_DOCUMENTS_CATEGORIES).split(",")) {
+            for (String category : getStringOption(Options.READ_DOCUMENTS_CATEGORIES).split(",")) {
                 if ("content".equalsIgnoreCase(category)) {
                     continue;
                 }
