@@ -4,24 +4,26 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.ObjectInputStream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * In this context, "streaming" != Spark Structured Streaming, but rather avoiding reading the contents of a file
+ * into memory by postponing reading of the file until the writer phase, where it can then be streamed from disk into
+ * MarkLogic.
+ */
 class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
 
-    /**
-     * In this context, "streaming" != Spark Structured Streaming, but rather avoiding reading the contents of a file
-     * into memory by postponing reading of the file until the writer phase, where it can then be streamed from disk into
-     * MarkLogic.
-     */
     @Test
     void stream() throws Exception {
         Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
@@ -39,6 +41,24 @@ class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
         assertCollectionSize("This verifies that enabling streaming does not break any functionality. We don't " +
             "have a test for a file large enough to warrant streaming as that would drastically slow down the suite " +
             "of tests.", "streamed-files", 4);
+    }
+
+    @Test
+    void handleFailureWhileStreaming() {
+        DataFrameWriter writer = newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .load("src/test/resources/mixed-files/hello.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, "not-an-actual-role,read")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertTrue(ex.getMessage().contains("SEC-ROLEDNE: xdmp:role(\"not-an-actual-role\")"),
+            "This verifies that when the connector uses GenericDocumentManager to PUT a single document, any error " +
+                "is still wrapped in a ConnectorException. Actual error message: " + ex.getMessage());
     }
 
     private void verifyEachRowHasFileContextAsItsContent(Dataset<Row> dataset) throws Exception {
