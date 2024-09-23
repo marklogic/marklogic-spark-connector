@@ -146,8 +146,6 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
-
-        StructType schema;
         
         try {
             // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
@@ -156,25 +154,24 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
                 logger.debug("Inferred schema from Optic columnInfo: {}", schema);
             }
-            return schema;
-        } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
-        }
 
-        List<String> paramColumns = caseSensitiveOptions.keySet().stream()
+            List<String> paramColumns = caseSensitiveOptions.keySet().stream()
             .filter(key -> key.startsWith(Options.READ_COLUMN_PARAMS_PREFIX))
             .map(key -> key.substring(Options.READ_COLUMN_PARAMS_PREFIX.length()))
             .collect(Collectors.toList());
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Adding param columns to schema: {}", paramColumns);
-        }
+            if (logger.isDebugEnabled()) {
+                logger.debug("Adding param columns to schema: {}", paramColumns);
+            }
 
-        for(String column : paramColumns) {
-            schema = schema.add(column, DataTypes.StringType, false);
-        }
+            for(String column : paramColumns) {
+                schema = schema.add(column, DataTypes.StringType, false);
+            }
 
-        return schema;
+            return schema;
+        } catch (Exception ex) {
+            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
+        }
     }
 
     private List<String> getPaths(Map<String, String> properties) {
