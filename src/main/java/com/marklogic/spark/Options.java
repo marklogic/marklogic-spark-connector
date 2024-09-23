@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -74,8 +62,14 @@ public abstract class Options {
     public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
     public static final String READ_TRIPLES_BASE_IRI = "spark.marklogic.read.triples.baseIri";
 
+    // For logging progress when reading documents, rows, or items via custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
+    public static final String READ_LOG_PROGRESS = "spark.marklogic.read.logProgress";
+
     public static final String READ_FILES_TYPE = "spark.marklogic.read.files.type";
     public static final String READ_FILES_COMPRESSION = "spark.marklogic.read.files.compression";
+    public static final String READ_FILES_ENCODING = "spark.marklogic.read.files.encoding";
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
     public static final String READ_ARCHIVES_CATEGORIES = "spark.marklogic.read.archives.categories";
 
@@ -89,7 +83,13 @@ public abstract class Options {
 
     public static final String WRITE_BATCH_SIZE = "spark.marklogic.write.batchSize";
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
+    public static final String WRITE_THREAD_COUNT_PER_PARTITION = "spark.marklogic.write.threadCountPerPartition";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
+
+    // For logging progress when writing documents or processing with custom code. Defines the interval at which
+    // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
+    // being written/processed.
+    public static final String WRITE_LOG_PROGRESS = "spark.marklogic.write.logProgress";
 
     // For writing via custom code.
     public static final String WRITE_INVOKE = "spark.marklogic.write.invoke";
@@ -117,19 +117,38 @@ public abstract class Options {
     public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
     public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
 
+    // For serializing a row into JSON. Intent is to allow for other constants defined in the Spark
+    // JSONOptions.scala class to be used after "spark.marklogic.write.json."
+    // Example - "spark.marklogic.write.json.ignoreNullFields=false.
+    public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
+
+
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
     public static final String WRITE_GRAPH_OVERRIDE = "spark.marklogic.write.graphOverride";
 
-    // For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
-    // This was introduced in 2.2.0 and unfortunately uses "fileRows" instead of "binaryFileRows".
+    /**
+     * For writing rows adhering to Spark's binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html .
+     *
+     * @deprecated since 2.3.0
+     */
+    @Deprecated(since = "2.3.0", forRemoval = true)
+    // We don't need Sonar to remind us of this deprecation.
+    @SuppressWarnings("java:S1133")
     public static final String WRITE_FILE_ROWS_DOCUMENT_TYPE = "spark.marklogic.write.fileRows.documentType";
 
-    // For writing rows adhering to {@code DocumentRowSchema} to a filesystem.
+    // Forces a document type when writing rows corresponding to our document row schema. Used when the URI extension
+    // does not result in MarkLogic choosing the correct document type.
+    public static final String WRITE_DOCUMENT_TYPE = "spark.marklogic.write.documentType";
+
+    // For writing rows adhering to {@code DocumentRowSchema} or {@code TripleRowSchema} to a filesystem.
     public static final String WRITE_FILES_COMPRESSION = "spark.marklogic.write.files.compression";
 
     // Applies to XML and JSON documents.
     public static final String WRITE_FILES_PRETTY_PRINT = "spark.marklogic.write.files.prettyPrint";
+
+    // Applies to writing documents as files, gzipped files, and as entries in zips/archives.
+    public static final String WRITE_FILES_ENCODING = "spark.marklogic.write.files.encoding";
 
     public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
     public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";

@@ -1,9 +1,13 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.ReadProgressLogger;
 import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
@@ -19,6 +23,10 @@ class CustomCodePartitionReader implements PartitionReader<InternalRow> {
     private final JsonRowDeserializer jsonRowDeserializer;
     private final DatabaseClient databaseClient;
 
+    // Only needed for logging progress.
+    private final long batchSize;
+    private long progressCounter;
+
     public CustomCodePartitionReader(CustomCodeContext customCodeContext, String partition) {
         this.databaseClient = customCodeContext.connectToMarkLogic();
         this.serverEvaluationCall = customCodeContext.buildCall(
@@ -30,6 +38,8 @@ class CustomCodePartitionReader implements PartitionReader<InternalRow> {
         if (partition != null) {
             this.serverEvaluationCall.addVariable("PARTITION", partition);
         }
+
+        this.batchSize = customCodeContext.getNumericOption(Options.READ_BATCH_SIZE, 1, 1);
 
         this.isCustomSchema = customCodeContext.isCustomSchema();
         this.jsonRowDeserializer = new JsonRowDeserializer(customCodeContext.getSchema());
@@ -48,6 +58,11 @@ class CustomCodePartitionReader implements PartitionReader<InternalRow> {
         String val = this.evalResultIterator.next().getString();
         if (this.isCustomSchema) {
             return this.jsonRowDeserializer.deserializeJson(val);
+        }
+        progressCounter++;
+        if (progressCounter >= batchSize) {
+            ReadProgressLogger.logProgressIfNecessary(progressCounter);
+            progressCounter = 0;
         }
         return new GenericInternalRow(new Object[]{UTF8String.fromString(val)});
     }

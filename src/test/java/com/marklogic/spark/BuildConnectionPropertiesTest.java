@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -38,6 +26,22 @@ class BuildConnectionPropertiesTest {
             "To avoid an error when the user uses the connector to write data to a cluster behind a load balancer, " +
                 "the connector defaults to a 'gateway' connection type. If the user can connect directly to MarkLogic, " +
                 "they can simply set this to 'direct' instead.");
+    }
+
+    @Test
+    void clientUriWithDatabase() {
+        properties.put(Options.CLIENT_DATABASE, "Documents");
+        properties.put(Options.CLIENT_URI, "user:password@host:8016");
+        Map<String, String> connectionProps = new ContextSupport(properties).buildConnectionProperties();
+
+        assertEquals("Documents", connectionProps.get(Options.CLIENT_DATABASE), "If the user does not specify a " +
+            "database in the connection string, then the database value specified separately should still be used. " +
+            "This avoids a potential issue where the user is not aware that the connection string accepts a database " +
+            "and thus specifies it via the database option.");
+        assertEquals("user", connectionProps.get(Options.CLIENT_USERNAME));
+        assertEquals("password", connectionProps.get(Options.CLIENT_PASSWORD));
+        assertEquals("host", connectionProps.get(Options.CLIENT_HOST));
+        assertEquals("8016", connectionProps.get(Options.CLIENT_PORT));
     }
 
     @Test

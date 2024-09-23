@@ -15,6 +15,7 @@
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"yearMonthDurationValue", "type":"yearMonthDuration", "hidden":false, "nullable":true}
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"dayTimeDurationValue", "type":"dayTimeDuration", "hidden":false, "nullable":true}
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"stringValue", "type":"string", "hidden":false, "nullable":true}
+{"schema":"sparkTest", "view":"AllTypeRows", "column":"collatedStringValue", "type":"collatedString", "hidden":false, "nullable":true}
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"anyURIValue", "type":"anyUri", "hidden":false, "nullable":true}
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"pointValue", "type":"point", "hidden":false, "nullable":true, "coordinate-system":"wgs84"}
 {"schema":"sparkTest", "view":"AllTypeRows", "column":"longLatPointValue", "type":"point", "hidden":false, "nullable":true, "coordinate-system":"wgs84"}

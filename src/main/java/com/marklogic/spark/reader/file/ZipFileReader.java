@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
@@ -75,7 +78,7 @@ class ZipFileReader implements PartitionReader<InternalRow> {
 
     private byte[] readZipEntry() {
         try {
-            return FileUtil.readBytes(currentZipInputStream);
+            return fileContext.readBytes(currentZipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from zip file at %s; cause: %s",
                 this.currentFilePath, e.getMessage()), e);

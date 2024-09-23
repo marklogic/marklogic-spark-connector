@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -80,23 +68,35 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
+            // Not yet supporting progress logging for file operations.
             return new MarkLogicFileTable(SparkSession.active(),
                 new CaseInsensitiveStringMap(properties),
                 JavaConverters.asScalaBuffer(getPaths(properties)), schema
             );
         }
 
+        final ContextSupport tempContext = new ContextSupport(properties);
+
+        // The appropriate progress logger is reset here so that when the connector is used repeatedly in an
+        // environment like PySpark, the counts start with zero on each new Spark job.
+        final long readProgressInterval = tempContext.getNumericOption(Options.READ_LOG_PROGRESS, 0, 0);
         if (isReadDocumentsOperation(properties)) {
+            ReadProgressLogger.initialize(readProgressInterval, "Documents read: {}");
             return new DocumentTable(DocumentRowSchema.SCHEMA);
         } else if (isReadTriplesOperation(properties)) {
+            ReadProgressLogger.initialize(readProgressInterval, "Triples read: {}");
             return new DocumentTable(TripleRowSchema.SCHEMA);
-        } else if (isReadOperation(properties)) {
-            if (logger.isDebugEnabled()) {
-                logger.debug("Creating new table for reading");
-            }
+        } else if (properties.get(Options.READ_OPTIC_QUERY) != null) {
+            ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
+            return new MarkLogicTable(schema, properties);
+        } else if (Util.isReadWithCustomCodeOperation(properties)) {
+            ReadProgressLogger.initialize(readProgressInterval, "Items read: {}");
             return new MarkLogicTable(schema, properties);
         }
 
+        final long writeProgressInterval = tempContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0);
+        String message = Util.isWriteWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
+        WriteProgressLogger.initialize(writeProgressInterval, message);
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 
@@ -113,10 +113,6 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private boolean isFileOperation(Map<String, String> properties) {
         return properties.containsKey("path") || properties.containsKey("paths");
-    }
-
-    private boolean isReadOperation(Map<String, String> properties) {
-        return properties.get(Options.READ_OPTIC_QUERY) != null || Util.isReadWithCustomCodeOperation(properties);
     }
 
     private boolean isReadDocumentsOperation(Map<String, String> properties) {
@@ -146,7 +142,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
         if (query == null || query.trim().length() < 1) {
-            throw new ConnectorException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
+            throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
         RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
@@ -156,8 +152,11 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         try {
             // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
             StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-
-            schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+            StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+            }
+            return schema;
         } catch (Exception ex) {
             throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }

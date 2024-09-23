@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.client.DatabaseClient;
@@ -12,6 +15,7 @@ import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.ReadProgressLogger;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
@@ -145,6 +149,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         if (logger.isTraceEnabled()) {
             logger.trace("Retrieved page of documents in {}ms from partition {}", (System.currentTimeMillis() - start), this.forestPartition);
         }
+        ReadProgressLogger.logProgressIfNecessary(page.getPageSize());
         return page;
     }
 

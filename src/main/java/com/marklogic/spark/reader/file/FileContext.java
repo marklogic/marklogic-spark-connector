@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
@@ -8,18 +11,30 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 
-class FileContext extends ContextSupport implements Serializable {
+public class FileContext extends ContextSupport implements Serializable {
 
     private SerializableConfiguration hadoopConfiguration;
+    private final String encoding;
 
-    FileContext(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
+    public FileContext(Map<String, String> properties, SerializableConfiguration hadoopConfiguration) {
         super(properties);
         this.hadoopConfiguration = hadoopConfiguration;
+        this.encoding = getStringOption(Options.READ_FILES_ENCODING);
+        if (this.encoding != null) {
+            try {
+                Charset.forName(this.encoding);
+            } catch (UnsupportedCharsetException e) {
+                throw new ConnectorException(String.format("Unsupported encoding value: %s", this.encoding), e);
+            }
+        }
     }
 
     boolean isZip() {
@@ -30,7 +45,7 @@ class FileContext extends ContextSupport implements Serializable {
         return "gzip".equalsIgnoreCase(getStringOption(Options.READ_FILES_COMPRESSION));
     }
 
-    InputStream openFile(String filePath) {
+    public InputStream openFile(String filePath) {
         try {
             Path hadoopPath = new Path(filePath);
             FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
@@ -42,10 +57,15 @@ class FileContext extends ContextSupport implements Serializable {
         }
     }
 
-    boolean isReadAbortOnFailure() {
+    public boolean isReadAbortOnFailure() {
         if (hasOption(Options.READ_FILES_ABORT_ON_FAILURE)) {
             return Boolean.parseBoolean(getStringOption(Options.READ_FILES_ABORT_ON_FAILURE));
         }
         return true;
+    }
+
+    byte[] readBytes(InputStream inputStream) throws IOException {
+        byte[] bytes = FileUtil.readBytes(inputStream);
+        return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
     }
 }

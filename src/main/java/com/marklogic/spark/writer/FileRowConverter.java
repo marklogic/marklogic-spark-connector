@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -5,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.DataTypes;
@@ -44,15 +46,16 @@ class FileRowConverter implements RowConverter {
         return new ArrayList<>();
     }
 
+    // Telling Sonar to not tell us to remove this code, since we can't until 3.0.
+    @SuppressWarnings("java:S1874")
     private void forceFormatIfNecessary(BytesHandle content) {
-        if (writeContext.hasOption(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE)) {
-            String value = writeContext.getProperties().get(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE);
-            try {
-                content.withFormat(Format.valueOf(value.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
-                String optionAlias = writeContext.getOptionNameForMessage(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE);
-                throw new ConnectorException(String.format(message, optionAlias, value));
+        Format format = writeContext.getDocumentFormat();
+        if (format != null) {
+            content.withFormat(format);
+        } else {
+            format = writeContext.getDeprecatedFileRowsDocumentFormat();
+            if (format != null) {
+                content.withFormat(format);
             }
         }
     }

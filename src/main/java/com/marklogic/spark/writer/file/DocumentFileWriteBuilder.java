@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.file;
 
 import org.apache.spark.sql.connector.write.BatchWrite;

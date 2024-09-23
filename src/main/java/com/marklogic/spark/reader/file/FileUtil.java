@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import java.io.ByteArrayOutputStream;
@@ -10,6 +13,14 @@ import java.util.zip.ZipInputStream;
 
 public interface FileUtil {
 
+    /**
+     * Does not handle file encoding - {@code FileContext} is expected to handle that as it has access to the
+     * user's options.
+     *
+     * @param inputStream
+     * @return
+     * @throws IOException
+     */
     static byte[] readBytes(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[1024];
         ByteArrayOutputStream baos = new ByteArrayOutputStream();

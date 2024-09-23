@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -127,16 +115,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void abort() {
-        Util.MAIN_LOGGER.warn("Abort called; stopping job");
+        Util.MAIN_LOGGER.warn("Abort called.");
         stopJobAndRelease();
         closeArchiveWriter();
-        Util.MAIN_LOGGER.info("Finished abort");
+        Util.MAIN_LOGGER.info("Finished abort.");
     }
 
     @Override
     public void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Close called; stopping job.");
+            logger.debug("Close called.");
         }
         stopJobAndRelease();
         closeArchiveWriter();
@@ -161,7 +149,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         if (writeContext.isUsingFileSchema()) {
             return new FileRowConverter(writeContext);
         } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
-            return new DocumentRowConverter(writeContext.getStringOption(Options.WRITE_URI_TEMPLATE));
+            return new DocumentRowConverter(writeContext);
         } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
             return new RdfRowConverter(writeContext);
         }
@@ -240,7 +228,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private void closeArchiveWriter() {
         if (archiveWriter != null) {
-            Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            if (failedItemCount.get() > 0) {
+                Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+            }
             archiveWriter.close();
         }
     }

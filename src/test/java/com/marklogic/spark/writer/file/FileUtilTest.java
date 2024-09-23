@@ -1,10 +1,11 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.file;
 
-import com.marklogic.spark.ConnectorException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class FileUtilTest {
 
@@ -22,7 +23,9 @@ class FileUtilTest {
 
     @Test
     void makePathWithInvalidURI() {
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> FileUtil.makePathFromDocumentURI(":::"));
-        assertEquals("Unable to construct URI from: :::", ex.getMessage());
+        String uri = FileUtil.makePathFromDocumentURI("has space.json");
+        assertEquals("has space.json", uri, "If a java.net.URI cannot be constructed - in this case, it's due to " +
+            "the space in the string - then the error should be logged at the DEBUG level and the original value " +
+            "should be returned.");
     }
 }

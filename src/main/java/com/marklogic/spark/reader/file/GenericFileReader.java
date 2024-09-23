@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
@@ -37,7 +40,7 @@ class GenericFileReader implements PartitionReader<InternalRow> {
         filePathIndex++;
         try {
             try (InputStream inputStream = fileContext.openFile(path)) {
-                byte[] content = FileUtil.readBytes(inputStream);
+                byte[] content = fileContext.readBytes(inputStream);
                 nextRowToReturn = new GenericInternalRow(new Object[]{
                     UTF8String.fromString(path),
                     ByteArray.concat(content),

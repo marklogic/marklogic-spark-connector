@@ -1,6 +1,8 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
-import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -128,7 +130,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private MlcpMetadata readMetadataEntry(ZipEntry metadataZipEntry) {
         try {
-            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(FileUtil.readBytes(currentZipInputStream)));
+            return this.mlcpMetadataConverter.convert(new ByteArrayInputStream(fileContext.readBytes(currentZipInputStream)));
         } catch (Exception e) {
             String message = String.format("Unable to read metadata for entry: %s; file: %s; cause: %s",
                 metadataZipEntry.getName(), this.currentFilePath, e.getMessage());
@@ -168,7 +170,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
 
     private byte[] readBytesFromContentEntry(ZipEntry contentZipEntry) {
         try {
-            return FileUtil.readBytes(currentZipInputStream);
+            return fileContext.readBytes(currentZipInputStream);
         } catch (IOException e) {
             String message = String.format("Unable to read entry %s from zip file at %s; cause: %s",
                 contentZipEntry.getName(), this.currentFilePath, e.getMessage());
@@ -200,14 +202,9 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private InternalRow makeNakedRow(ZipEntry metadataZipEntry, MlcpMetadata mlcpMetadata) {
-        DocumentMetadataHandle metadata = mlcpMetadata.getMetadata();
-        metadata.getCollections().clear();
-        metadata.getPermissions().clear();
-        metadata.getMetadataValues().clear();
-        metadata.setQuality(0);
         return new DocumentRowBuilder(metadataCategories)
             .withUri(metadataZipEntry.getName())
-            .withMetadata(metadata)
+            .withMetadata(mlcpMetadata.getMetadata())
             .buildRow();
     }
 

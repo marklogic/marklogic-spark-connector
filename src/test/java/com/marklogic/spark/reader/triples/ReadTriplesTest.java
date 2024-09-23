@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.triples;
 
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -90,6 +93,8 @@ class ReadTriplesTest extends AbstractIntegrationTest {
     void twoCollections() {
         long count = startRead()
             .option(Options.READ_TRIPLES_COLLECTIONS, "http://example.org/graph,other-graph")
+            .option(Options.READ_BATCH_SIZE, 5)
+            .option(Options.READ_LOG_PROGRESS, 10)
             .load().count();
 
         assertEquals(32, count, "Since both test triples files belong to 'test-config', and each also belongs to " +

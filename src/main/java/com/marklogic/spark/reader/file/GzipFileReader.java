@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
@@ -70,7 +73,7 @@ class GzipFileReader implements PartitionReader<InternalRow> {
 
     private byte[] extractGZIPContents(String currentFilePath, InputStream gzipInputStream) {
         try {
-            return FileUtil.readBytes(gzipInputStream);
+            return fileContext.readBytes(gzipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to read from gzip file at %s; cause: %s",
                 currentFilePath, e.getMessage()), e);

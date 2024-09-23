@@ -193,7 +193,8 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.fileRows.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.jsonRootName | As of 2.3.0, specifies a root field name when writing JSON documents based on arbitrary rows. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
-| spark.marklogic.write.threadCount | The number of threads used within each partition to send documents to MarkLogic; defaults to 4. |
+| spark.marklogic.write.threadCount | The number of threads used across all partitions to send documents to MarkLogic; defaults to 4. |
+| spark.marklogic.write.threadCountPerPartition | New in 2.3.0; the number of threads used per partition to send documents to MarkLogic. |
 | spark.marklogic.write.transform | Name of a REST transform to apply to each document. |
 | spark.marklogic.write.transformParams | Comma-delimited string of transform parameter names and values - e.g. param1,value1,param2,value2 . |
 | spark.marklogic.write.transformParamsDelimiter | Delimiter to use instead of a command for the `transformParams` option. |

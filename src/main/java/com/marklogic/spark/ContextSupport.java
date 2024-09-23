@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -22,12 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 import java.util.concurrent.TimeUnit;
 
 public class ContextSupport implements Serializable {
@@ -70,7 +54,13 @@ public class ContextSupport implements Serializable {
         }
         DatabaseClient.ConnectionResult result = client.checkConnection();
         if (!result.isConnected()) {
-            throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
+            if (result.getStatusCode() == 404) {
+                throw new ConnectorException(String.format("Unable to connect to MarkLogic; status code: 404; ensure that " +
+                    "you are attempting to connect to a MarkLogic REST API app server. See the MarkLogic documentation on " +
+                    "REST API app servers for more information."));
+            }
+            throw new ConnectorException(String.format(
+                "Unable to connect to MarkLogic; status code: %d; error message: %s", result.getStatusCode(), result.getErrorMessage()));
         }
         return client;
     }
@@ -88,15 +78,12 @@ public class ContextSupport implements Serializable {
         connectionProps.put("spark.marklogic.client.authType", "digest");
         connectionProps.put("spark.marklogic.client.connectionType", "gateway");
         connectionProps.putAll(this.properties);
-
         if (optionExists(Options.CLIENT_URI)) {
-            parseClientUri(properties.get(Options.CLIENT_URI), connectionProps);
+            parseConnectionString(properties.get(Options.CLIENT_URI), connectionProps);
         }
-
         if ("true".equalsIgnoreCase(properties.get(Options.CLIENT_SSL_ENABLED))) {
             connectionProps.put("spark.marklogic.client.sslProtocol", "default");
         }
-
         return connectionProps;
     }
 
@@ -106,56 +93,28 @@ public class ContextSupport implements Serializable {
     }
 
     public final String getOptionNameForMessage(String option) {
-        // Allows ETL tool to override what's shown in a validation error.
-        // Feels like this should be in another class which can cache the ResourceBundle reference.
-        ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
-        String optionName = bundle.getString(option);
-        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+        return Util.getOptionNameForErrorMessage(option);
     }
 
-    private void parseClientUri(String clientUri, Map<String, String> connectionProps) {
-        final String errorMessage = String.format("Invalid value for %s; must be username:password@host:port",
-            getOptionNameForMessage("spark.marklogic.client.uri"));
+    private void parseConnectionString(String value, Map<String, String> connectionProps) {
+        ConnectionString connectionString = new ConnectionString(value, getOptionNameForMessage("spark.marklogic.client.uri"));
+        connectionProps.put(Options.CLIENT_USERNAME, connectionString.getUsername());
+        connectionProps.put(Options.CLIENT_PASSWORD, connectionString.getPassword());
+        connectionProps.put(Options.CLIENT_HOST, connectionString.getHost());
+        connectionProps.put(Options.CLIENT_PORT, connectionString.getPort() + "");
 
-        String[] parts = clientUri.split("@");
-        if (parts.length != 2) {
-            throw new ConnectorException(errorMessage);
-        }
-        String[] tokens = parts[0].split(":");
-        if (tokens.length != 2) {
-            throw new ConnectorException(errorMessage);
-        }
-        connectionProps.put(Options.CLIENT_USERNAME, decodeValue(tokens[0], "username"));
-        connectionProps.put(Options.CLIENT_PASSWORD, decodeValue(tokens[1], "password"));
-
-        tokens = parts[1].split(":");
-        if (tokens.length != 2) {
-            throw new ConnectorException(errorMessage);
-        }
-        connectionProps.put(Options.CLIENT_HOST, tokens[0]);
-        if (tokens[1].contains("/")) {
-            tokens = tokens[1].split("/");
-            connectionProps.put(Options.CLIENT_PORT, tokens[0]);
-            connectionProps.put(Options.CLIENT_DATABASE, tokens[1]);
-        } else {
-            connectionProps.put(Options.CLIENT_PORT, tokens[1]);
+        String db = connectionString.getDatabase();
+        if (db != null && db.trim().length() > 0) {
+            connectionProps.put(Options.CLIENT_DATABASE, db);
         }
     }
 
-    private String decodeValue(String value, String label) {
-        try {
-            return URLDecoder.decode(value, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new ConnectorException(String.format("Unable to decode '%s'; cause: %s", label, value));
-        }
-    }
-
-    protected final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
+    public final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
             long value = this.getProperties().containsKey(optionName) ?
                 Long.parseLong(this.getProperties().get(optionName)) :
                 defaultValue;
-            if (value < minimumValue) {
+            if (value != defaultValue && value < minimumValue) {
                 throw new ConnectorException(String.format("The value of '%s' must be %d or greater.", getOptionNameForMessage(optionName), minimumValue));
             }
             return value;

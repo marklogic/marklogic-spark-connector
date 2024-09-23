@@ -104,6 +104,12 @@
       "metadata": {}
     },
     {
+      "name": "sparkTest.AllTypeRows.collatedStringValue",
+      "type": "string",
+      "nullable": true,
+      "metadata": {}
+    },
+    {
       "name": "sparkTest.AllTypeRows.anyURIValue",
       "type": "string",
       "nullable": true,

@@ -7,10 +7,11 @@ plugins {
   id 'signing'
   id "jacoco"
   id "org.sonarqube" version "4.4.1.3373"
+  id "org.owasp.dependencycheck" version "10.0.3"
 }
 
 group 'com.marklogic'
-version '2.2-SNAPSHOT'
+version '2.3.1'
 
 java {
   // To support reading RDF files, Apache Jena is used - but that requires Java 11. If we want to do a 2.2.0 release
@@ -21,6 +22,10 @@ java {
 
 repositories {
   mavenCentral()
+  mavenLocal()
+  maven {
+    url "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
+  }
 }
 
 configurations {
@@ -42,7 +47,7 @@ dependencies {
     exclude module: "rocksdbjni"
   }
 
-  shadowDependencies ("com.marklogic:marklogic-client-api:6.6.0") {
+  shadowDependencies ("com.marklogic:marklogic-client-api:7.0.0") {
     // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
     // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
     // So the 4 Jackson modules are excluded to allow for Spark's to be used.
@@ -50,19 +55,11 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // For XML support; supports converting a string of JSON into a string of XML.
-  // See ArbitraryRowConverter for more information.
-  shadowDependencies "org.json:json:20240303"
+  // Required for converting JSON to XML. Using 2.14.2 to align with Spark 3.4.1.
+  shadowDependencies "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.14.2"
 
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
-
-  // Makes it possible to use lambdas in Java 8 to implement Spark's Function1 and Function2 interfaces
-  // See https://github.com/scala/scala-java8-compat for more information
-  shadowDependencies("org.scala-lang.modules:scala-java8-compat_2.12:1.0.2") {
-    // Prefer the Scala libraries used within the user's Spark runtime.
-    exclude module: "scala-library"
-  }
 
   shadowDependencies ("org.apache.jena:jena-arq:4.10.0") {
     exclude group: "com.fasterxml.jackson.core"
@@ -71,18 +68,35 @@ dependencies {
 
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 
-  testImplementation ('com.marklogic:ml-app-deployer:4.7.0') {
+  testImplementation ('com.marklogic:ml-app-deployer:4.8.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared above.
+    exclude module: "marklogic-client-api"
   }
+
   testImplementation ('com.marklogic:marklogic-junit5:1.4.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared above.
+    exclude module: "marklogic-client-api"
   }
 
   testImplementation "ch.qos.logback:logback-classic:1.3.14"
   testImplementation "org.slf4j:jcl-over-slf4j:1.7.36"
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
+}
+
+// See https://jeremylong.github.io/DependencyCheck/dependency-check-gradle/configuration.html for more information.
+dependencyCheck {
+  // Need a JSON report to integrate with Sonar. And HTML is easier for humans to read.
+  formats = ["HTML", "JSON"]
+  // We don't include compileOnly since that includes Spark, and Spark and its dependencies are not actual dependencies
+  // of our connector.
+  scanConfigurations = ["shadowDependencies"]
+  suppressionFile = "config/dependency-check-suppressions.xml"
 }
 
 test {
@@ -103,6 +117,8 @@ sonar {
   properties {
     property "sonar.projectKey", "marklogic-spark"
     property "sonar.host.url", "http://localhost:9000"
+    // See https://github.com/dependency-check/dependency-check-sonar-plugin for more information.
+    property "sonar.dependencyCheck.jsonReportPath", "build/reports/dependency-check-report.json"
   }
 }
 
@@ -144,38 +160,6 @@ task perfTest(type: JavaExec) {
   mainClass = "com.marklogic.spark.reader.PerformanceTester"
   classpath = sourceSets.test.runtimeClasspath
   args mlHost
-}
-
-task dockerBuildCache(type: Exec) {
-  description = "Creates an image named 'marklogic-spark-cache' containing a cache of the Gradle dependencies."
-  commandLine 'docker', 'build', '--no-cache', '-t', 'marklogic-spark-cache', '.'
-}
-
-task dockerTest(type: Exec) {
-  description = "Run all of the tests within a Docker environment."
-  commandLine 'docker', 'run',
-    // Allows for communicating with the MarkLogic cluster that is setup via docker-compose.yaml.
-    '--network=marklogic_spark_external_net',
-    // Map the project directory into the Docker container.
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    // Working directory for the Gradle tasks below.
-    '-w', '/root/project',
-    // Remove the container after it finishes running.
-    '--rm',
-    // Use the output of dockerBuildCache to avoid downloading all the Gradle dependencies.
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'test'
-}
-
-task dockerPerfTest(type: Exec) {
-  description = "Run PerformanceTester a Docker environment."
-  commandLine 'docker', 'run',
-    '--network=marklogic_spark_external_net',
-    '-v', getProjectDir().getAbsolutePath() + ':/root/project',
-    '-w', '/root/project',
-    '--rm',
-    'marklogic-spark-cache:latest',
-    'gradle', '-i', '-PmlHost=bootstrap_3n.local', 'perfTest'
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {

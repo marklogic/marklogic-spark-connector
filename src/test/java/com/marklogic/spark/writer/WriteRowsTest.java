@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -23,7 +11,6 @@ import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +24,25 @@ class WriteRowsTest extends AbstractWriteTest {
     void defaultBatchSizeAndThreadCount() {
         newWriter().save();
         verifyTwoHundredDocsWereWritten();
+    }
+
+    @Test
+    void logProgressTest() {
+        newWriter(4)
+            // Including these options here to ensure they don't cause any issues, though we're not yet able to
+            // assert on the info-level log entries that they add.
+            .option(Options.WRITE_BATCH_SIZE, 8)
+            .option(Options.WRITE_THREAD_COUNT, 8)
+            .option(Options.WRITE_LOG_PROGRESS, 20)
+            .save();
+
+        verifyTwoHundredDocsWereWritten();
+
+        // For manual inspection, run it again to ensure that the progress counter was reset.
+        newWriter(2)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .option(Options.WRITE_LOG_PROGRESS, 40)
+            .save();
     }
 
     @Test
@@ -56,11 +62,34 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void twoPartitions() {
-        newWriter(2).save();
+        newWriter(2)
+            .option(Options.WRITE_THREAD_COUNT_PER_PARTITION, 8)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .save();
 
         // Just verifies that the operation succeeds with multiple partitions. Check the logging to see that two
         // partitions were in fact created, each with its own WriteBatcher.
         verifyTwoHundredDocsWereWritten();
+    }
+
+    @Test
+    void insufficientPrivilegeForOtherDatabase() {
+        DataFrameWriter writer = newWriter(2)
+            .option(Options.WRITE_THREAD_COUNT_PER_PARTITION, 8)
+            .option(Options.WRITE_BATCH_SIZE, 10)
+            .option(Options.CLIENT_URI, "spark-test-user:spark@localhost:8016/Documents");
+
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        assertNull(ex.getCause(), "Surprisingly, in this scenario where the exception is thrown during the " +
+            "construction of WriteBatcherDataWriter, Spark does not populate the 'cause' of the exception but rather " +
+            "shoves the entire stacktrace of the exception into the exception message. This is not a good UX for " +
+            "connector or Flux users, as it puts an ugly stacktrace right into their face. I have not figured out " +
+            "how to avoid this yet, so this test is capturing this behavior in the hopes that an upgraded version of " +
+            "Spark will properly set the cause instead.");
+        assertTrue(ex.getMessage().contains("at com.marklogic.client.impl.OkHttpServices"), "This is confirming that " +
+            "the exception message contains the stacktrace of the MarkLogic exception - which we don't want. Hoping " +
+            "this assertion breaks during a future upgrade of Spark and we have a proper exception message " +
+            "instead. Actual message: " + ex.getMessage());
     }
 
     @Test
@@ -70,7 +99,7 @@ class WriteRowsTest extends AbstractWriteTest {
             .save();
 
         String uri = getUrisInCollection(COLLECTION, 1).get(0);
-        // Temporal doc is written to the temporal collection; "latest" since it's the latest version for that URI;
+        // Temporal doc is written to the temporal collection and 'latest' since it's the latest version for that URI,
         // and to a collection matching the URI of the document.
         assertInCollections(uri, COLLECTION, TEMPORAL_COLLECTION, "latest", uri);
     }
@@ -106,7 +135,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void invalidBatchSize() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
         assertEquals("The value of 'spark.marklogic.write.batchSize' must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
@@ -122,9 +151,9 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void userNotPermittedToWriteAndFailOnCommit() {
         ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
-                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
-                .option(Options.WRITE_BATCH_SIZE, 500)
-                .save()
+            .option(Options.CLIENT_USERNAME, "spark-no-write-user")
+            .option(Options.WRITE_BATCH_SIZE, 500)
+            .save()
         );
 
         verifyFailureIsDueToLackOfPermission(ex);
@@ -152,10 +181,10 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void userNotPermittedToWriteAndFailOnWrite() {
         ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
-                .option(Options.CLIENT_USERNAME, "spark-no-write-user")
-                .option(Options.WRITE_BATCH_SIZE, 1)
-                .option(Options.WRITE_THREAD_COUNT, 1)
-                .save()
+            .option(Options.CLIENT_USERNAME, "spark-no-write-user")
+            .option(Options.WRITE_BATCH_SIZE, 1)
+            .option(Options.WRITE_THREAD_COUNT, 1)
+            .save()
         );
 
         verifyFailureIsDueToLackOfPermission(ex);

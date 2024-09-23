@@ -1,28 +1,12 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
-import org.apache.spark.sql.catalyst.json.JSONOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.immutable.HashMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 public interface Util {
@@ -32,19 +16,6 @@ public interface Util {
      * messages.
      */
     Logger MAIN_LOGGER = LoggerFactory.getLogger("com.marklogic.spark");
-
-    JSONOptions DEFAULT_JSON_OPTIONS = new JSONOptions(
-        new HashMap<>(),
-
-        // As verified via tests, this default timezone ID is overridden by a user via the spark.sql.session.timeZone option.
-        "Z",
-
-        // We don't expect corrupted records - i.e. corrupted values - to be present in the index. But Spark
-        // requires this to be set. See
-        // https://medium.com/@sasidharan-r/how-to-handle-corrupt-or-bad-record-in-apache-spark-custom-logic-pyspark-aws-430ddec9bb41
-        // for more information.
-        "_corrupt_record"
-    );
 
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
@@ -79,5 +50,26 @@ public interface Util {
             Options.READ_INVOKE, Options.READ_XQUERY, Options.READ_JAVASCRIPT,
             Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE
         );
+    }
+
+    static boolean isWriteWithCustomCodeOperation(Map<String, String> properties) {
+        return Util.hasOption(properties,
+            Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
+            Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE
+        );
+    }
+
+    /**
+     * Allows Flux to override what's shown in a validation error. The connector is fine showing option names
+     * such as "spark.marklogic.read.opticQuery", but that is meaningless to a Flux user. This can also be used to
+     * access any key in the messages properties file.
+     *
+     * @param option
+     * @return
+     */
+    static String getOptionNameForErrorMessage(String option) {
+        ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
+        String optionName = bundle.getString(option);
+        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
     }
 }

@@ -1,5 +1,9 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.file;
 
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -28,6 +32,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 class RdfFileWriter implements DataWriter<InternalRow> {
 
@@ -39,6 +44,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
     private final int partitionId;
     private final LangAndExtension langAndExtension;
     private final String graphOverride;
+    private final boolean isGZIP;
 
     private OutputStream outputStream;
     private StreamRDF stream;
@@ -50,6 +56,15 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         this.hadoopConfiguration = hadoopConfiguration;
         this.partitionId = partitionId;
         this.langAndExtension = determineLangAndExtension();
+
+        String value = rdfContext.getStringOption(Options.WRITE_FILES_COMPRESSION);
+        if ("gzip".equals(value)) {
+            this.isGZIP = true;
+        } else if (value != null && value.trim().length() > 0) {
+            throw new ConnectorException(String.format("Unsupported compression value; only 'gzip' is supported: %s", value));
+        } else {
+            this.isGZIP = false;
+        }
 
         if (!this.langAndExtension.supportsGraph() && this.graphOverride != null) {
             Util.MAIN_LOGGER.warn("RDF graph '{}' will be ignored since the target RDF format of '{}' does not support graphs.",
@@ -91,9 +106,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
     }
 
     private void createStream() throws IOException {
-        final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
-        String filename = String.format("%s-%d.%s", timestamp, partitionId, langAndExtension.extension);
-        Path filePath = new Path(this.path, filename);
+        final Path filePath = makeFilePath();
         logger.info("Will write to: {}", filePath.toUri());
 
         FileSystem fileSystem = filePath.getFileSystem(this.hadoopConfiguration.value());
@@ -107,8 +120,22 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         } else {
             this.outputStream = new BufferedOutputStream(fileSystem.create(filePath, false));
         }
+
+        if (isGZIP) {
+            this.outputStream = new GZIPOutputStream(this.outputStream);
+        }
+
         this.stream = StreamRDFWriter.getWriterStream(this.outputStream, langAndExtension.lang);
         this.stream.start();
+    }
+
+    private Path makeFilePath() {
+        final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
+        String filename = String.format("%s-%d.%s", timestamp, partitionId, langAndExtension.extension);
+        if (this.isGZIP) {
+            filename += ".gz";
+        }
+        return new Path(this.path, filename);
     }
 
     /**

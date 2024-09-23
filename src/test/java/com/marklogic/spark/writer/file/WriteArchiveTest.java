@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.file;
 
 import com.marklogic.junit5.XmlNode;
@@ -34,7 +37,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
         "properties",
         "metadatavalues"
     })
-    void writeAllMetadata(String metadata, @TempDir Path tempDir) throws Exception {
+    void writeAllMetadata(String metadata, @TempDir Path tempDir) {
         newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -81,7 +84,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
         String xml = new String((byte[]) row.get(1));
         XmlNode metadata = new XmlNode(xml,
             Namespace.getNamespace("rapi", "http://marklogic.com/rest-api"),
-            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
+            PROPERTIES_NAMESPACE,
             Namespace.getNamespace("ex", "org:example"));
 
         switch (metadataValue) {

@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -34,7 +37,7 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
     @Test
     void zeroPartitions() {
         Dataset<Row> dataset = readAuthors(0);
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.count());
+        assertThrows(ConnectorException.class, () -> dataset.count());
     }
 
     @Test

@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -23,10 +11,8 @@ import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.ContextSupport;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
+import com.marklogic.client.io.Format;
+import com.marklogic.spark.*;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
@@ -43,13 +29,18 @@ public class WriteContext extends ContextSupport {
 
     private final StructType schema;
     private final boolean usingFileSchema;
+    private final int batchSize;
 
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
 
+    // This unfortunately is not final as we don't know it when this object is created.
+    private int numPartitions;
+
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
         this.schema = schema;
+        this.batchSize = (int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1);
 
         // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
         // so that reader can be reused for loading files as-is.
@@ -67,20 +58,52 @@ public class WriteContext extends ContextSupport {
         return schema;
     }
 
-    int getThreadCount() {
+    /**
+     * @return the total number of threads to use across all partitions. This is typically how a user thinks in terms
+     * of, as they are not likely to know how many partitions will be created. But they will typically know how many
+     * hosts are in their MarkLogic cluster and how many threads are available to an app server on each host.
+     */
+    int getTotalThreadCount() {
         return (int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
     }
 
+    /**
+     * @return the thread count to use per partition where a user has specified the total thread count across all
+     * partitions.
+     */
+    int getCalculatedThreadCountPerPartition() {
+        int threadCount = getTotalThreadCount();
+        if (this.numPartitions > 0) {
+            return (int) Math.ceil((double) threadCount / (double) numPartitions);
+        }
+        return threadCount;
+    }
+
+    /**
+     * @return the thread count to use per partition where a user has used an option to explicitly define how many
+     * threads should be used by a partition.
+     */
+    int getUserDefinedThreadCountPerPartition() {
+        return (int) getNumericOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
+    }
+
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
+        // If the user told us how many threads they want per partition (we expect this to be rare), then use that.
+        // Otherwise, use the calculated number of threads per partition based on the total thread count that either
+        // the user configured or using the default value for that option.
+        final int threadCount = getUserDefinedThreadCountPerPartition() > 0 ?
+            getUserDefinedThreadCountPerPartition() : getCalculatedThreadCountPerPartition();
+
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
+        }
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
-            .withBatchSize((int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1))
-            .withThreadCount(getThreadCount())
-            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
+            .withBatchSize(batchSize)
+            .withThreadCount(threadCount)
+            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
+            .onBatchSuccess(this::logBatchOnSuccess);
 
-        if (logger.isDebugEnabled()) {
-            writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
-        }
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
@@ -115,6 +138,41 @@ public class WriteContext extends ContextSupport {
         }
 
         return factory.newDocBuilder();
+    }
+
+    Format getDocumentFormat() {
+        if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
+            String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
+            try {
+                return Format.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                String optionAlias = getOptionNameForMessage(Options.WRITE_DOCUMENT_TYPE);
+                throw new ConnectorException(String.format(message, optionAlias, value));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * @deprecated since 2.3.0; users should use getDocumentFormat instead.
+     */
+    @Deprecated(since = "2.3.0")
+    // We don't need Sonar to remind us of this deprecation.
+    @SuppressWarnings("java:S1133")
+    Format getDeprecatedFileRowsDocumentFormat() {
+        final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
+        if (hasOption(deprecatedOption)) {
+            String value = getStringOption(deprecatedOption);
+            try {
+                return Format.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
+                String optionAlias = getOptionNameForMessage(deprecatedOption);
+                throw new ConnectorException(String.format(message, optionAlias, value));
+            }
+        }
+        return null;
     }
 
     /**
@@ -193,12 +251,14 @@ public class WriteContext extends ContextSupport {
             WriteEvent firstEvent = batch.getItems()[0];
             // If the first event is the item added by DMSDK for the default metadata object, ignore it when showing
             // the count of documents in the batch.
-            // the count of documents in the batch.
             if (firstEvent.getTargetUri() == null && firstEvent.getMetadata() != null) {
                 docCount--;
             }
         }
-        logger.debug("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+        WriteProgressLogger.logProgressIfNecessary(docCount);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+        }
     }
 
     boolean isUsingFileSchema() {
@@ -211,5 +271,9 @@ public class WriteContext extends ContextSupport {
 
     int getFileSchemaPathPosition() {
         return fileSchemaPathPosition;
+    }
+
+    public void setNumPartitions(int numPartitions) {
+        this.numPartitions = numPartitions;
     }
 }

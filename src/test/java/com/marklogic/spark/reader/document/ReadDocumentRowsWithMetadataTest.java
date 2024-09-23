@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.junit5.XmlNode;
@@ -126,7 +129,7 @@ class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
         assertEquals(10, row.getInt(5));
 
         XmlNode properties = new XmlNode(row.getString(6), Namespace.getNamespace("ex", "org:example"),
-            Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"));
+            PROPERTIES_NAMESPACE);
         properties.assertElementValue("/prop:properties/ex:key1", "value1");
         properties.assertElementValue("/prop:properties/key2", "value2");
 

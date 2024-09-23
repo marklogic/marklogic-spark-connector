@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
@@ -111,6 +114,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    @Deprecated
     void forceDocumentType() {
         newSparkSession()
             .read()
@@ -134,6 +138,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    @Deprecated
     void invalidDocumentType() {
         DataFrameWriter writer = newSparkSession()
             .read()

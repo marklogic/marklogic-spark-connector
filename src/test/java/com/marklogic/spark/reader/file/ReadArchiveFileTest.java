@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.junit5.XmlNode;
@@ -200,6 +203,25 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             "and 1 from secondEntryInvalid.zip.");
     }
 
+    /**
+     * Verifies that the encoding is applied to documents read from an archive zip. In this case, iso-8859-1 is required
+     * for the content entry but still works fine for the metadata entry, which is UTF-8.
+     */
+    @Test
+    void customEncoding() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .option(Options.READ_FILES_ENCODING, "iso-8859-1")
+            .load("src/test/resources/encoding/medline.iso-8859-1.archive.zip")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("test/medline.iso-8859-1.xml", "collection1");
+        doc.assertElementExists("/MedlineCitationSet");
+    }
+
     private void verifyAllMetadata(Path tempDir, int rowCount) {
         List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "archive")
@@ -240,8 +262,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
     }
 
     private void verifyProperties(Row row) {
-        XmlNode properties = new XmlNode(row.getString(6), Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property"),
-            Namespace.getNamespace("ex", "org:example"));
+        XmlNode properties = new XmlNode(row.getString(6), PROPERTIES_NAMESPACE, Namespace.getNamespace("ex", "org:example"));
         properties.assertElementValue("/prop:properties/ex:key1", "value1");
         properties.assertElementValue("/prop:properties/key2", "value2");
     }

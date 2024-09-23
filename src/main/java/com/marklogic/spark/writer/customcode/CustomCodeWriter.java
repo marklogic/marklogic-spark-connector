@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.writer.customcode;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,19 +12,15 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
+import com.marklogic.spark.*;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.CommitMessage;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,8 +31,9 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
 
     private final DatabaseClient databaseClient;
     private final CustomCodeContext customCodeContext;
-
+    private final JsonRowSerializer jsonRowSerializer;
     private final int batchSize;
+
     private final List<String> currentBatch = new ArrayList<>();
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
@@ -45,9 +45,9 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     CustomCodeWriter(CustomCodeContext customCodeContext) {
         this.customCodeContext = customCodeContext;
         this.databaseClient = customCodeContext.connectToMarkLogic();
+        this.jsonRowSerializer = new JsonRowSerializer(customCodeContext.getSchema(), customCodeContext.getProperties());
 
-        this.batchSize = customCodeContext.optionExists(Options.WRITE_BATCH_SIZE) ?
-            Integer.parseInt(customCodeContext.getProperties().get(Options.WRITE_BATCH_SIZE)) : 1;
+        this.batchSize = (int) customCodeContext.getNumericOption(Options.WRITE_BATCH_SIZE, 1, 1);
 
         this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
@@ -60,11 +60,10 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         String rowValue = customCodeContext.isCustomSchema() ?
-            convertRowToJSONString(row) :
+            jsonRowSerializer.serializeRowToJson(row) :
             row.getString(0);
 
         this.currentBatch.add(rowValue);
-
         if (this.currentBatch.size() >= this.batchSize) {
             flush();
         }
@@ -88,7 +87,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public void close() {
         if (logger.isDebugEnabled()) {
-            logger.debug("Close called; stopping job.");
+            logger.debug("Close called.");
         }
         if (databaseClient != null) {
             databaseClient.release();
@@ -104,8 +103,8 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             return;
         }
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Calling custom code in MarkLogic");
+        if (logger.isTraceEnabled()) {
+            logger.trace("Calling custom code in MarkLogic");
         }
         final int itemCount = currentBatch.size();
         ServerEvaluationCall call = customCodeContext.buildCall(
@@ -148,22 +147,11 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         return array;
     }
 
-    private String convertRowToJSONString(InternalRow row) {
-        StringWriter jsonObjectWriter = new StringWriter();
-        JacksonGenerator jacksonGenerator = new JacksonGenerator(
-            this.customCodeContext.getSchema(),
-            jsonObjectWriter,
-            Util.DEFAULT_JSON_OPTIONS
-        );
-        jacksonGenerator.write(row);
-        jacksonGenerator.flush();
-        return jsonObjectWriter.toString();
-    }
-
     private void executeCall(ServerEvaluationCall call, int itemCount) {
         try {
             call.evalAs(String.class);
             this.successItemCount += itemCount;
+            WriteProgressLogger.logProgressIfNecessary(itemCount);
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
                 throw ex;

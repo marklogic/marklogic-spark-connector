@@ -1,27 +1,17 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
 import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -49,6 +39,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected static final String CONNECTOR_IDENTIFIER = "marklogic";
     protected static final String NO_AUTHORS_QUERY = "op.fromView('Medical', 'NoAuthors', '')";
     protected static final String DEFAULT_PERMISSIONS = "spark-user-role,read,spark-user-role,update";
+    protected static final Namespace PROPERTIES_NAMESPACE = Namespace.getNamespace("prop", "http://marklogic.com/xdmp/property");
 
     protected static final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -129,7 +120,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
             String version = getDatabaseClient().newServerEval().javascript("xdmp.version()").evalAs(String.class);
             markLogicVersion = new MarkLogicVersion(version);
         }
-        return markLogicVersion.getMajor() == 10;
+        return markLogicVersion.getMajorNumber() == 10;
     }
 
     protected final boolean isSpark340OrHigher() {
@@ -175,5 +166,13 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     protected final DocumentMetadataHandle readMetadata(String uri) {
         // This should really be in marklogic-unit-test.
         return getDatabaseClient().newDocumentManager().readMetadata(uri, new DocumentMetadataHandle());
+    }
+
+    @Override
+    protected XmlNode readDocumentProperties(String uri) {
+        // This should be fixed in marklogic-unit-test to include the properties namespace by default.
+        XmlNode props = super.readDocumentProperties(uri);
+        props.setNamespaces(new Namespace[]{PROPERTIES_NAMESPACE});
+        return props;
     }
 }

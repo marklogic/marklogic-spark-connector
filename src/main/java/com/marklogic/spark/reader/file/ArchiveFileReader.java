@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
@@ -46,7 +49,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             if (contentZipEntry == null) {
                 return openNextFileAndReadNextEntry();
             }
-            byte[] content = FileUtil.readBytes(currentZipInputStream);
+            byte[] content = fileContext.readBytes(currentZipInputStream);
             if (content == null || content.length == 0) {
                 return openNextFileAndReadNextEntry();
             }
@@ -108,6 +111,6 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             Util.MAIN_LOGGER.warn(message);
             return new byte[0];
         }
-        return FileUtil.readBytes(currentZipInputStream);
+        return fileContext.readBytes(currentZipInputStream);
     }
 }

@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
@@ -41,11 +29,7 @@ import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -74,6 +58,7 @@ public class OpticReadContext extends ContextSupport {
     private final Map<String, String> userDefinedParams;
     private final Map<String, String> columnParamDefaults;
     private Map<String, String> columnParamValues;
+    private final long batchSize;
 
     public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
@@ -113,11 +98,11 @@ public class OpticReadContext extends ContextSupport {
         }
 
         final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
-        final long batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
+        this.batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
 
         final String dslQuery = properties.get(Options.READ_OPTIC_QUERY);
         if (dslQuery == null || dslQuery.trim().length() < 1) {
-            throw new IllegalArgumentException(String.format("No Optic query found; must define %s", Options.READ_OPTIC_QUERY));
+            throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
 
         DatabaseClient client = connectToMarkLogic();
@@ -264,7 +249,10 @@ public class OpticReadContext extends ContextSupport {
             .map(PlanUtil::expressionToColumnName)
             .collect(Collectors.toList());
 
-        addOperatorToPlan(PlanUtil.buildGroupByAggregation(groupByColumnNames, aggregation));
+        if (logger.isDebugEnabled()) {
+            logger.debug("groupBy column names: {}", groupByColumnNames);
+        }
+        addOperatorToPlan(PlanUtil.buildGroupByAggregation(new HashSet<>(groupByColumnNames), aggregation));
 
         StructType newSchema = buildSchemaWithColumnNames(groupByColumnNames);
 
@@ -303,6 +291,9 @@ public class OpticReadContext extends ContextSupport {
             this.planAnalysis = new PlanAnalysis(planAnalysis.getBoundedPlan(), mergedPartitions);
         }
 
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Schema after pushing down aggregation: {}", newSchema);
+        }
         this.schema = newSchema;
     }
 
@@ -369,5 +360,9 @@ public class OpticReadContext extends ContextSupport {
 
     long getBucketCount() {
         return planAnalysis != null ? planAnalysis.getAllBuckets().size() : 0;
+    }
+
+    long getBatchSize() {
+        return batchSize;
     }
 }

@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -6,9 +9,12 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -22,6 +28,8 @@ import static org.junit.jupiter.api.Assertions.*;
  * bytes from the file.
  */
 class ReadGenericFilesTest extends AbstractIntegrationTest {
+
+    private static final String ISO_8859_1_ENCODED_FILE = "src/test/resources/encoding/medline.iso-8859-1.txt";
 
     @Test
     void readAndWriteMixedFiles() {
@@ -50,5 +58,74 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
         assertEquals("hello world", text.trim());
         BytesHandle handle = getDatabaseClient().newBinaryDocumentManager().read("/hello2.txt.gz", new BytesHandle());
         assertEquals(Format.BINARY, handle.getFormat());
+    }
+
+    /**
+     * Need to actually write the document to force an error to occur.
+     */
+    @Test
+    void wrongEncoding() {
+        DataFrameWriter writer = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load(ISO_8859_1_ENCODED_FILE)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertTrue(ex.getMessage().contains("document is not UTF-8 encoded"), "Actual error: " + ex.getMessage());
+    }
+
+    @Test
+    void customEncoding() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_ENCODING, "ISO-8859-1")
+            .load(ISO_8859_1_ENCODED_FILE)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/iso-doc.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/iso-doc.xml");
+        doc.assertElementExists("/MedlineCitationSet");
+        doc.assertElementValue("/MedlineCitationSet/MedlineCitation/Affiliation",
+            "Istituto di Anatomia e Istologia Patologica, Università di Ferrara, Italy.");
+    }
+
+    @Test
+    void invalidEncodingValue() {
+        DataFrameWriter writer = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_ENCODING, "not-a-real-encoding")
+            .load(ISO_8859_1_ENCODED_FILE)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
+        assertTrue(ex.getMessage().contains("Unsupported encoding value: not-a-real-encoding"), "Actual error: " + ex.getMessage());
+    }
+
+    /**
+     * Verifies that encoding is applied when a file is gzipped as well. Neat!
+     */
+    @Test
+    void gzippedCustomEncoding() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_ENCODING, "ISO-8859-1")
+            .option(Options.READ_FILES_COMPRESSION, "gzip")
+            .load("src/test/resources/encoding/medline2.iso-8859-1.xml.gz")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_COLLECTIONS, "encoding-test")
+            .mode(SaveMode.Append)
+            .save();
+
+        String uri = getUrisInCollection("encoding-test", 1).get(0);
+        XmlNode doc = readXmlDocument(uri);
+        doc.assertElementExists("/MedlineCitationSet");
     }
 }

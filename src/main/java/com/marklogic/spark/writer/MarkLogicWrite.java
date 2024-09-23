@@ -1,17 +1,5 @@
 /*
- * Copyright 2023 MarkLogic Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -53,11 +41,15 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     @Override
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
-        int partitions = info.numPartitions();
-        int threadCount = writeContext.getThreadCount();
-        Util.MAIN_LOGGER.info("Number of partitions: {}; thread count per partition: {}; total threads used for writing: {}",
-            partitions, threadCount, partitions * threadCount);
-        return (DataWriterFactory) determineWriterFactory();
+        int numPartitions = info.numPartitions();
+        writeContext.setNumPartitions(numPartitions);
+        DataWriterFactory dataWriterFactory = determineWriterFactory();
+        if (dataWriterFactory instanceof WriteBatcherDataWriterFactory) {
+            logPartitionAndThreadCounts(numPartitions);
+        } else {
+            Util.MAIN_LOGGER.info("Number of partitions: {}", numPartitions);
+        }
+        return dataWriterFactory;
     }
 
     @Override
@@ -107,9 +99,8 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         abort(messages);
     }
 
-    private Object determineWriterFactory() {
-        if (writeContext.hasOption(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
-            Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE)) {
+    private DataWriterFactory determineWriterFactory() {
+        if (Util.isWriteWithCustomCodeOperation(writeContext.getProperties())) {
             CustomCodeContext context = new CustomCodeContext(
                 writeContext.getProperties(), writeContext.getSchema(), Options.WRITE_VARS_PREFIX
             );
@@ -120,6 +111,17 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         // SerializableConfiguration allows for it to be sent to the factory.
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
         return new WriteBatcherDataWriterFactory(writeContext, new SerializableConfiguration(config));
+    }
+
+    private void logPartitionAndThreadCounts(int numPartitions) {
+        int userDefinedPartitionThreadCount = writeContext.getUserDefinedThreadCountPerPartition();
+        if (userDefinedPartitionThreadCount > 0) {
+            Util.MAIN_LOGGER.info("Number of partitions: {}; total thread count: {}; thread count per partition: {}",
+                numPartitions, numPartitions * userDefinedPartitionThreadCount, userDefinedPartitionThreadCount);
+        } else {
+            Util.MAIN_LOGGER.info("Number of partitions: {}; total threads used for writing: {}",
+                numPartitions, writeContext.getTotalThreadCount());
+        }
     }
 
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {

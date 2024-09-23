@@ -1,9 +1,15 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.document;
 
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
+import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -77,6 +83,35 @@ class ReadDocumentRowsByUrisTest extends AbstractIntegrationTest {
             .count();
 
         assertEquals(0, count, "This verifies that the collection impacts the list of URIs.");
+    }
+
+    @Test
+    void nonUsAsciiUri() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/encoding/太田佳伸のＸＭＬファイル.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*encoding,''")
+            .mode(SaveMode.Append)
+            .save();
+
+        final String expectedUri = "/太田佳伸のＸＭＬファイル.xml";
+        XmlNode doc = readXmlDocument(expectedUri);
+        doc.assertElementValue("/root/filename", "太田佳伸のＸＭＬファイル");
+
+        Dataset<Row> dataset = sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, expectedUri)
+            .load();
+
+        assertEquals(1, dataset.count());
+        Row row = dataset.collectAsList().get(0);
+        assertEquals(expectedUri, row.getString(0),
+            "As of 7.0.0, the Java Client should default to setting mail.mime.allowutf8=true so that the " +
+                "Jakarta Mail library allows UTF-8 characters in the header names of multipart response parts. " +
+                "Normally, it only allows US-ASCII characters. But since MarkLogic allows UTF-8 characters in " +
+                "URIs, we need the Jakarta Mail library (used by the Java Client) to be more permissive.");
     }
 
     private DataFrameReader startRead() {

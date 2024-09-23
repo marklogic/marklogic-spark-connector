@@ -1,3 +1,6 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.client.DatabaseClient;
@@ -7,6 +10,7 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
 import com.marklogic.client.type.PlanColumn;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.ReadProgressLogger;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -34,6 +38,10 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     private final PlanBuilder op;
     private final String graphBaseIri;
 
+    // Only for logging
+    private final long batchSize;
+    private long progressCounter;
+
     private Iterator<RowRecord> currentRowIterator;
 
     public OpticTriplesReader(ForestPartition forestPartition, DocumentContext context) {
@@ -51,6 +59,8 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
             filtered = Boolean.parseBoolean(context.getProperties().get(Options.READ_TRIPLES_FILTERED));
         }
         this.uriBatcher = new UriBatcher(this.databaseClient, query, forestPartition, context.getBatchSize(), filtered);
+
+        this.batchSize = context.getBatchSize();
     }
 
     @Override
@@ -71,6 +81,11 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     @Override
     public InternalRow get() {
         Object[] row = convertNextTripleIntoRow();
+        progressCounter++;
+        if (progressCounter >= batchSize) {
+            ReadProgressLogger.logProgressIfNecessary(this.progressCounter);
+            progressCounter = 0;
+        }
         return new GenericInternalRow(row);
     }
 

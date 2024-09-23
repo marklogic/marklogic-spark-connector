@@ -1,0 +1,12 @@
+<MedlineCitationSet>
+<MedlineCitation>
+<PMID>10605436</PMID>
+<ArticleTitle>Concerning the localization of steroids in centrioles and basal bodies by immunofluorescence.</ArticleTitle>
+<Affiliation>Istituto di Anatomia e Istologia Patologica, Università di Ferrara, Italy.</Affiliation>
+</MedlineCitation>
+<MedlineCitation>
+<PMID>12261559</PMID>
+<ArticleTitle>[An attempt to study, through genealogies, family structures in the case of a non-noble family]</ArticleTitle>
+<VernacularTitle>Un tentativo di studio, tramite, genealogie, di strutture familiari nel caso di una famiglia non nobile</VernacularTitle>
+</MedlineCitation>
+</MedlineCitationSet>
