@@ -40,6 +40,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final Set<DocumentManager.Metadata> requestedMetadata;
     private final boolean contentWasRequested;
     private final Integer limit;
+    private final boolean isStreamingFiles;
 
     // Only used for logging.
     private final ForestPartition forestPartition;
@@ -53,6 +54,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     ForestReader(ForestPartition forestPartition, DocumentContext context) {
         this.forestPartition = forestPartition;
         this.limit = context.getLimit();
+        this.isStreamingFiles = "true".equalsIgnoreCase(context.getStringOption(Options.STREAM_FILES));
 
         DatabaseClient client = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
@@ -99,7 +101,9 @@ class ForestReader implements PartitionReader<InternalRow> {
                 }
                 return false;
             }
-            this.currentDocumentPage = readPage(uris);
+
+            // When streaming, we don't want to retrieve the documents yet - they'll be retrieved in the writer phase.
+            this.currentDocumentPage = this.isStreamingFiles ? new UrisPage(uris.iterator()) : readPage(uris);
         }
 
         return currentDocumentPage.hasNext();
