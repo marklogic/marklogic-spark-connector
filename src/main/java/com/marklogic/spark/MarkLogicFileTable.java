@@ -42,6 +42,9 @@ class MarkLogicFileTable extends FileTable {
 
     @Override
     public ScanBuilder newScanBuilder(CaseInsensitiveStringMap options) {
+        if ("true".equalsIgnoreCase(options.get(Options.STREAM_FILES)) && Util.MAIN_LOGGER.isInfoEnabled()) {
+            Util.MAIN_LOGGER.info("Will defer reading of file contents so they can be streamed during the writer phase.");
+        }
         return new FileScanBuilder(options.asCaseSensitiveMap(), super.fileIndex());
     }
 
