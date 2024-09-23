@@ -3,6 +3,8 @@
  */
 package com.marklogic.spark.reader.document;
 
+import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.read.SupportsPushDownLimit;
@@ -15,6 +17,9 @@ class DocumentScanBuilder implements ScanBuilder, SupportsPushDownLimit {
 
     DocumentScanBuilder(CaseInsensitiveStringMap options, StructType schema) {
         this.context = new DocumentContext(options, schema);
+        if ("true".equalsIgnoreCase(this.context.getStringOption(Options.STREAM_FILES)) && Util.MAIN_LOGGER.isInfoEnabled()) {
+            Util.MAIN_LOGGER.info("Will defer reading documents from MarkLogic so they can be streamed to files during the writer phase.");
+        }
     }
 
     @Override

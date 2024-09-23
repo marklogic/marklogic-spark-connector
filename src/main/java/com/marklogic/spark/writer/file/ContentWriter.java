@@ -5,7 +5,10 @@ package com.marklogic.spark.writer.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.io.BytesHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -32,6 +35,9 @@ class ContentWriter {
     private final boolean prettyPrint;
     private final Charset encoding;
 
+    // Only set when streaming.
+    private final GenericDocumentManager documentManager;
+
     ContentWriter(Map<String, String> properties) {
         this.encoding = determineEncoding(properties);
         this.prettyPrint = "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT));
@@ -42,19 +48,22 @@ class ContentWriter {
             this.transformer = null;
             this.objectMapper = null;
         }
+
+        this.documentManager = "true".equalsIgnoreCase(properties.get(Options.STREAM_FILES)) ?
+            new ContextSupport(properties).connectToMarkLogic().newDocumentManager() : null;
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
         if (this.prettyPrint) {
             prettyPrintContent(row, outputStream);
         } else {
-            byte[] bytes = row.getBinary(1);
+            byte[] bytes = getContentBytes(row);
             if (this.encoding != null) {
                 // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
                 // specified encoding (as opposed to new String(bytes, encoding)).
                 outputStream.write(new String(bytes).getBytes(this.encoding));
             } else {
-                outputStream.write(row.getBinary(1));
+                outputStream.write(bytes);
             }
         }
     }
@@ -107,7 +116,7 @@ class ContentWriter {
     }
 
     private void prettyPrintContent(InternalRow row, OutputStream outputStream) throws IOException {
-        final byte[] content = row.getBinary(1);
+        final byte[] content = getContentBytes(row);
         final String format = row.isNullAt(2) ? null : row.getString(2);
         if ("JSON".equalsIgnoreCase(format)) {
             prettyPrintJson(content, outputStream);
@@ -140,5 +149,13 @@ class ContentWriter {
         } catch (TransformerException e) {
             throw new ConnectorException(String.format("Unable to pretty print XML; cause: %s", e.getMessage()), e);
         }
+    }
+
+    private byte[] getContentBytes(InternalRow row) {
+        if (this.documentManager != null) {
+            String uri = row.getString(0);
+            return documentManager.read(uri, new BytesHandle()).get();
+        }
+        return row.getBinary(1);
     }
 }
