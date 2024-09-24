@@ -11,7 +11,7 @@ plugins {
 }
 
 group 'com.marklogic'
-version '2.3-SNAPSHOT'
+version '2.3.2'
 
 java {
   // To support reading RDF files, Apache Jena is used - but that requires Java 11. If we want to do a 2.2.0 release
