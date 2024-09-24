@@ -162,7 +162,7 @@ public abstract class Options {
      *
      * @since 2.4.0
      */
-    public static final String STREAM_FILES = "spark.marklogic.files.stream";
+    public static final String STREAM_FILES = "spark.marklogic.streamFiles";
 
     private Options() {
     }

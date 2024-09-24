@@ -52,7 +52,7 @@ of memory while trying to fit the contents of a file into an in-memory row.
 
 To enable this, include the following in the set of options passed to your reader:
 
-    .option("spark.marklogic.files.stream", "true")
+    .option("spark.marklogic.streamFiles", "true")
 
 As a result of this option, the `content` column in each row will not contain the contents of the file. Instead, 
 it will contain a serialized object intended to be used during the write phase to read the contents of the file as a 
