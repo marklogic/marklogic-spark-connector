@@ -6,11 +6,12 @@ package com.marklogic.spark.writer.file;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.document.GenericDocumentManager;
-import com.marklogic.client.io.BytesHandle;
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import javax.xml.XMLConstants;
@@ -19,6 +20,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -35,6 +37,7 @@ class ContentWriter {
     private final boolean prettyPrint;
     private final Charset encoding;
 
+    private final boolean isStreamingFiles;
     // Only set when streaming.
     private final GenericDocumentManager documentManager;
 
@@ -49,22 +52,22 @@ class ContentWriter {
             this.objectMapper = null;
         }
 
-        this.documentManager = "true".equalsIgnoreCase(properties.get(Options.STREAM_FILES)) ?
+        this.isStreamingFiles = "true".equalsIgnoreCase(properties.get(Options.STREAM_FILES));
+        this.documentManager = this.isStreamingFiles ?
             new ContextSupport(properties).connectToMarkLogic().newDocumentManager() : null;
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
-        if (this.prettyPrint) {
+        if (this.isStreamingFiles) {
+            streamDocumentToFile(row, outputStream);
+        } else if (this.prettyPrint) {
             prettyPrintContent(row, outputStream);
+        } else if (this.encoding != null) {
+            // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
+            // specified encoding (as opposed to new String(bytes, encoding)).
+            outputStream.write(new String(row.getBinary(1)).getBytes(this.encoding));
         } else {
-            byte[] bytes = getContentBytes(row);
-            if (this.encoding != null) {
-                // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
-                // specified encoding (as opposed to new String(bytes, encoding)).
-                outputStream.write(new String(bytes).getBytes(this.encoding));
-            } else {
-                outputStream.write(bytes);
-            }
+            outputStream.write(row.getBinary(1));
         }
     }
 
@@ -116,7 +119,7 @@ class ContentWriter {
     }
 
     private void prettyPrintContent(InternalRow row, OutputStream outputStream) throws IOException {
-        final byte[] content = getContentBytes(row);
+        final byte[] content = row.getBinary(1);
         final String format = row.isNullAt(2) ? null : row.getString(2);
         if ("JSON".equalsIgnoreCase(format)) {
             prettyPrintJson(content, outputStream);
@@ -151,11 +154,10 @@ class ContentWriter {
         }
     }
 
-    private byte[] getContentBytes(InternalRow row) {
-        if (this.documentManager != null) {
-            String uri = row.getString(0);
-            return documentManager.read(uri, new BytesHandle()).get();
-        }
-        return row.getBinary(1);
+    private void streamDocumentToFile(InternalRow row, OutputStream outputStream) throws IOException {
+        String uri = row.getString(0);
+        InputStream inputStream = documentManager.read(uri, new InputStreamHandle()).get();
+        // commons-io is a dependency of Spark and a common utility for copying between two steams.
+        IOUtils.copy(inputStream, outputStream);
     }
 }
