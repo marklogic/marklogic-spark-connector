@@ -76,7 +76,7 @@ class RdfFileReader implements PartitionReader<InternalRow> {
     }
 
     private boolean initializeRdfStreamReader() {
-        this.currentFilePath = this.filePartition.getPaths().get(nextFilePathIndex);
+        this.currentFilePath = fileContext.getDecodedFilePath(filePartition, nextFilePathIndex);
         if (logger.isDebugEnabled()) {
             logger.debug("Reading file {}", this.currentFilePath);
         }

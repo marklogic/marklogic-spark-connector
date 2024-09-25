@@ -41,11 +41,11 @@ class GenericFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        final String path = filePartition.getPaths().get(filePathIndex);
+        final String path = fileContext.getDecodedFilePath(filePartition, filePathIndex);
         filePathIndex++;
         try {
             byte[] content = this.isStreaming ? serializeFileContext() : readFileIntoByteArray(path);
-            
+
             nextRowToReturn = new GenericInternalRow(new Object[]{
                 UTF8String.fromString(path),
                 ByteArray.concat(content),
