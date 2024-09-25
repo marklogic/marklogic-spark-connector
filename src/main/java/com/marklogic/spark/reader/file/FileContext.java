@@ -72,8 +72,7 @@ public class FileContext extends ContextSupport implements Serializable {
         return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
     }
 
-    public String getDecodedFilePath(FilePartition filePartition, int index) {
-        String path = filePartition.getPaths().get(index);
+    public String decodeFilePath(String path) {
         try {
             if (this.encoding != null) {
                 return URLDecoder.decode(path, this.encoding);

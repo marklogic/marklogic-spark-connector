@@ -97,18 +97,21 @@ class DocumentRowConverter implements RowConverter {
      * In a scenario where the user wants to stream a file into MarkLogic, the content column will contain a serialized
      * instance of {@code FileContext}, which is used to stream the file into a {@code InputStreamHandle}.
      */
-    private Content readContentFromFile(String uri, InternalRow row) {
+    private Content readContentFromFile(String filePath, InternalRow row) {
         byte[] bytes = row.getBinary(1);
+        String filePathInErrorMessage = filePath;
         try {
             ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
             FileContext fileContext = (FileContext) ois.readObject();
-            InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(uri));
+            final String decodedPath = fileContext.decodeFilePath(filePath);
+            filePathInErrorMessage = decodedPath;
+            InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
             if (this.documentFormat != null) {
                 streamHandle.withFormat(this.documentFormat);
             }
             return new Content(streamHandle, null);
         } catch (Exception e) {
-            throw new ConnectorException(String.format("Unable to read from file %s; cause: %s", uri, e.getMessage()));
+            throw new ConnectorException(String.format("Unable to read from file %s; cause: %s", filePathInErrorMessage, e.getMessage()));
         }
     }
 

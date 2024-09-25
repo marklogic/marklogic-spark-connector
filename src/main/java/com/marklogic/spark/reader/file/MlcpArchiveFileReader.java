@@ -99,7 +99,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private void openNextFile() {
-        this.currentFilePath = fileContext.getDecodedFilePath(filePartition, nextFilePathIndex);
+        this.currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
     }

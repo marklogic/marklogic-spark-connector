@@ -10,7 +10,6 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -45,7 +44,6 @@ class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Doesn't work yet, will fix as part of MLE-17084 in a follow-up PR")
     void streamFileWithSpacesInFilename() {
         Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.STREAM_FILES, true)
@@ -57,7 +55,9 @@ class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_REPLACE, ".*/with-spaces,''"));
 
         String uri = getUrisInCollection("streamed-files", 1).get(0);
-        assertEquals("/three uris.csv", uri);
+        assertEquals("/three%20uris.csv", uri, "Due to bug MLE-17088, the PUT v1/documents endpoint is not able to " +
+            "accept a URI with a space in it. So when streaming files with spaces in them, the URIs will have " +
+            "encoded spaces in them.");
     }
 
     @Test
