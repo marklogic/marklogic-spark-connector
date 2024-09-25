@@ -128,4 +128,65 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
         XmlNode doc = readXmlDocument(uri);
         doc.assertElementExists("/MedlineCitationSet");
     }
+
+    @Test
+    void filenameHasSpace() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/generic-files/with-spaces/three uris.csv");
+
+        Row row = dataset.collectAsList().get(0);
+        String path = row.getString(0);
+        assertTrue(path.endsWith("generic-files/with-spaces/three uris.csv"),
+            "The file path should be decoded by default. Under the hood, Spark builds up a set of file paths " +
+                "that are URL-encoded. But those will fail when trying to read the file, so they need to be " +
+                "decoded. Actual path: " + path);
+
+        String content = new String((byte[]) row.get(1));
+        assertEquals("URI\n/process-test1\n/process-test2\n/process-test3\n", content);
+
+        // Write the dataset to verify the URI has a space in it.
+        defaultWrite(dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_COLLECTIONS, "space-test")
+            .option(Options.WRITE_URI_REPLACE, ".*generic-files,''"));
+
+        String uri = getUrisInCollection("space-test", 1).get(0);
+        assertEquals("/with-spaces/three uris.csv", uri);
+    }
+
+    @Test
+    void filenameWithSpaceAndCustomEncoding() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_ENCODING, "ISO-8859-1")
+            .load("src/test/resources/generic-files/with-spaces/medline iso 8859 1.txt");
+
+        Row row = dataset.collectAsList().get(0);
+        String path = row.getString(0);
+        assertTrue(path.endsWith("/with-spaces/medline iso 8859 1.txt"),
+            "Verifying that when a custom encoding is specified, the path can still be decoded correctly.");
+    }
+
+    @Test
+    void filenameWithEncodedSpace() {
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/generic-files/with-spaces")
+            .select("URI")
+            .orderBy("URI")
+            .collectAsList();
+
+        assertEquals(3, rows.size());
+        assertTrue(rows.get(0).getString(0).endsWith("/hello%20world.json"));
+        assertTrue(rows.get(1).getString(0).endsWith("/medline iso 8859 1.txt"));
+        assertTrue(rows.get(2).getString(0).endsWith("/three uris.csv"));
+    }
+
+    @Test
+    void csvFileWithSpaces() {
+        List<Row> rows = newSparkSession().read()
+            .option("header", true)
+            .csv("src/test/resources/generic-files/with-spaces/three uris.csv")
+            .collectAsList();
+
+        assertEquals(3, rows.size(), "This doesn't test our connector, but rather demonstrates that the OOTB " +
+            "Spark file data sources correctly handle file paths with spaces in them.");
+    }
 }

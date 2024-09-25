@@ -87,7 +87,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     private void openNextFile() {
-        this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
+        this.currentFilePath = fileContext.getDecodedFilePath(filePartition, nextFilePathIndex);
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
     }

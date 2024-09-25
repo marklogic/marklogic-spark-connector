@@ -10,6 +10,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
@@ -41,6 +42,22 @@ class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
         assertCollectionSize("This verifies that enabling streaming does not break any functionality. We don't " +
             "have a test for a file large enough to warrant streaming as that would drastically slow down the suite " +
             "of tests.", "streamed-files", 4);
+    }
+
+    @Test
+    @Disabled("Doesn't work yet, will fix as part of MLE-17084 in a follow-up PR")
+    void streamFileWithSpacesInFilename() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .load("src/test/resources/generic-files/with-spaces/three uris.csv");
+
+        defaultWrite(dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.WRITE_COLLECTIONS, "streamed-files")
+            .option(Options.WRITE_URI_REPLACE, ".*/with-spaces,''"));
+
+        String uri = getUrisInCollection("streamed-files", 1).get(0);
+        assertEquals("/three uris.csv", uri);
     }
 
     @Test
