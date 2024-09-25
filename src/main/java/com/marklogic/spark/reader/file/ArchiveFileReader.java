@@ -29,6 +29,9 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     private int nextFilePathIndex;
     private InternalRow nextRowToReturn;
 
+    // Legacy = content first, then metadata.
+    private Boolean isLegacyFormat;
+
     ArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
@@ -45,15 +48,23 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     @Override
     public boolean next() {
         try {
-            ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
-            if (contentZipEntry == null) {
+            ZipEntry nextZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
+            if (nextZipEntry == null) {
                 return openNextFileAndReadNextEntry();
             }
+
+            if (isLegacyFormat == null) {
+                isLegacyFormat = !nextZipEntry.getName().endsWith(".metadata");
+            }
+            if (!isLegacyFormat) {
+                return readMetadataFollowedByContentEntry();
+            }
+
             byte[] content = fileContext.readBytes(currentZipInputStream);
             if (content == null || content.length == 0) {
                 return openNextFileAndReadNextEntry();
             }
-            final String zipEntryName = contentZipEntry.getName();
+            final String zipEntryName = nextZipEntry.getName();
 
             byte[] metadataBytes = readMetadataEntry(zipEntryName);
             if (metadataBytes == null || metadataBytes.length == 0) {
@@ -84,6 +95,24 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     @Override
     public void close() {
         IOUtils.closeQuietly(this.currentZipInputStream);
+    }
+
+    private boolean readMetadataFollowedByContentEntry() throws IOException {
+        byte[] metadataBytes = fileContext.readBytes(currentZipInputStream);
+        if (metadataBytes == null || metadataBytes.length == 0) {
+            return openNextFileAndReadNextEntry();
+        }
+
+        ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
+        byte[] content = fileContext.readBytes(currentZipInputStream);
+
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+        metadata.fromBuffer(metadataBytes);
+        this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
+            .withUri(contentZipEntry.getName())
+            .withContent(content).withMetadata(metadata)
+            .buildRow();
+        return true;
     }
 
     private void openNextFile() {

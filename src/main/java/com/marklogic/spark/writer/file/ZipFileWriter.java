@@ -58,14 +58,16 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         }
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
-        zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        this.contentWriter.writeContent(row, zipOutputStream);
-        zipEntryCounter++;
+
         if (hasMetadata(row)) {
             zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
         }
+
+        zipOutputStream.putNextEntry(new ZipEntry(entryName));
+        this.contentWriter.writeContent(row, zipOutputStream);
+        zipEntryCounter++;
     }
 
     @Override
