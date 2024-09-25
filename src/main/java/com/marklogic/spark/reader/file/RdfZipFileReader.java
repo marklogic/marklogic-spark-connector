@@ -68,7 +68,7 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
             }
 
             // Open up the next zip.
-            this.currentFilePath = fileContext.getDecodedFilePath(filePartition, nextFilePathIndex);
+            this.currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
             nextFilePathIndex++;
             this.currentZipInputStream = new CustomZipInputStream(fileContext.openFile(currentFilePath));
             return next();
