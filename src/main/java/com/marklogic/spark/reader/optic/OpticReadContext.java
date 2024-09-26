@@ -53,7 +53,6 @@ public class OpticReadContext extends ContextSupport {
     private PlanAnalysis planAnalysis;
     private StructType schema;
     private long serverTimestamp;
-    private boolean useServerTimestamp;
     private List<OpticFilter> opticFilters;
     private final Map<String, String> userDefinedParams;
     private final Map<String, String> columnParamDefaults;
@@ -64,10 +63,6 @@ public class OpticReadContext extends ContextSupport {
         super(properties);
         this.schema = schema;
 
-        // There's a defect in ML server that causes queries with timestamps to not return correct errors.
-        // This allows the timestamp to be supressed for debugging purposes.
-        this.useServerTimestamp = !properties.containsKey(Options.READ_DISABLE_TIMESTAMP) ||
-            !properties.get(Options.READ_DISABLE_TIMESTAMP).trim().toLowerCase().equals("true");
 
         // Stash a map of the user-defined parameters (if any) so that they aren't calculated on every call.
         this.userDefinedParams = properties.keySet().stream()
@@ -122,15 +117,11 @@ public class OpticReadContext extends ContextSupport {
                     this.planAnalysis.getPartitions().size(), this.planAnalysis.getAllBuckets().size());
             }
 
-            if (useServerTimestamp) {
-                // Calling this to establish a server timestamp.
-                StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
-                this.serverTimestamp = columnInfoHandle.getServerTimestamp();
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Will use server timestamp: {}", serverTimestamp);
-                }
-            } else if (logger.isWarnEnabled()) {
-                logger.warn("Server timestamp disabled - results are not guaranteed to be consistent!!!");
+            // Calling this to establish a server timestamp.
+            StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
+            this.serverTimestamp = columnInfoHandle.getServerTimestamp();
+            if (logger.isDebugEnabled()) {
+                logger.debug("Will use server timestamp: {}", serverTimestamp);
             }
         }
 
@@ -158,17 +149,14 @@ public class OpticReadContext extends ContextSupport {
         // This should never occur, as a query should only ever occur when rows were initially found, which leads to a
         // server timestamp being captured. But if it were somehow to occur, we should error out as the row-ID-based
         // partitions are not reliable without a consistent server timestamp.
-        if (useServerTimestamp && serverTimestamp < 1) {
+        if (serverTimestamp < 1) {
             throw new ConnectorException(String.format("Unable to read rows; invalid server timestamp: %d", serverTimestamp));
         }
 
         PlanBuilder.Plan plan = buildPlanForBucket(rowManager, bucket);
 
         JacksonHandle jsonHandle = new JacksonHandle();
-
-        if (useServerTimestamp) {
-            jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
-        }
+        jsonHandle.setPointInTimeQueryTimestamp(serverTimestamp);
         
         // Remarkably, the use of resultDoc has consistently proven to be a few percentage points faster than using
         // resultRows with a StringHandle, even though the latter avoids the need for converting to and from a JsonNode.
