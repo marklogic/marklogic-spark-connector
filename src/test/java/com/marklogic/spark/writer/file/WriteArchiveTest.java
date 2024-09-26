@@ -64,6 +64,12 @@ class WriteArchiveTest extends AbstractIntegrationTest {
 
         assertEquals(4, rows.size(), "Expecting the 2 author JSON entries and 2 entries for metadata.");
 
+        for (int i = 0; i < 4; i += 2) {
+            String entryName = rows.get(i).getString(0);
+            assertTrue(entryName.endsWith(".metadata"), "The metadata should come before the content entry. " +
+                "This allows for the content to later be streamed back into MarkLogic. Entry name: " + entryName);
+        }
+
         final String expectedUriPrefix = "file://" + tempDir.toFile().getAbsolutePath();
         for (Row row : rows) {
             String uri = row.getString(0);
