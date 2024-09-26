@@ -257,7 +257,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      * @param writeOp
      */
     private void writeDocumentViaPutOperation(DocumentWriteOperation writeOp) {
-        final String uri = writeOp.getUri();
+        final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
         try {
             this.documentManager.write(uri, writeOp.getMetadata(), (GenericWriteHandle) writeOp.getContent());
             this.successItemCount.incrementAndGet();
@@ -265,6 +265,15 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             captureFailure(ex.getMessage(), uri);
             this.writeFailure.compareAndSet(null, ex);
         }
+    }
+
+    /**
+     * Sigh. Using URLEncoder.encode will convert forward slashes into "%2F", which a user almost certainly does not
+     * want, since those are meaningful in MarkLogic URIs. The main problem to address with the PUT endpoint is that it
+     * erroneously does not accept spaces (see MLE-17088). So this simply replaces spaces.
+     */
+    private String replaceSpacesInUriForPutEndpoint(String uri) {
+        return uri.replace(" ", "%20");
     }
 
     private void captureFailure(String message, String documentUri) {
