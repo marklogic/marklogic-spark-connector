@@ -10,7 +10,6 @@ import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
-import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -21,8 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code DocumentRowSchema}.
@@ -42,23 +42,16 @@ class DocumentRowConverter implements RowConverter {
     }
 
     @Override
-    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         final String uri = row.getString(0);
 
         final boolean isNakedProperties = row.isNullAt(1);
         if (isNakedProperties) {
             DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-            return Optional.of(new DocBuilder.DocumentInputs(uri, null, null, metadata));
+            return Stream.of(new DocBuilder.DocumentInputs(uri, null, null, metadata)).iterator();
         }
 
-        Content content = this.isStreamingFromFiles ?
-            readContentFromFile(uri, row) :
-            readContentFromRow(uri, row);
-
-        DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        return Optional.of(new DocBuilder.DocumentInputs(
-            uri, content.contentHandle, content.uriTemplateValues, metadata)
-        );
+        return this.isStreamingFromFiles ? readContentFromFile(uri, row) : readContentFromRow(uri, row);
     }
 
     @Override
@@ -66,7 +59,7 @@ class DocumentRowConverter implements RowConverter {
         return new ArrayList<>();
     }
 
-    private Content readContentFromRow(String uri, InternalRow row) {
+    private Iterator<DocBuilder.DocumentInputs> readContentFromRow(String uri, InternalRow row) {
         BytesHandle bytesHandle = new BytesHandle(row.getBinary(1));
         if (this.documentFormat != null) {
             bytesHandle.withFormat(this.documentFormat);
@@ -76,7 +69,8 @@ class DocumentRowConverter implements RowConverter {
             String format = row.isNullAt(2) ? null : row.getString(2);
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }
-        return new Content(bytesHandle, uriTemplateValues);
+        DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
+        return Stream.of(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata)).iterator();
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
@@ -97,7 +91,7 @@ class DocumentRowConverter implements RowConverter {
      * In a scenario where the user wants to stream a file into MarkLogic, the content column will contain a serialized
      * instance of {@code FileContext}, which is used to stream the file into a {@code InputStreamHandle}.
      */
-    private Content readContentFromFile(String filePath, InternalRow row) {
+    private Iterator<DocBuilder.DocumentInputs> readContentFromFile(String filePath, InternalRow row) {
         byte[] bytes = row.getBinary(1);
         String filePathInErrorMessage = filePath;
         try {
@@ -109,27 +103,10 @@ class DocumentRowConverter implements RowConverter {
             if (this.documentFormat != null) {
                 streamHandle.withFormat(this.documentFormat);
             }
-            return new Content(streamHandle, null);
+            DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
+            return Stream.of(new DocBuilder.DocumentInputs(filePath, streamHandle, null, metadata)).iterator();
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to read from file %s; cause: %s", filePathInErrorMessage, e.getMessage()));
-        }
-    }
-
-    private static class Content {
-        private final AbstractWriteHandle contentHandle;
-        private final JsonNode uriTemplateValues;
-
-        public Content(AbstractWriteHandle contentHandle, JsonNode uriTemplateValues) {
-            this.contentHandle = contentHandle;
-            this.uriTemplateValues = uriTemplateValues;
-        }
-
-        AbstractWriteHandle getContentHandle() {
-            return contentHandle;
-        }
-
-        JsonNode getUriTemplateValues() {
-            return uriTemplateValues;
         }
     }
 }

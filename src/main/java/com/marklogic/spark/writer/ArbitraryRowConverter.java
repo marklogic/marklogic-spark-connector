@@ -20,9 +20,10 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 /**
  * Handles building a document from an "arbitrary" row - i.e. one with an unknown schema, where the row will be
@@ -53,7 +54,7 @@ class ArbitraryRowConverter implements RowConverter {
     }
 
     @Override
-    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         String initialUri = null;
         if (this.filePathIndex > -1) {
             initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
@@ -103,7 +104,7 @@ class ArbitraryRowConverter implements RowConverter {
             }
         }
 
-        return Optional.of(new DocBuilder.DocumentInputs(initialUri, contentHandle, uriTemplateValues, null));
+        return Stream.of(new DocBuilder.DocumentInputs(initialUri, contentHandle, uriTemplateValues, null)).iterator();
     }
 
     @Override
