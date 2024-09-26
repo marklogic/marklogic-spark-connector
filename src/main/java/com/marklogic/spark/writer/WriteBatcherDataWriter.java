@@ -30,8 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -92,9 +92,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
-        Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
-        if (document.isPresent()) {
-            DocumentWriteOperation writeOp = this.docBuilder.build(document.get());
+
+        Iterator<DocBuilder.DocumentInputs> iterator = rowConverter.convertRow(row);
+        while (iterator.hasNext()) {
+            DocumentWriteOperation writeOp = this.docBuilder.build(iterator.next());
             if (this.isStreamingFiles) {
                 writeDocumentViaPutOperation(writeOp);
             } else {

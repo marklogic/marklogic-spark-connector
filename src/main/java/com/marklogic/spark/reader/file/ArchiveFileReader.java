@@ -56,27 +56,8 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             if (isLegacyFormat == null) {
                 isLegacyFormat = !nextZipEntry.getName().endsWith(".metadata");
             }
-            if (!isLegacyFormat) {
-                return readMetadataFollowedByContentEntry();
-            }
 
-            byte[] content = fileContext.readBytes(currentZipInputStream);
-            if (content == null || content.length == 0) {
-                return openNextFileAndReadNextEntry();
-            }
-            final String zipEntryName = nextZipEntry.getName();
-
-            byte[] metadataBytes = readMetadataEntry(zipEntryName);
-            if (metadataBytes == null || metadataBytes.length == 0) {
-                return openNextFileAndReadNextEntry();
-            }
-
-            DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-            metadata.fromBuffer(metadataBytes);
-            this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
-                .withUri(zipEntryName).withContent(content).withMetadata(metadata)
-                .buildRow();
-            return true;
+            return isLegacyFormat ? readContentFollowedByMetadata(nextZipEntry) : readMetadataFollowedByContent();
         } catch (IOException e) {
             String message = String.format("Unable to read archive file at %s; cause: %s", this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
@@ -97,7 +78,35 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         IOUtils.closeQuietly(this.currentZipInputStream);
     }
 
-    private boolean readMetadataFollowedByContentEntry() throws IOException {
+    /**
+     * This is the Flux 1.0 "legacy" approach, where content was written first, followed by metadata. This does not
+     * support streaming.
+     */
+    private boolean readContentFollowedByMetadata(ZipEntry contentZipEntry) throws IOException {
+        byte[] content = fileContext.readBytes(currentZipInputStream);
+        if (content == null || content.length == 0) {
+            return openNextFileAndReadNextEntry();
+        }
+        final String zipEntryName = contentZipEntry.getName();
+
+        byte[] metadataBytes = readMetadataEntry(zipEntryName);
+        if (metadataBytes == null || metadataBytes.length == 0) {
+            return openNextFileAndReadNextEntry();
+        }
+
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+        metadata.fromBuffer(metadataBytes);
+
+        this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
+            .withUri(zipEntryName).withContent(content).withMetadata(metadata)
+            .buildRow();
+        return true;
+    }
+
+    /**
+     * This is the Flux 1.1+ approach, where the metadata entry is written first. This supports streaming.
+     */
+    private boolean readMetadataFollowedByContent() throws IOException {
         byte[] metadataBytes = fileContext.readBytes(currentZipInputStream);
         if (metadataBytes == null || metadataBytes.length == 0) {
             return openNextFileAndReadNextEntry();
