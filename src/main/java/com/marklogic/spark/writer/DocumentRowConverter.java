@@ -13,13 +13,17 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
+import com.marklogic.spark.reader.file.ArchiveFileReader;
 import com.marklogic.spark.reader.file.FileContext;
+import com.marklogic.spark.reader.file.FilePartition;
+import com.marklogic.spark.writer.file.ArchiveFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -93,20 +97,31 @@ class DocumentRowConverter implements RowConverter {
      */
     private Iterator<DocBuilder.DocumentInputs> readContentFromFile(String filePath, InternalRow row) {
         byte[] bytes = row.getBinary(1);
-        String filePathInErrorMessage = filePath;
-        try {
-            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
-            FileContext fileContext = (FileContext) ois.readObject();
-            final String decodedPath = fileContext.decodeFilePath(filePath);
-            filePathInErrorMessage = decodedPath;
-            InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
-            if (this.documentFormat != null) {
-                streamHandle.withFormat(this.documentFormat);
-            }
-            DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-            return Stream.of(new DocBuilder.DocumentInputs(filePath, streamHandle, null, metadata)).iterator();
+        FileContext fileContext;
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
+            fileContext = (FileContext) ois.readObject();
         } catch (Exception e) {
-            throw new ConnectorException(String.format("Unable to read from file %s; cause: %s", filePathInErrorMessage, e.getMessage()));
+            throw new ConnectorException(String.format("Unable to read from file %s; cause: %s", filePath, e.getMessage()));
         }
+
+        if ("archive".equalsIgnoreCase(fileContext.getStringOption(Options.READ_FILES_TYPE))) {
+            return buildIteratorForArchiveFile(filePath, fileContext);
+        }
+
+        final String decodedPath = fileContext.decodeFilePath(filePath);
+        InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
+        if (this.documentFormat != null) {
+            streamHandle.withFormat(this.documentFormat);
+        }
+        DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
+        return Stream.of(new DocBuilder.DocumentInputs(filePath, streamHandle, null, metadata)).iterator();
+    }
+
+    private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
+        FilePartition filePartition = new FilePartition(Arrays.asList(filePath));
+        ArchiveFileReader archiveFileReader = new ArchiveFileReader(
+            filePartition, fileContext, ArchiveFileReader.StreamingMode.STREAM_DURING_WRITER_PHASE
+        );
+        return new ArchiveFileIterator(archiveFileReader, this.documentFormat);
     }
 }

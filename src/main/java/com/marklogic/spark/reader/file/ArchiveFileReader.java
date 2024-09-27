@@ -4,6 +4,7 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -12,17 +13,20 @@ import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-class ArchiveFileReader implements PartitionReader<InternalRow> {
+public class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
     private final List<String> metadataCategories;
+    private final StreamingMode streamingMode;
 
     private String currentFilePath;
     private ZipInputStream currentZipInputStream;
@@ -32,9 +36,25 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
     // Legacy = content first, then metadata.
     private Boolean isLegacyFormat;
 
+    public enum StreamingMode {
+        STREAM_DURING_READER_PHASE,
+        STREAM_DURING_WRITER_PHASE
+    }
+
     ArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
+        this(
+            filePartition, fileContext,
+            // Will refactor this later to avoid duplication of this comparison.
+            // Should be a nice little method in FileContext.
+            "true".equalsIgnoreCase(fileContext.getStringOption(Options.STREAM_FILES)) ? StreamingMode.STREAM_DURING_READER_PHASE : null
+        );
+    }
+
+    public ArchiveFileReader(FilePartition filePartition, FileContext fileContext, StreamingMode streamingMode) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
+        this.streamingMode = streamingMode;
+
         this.metadataCategories = new ArrayList<>();
         if (fileContext.hasOption(Options.READ_ARCHIVES_CATEGORIES)) {
             for (String category : fileContext.getStringOption(Options.READ_ARCHIVES_CATEGORIES).split(",")) {
@@ -47,6 +67,10 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public boolean next() {
+        if (StreamingMode.STREAM_DURING_READER_PHASE.equals(this.streamingMode)) {
+            return nextWhileStreamingDuringReaderPhase();
+        }
+
         try {
             ZipEntry nextZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
             if (nextZipEntry == null) {
@@ -55,6 +79,7 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
             if (isLegacyFormat == null) {
                 isLegacyFormat = !nextZipEntry.getName().endsWith(".metadata");
+                logArchiveFormat();
             }
 
             return isLegacyFormat ? readContentFollowedByMetadata(nextZipEntry) : readMetadataFollowedByContent();
@@ -70,12 +95,50 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     @Override
     public InternalRow get() {
-        return nextRowToReturn;
+        return StreamingMode.STREAM_DURING_READER_PHASE.equals(this.streamingMode) ?
+            buildSingleRowForArchiveFile() :
+            nextRowToReturn;
     }
 
     @Override
     public void close() {
         IOUtils.closeQuietly(this.currentZipInputStream);
+    }
+
+    /**
+     * Exposed for {@code ArchiveFileIterator} to be able to read from the zip stream when it produces a set of
+     * document inputs.
+     *
+     * @return a {@code InputStreamHandle} to avoid reading a content zip entry into memory.
+     */
+    public InputStreamHandle getContentHandleForCurrentZipEntry() {
+        return new InputStreamHandle(currentZipInputStream);
+    }
+
+    private void logArchiveFormat() {
+        if (Util.MAIN_LOGGER.isInfoEnabled() && isLegacyFormat) {
+            Util.MAIN_LOGGER.info("Archive {} uses Flux 1.0 format, will read content and then metadata.", this.currentFilePath);
+        }
+        if (Util.MAIN_LOGGER.isDebugEnabled() && !isLegacyFormat.booleanValue()) {
+            Util.MAIN_LOGGER.debug("Archive {} uses Flux 1.1+ format, will read metadata and then content.", this.currentFilePath);
+        }
+    }
+
+    /**
+     * Implementation of {@code next()} while streaming during the reader phase, where we don't want to actually read
+     * anything from a zip file. We just want to build a row per zip file.
+     *
+     * @return
+     */
+    private boolean nextWhileStreamingDuringReaderPhase() {
+        if (currentFilePath != null) {
+            return true;
+        }
+        if (nextFilePathIndex >= filePartition.getPaths().size()) {
+            return false;
+        }
+        openNextFile();
+        return true;
     }
 
     /**
@@ -87,8 +150,8 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
         if (content == null || content.length == 0) {
             return openNextFileAndReadNextEntry();
         }
-        final String zipEntryName = contentZipEntry.getName();
 
+        final String zipEntryName = contentZipEntry.getName();
         byte[] metadataBytes = readMetadataEntry(zipEntryName);
         if (metadataBytes == null || metadataBytes.length == 0) {
             return openNextFileAndReadNextEntry();
@@ -96,7 +159,6 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
         metadata.fromBuffer(metadataBytes);
-
         this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
             .withUri(zipEntryName).withContent(content).withMetadata(metadata)
             .buildRow();
@@ -105,6 +167,9 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     /**
      * This is the Flux 1.1+ approach, where the metadata entry is written first. This supports streaming.
+     * <p>
+     * This is where we implement streaming-during-write-to-MarkLogic. We read the metadata entry as normal - good.
+     * Then we build everything in our row except the content.
      */
     private boolean readMetadataFollowedByContent() throws IOException {
         byte[] metadataBytes = fileContext.readBytes(currentZipInputStream);
@@ -112,22 +177,35 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             return openNextFileAndReadNextEntry();
         }
 
-        ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
-        byte[] content = fileContext.readBytes(currentZipInputStream);
-
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
         metadata.fromBuffer(metadataBytes);
-        this.nextRowToReturn = new DocumentRowBuilder(this.metadataCategories)
+
+        // We still do this to get the stream ready to read the next entry.
+        ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
+
+        DocumentRowBuilder rowBuilder = new DocumentRowBuilder(this.metadataCategories)
             .withUri(contentZipEntry.getName())
-            .withContent(content).withMetadata(metadata)
-            .buildRow();
+            .withMetadata(metadata);
+
+        if (!StreamingMode.STREAM_DURING_WRITER_PHASE.equals(this.streamingMode)) {
+            byte[] content = fileContext.readBytes(currentZipInputStream);
+            rowBuilder = rowBuilder.withContent(content);
+        }
+
+        this.nextRowToReturn = rowBuilder.buildRow();
         return true;
     }
 
     private void openNextFile() {
-        this.currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
+        final boolean isStreamingDuringRead = StreamingMode.STREAM_DURING_READER_PHASE.equals(this.streamingMode);
+        final String nextFilePath = filePartition.getPaths().get(nextFilePathIndex);
+
+        this.currentFilePath = isStreamingDuringRead ? nextFilePath : fileContext.decodeFilePath(nextFilePath);
         nextFilePathIndex++;
-        this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+
+        if (!isStreamingDuringRead) {
+            this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+        }
     }
 
     private boolean openNextFileAndReadNextEntry() {
@@ -150,5 +228,27 @@ class ArchiveFileReader implements PartitionReader<InternalRow> {
             return new byte[0];
         }
         return fileContext.readBytes(currentZipInputStream);
+    }
+
+    /**
+     * Builds a row containing the file path, the serialized FileContext, and the metadata.
+     */
+    private InternalRow buildSingleRowForArchiveFile() {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(this.fileContext);
+            oos.flush();
+        } catch (Exception ex) {
+            String message = String.format("Unable to build row for archive file at %s; cause: %s",
+                this.currentFilePath, ex.getMessage());
+            throw new ConnectorException(message, ex);
+        }
+
+        InternalRow row = new DocumentRowBuilder(this.metadataCategories)
+            .withUri(this.currentFilePath)
+            .withContent(baos.toByteArray())
+            .buildRow();
+        this.currentFilePath = null;
+        return row;
     }
 }
