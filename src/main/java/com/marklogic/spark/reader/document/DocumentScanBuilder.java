@@ -17,7 +17,7 @@ class DocumentScanBuilder implements ScanBuilder, SupportsPushDownLimit {
 
     DocumentScanBuilder(CaseInsensitiveStringMap options, StructType schema) {
         this.context = new DocumentContext(options, schema);
-        if ("true".equalsIgnoreCase(this.context.getStringOption(Options.STREAM_FILES)) && Util.MAIN_LOGGER.isInfoEnabled()) {
+        if (this.context.isStreamingFiles() && Util.MAIN_LOGGER.isInfoEnabled()) {
             Util.MAIN_LOGGER.info("Will defer reading documents from MarkLogic so they can be streamed to files during the writer phase.");
         }
     }

@@ -42,7 +42,7 @@ class DocumentRowConverter implements RowConverter {
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
-        this.isStreamingFromFiles = writeContext.hasOption(Options.STREAM_FILES);
+        this.isStreamingFromFiles = writeContext.isStreamingFiles();
     }
 
     @Override

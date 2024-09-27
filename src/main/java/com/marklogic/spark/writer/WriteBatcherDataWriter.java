@@ -71,7 +71,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
         this.rowConverter = determineRowConverter();
-        this.isStreamingFiles = "true".equals(writeContext.getStringOption(Options.STREAM_FILES));
+        this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
 
         if (writeContext.isAbortOnFailure()) {

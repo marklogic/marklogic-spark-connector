@@ -44,9 +44,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
     ArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
         this(
             filePartition, fileContext,
-            // Will refactor this later to avoid duplication of this comparison.
-            // Should be a nice little method in FileContext.
-            "true".equalsIgnoreCase(fileContext.getStringOption(Options.STREAM_FILES)) ? StreamingMode.STREAM_DURING_READER_PHASE : null
+            fileContext.isStreamingFiles() ? StreamingMode.STREAM_DURING_READER_PHASE : null
         );
     }
 

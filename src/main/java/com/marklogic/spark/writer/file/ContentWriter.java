@@ -42,8 +42,9 @@ class ContentWriter {
     private final GenericDocumentManager documentManager;
 
     ContentWriter(Map<String, String> properties) {
-        this.encoding = determineEncoding(properties);
-        this.prettyPrint = "true".equalsIgnoreCase(properties.get(Options.WRITE_FILES_PRETTY_PRINT));
+        ContextSupport context = new ContextSupport(properties);
+        this.encoding = determineEncoding(context);
+        this.prettyPrint = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_FILES_PRETTY_PRINT));
         if (this.prettyPrint) {
             this.objectMapper = new ObjectMapper();
             this.transformer = newTransformer();
@@ -52,9 +53,8 @@ class ContentWriter {
             this.objectMapper = null;
         }
 
-        this.isStreamingFiles = "true".equalsIgnoreCase(properties.get(Options.STREAM_FILES));
-        this.documentManager = this.isStreamingFiles ?
-            new ContextSupport(properties).connectToMarkLogic().newDocumentManager() : null;
+        this.isStreamingFiles = context.isStreamingFiles();
+        this.documentManager = this.isStreamingFiles ? context.connectToMarkLogic().newDocumentManager() : null;
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
@@ -82,9 +82,9 @@ class ContentWriter {
         }
     }
 
-    private Charset determineEncoding(Map<String, String> properties) {
-        String encodingValue = properties.get(Options.WRITE_FILES_ENCODING);
-        if (encodingValue != null && encodingValue.trim().length() > 0) {
+    private Charset determineEncoding(ContextSupport context) {
+        if (context.hasOption(Options.WRITE_FILES_ENCODING)) {
+            String encodingValue = context.getStringOption(Options.WRITE_FILES_ENCODING);
             try {
                 return Charset.forName(encodingValue);
             } catch (Exception ex) {

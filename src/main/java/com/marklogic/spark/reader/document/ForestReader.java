@@ -54,7 +54,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     ForestReader(ForestPartition forestPartition, DocumentContext context) {
         this.forestPartition = forestPartition;
         this.limit = context.getLimit();
-        this.isStreamingFiles = "true".equalsIgnoreCase(context.getStringOption(Options.STREAM_FILES));
+        this.isStreamingFiles = context.isStreamingFiles();
 
         DatabaseClient client = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
