@@ -32,7 +32,7 @@ class GenericFileReader implements PartitionReader<InternalRow> {
     GenericFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
-        this.isStreaming = "true".equalsIgnoreCase(fileContext.getStringOption(Options.STREAM_FILES));
+        this.isStreaming = fileContext.isStreamingFiles();
     }
 
     @Override
