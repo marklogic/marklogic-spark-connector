@@ -4,6 +4,8 @@
 package com.marklogic.spark.writer.file;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Options;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -26,7 +28,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
 
-    private final Map<String, String> properties;
+    private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
 
     private final String zipPath;
@@ -44,7 +46,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration,
                          int partitionId, boolean createZipFileImmediately) {
         this.zipPath = makeFilePath(path, partitionId);
-        this.properties = properties;
+        this.context = new ContextSupport(properties);
         this.hadoopConfiguration = hadoopConfiguration;
         if (createZipFileImmediately) {
             createZipFileAndContentWriter();
@@ -56,15 +58,11 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         if (contentWriter == null) {
             createZipFileAndContentWriter();
         }
+
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
 
-        if (hasMetadata(row)) {
-            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
-            this.contentWriter.writeMetadata(row, zipOutputStream);
-            zipEntryCounter++;
-        }
-
+        writeMetadataEntryIfNecessary(row, uri, entryName);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
         zipEntryCounter++;
@@ -90,13 +88,25 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         if (logger.isDebugEnabled()) {
             logger.debug("Will write to: {}", filePath);
         }
-        this.contentWriter = new ContentWriter(properties);
+        this.contentWriter = new ContentWriter(context.getProperties());
         try {
             FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
             fileSystem.setWriteChecksum(false);
             zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
         } catch (IOException e) {
             throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
+        }
+    }
+
+    private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName) throws IOException {
+        if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
+            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            this.contentWriter.writeMetadataWhileStreaming(uri, zipOutputStream);
+            zipEntryCounter++;
+        } else if (hasMetadata(row)) {
+            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            this.contentWriter.writeMetadata(row, zipOutputStream);
+            zipEntryCounter++;
         }
     }
 

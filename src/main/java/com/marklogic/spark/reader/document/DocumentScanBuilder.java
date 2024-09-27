@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.reader.document;
 
-import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.ScanBuilder;

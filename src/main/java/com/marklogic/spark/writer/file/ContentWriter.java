@@ -6,10 +6,12 @@ package com.marklogic.spark.writer.file;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -38,7 +40,7 @@ class ContentWriter {
     private final Charset encoding;
 
     private final boolean isStreamingFiles;
-    // Only set when streaming.
+    // Only used when streaming.
     private final GenericDocumentManager documentManager;
 
     ContentWriter(Map<String, String> properties) {
@@ -54,7 +56,14 @@ class ContentWriter {
         }
 
         this.isStreamingFiles = context.isStreamingFiles();
-        this.documentManager = this.isStreamingFiles ? context.connectToMarkLogic().newDocumentManager() : null;
+        if (this.isStreamingFiles) {
+            this.documentManager = context.connectToMarkLogic().newDocumentManager();
+            if (context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
+                this.documentManager.setMetadataCategories(Util.getRequestedMetadata(context));
+            }
+        } else {
+            this.documentManager = null;
+        }
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
@@ -73,6 +82,21 @@ class ContentWriter {
 
     void writeMetadata(InternalRow row, OutputStream outputStream) throws IOException {
         String metadataXml = DocumentRowSchema.makeDocumentMetadata(row).toString();
+        writeMetadata(metadataXml, outputStream);
+    }
+
+    /**
+     * When streaming documents to an archive, the metadata unfortunately has to be retrieved in a separate request
+     * per document. This is due to the Java Client hardcoding "content" as a category in a POST to v1/search. A
+     * future fix to the Java Client to not hardcode this will allow for the metadata to be retrieved during the
+     * reader phase.
+     */
+    void writeMetadataWhileStreaming(String documentUri, OutputStream outputStream) throws IOException {
+        DocumentMetadataHandle metadata = this.documentManager.readMetadata(documentUri, new DocumentMetadataHandle());
+        writeMetadata(metadata.toString(), outputStream);
+    }
+
+    private void writeMetadata(String metadataXml, OutputStream outputStream) throws IOException {
         // Must honor the encoding here as well, as a user could easily have values that require encoding in metadata
         // values or in a properties fragment.
         if (this.encoding != null) {

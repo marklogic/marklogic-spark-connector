@@ -4,7 +4,6 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
