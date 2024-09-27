@@ -43,8 +43,6 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
 
     protected static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private static MarkLogicVersion markLogicVersion;
-
     /**
      * Via marklogic-junit5, this is populated via the mlHost/mlRestPort/mlUsername/mlPassword property values. Those
      * are expected to be for an admin-like user who can deploy the test app. Thus, this should only be used for
@@ -113,14 +111,6 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
 
     protected final String makeClientUri() {
         return String.format("%s:%s@%s:%d", TEST_USERNAME, TEST_PASSWORD, testConfig.getHost(), testConfig.getRestPort());
-    }
-
-    protected final boolean isMarkLogic10() {
-        if (markLogicVersion == null) {
-            String version = getDatabaseClient().newServerEval().javascript("xdmp.version()").evalAs(String.class);
-            markLogicVersion = new MarkLogicVersion(version);
-        }
-        return markLogicVersion.getMajorNumber() == 10;
     }
 
     protected final boolean isSpark340OrHigher() {

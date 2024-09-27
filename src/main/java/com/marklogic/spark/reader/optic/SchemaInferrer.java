@@ -53,6 +53,20 @@ public abstract class SchemaInferrer {
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("iri", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("time", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unknown", DataTypes.StringType);
+
+        // New MarkLogic 12 types.
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedByte", DataTypes.ByteType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedShort", DataTypes.ShortType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("base64Binary", DataTypes.BinaryType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("hexBinary", DataTypes.BinaryType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("byte", DataTypes.ByteType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("duration", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("gMonthDay", DataTypes.StringType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("positiveInteger", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("nonPositiveInteger", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("negativeInteger", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("nonNegativeInteger", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("longLatPoint", DataTypes.StringType);
     }
 
     private SchemaInferrer() {}
