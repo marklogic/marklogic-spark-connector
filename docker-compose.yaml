@@ -1,10 +1,9 @@
-version: '3.8'
-name: marklogic_spark
+name: marklogic_spark_12
 
 services:
 
   marklogic:
-    image: "marklogicdb/marklogic-db:${MARKLOGIC_TAG}"
+    image: "ml-docker-db-dev-tierpoint.bed-artifactory.bedford.progress.com/marklogic/marklogic-server-ubi:latest-12"
     platform: linux/amd64
     environment:
       - MARKLOGIC_INIT=true

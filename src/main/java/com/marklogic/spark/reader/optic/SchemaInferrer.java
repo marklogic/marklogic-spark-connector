@@ -53,6 +53,15 @@ public abstract class SchemaInferrer {
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("iri", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("time", DataTypes.StringType);
         COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unknown", DataTypes.StringType);
+
+        // New MarkLogic 12 types.
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("positiveIntegerValue", DataTypes.IntegerType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedByteValue", DataTypes.ByteType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("unsignedShortValue", DataTypes.ShortType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("base64BinaryValue", DataTypes.BinaryType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("hexBinaryValue", DataTypes.BinaryType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("byteValue", DataTypes.ByteType);
+        COLUMN_INFO_TYPES_TO_SPARK_TYPES.put("durationValue", DataTypes.StringType);
     }
 
     private SchemaInferrer() {}
