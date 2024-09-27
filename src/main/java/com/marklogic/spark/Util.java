@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark;
 
+import com.marklogic.client.document.DocumentManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,5 +72,22 @@ public interface Util {
         ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
         String optionName = bundle.getString(option);
         return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+    }
+
+    static Set<DocumentManager.Metadata> getRequestedMetadata(ContextSupport context) {
+        Set<DocumentManager.Metadata> set = new HashSet<>();
+        if (context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
+            for (String category : context.getStringOption(Options.READ_DOCUMENTS_CATEGORIES).split(",")) {
+                if ("content".equalsIgnoreCase(category)) {
+                    continue;
+                }
+                if ("metadata".equalsIgnoreCase(category)) {
+                    set.add(DocumentManager.Metadata.ALL);
+                } else {
+                    set.add(DocumentManager.Metadata.valueOf(category.toUpperCase()));
+                }
+            }
+        }
+        return set;
     }
 }
