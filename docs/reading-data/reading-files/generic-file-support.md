@@ -46,7 +46,7 @@ The connector also supports the following
 
 ## Reading and writing large binary files
 
-The 2.3.2 connector introduces a fix for reading and writing large binary files to MarkLogic, allowing for the contents
+The 2.4.0 connector introduces support for reading and writing large binary files to MarkLogic, allowing for the contents
 of each file to be streamed from its source to MarkLogic. This avoids an issue where the Spark environment runs out
 of memory while trying to fit the contents of a file into an in-memory row. 
 
@@ -61,6 +61,8 @@ stream.
 Files read from the MarkLogic Spark connector with the above option can then be written as documents to MarkLogic 
 with the same option above being passed to the writer. The connector will then stream the contents of each file to
 MarkLogic, submitting one request to MarkLogic per document. 
+
+The `spark.marklogic.streamFiles` option can also be used when reading GZIP, ZIP, and archive files. 
 
 ## Reading any file
 
