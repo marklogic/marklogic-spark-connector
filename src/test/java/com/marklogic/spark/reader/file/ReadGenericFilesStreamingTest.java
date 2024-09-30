@@ -35,6 +35,7 @@ class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
 
         defaultWrite(dataset.write().format(CONNECTOR_IDENTIFIER)
             .option(Options.STREAM_FILES, true)
+            .option(Options.WRITE_LOG_PROGRESS, 1) // Included for manual verification of logging.
             .option(Options.WRITE_COLLECTIONS, "streamed-files")
             .option(Options.WRITE_URI_REPLACE, ".*/mixed-files,''"));
 

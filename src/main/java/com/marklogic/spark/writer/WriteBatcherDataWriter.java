@@ -260,6 +260,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
         try {
             this.documentManager.write(uri, writeOp.getMetadata(), (GenericWriteHandle) writeOp.getContent());
+            writeContext.logBatchOnSuccess(1, 0);
             this.successItemCount.incrementAndGet();
         } catch (RuntimeException ex) {
             captureFailure(ex.getMessage(), uri);

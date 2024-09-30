@@ -1,8 +1,7 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-Due to the use of the Sonar plugin for Gradle, you must use Java 11 or higher for developing and testing the project. 
-The `build.gradle` file for this project ensures that the connector is built to run on Java 8 or higher. 
+You must use Java 11 or higher for developing, testing, and building this project. 
 
 # Setup
 
