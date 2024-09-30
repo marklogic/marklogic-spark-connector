@@ -3,9 +3,12 @@
  */
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.spark.ConnectorException;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -63,5 +66,18 @@ public interface FileUtil {
             partitions[partitionIndex] = new FilePartition(currentPartition);
         }
         return partitions;
+    }
+
+    static byte[] serializeFileContext(FileContext fileContext, String currentFilePath) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject(fileContext);
+            oos.flush();
+            return baos.toByteArray();
+        } catch (Exception ex) {
+            String message = String.format("Unable to build row for file at %s; cause: %s",
+                currentFilePath, ex.getMessage());
+            throw new ConnectorException(message, ex);
+        }
     }
 }

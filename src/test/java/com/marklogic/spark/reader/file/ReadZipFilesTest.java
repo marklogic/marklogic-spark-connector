@@ -44,15 +44,31 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_COLLECTIONS, "zip-test")
         );
 
-        assertCollectionSize("zip-test", 4);
-        JsonNode doc = readJsonDocument("/mixed-files/hello.json");
-        assertEquals("world", doc.get("hello").asText());
-        XmlNode xmlDoc = readXmlDocument("/mixed-files/hello.xml");
-        assertEquals("world", xmlDoc.getElementValue("/hello"));
-        String text = getDatabaseClient().newTextDocumentManager().read("/mixed-files/hello.txt", new StringHandle()).get();
-        assertEquals("hello world", text.trim());
-        InputStreamHandle handle = getDatabaseClient().newDocumentManager().read("/mixed-files/hello2.txt.gz", new InputStreamHandle());
-        assertEquals(Format.BINARY, handle.getFormat());
+        verifyMixedFilesInZipWereWrittenCorrectly();
+    }
+
+    /**
+     * Same as readAndWriteFourFilesInZip, but it uses streaming. The results thus should be the same. But the output
+     * of the reader differs because the zip file isn't actually read during the reader phase.
+     */
+    @Test
+    void streamingReadAndWriteFourFilesInZip() {
+        Dataset<Row> reader = newZipReader()
+            .option(Options.STREAM_FILES, true)
+            .load("src/test/resources/zip-files/mixed*.zip");
+
+        List<Row> rows = reader.collectAsList();
+        assertEquals(1, rows.size(), "Expecting 1 row for each zip file. A zip file shouldn't be read during " +
+            "streaming as we want to avoid reading the contents of any entry into memory.");
+
+        defaultWrite(reader.write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.WRITE_URI_REPLACE, ".*/mixed-files.zip,''")
+            .option(Options.WRITE_COLLECTIONS, "zip-test")
+        );
+
+        verifyMixedFilesInZipWereWrittenCorrectly();
     }
 
     @Test
@@ -145,5 +161,17 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
         return newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_COMPRESSION, "zip");
+    }
+
+    private void verifyMixedFilesInZipWereWrittenCorrectly() {
+        assertCollectionSize("zip-test", 4);
+        JsonNode doc = readJsonDocument("/mixed-files/hello.json");
+        assertEquals("world", doc.get("hello").asText());
+        XmlNode xmlDoc = readXmlDocument("/mixed-files/hello.xml");
+        assertEquals("world", xmlDoc.getElementValue("/hello"));
+        String text = getDatabaseClient().newTextDocumentManager().read("/mixed-files/hello.txt", new StringHandle()).get();
+        assertEquals("hello world", text.trim());
+        InputStreamHandle handle = getDatabaseClient().newDocumentManager().read("/mixed-files/hello2.txt.gz", new InputStreamHandle());
+        assertEquals(Format.BINARY, handle.getFormat());
     }
 }
