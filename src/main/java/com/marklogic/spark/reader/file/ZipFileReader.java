@@ -55,8 +55,9 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
             currentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
         } catch (IOException e) {
             throw new ConnectorException(String.format(
-                "Unable to read from zip file %s; cause: %s", currentFilePath, e.getMessage(), e));
+                "Unable to read from zip file %s; cause: %s", currentFilePath, e.getMessage()), e);
         }
+
         if (currentZipEntry != null) {
             return true;
         }

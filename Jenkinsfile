@@ -40,7 +40,7 @@ pipeline{
     buildDiscarder logRotator(artifactDaysToKeepStr: '7', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '')
   }
   environment{
-    JAVA11_HOME_DIR="/home/builder/java/jdk-11.0.2"
+    JAVA17_HOME_DIR="/home/builder/java/jdk-17.0.2"
     GRADLE_DIR   =".gradle"
     DMC_USER     = credentials('MLBUILD_USER')
     DMC_PASSWORD = credentials('MLBUILD_PASSWORD')
@@ -61,9 +61,9 @@ pipeline{
             docker-compose down -v || true
             docker-compose up -d --build
           '''
-        runtests('JAVA11_HOME_DIR')
+        runtests('JAVA17_HOME_DIR')
         withSonarQubeEnv('SONAR_Progress') {
-          runSonarScan('JAVA11_HOME_DIR')
+          runSonarScan('JAVA17_HOME_DIR')
         }
       }
       post{
@@ -83,7 +83,7 @@ pipeline{
       }
       steps{
       	sh label:'publish', script: '''#!/bin/bash
-          export JAVA_HOME=$JAVA11_HOME_DIR
+          export JAVA_HOME=$JAVA17_HOME_DIR
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
           export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
           cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
@@ -110,7 +110,7 @@ pipeline{
                 docker-compose down -v || true
                 MARKLOGIC_TAG=latest-10.0 docker-compose up -d --build
             '''
-            runtests('JAVA11_HOME_DIR')
+            runtests('JAVA17_HOME_DIR')
       }
       post{
         always{
