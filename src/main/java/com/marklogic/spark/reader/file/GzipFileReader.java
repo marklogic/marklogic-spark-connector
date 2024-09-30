@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import org.apache.commons.io.IOUtils;
@@ -19,17 +20,26 @@ import java.io.InputStream;
  * Expects to read a single gzipped file and return a single row. May expand the scope of this later to expect multiple
  * files and to thus return multiple rows.
  */
-class GzipFileReader implements PartitionReader<InternalRow> {
+public class GzipFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
+    private final StreamingMode streamingMode;
 
     private int nextFilePathIndex;
     private InternalRow rowToReturn;
 
-    GzipFileReader(FilePartition filePartition, FileContext fileContext) {
+    // Only set if streaming during the writer phase.
+    private InputStreamHandle streamingContentHandle;
+
+    public GzipFileReader(FilePartition filePartition, FileContext fileContext) {
+        this(filePartition, fileContext, fileContext.isStreamingFiles() ? StreamingMode.STREAM_DURING_READER_PHASE : null);
+    }
+
+    public GzipFileReader(FilePartition filePartition, FileContext fileContext, StreamingMode streamingMode) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
+        this.streamingMode = streamingMode;
     }
 
     @Override
@@ -40,30 +50,45 @@ class GzipFileReader implements PartitionReader<InternalRow> {
 
         String currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
         nextFilePathIndex++;
-        InputStream gzipInputStream = null;
-        try {
-            gzipInputStream = fileContext.openFile(currentFilePath);
-            byte[] content = extractGZIPContents(currentFilePath, gzipInputStream);
-            String uri = makeURI(currentFilePath);
-            this.rowToReturn = new GenericInternalRow(new Object[]{
-                UTF8String.fromString(uri), ByteArray.concat(content),
-                null, null, null, null, null, null
-            });
-            return true;
-        } catch (RuntimeException ex) {
-            if (fileContext.isReadAbortOnFailure()) {
-                throw ex;
+        String uri = makeURI(currentFilePath);
+
+        Object contentValue;
+        if (StreamingMode.STREAM_DURING_READER_PHASE.equals(streamingMode)) {
+            contentValue = FileUtil.serializeFileContext(fileContext, currentFilePath);
+            uri = currentFilePath;
+        } else if (StreamingMode.STREAM_DURING_WRITER_PHASE.equals(streamingMode)) {
+            streamingContentHandle = new InputStreamHandle(fileContext.openFile(currentFilePath));
+            contentValue = null;
+        } else {
+            InputStream gzipInputStream = null;
+            try {
+                gzipInputStream = fileContext.openFile(currentFilePath);
+                byte[] content = extractGZIPContents(currentFilePath, gzipInputStream);
+                contentValue = ByteArray.concat(content);
+            } catch (RuntimeException ex) {
+                if (fileContext.isReadAbortOnFailure()) {
+                    throw ex;
+                }
+                Util.MAIN_LOGGER.warn("Unable to read file at {}; cause: {}", currentFilePath, ex.getMessage());
+                return next();
+            } finally {
+                IOUtils.closeQuietly(gzipInputStream);
             }
-            Util.MAIN_LOGGER.warn("Unable to read file at {}; cause: {}", currentFilePath, ex.getMessage());
-            return next();
-        } finally {
-            IOUtils.closeQuietly(gzipInputStream);
         }
+
+        this.rowToReturn = new GenericInternalRow(new Object[]{
+            UTF8String.fromString(uri), contentValue, null, null, null, null, null, null
+        });
+        return true;
     }
 
     @Override
     public InternalRow get() {
         return rowToReturn;
+    }
+
+    public InputStreamHandle getStreamingContentHandle() {
+        return streamingContentHandle;
     }
 
     @Override

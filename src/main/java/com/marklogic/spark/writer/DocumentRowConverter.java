@@ -22,7 +22,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Stream;
@@ -54,7 +53,7 @@ class DocumentRowConverter implements RowConverter {
             return Stream.of(new DocBuilder.DocumentInputs(uri, null, null, metadata)).iterator();
         }
 
-        return this.isStreamingFromFiles ? readContentFromFile(uri, row) : readContentFromRow(uri, row);
+        return this.isStreamingFromFiles ? streamContentFromFile(uri, row) : readContentFromRow(uri, row);
     }
 
     @Override
@@ -94,7 +93,7 @@ class DocumentRowConverter implements RowConverter {
      * In a scenario where the user wants to stream a file into MarkLogic, the content column will contain a serialized
      * instance of {@code FileContext}, which is used to stream the file into a {@code InputStreamHandle}.
      */
-    private Iterator<DocBuilder.DocumentInputs> readContentFromFile(String filePath, InternalRow row) {
+    private Iterator<DocBuilder.DocumentInputs> streamContentFromFile(String filePath, InternalRow row) {
         byte[] bytes = row.getBinary(1);
         FileContext fileContext;
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
@@ -107,9 +106,13 @@ class DocumentRowConverter implements RowConverter {
             return buildIteratorForArchiveFile(filePath, fileContext);
         } else if (fileContext.isZip()) {
             return buildIteratorForZipFile(filePath, fileContext);
+        } else if (fileContext.isGzip()) {
+            return buildIteratorForGzipFile(filePath, fileContext);
         }
+        return buildIteratorForGenericFile(row, filePath, fileContext);
+    }
 
-        // If it's not an archive or normal zip file, we just have generic files that the user wants to stream.
+    private Iterator<DocBuilder.DocumentInputs> buildIteratorForGenericFile(InternalRow row, String filePath, FileContext fileContext) {
         final String decodedPath = fileContext.decodeFilePath(filePath);
         InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
         if (this.documentFormat != null) {
@@ -120,7 +123,7 @@ class DocumentRowConverter implements RowConverter {
     }
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
-        FilePartition filePartition = new FilePartition(Arrays.asList(filePath));
+        FilePartition filePartition = new FilePartition(filePath);
         ArchiveFileReader archiveFileReader = new ArchiveFileReader(
             filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
         );
@@ -128,8 +131,19 @@ class DocumentRowConverter implements RowConverter {
     }
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForZipFile(String filePath, FileContext fileContext) {
-        FilePartition filePartition = new FilePartition(Arrays.asList(filePath));
+        FilePartition filePartition = new FilePartition(filePath);
         ZipFileReader reader = new ZipFileReader(filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
         return new ZipFileIterator(reader, this.documentFormat);
+    }
+
+    private Iterator<DocBuilder.DocumentInputs> buildIteratorForGzipFile(String filePath, FileContext fileContext) {
+        GzipFileReader reader = new GzipFileReader(new FilePartition(filePath), fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
+        reader.next();
+        String uri = reader.get().getString(0);
+        InputStreamHandle contentHandle = reader.getStreamingContentHandle();
+        if (this.documentFormat != null) {
+            contentHandle.withFormat(this.documentFormat);
+        }
+        return Stream.of(new DocBuilder.DocumentInputs(uri, contentHandle, null, null)).iterator();
     }
 }
