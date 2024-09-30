@@ -13,10 +13,9 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
-import com.marklogic.spark.reader.file.ArchiveFileReader;
-import com.marklogic.spark.reader.file.FileContext;
-import com.marklogic.spark.reader.file.FilePartition;
+import com.marklogic.spark.reader.file.*;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
+import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.io.ByteArrayInputStream;
@@ -106,8 +105,11 @@ class DocumentRowConverter implements RowConverter {
 
         if ("archive".equalsIgnoreCase(fileContext.getStringOption(Options.READ_FILES_TYPE))) {
             return buildIteratorForArchiveFile(filePath, fileContext);
+        } else if (fileContext.isZip()) {
+            return buildIteratorForZipFile(filePath, fileContext);
         }
 
+        // If it's not an archive or normal zip file, we just have generic files that the user wants to stream.
         final String decodedPath = fileContext.decodeFilePath(filePath);
         InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
         if (this.documentFormat != null) {
@@ -120,8 +122,14 @@ class DocumentRowConverter implements RowConverter {
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
         FilePartition filePartition = new FilePartition(Arrays.asList(filePath));
         ArchiveFileReader archiveFileReader = new ArchiveFileReader(
-            filePartition, fileContext, ArchiveFileReader.StreamingMode.STREAM_DURING_WRITER_PHASE
+            filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
         );
         return new ArchiveFileIterator(archiveFileReader, this.documentFormat);
+    }
+
+    private Iterator<DocBuilder.DocumentInputs> buildIteratorForZipFile(String filePath, FileContext fileContext) {
+        FilePartition filePartition = new FilePartition(Arrays.asList(filePath));
+        ZipFileReader reader = new ZipFileReader(filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
+        return new ZipFileIterator(reader, this.documentFormat);
     }
 }

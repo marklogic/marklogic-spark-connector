@@ -13,9 +13,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
@@ -35,11 +33,6 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     // Legacy = content first, then metadata.
     private Boolean isLegacyFormat;
-
-    public enum StreamingMode {
-        STREAM_DURING_READER_PHASE,
-        STREAM_DURING_WRITER_PHASE
-    }
 
     ArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
         this(
@@ -229,22 +222,13 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
     }
 
     /**
-     * Builds a row containing the file path, the serialized FileContext, and the metadata.
+     * Builds a row to represent the archive file so that it can be opened during the writer phase.
      */
     private InternalRow buildSingleRowForArchiveFile() {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(this.fileContext);
-            oos.flush();
-        } catch (Exception ex) {
-            String message = String.format("Unable to build row for archive file at %s; cause: %s",
-                this.currentFilePath, ex.getMessage());
-            throw new ConnectorException(message, ex);
-        }
-
+        byte[] serializedFileContext = FileUtil.serializeFileContext(fileContext, currentFilePath);
         InternalRow row = new DocumentRowBuilder(this.metadataCategories)
             .withUri(this.currentFilePath)
-            .withContent(baos.toByteArray())
+            .withContent(serializedFileContext)
             .buildRow();
         this.currentFilePath = null;
         return row;

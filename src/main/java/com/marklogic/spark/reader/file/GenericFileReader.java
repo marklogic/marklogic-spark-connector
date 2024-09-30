@@ -11,10 +11,8 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 
 /**
  * "Generic" = read each file as-is with no special processing.
@@ -47,7 +45,9 @@ class GenericFileReader implements PartitionReader<InternalRow> {
 
         filePathIndex++;
         try {
-            byte[] content = this.isStreaming ? serializeFileContext() : readFileIntoByteArray(path);
+            byte[] content = this.isStreaming ?
+                FileUtil.serializeFileContext(fileContext, path) :
+                readFileIntoByteArray(path);
 
             nextRowToReturn = new GenericInternalRow(new Object[]{
                 UTF8String.fromString(path),
@@ -79,13 +79,5 @@ class GenericFileReader implements PartitionReader<InternalRow> {
         try (InputStream inputStream = fileContext.openFile(path)) {
             return fileContext.readBytes(inputStream);
         }
-    }
-
-    private byte[] serializeFileContext() throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(fileContext);
-        }
-        return baos.toByteArray();
     }
 }

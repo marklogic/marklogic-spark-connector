@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.file;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.ArchiveFileReader;
 import com.marklogic.spark.writer.DocBuilder;
@@ -20,8 +21,8 @@ import java.util.Iterator;
  */
 public class ArchiveFileIterator implements Iterator<DocBuilder.DocumentInputs> {
 
-    private ArchiveFileReader archiveFileReader;
-    private Format documentFormat;
+    private final ArchiveFileReader archiveFileReader;
+    private final Format documentFormat;
 
     public ArchiveFileIterator(ArchiveFileReader archiveFileReader, Format documentFormat) {
         this.archiveFileReader = archiveFileReader;
@@ -39,9 +40,12 @@ public class ArchiveFileIterator implements Iterator<DocBuilder.DocumentInputs> 
     @SuppressWarnings("java:S2272")
     public DocBuilder.DocumentInputs next() {
         InternalRow row = archiveFileReader.get();
+        String uri = row.getString(0);
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Creating input stream for entry {}", uri);
+        }
         InputStreamHandle contentHandle = archiveFileReader.getContentHandleForCurrentZipEntry();
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        String uri = row.getString(0);
         if (this.documentFormat != null) {
             contentHandle.withFormat(this.documentFormat);
         }

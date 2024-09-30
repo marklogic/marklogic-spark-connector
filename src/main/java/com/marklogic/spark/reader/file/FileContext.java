@@ -40,7 +40,7 @@ public class FileContext extends ContextSupport implements Serializable {
         }
     }
 
-    boolean isZip() {
+    public boolean isZip() {
         return "zip".equalsIgnoreCase(getStringOption(Options.READ_FILES_COMPRESSION));
     }
 
