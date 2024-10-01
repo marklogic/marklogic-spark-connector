@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * into memory by postponing reading of the file until the writer phase, where it can then be streamed from disk into
  * MarkLogic.
  */
-class ReadGenericFilesStreamingTest extends AbstractIntegrationTest {
+class StreamGenericFilesTest extends AbstractIntegrationTest {
 
     @Test
     void stream() throws Exception {
