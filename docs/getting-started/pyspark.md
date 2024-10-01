@@ -29,7 +29,7 @@ shell by pressing `ctrl-D`.
 
 Run PySpark from the directory that you downloaded the connector to per the [setup instructions](setup.md):
 
-    pyspark --jars marklogic-spark-connector-2.3.1.jar
+    pyspark --jars marklogic-spark-connector-2.4.0.jar
 
 The `--jars` command line option is PySpark's method for utilizing Spark connectors. Each Spark environment should have
 a similar mechanism for including third party connectors; please see the documentation for your particular Spark
