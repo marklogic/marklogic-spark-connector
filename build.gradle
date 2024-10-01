@@ -93,6 +93,7 @@ test {
   environment "mlHost", mlHost
 }
 
+// See https://docs.gradle.org/current/userguide/jacoco_plugin.html .
 jacocoTestReport {
   dependsOn test
   reports {
@@ -104,8 +105,6 @@ sonar {
   properties {
     property "sonar.projectKey", "marklogic-spark"
     property "sonar.host.url", "http://localhost:9000"
-    // See https://github.com/dependency-check/dependency-check-sonar-plugin for more information.
-    property "sonar.dependencyCheck.jsonReportPath", "build/reports/dependency-check-report.json"
   }
 }
 

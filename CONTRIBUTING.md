@@ -7,22 +7,22 @@ described below, you must use Java 17 or higher.
 # Setup
 
 To begin, you need to deploy the test application in this project to MarkLogic. You can do so either on your own 
-installation of MarkLogic, or you can use `docker-compose` to install MarkLogic, optionally as a 3-node cluster with 
+installation of MarkLogic, or you can use `docker compose` to install MarkLogic, optionally as a 3-node cluster with 
 a load balancer in front of it.
 
-## Installing MarkLogic with docker-compose
+## Installing MarkLogic with docker compose
 
-If you wish to use `docker-compose`, perform the following steps before deploying the test application.
+If you wish to use `docker compose`, perform the following steps before deploying the test application.
 
 1. [Install Docker](https://docs.docker.com/get-docker/).
 2. Ensure that you don't have a MarkLogic instance running locally (if you do, you may run into port conflicts in 
    the next step).
-3. Run `docker-compose up -d --build`.
+3. Run `docker compose up -d --build`.
 
 The above will result in a new MarkLogic instance with a single node. 
 
 Alternatively, if you would like to test against a 3-node MarkLogic cluster with a load balancer in front of it, 
-run `docker-compose -f docker-compose-3nodes.yaml up -d --build`.
+run `docker compose -f docker-compose-3nodes.yaml up -d --build`.
 
 ## Deploying the test application
 
@@ -89,7 +89,7 @@ This project's `docker-compose-3nodes.yaml` file includes
 [Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of
 collecting MarkLogic log files and allowing them to be viewed and searched via Grafana.
 
-Once you have run `docker-compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
+Once you have run `docker compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
 access MarkLogic logging data:
 
 1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to
