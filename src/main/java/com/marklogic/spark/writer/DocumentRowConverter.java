@@ -15,6 +15,8 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
+import com.marklogic.spark.writer.file.FileIterator;
+import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 
@@ -114,12 +116,12 @@ class DocumentRowConverter implements RowConverter {
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForGenericFile(InternalRow row, String filePath, FileContext fileContext) {
         final String decodedPath = fileContext.decodeFilePath(filePath);
-        InputStreamHandle streamHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
+        InputStreamHandle contentHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
         if (this.documentFormat != null) {
-            streamHandle.withFormat(this.documentFormat);
+            contentHandle.withFormat(this.documentFormat);
         }
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        return Stream.of(new DocBuilder.DocumentInputs(filePath, streamHandle, null, metadata)).iterator();
+        return new FileIterator(contentHandle, new DocBuilder.DocumentInputs(filePath, contentHandle, null, metadata));
     }
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
@@ -138,12 +140,6 @@ class DocumentRowConverter implements RowConverter {
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForGzipFile(String filePath, FileContext fileContext) {
         GzipFileReader reader = new GzipFileReader(new FilePartition(filePath), fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
-        reader.next();
-        String uri = reader.get().getString(0);
-        InputStreamHandle contentHandle = reader.getStreamingContentHandle();
-        if (this.documentFormat != null) {
-            contentHandle.withFormat(this.documentFormat);
-        }
-        return Stream.of(new DocBuilder.DocumentInputs(uri, contentHandle, null, null)).iterator();
+        return new GzipFileIterator(reader, this.documentFormat);
     }
 }

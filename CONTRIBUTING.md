@@ -83,6 +83,10 @@ you've introduced on the feature branch you're working on. You can then click on
 Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
 
+You can also force Gradle to run `sonar` if any tests fail:
+
+    ./gradlew clean test sonar --continue
+
 ## Accessing MarkLogic logs in Grafana
 
 This project's `docker-compose-3nodes.yaml` file includes

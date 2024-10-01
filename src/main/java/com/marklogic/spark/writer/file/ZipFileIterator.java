@@ -8,11 +8,13 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.file.ZipFileReader;
 import com.marklogic.spark.writer.DocBuilder;
+import org.apache.commons.crypto.utils.IoUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import java.io.Closeable;
 import java.util.Iterator;
 
-public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs> {
+public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs>, Closeable {
 
     private final ZipFileReader zipFileReader;
     private final Format documentFormat;
@@ -42,5 +44,10 @@ public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs> {
             contentHandle.withFormat(this.documentFormat);
         }
         return new DocBuilder.DocumentInputs(uri, contentHandle, null, null);
+    }
+
+    @Override
+    public void close() {
+        IoUtils.closeQuietly(zipFileReader);
     }
 }

@@ -20,6 +20,7 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -29,6 +30,7 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -94,12 +96,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
 
         Iterator<DocBuilder.DocumentInputs> iterator = rowConverter.convertRow(row);
-        while (iterator.hasNext()) {
-            DocumentWriteOperation writeOp = this.docBuilder.build(iterator.next());
-            if (this.isStreamingFiles) {
-                writeDocumentViaPutOperation(writeOp);
-            } else {
-                this.writeBatcher.add(writeOp);
+        try {
+            while (iterator.hasNext()) {
+                DocumentWriteOperation writeOp = this.docBuilder.build(iterator.next());
+                if (this.isStreamingFiles) {
+                    writeDocumentViaPutOperation(writeOp);
+                } else {
+                    this.writeBatcher.add(writeOp);
+                }
+            }
+        } finally {
+            // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
+            // close the associated InputStream.
+            if (iterator instanceof Closeable) {
+                IOUtils.closeQuietly((Closeable) iterator);
             }
         }
     }

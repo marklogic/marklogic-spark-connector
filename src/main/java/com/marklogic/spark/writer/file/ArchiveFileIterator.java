@@ -10,8 +10,10 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.ArchiveFileReader;
 import com.marklogic.spark.writer.DocBuilder;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import java.io.Closeable;
 import java.util.Iterator;
 
 /**
@@ -19,7 +21,7 @@ import java.util.Iterator;
  * {@code DocumentRowConverter} to build sets of document inputs from an archive file without reading any content entry
  * into memory - thus supporting streaming of an archive.
  */
-public class ArchiveFileIterator implements Iterator<DocBuilder.DocumentInputs> {
+public class ArchiveFileIterator implements Iterator<DocBuilder.DocumentInputs>, Closeable {
 
     private final ArchiveFileReader archiveFileReader;
     private final Format documentFormat;
@@ -50,5 +52,10 @@ public class ArchiveFileIterator implements Iterator<DocBuilder.DocumentInputs> 
             contentHandle.withFormat(this.documentFormat);
         }
         return new DocBuilder.DocumentInputs(uri, contentHandle, null, metadata);
+    }
+
+    @Override
+    public void close() {
+        IOUtils.closeQuietly(archiveFileReader);
     }
 }
