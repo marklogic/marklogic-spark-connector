@@ -20,6 +20,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
 
     @Test
     void validPartitionCountAndBatchSize() {
+        System.out.println("Just testing if a PR with no real changes works on Jenkins.");
         List<Row> rows = newDefaultReader()
             .option(Options.READ_NUM_PARTITIONS, "3")
             .option(Options.READ_BATCH_SIZE, "10000")
