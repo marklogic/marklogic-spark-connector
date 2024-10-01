@@ -1,7 +1,8 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-You must use Java 11 or higher for developing, testing, and building this project. 
+You must use Java 11 or higher for developing, testing, and building this project. If you wish to use Sonar as 
+described below, you must use Java 17 or higher.
 
 # Setup
 
@@ -44,8 +45,8 @@ To run the tests against the test application, run the following Gradle task:
 
 ## Generating code quality reports with SonarQube
 
-In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file and you must
-have the services in that file running.
+In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file, and you must
+have the services in that file running and you must use Java 17 to run the Gradle `sonar` task.
 
 To configure the SonarQube service, perform the following steps:
 
@@ -61,8 +62,8 @@ To configure the SonarQube service, perform the following steps:
 10. Add `systemProp.sonar.token=your token pasted here` to `gradle-local.properties` in the root of your project, creating
 that file if it does not exist yet.
 
-To run SonarQube, run the following Gradle tasks, which will run all the tests with code coverage and then generate
-a quality report with SonarQube:
+To run SonarQube, run the following Gradle tasks using Java 17, which will run all the tests with code coverage and 
+then generate a quality report with SonarQube:
 
     ./gradlew test sonar
 
@@ -81,13 +82,6 @@ you've introduced on the feature branch you're working on. You can then click on
 
 Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
-
-Our Sonar instance is also configured to scan for dependency vulnerabilities 
-[via the dependency-check plugin](https://github.com/dependency-check/dependency-check-sonar-plugin). For more 
-information, see the `dependencyCheck` block in this project's `build.gradle` file. To include dependency check results,
-just run the following (it's not included by default when running the `sonar` task):
-
-    ./gradlew dependencyCheckAnalyze sonar
 
 ## Accessing MarkLogic logs in Grafana
 
