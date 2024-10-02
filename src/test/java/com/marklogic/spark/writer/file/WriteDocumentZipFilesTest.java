@@ -91,6 +91,41 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             "'schema-specific part', which is just example/123.xml.");
     }
 
+    /**
+     * Verifies that streaming documents to a zip file "just works" on account of supporting streaming of archive files
+     * first. The same ZipFileWriter is used for both. The only difference with archive files is that it will also
+     * check for metadata in each Spark row and include a metadata entry in the archive file.
+     *
+     * @param tempDir
+     * @throws Exception
+     */
+    @Test
+    void streamZipFile(@TempDir Path tempDir) throws Exception {
+        Dataset<Row> dataset = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
+            .option(Options.STREAM_FILES, true)
+            .load();
+
+        assertEquals(15, dataset.count(), "Should have 1 row per author document.");
+        dataset.collectAsList().forEach(row -> {
+            assertFalse(row.isNullAt(0), "The URI column should be non-null.");
+            assertTrue(row.isNullAt(1), "The content column should be empty. The document will be read during the " +
+                "writer phase instead.");
+        });
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        verifyZipFilesHaveExpectedFilenames(tempDir);
+        verifyZipFilesContainFifteenAuthors(tempDir);
+    }
 
     private Dataset<Row> readAuthorCollection() {
         return newSparkSession().read()

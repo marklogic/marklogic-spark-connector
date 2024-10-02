@@ -1,4 +1,3 @@
-version: '3.8'
 name: marklogic_spark_3nodes
 
 services:
@@ -30,7 +29,7 @@ services:
   # by this host. Note that each MarkLogic host has its 8000-8002 ports exposed externally so that the apps on those
   # ports can each be accessed if needed.
   bootstrap_3n:
-    image: "marklogicdb/marklogic-db:${MARKLOGIC_TAG}"
+    image: "progressofficial/marklogic-db:${MARKLOGIC_TAG}"
     platform: linux/amd64
     container_name: bootstrap_3n
     hostname: bootstrap_3n.local
@@ -50,7 +49,7 @@ services:
       - internal_net
 
   node2:
-    image: "marklogicdb/marklogic-db:${MARKLOGIC_TAG}"
+    image: "progressofficial/marklogic-db:${MARKLOGIC_TAG}"
     platform: linux/amd64
     container_name: node2
     hostname: node2.local
@@ -74,7 +73,7 @@ services:
       - internal_net
 
   node3:
-    image: "marklogicdb/marklogic-db:${MARKLOGIC_TAG}"
+    image: "progressofficial/marklogic-db:${MARKLOGIC_TAG}"
     platform: linux/amd64
     container_name: node3
     hostname: node3.local

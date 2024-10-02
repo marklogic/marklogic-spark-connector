@@ -5,8 +5,8 @@ package com.marklogic.spark.writer;
 
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Strategy interface for how a Spark row is converted into a set of inputs for writing a document to MarkLogic.
@@ -14,13 +14,11 @@ import java.util.Optional;
 public interface RowConverter {
 
     /**
-     * An implementation can return an empty Optional, which will happen when the row will be used with other rows to
-     * form a document.
-     *
      * @param row
-     * @return
+     * @return an iterator of inputs for creating documents to write to MarkLogic. An iterator is used to allow the
+     * implementor to return multiple documents if necessary.
      */
-    Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row);
+    Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row);
 
     /**
      * Called when {@code WriteBatcherDataWriter} has no more rows to send, but the implementation may have one or

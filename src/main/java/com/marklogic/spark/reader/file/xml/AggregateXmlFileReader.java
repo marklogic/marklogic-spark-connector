@@ -53,7 +53,8 @@ public class AggregateXmlFileReader implements PartitionReader<InternalRow> {
             }
 
             try {
-                nextRowToReturn = this.aggregateXMLSplitter.nextRow(filePartition.getPaths().get(filePathIndex));
+                String path = fileContext.decodeFilePath(filePartition.getPaths().get(filePathIndex));
+                nextRowToReturn = this.aggregateXMLSplitter.nextRow(path);
                 return true;
             } catch (RuntimeException ex) {
                 // Error is expected to be friendly already.
@@ -80,7 +81,7 @@ public class AggregateXmlFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        final String filePath = filePartition.getPaths().get(filePathIndex);
+        final String filePath = fileContext.decodeFilePath(filePartition.getPaths().get(filePathIndex));
         try {
             this.inputStream = fileContext.openFile(filePath);
             String identifierForError = "file " + filePath;

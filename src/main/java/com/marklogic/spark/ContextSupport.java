@@ -25,7 +25,7 @@ public class ContextSupport implements Serializable {
     // client. Those two actions are rarely done, so the cost of synchronization will be negligible.
     private static final Object CLIENT_LOCK = new Object();
 
-    protected ContextSupport(Map<String, String> properties) {
+    public ContextSupport(Map<String, String> properties) {
         this.properties = properties;
         this.configuratorWasAdded = addOkHttpConfiguratorIfNecessary();
     }
@@ -143,6 +143,10 @@ public class ContextSupport implements Serializable {
 
     public final String getStringOption(String option) {
         return hasOption(option) ? properties.get(option).trim() : null;
+    }
+
+    public final boolean isStreamingFiles() {
+        return "true".equalsIgnoreCase(getStringOption(Options.STREAM_FILES));
     }
 
     public Map<String, String> getProperties() {

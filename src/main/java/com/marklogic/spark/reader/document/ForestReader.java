@@ -16,6 +16,7 @@ import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
@@ -40,6 +41,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final Set<DocumentManager.Metadata> requestedMetadata;
     private final boolean contentWasRequested;
     private final Integer limit;
+    private final boolean isStreamingFiles;
 
     // Only used for logging.
     private final ForestPartition forestPartition;
@@ -53,6 +55,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     ForestReader(ForestPartition forestPartition, DocumentContext context) {
         this.forestPartition = forestPartition;
         this.limit = context.getLimit();
+        this.isStreamingFiles = context.isStreamingFiles();
 
         DatabaseClient client = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
@@ -72,7 +75,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
         this.contentWasRequested = context.contentWasRequested();
-        this.requestedMetadata = context.getRequestedMetadata();
+        this.requestedMetadata = Util.getRequestedMetadata(context);
         this.documentManager.setMetadataCategories(this.requestedMetadata);
         this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
     }
@@ -99,7 +102,9 @@ class ForestReader implements PartitionReader<InternalRow> {
                 }
                 return false;
             }
-            this.currentDocumentPage = readPage(uris);
+
+            // When streaming, we don't want to retrieve the documents yet - they'll be retrieved in the writer phase.
+            this.currentDocumentPage = this.isStreamingFiles ? new UrisPage(uris.iterator()) : readPage(uris);
         }
 
         return currentDocumentPage.hasNext();

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Converts each row into a sem:triple element, which is then added to a sem:triples XML document associated with a
@@ -60,7 +61,7 @@ public class RdfRowConverter implements RowConverter {
     }
 
     @Override
-    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         final String graph = determineGraph(row);
         graphs.add(graph);
 
@@ -75,9 +76,9 @@ public class RdfRowConverter implements RowConverter {
         triplesDocument.addTriple(row);
         if (triplesDocument.hasMaxTriples()) {
             triplesDocuments.remove(graph);
-            return Optional.of(triplesDocument.buildDocument());
+            return Stream.of(triplesDocument.buildDocument()).iterator();
         }
-        return Optional.empty();
+        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
     }
 
     /**

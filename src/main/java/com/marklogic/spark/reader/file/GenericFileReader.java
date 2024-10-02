@@ -21,6 +21,7 @@ class GenericFileReader implements PartitionReader<InternalRow> {
 
     private final FilePartition filePartition;
     private final FileContext fileContext;
+    private final boolean isStreaming;
 
     private InternalRow nextRowToReturn;
     private int filePathIndex;
@@ -28,6 +29,7 @@ class GenericFileReader implements PartitionReader<InternalRow> {
     GenericFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
         this.fileContext = fileContext;
+        this.isStreaming = fileContext.isStreamingFiles();
     }
 
     @Override
@@ -36,17 +38,22 @@ class GenericFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        final String path = filePartition.getPaths().get(filePathIndex);
+        // If streaming, we want to put the unaltered file path in the row. The writer can then decode it and also use
+        // its original value as the URI, as the PUT v1/documents endpoint does not allow e.g. spaces.
+        final String originalFilePath = filePartition.getPaths().get(filePathIndex);
+        final String path = this.isStreaming ? originalFilePath : fileContext.decodeFilePath(originalFilePath);
+
         filePathIndex++;
         try {
-            try (InputStream inputStream = fileContext.openFile(path)) {
-                byte[] content = fileContext.readBytes(inputStream);
-                nextRowToReturn = new GenericInternalRow(new Object[]{
-                    UTF8String.fromString(path),
-                    ByteArray.concat(content),
-                    null, null, null, null, null, null
-                });
-            }
+            byte[] content = this.isStreaming ?
+                FileUtil.serializeFileContext(fileContext, path) :
+                readFileIntoByteArray(path);
+
+            nextRowToReturn = new GenericInternalRow(new Object[]{
+                UTF8String.fromString(path),
+                ByteArray.concat(content),
+                null, null, null, null, null, null
+            });
         } catch (Exception ex) {
             String message = String.format("Unable to read file at %s; cause: %s", path, ex.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
@@ -66,5 +73,11 @@ class GenericFileReader implements PartitionReader<InternalRow> {
     @Override
     public void close() throws IOException {
         // Nothing to close.
+    }
+
+    private byte[] readFileIntoByteArray(String path) throws IOException {
+        try (InputStream inputStream = fileContext.openFile(path)) {
+            return fileContext.readBytes(inputStream);
+        }
     }
 }

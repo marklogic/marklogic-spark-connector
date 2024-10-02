@@ -14,8 +14,10 @@ import org.apache.spark.sql.types.DataTypes;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code FileRowSchema}.
@@ -33,12 +35,12 @@ class FileRowConverter implements RowConverter {
     }
 
     @Override
-    public Optional<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
         final String path = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle contentHandle = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
         forceFormatIfNecessary(contentHandle);
         Optional<JsonNode> uriTemplateValues = deserializeContentToJson(path, contentHandle, row);
-        return Optional.of(new DocBuilder.DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null));
+        return Stream.of(new DocBuilder.DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null)).iterator();
     }
 
     @Override

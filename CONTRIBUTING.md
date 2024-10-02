@@ -1,28 +1,28 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-Due to the use of the Sonar plugin for Gradle, you must use Java 11 or higher for developing and testing the project. 
-The `build.gradle` file for this project ensures that the connector is built to run on Java 8 or higher. 
+You must use Java 11 or higher for developing, testing, and building this project. If you wish to use Sonar as 
+described below, you must use Java 17 or higher.
 
 # Setup
 
 To begin, you need to deploy the test application in this project to MarkLogic. You can do so either on your own 
-installation of MarkLogic, or you can use `docker-compose` to install MarkLogic, optionally as a 3-node cluster with 
+installation of MarkLogic, or you can use `docker compose` to install MarkLogic, optionally as a 3-node cluster with 
 a load balancer in front of it.
 
-## Installing MarkLogic with docker-compose
+## Installing MarkLogic with docker compose
 
-If you wish to use `docker-compose`, perform the following steps before deploying the test application.
+If you wish to use `docker compose`, perform the following steps before deploying the test application.
 
 1. [Install Docker](https://docs.docker.com/get-docker/).
 2. Ensure that you don't have a MarkLogic instance running locally (if you do, you may run into port conflicts in 
    the next step).
-3. Run `docker-compose up -d --build`.
+3. Run `docker compose up -d --build`.
 
 The above will result in a new MarkLogic instance with a single node. 
 
 Alternatively, if you would like to test against a 3-node MarkLogic cluster with a load balancer in front of it, 
-run `docker-compose -f docker-compose-3nodes.yaml up -d --build`.
+run `docker compose -f docker-compose-3nodes.yaml up -d --build`.
 
 ## Deploying the test application
 
@@ -45,8 +45,8 @@ To run the tests against the test application, run the following Gradle task:
 
 ## Generating code quality reports with SonarQube
 
-In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file and you must
-have the services in that file running.
+In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file, and you must
+have the services in that file running and you must use Java 17 to run the Gradle `sonar` task.
 
 To configure the SonarQube service, perform the following steps:
 
@@ -62,8 +62,8 @@ To configure the SonarQube service, perform the following steps:
 10. Add `systemProp.sonar.token=your token pasted here` to `gradle-local.properties` in the root of your project, creating
 that file if it does not exist yet.
 
-To run SonarQube, run the following Gradle tasks, which will run all the tests with code coverage and then generate
-a quality report with SonarQube:
+To run SonarQube, run the following Gradle tasks using Java 17, which will run all the tests with code coverage and 
+then generate a quality report with SonarQube:
 
     ./gradlew test sonar
 
@@ -83,12 +83,9 @@ you've introduced on the feature branch you're working on. You can then click on
 Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
 without having to re-run the tests.
 
-Our Sonar instance is also configured to scan for dependency vulnerabilities 
-[via the dependency-check plugin](https://github.com/dependency-check/dependency-check-sonar-plugin). For more 
-information, see the `dependencyCheck` block in this project's `build.gradle` file. To include dependency check results,
-just run the following (it's not included by default when running the `sonar` task):
+You can also force Gradle to run `sonar` if any tests fail:
 
-    ./gradlew dependencyCheckAnalyze sonar
+    ./gradlew clean test sonar --continue
 
 ## Accessing MarkLogic logs in Grafana
 
@@ -96,7 +93,7 @@ This project's `docker-compose-3nodes.yaml` file includes
 [Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of
 collecting MarkLogic log files and allowing them to be viewed and searched via Grafana.
 
-Once you have run `docker-compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
+Once you have run `docker compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
 access MarkLogic logging data:
 
 1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to
@@ -123,7 +120,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-2.3-SNAPSHOT.jar
+    pyspark --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -199,7 +196,7 @@ The Spark master GUI is at <http://localhost:8080>. You can use this to view det
 
 Now that you have a Spark cluster running, you just need to tell PySpark to connect to it:
 
-    pyspark --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3-SNAPSHOT.jar
+    pyspark --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
 
 You can then run the same commands as shown in the PySpark section above. The Spark master GUI will allow you to 
 examine details of each of the commands that you run.
@@ -218,12 +215,12 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.3-SNAPSHOT.jar src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
 to `src/main/java`. Then run `./gradlew clean shadowJar` to rebuild the connector jar. Then run the following:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.3-SNAPSHOT.jar
+    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 
 

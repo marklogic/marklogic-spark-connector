@@ -7,9 +7,11 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.client.io.marker.GenericWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -18,6 +20,7 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
@@ -27,9 +30,10 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.Closeable;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,6 +59,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private final RowConverter rowConverter;
 
+    private final boolean isStreamingFiles;
+    // Only initialized if streaming files.
+    private final GenericDocumentManager documentManager;
+
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
@@ -65,6 +73,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
         this.rowConverter = determineRowConverter();
+        this.isStreamingFiles = writeContext.isStreamingFiles();
+        this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -84,9 +94,23 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
-        Optional<DocBuilder.DocumentInputs> document = rowConverter.convertRow(row);
-        if (document.isPresent()) {
-            this.writeBatcher.add(this.docBuilder.build(document.get()));
+
+        Iterator<DocBuilder.DocumentInputs> iterator = rowConverter.convertRow(row);
+        try {
+            while (iterator.hasNext()) {
+                DocumentWriteOperation writeOp = this.docBuilder.build(iterator.next());
+                if (this.isStreamingFiles) {
+                    writeDocumentViaPutOperation(writeOp);
+                } else {
+                    this.writeBatcher.add(writeOp);
+                }
+            }
+        } finally {
+            // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
+            // close the associated InputStream.
+            if (iterator instanceof Closeable) {
+                IOUtils.closeQuietly((Closeable) iterator);
+            }
         }
     }
 
@@ -183,8 +207,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
             successfulBatch -> successItemCount.getAndAdd(successfulBatch.size()),
             (failedDoc, failure) -> {
-                Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", failedDoc.getUri(), failure.getMessage());
-                failedItemCount.incrementAndGet();
+                captureFailure(failure.getMessage(), failedDoc.getUri());
                 if (this.archiveWriter != null) {
                     writeFailedDocumentToArchive(failedDoc);
                 }
@@ -233,5 +256,39 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             }
             archiveWriter.close();
         }
+    }
+
+    /**
+     * A user typically chooses to stream a document due to its size. A PUT call to v1/documents can handle a document
+     * of any size. But a POST call seems to have a limitation due to the multipart nature of the request - the body
+     * part appears to be read into memory, which can cause the server to run out of memory. So for streaming, a PUT
+     * call is made, which means we don't use the WriteBatcher.
+     *
+     * @param writeOp
+     */
+    private void writeDocumentViaPutOperation(DocumentWriteOperation writeOp) {
+        final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
+        try {
+            this.documentManager.write(uri, writeOp.getMetadata(), (GenericWriteHandle) writeOp.getContent());
+            writeContext.logBatchOnSuccess(1, 0);
+            this.successItemCount.incrementAndGet();
+        } catch (RuntimeException ex) {
+            captureFailure(ex.getMessage(), uri);
+            this.writeFailure.compareAndSet(null, ex);
+        }
+    }
+
+    /**
+     * Sigh. Using URLEncoder.encode will convert forward slashes into "%2F", which a user almost certainly does not
+     * want, since those are meaningful in MarkLogic URIs. The main problem to address with the PUT endpoint is that it
+     * erroneously does not accept spaces (see MLE-17088). So this simply replaces spaces.
+     */
+    private String replaceSpacesInUriForPutEndpoint(String uri) {
+        return uri.replace(" ", "%20");
+    }
+
+    private void captureFailure(String message, String documentUri) {
+        Util.MAIN_LOGGER.error("Unable to write document with URI: {}; cause: {}", documentUri, message);
+        failedItemCount.incrementAndGet();
     }
 }

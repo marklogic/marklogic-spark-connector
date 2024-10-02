@@ -30,7 +30,7 @@ class ReadGzipFilesTest extends AbstractIntegrationTest {
 
         verifyRow(rows.get(0), "/src/test/resources/gzip-files/hello.xml", "<hello>world</hello>\n");
         verifyRow(rows.get(1), "/src/test/resources/gzip-files/level1/hello.txt", "hello world\n");
-        verifyRow(rows.get(2), "/src/test/resources/gzip-files/level1/level2/hello.json", "{\"hello\":\"world\"}\n");
+        verifyRow(rows.get(2), "/src/test/resources/gzip-files/level1/level2/hello world.json", "{\"hello\":\"world\"}\n");
     }
 
     @Test

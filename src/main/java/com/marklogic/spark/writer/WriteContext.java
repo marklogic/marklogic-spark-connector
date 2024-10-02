@@ -246,18 +246,22 @@ public class WriteContext extends ContextSupport {
     }
 
     private void logBatchOnSuccess(WriteBatch batch) {
-        int docCount = batch.getItems().length;
-        if (docCount > 0) {
+        int documentCount = batch.getItems().length;
+        if (documentCount > 0) {
             WriteEvent firstEvent = batch.getItems()[0];
             // If the first event is the item added by DMSDK for the default metadata object, ignore it when showing
             // the count of documents in the batch.
             if (firstEvent.getTargetUri() == null && firstEvent.getMetadata() != null) {
-                docCount--;
+                documentCount--;
             }
         }
-        WriteProgressLogger.logProgressIfNecessary(docCount);
-        if (logger.isTraceEnabled()) {
-            logger.trace("Wrote batch; length: {}; job batch number: {}", docCount, batch.getJobBatchNumber());
+        logBatchOnSuccess(documentCount, batch.getJobBatchNumber());
+    }
+
+    public void logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
+        WriteProgressLogger.logProgressIfNecessary(documentCount);
+        if (logger.isTraceEnabled() && optionalJobBatchNumber > 0) {
+            logger.trace("Wrote batch; length: {}; job batch number: {}", documentCount, optionalJobBatchNumber);
         }
     }
 

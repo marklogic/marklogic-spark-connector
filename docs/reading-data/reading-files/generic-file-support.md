@@ -44,6 +44,26 @@ The connector also supports the following
 - Use `recursiveFileLookup` to include files in child directories.
 - Use `modifiedBefore` and `modifiedAfter` to select files based on their modification time.
 
+## Reading and writing large binary files
+
+The 2.4.0 connector introduces support for reading and writing large binary files to MarkLogic, allowing for the contents
+of each file to be streamed from its source to MarkLogic. This avoids an issue where the Spark environment runs out
+of memory while trying to fit the contents of a file into an in-memory row. 
+
+To enable this, include the following in the set of options passed to your reader:
+
+    .option("spark.marklogic.streamFiles", "true")
+
+As a result of this option, the `content` column in each row will not contain the contents of the file. Instead, 
+it will contain a serialized object intended to be used during the write phase to read the contents of the file as a 
+stream. 
+
+Files read from the MarkLogic Spark connector with the above option can then be written as documents to MarkLogic 
+with the same option above being passed to the writer. The connector will then stream the contents of each file to
+MarkLogic, submitting one request to MarkLogic per document. 
+
+The `spark.marklogic.streamFiles` option can also be used when reading GZIP, ZIP, and archive files. 
+
 ## Reading any file
 
 If you wish to read files without any special handling provided by the connector, you can use the

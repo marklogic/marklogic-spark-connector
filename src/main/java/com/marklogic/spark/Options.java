@@ -150,6 +150,20 @@ public abstract class Options {
     public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
     public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
+    /**
+     * When used in the reader phase while reading generic files, the connector will put a serialized {@code FileContext}
+     * into the content column instead of the contents of the file. When used during the writer phase when writing rows
+     * conforming to {@code DocumentRowSchema}, the connector will stream the file using the {@code FileContext} to
+     * avoid reading its contents into memory.
+     * <p>
+     * Similarly, when used in the reader phase when reading documents from MarkLogic, the value of the 'content' column
+     * in each row will be null. During the writer phase, the connector will retrieve the document corresponding to the
+     * value in the 'uri' column and stream it to file.
+     *
+     * @since 2.4.0
+     */
+    public static final String STREAM_FILES = "spark.marklogic.streamFiles";
+
     private Options() {
     }
 }

@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PrettyPrintFilesTest extends AbstractIntegrationTest {
 
@@ -107,5 +108,29 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
 
         String doc2 = FileUtils.readFileToString(new File(dir, "doc2.json"), "UTF-8");
         assertEquals("{\"hello\":\"world\"}", doc2);
+    }
+
+    @Test
+    void notSupportedWhenStreaming(@TempDir Path tempDir) throws Exception {
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "pretty-print")
+            .load()
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .option(Options.WRITE_FILES_PRETTY_PRINT, "true")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        File dir = new File(tempDir.toFile(), "pretty-print");
+        String doc1 = FileUtils.readFileToString(new File(dir, "doc1.xml"), "UTF-8");
+        assertTrue(doc1.contains("<root><hello>world</hello></root>"),
+            "pretty-printed is not supported when streaming documents, as pretty-printing requires reading the " +
+                "document into memory, which conflicts with streaming. So the XML doc should be on a single line. " +
+                "Actual doc: " + doc1);
     }
 }
