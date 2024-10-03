@@ -69,6 +69,9 @@ pipeline{
       post{
         always{
           sh label:'mlcleanup', script: '''#!/bin/bash
+            docker exec -it marklogic chmod -R 755 /var/opt/MarkLogic/Logs
+            docker exec -it sonarqube chmod -R 755 /opt/sonarqube/data
+            docker exec -it postgres chmod -R 755 /var/lib/postgresql
             cd marklogic-spark-connector
             docker-compose down -v || true
             sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
@@ -115,6 +118,9 @@ pipeline{
       post{
         always{
           sh label:'mlcleanup', script: '''#!/bin/bash
+            docker exec -it marklogic chmod -R 755 /var/opt/MarkLogic/Logs
+            docker exec -it sonarqube chmod -R 755 /opt/sonarqube/data
+            docker exec -it postgres chmod -R 755 /var/lib/postgresql
             cd marklogic-spark-connector
             docker-compose down -v || true
             sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
