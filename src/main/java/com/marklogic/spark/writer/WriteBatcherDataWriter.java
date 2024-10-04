@@ -63,6 +63,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
+    private final DocumentProcessor documentProcessor;
+
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
@@ -75,6 +77,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
+        this.documentProcessor = DocumentProcessorFactory.buildDocumentProcessor(writeContext);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -97,20 +100,28 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
         Iterator<DocBuilder.DocumentInputs> iterator = rowConverter.convertRow(row);
         try {
-            while (iterator.hasNext()) {
-                DocumentWriteOperation writeOp = this.docBuilder.build(iterator.next());
-                if (this.isStreamingFiles) {
-                    writeDocumentViaPutOperation(writeOp);
+            iterator.forEachRemaining(documentInputs -> {
+                DocumentWriteOperation sourceDocument = this.docBuilder.build(documentInputs);
+                if (this.documentProcessor != null) {
+                    this.documentProcessor.apply(sourceDocument).forEachRemaining(this::writeDocument);
                 } else {
-                    this.writeBatcher.add(writeOp);
+                    writeDocument(sourceDocument);
                 }
-            }
+            });
         } finally {
             // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
             // close the associated InputStream.
             if (iterator instanceof Closeable) {
                 IOUtils.closeQuietly((Closeable) iterator);
             }
+        }
+    }
+
+    private void writeDocument(DocumentWriteOperation writeOp) {
+        if (this.isStreamingFiles) {
+            writeDocumentViaPutOperation(writeOp);
+        } else {
+            this.writeBatcher.add(writeOp);
         }
     }
 

@@ -158,6 +158,22 @@ public abstract class Options {
     public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
     public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
+    public static final String WRITE_SPLITTER_JSON_POINTERS = "spark.marklogic.write.splitter.json.pointers";
+    public static final String WRITE_SPLITTER_JSONPATHS = "spark.marklogic.write.splitter.json.paths";
+    public static final String WRITE_SPLITTER_XML_XPATHS = "spark.marklogic.write.splitter.xml.xpaths";
+    public static final String WRITE_SPLITTER_XML_NAMESPACES_PREFIX = "spark.marklogic.splitter.xml.namespace.";
+    public static final String WRITE_SPLITTER_CUSTOM_CLASS = "spark.marklogic.write.splitter.custom";
+    public static final String WRITE_SPLITTER_CUSTOM_OPTION_PREFIX = "spark.marklogic.write.splitter.custom.";
+    public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
+    public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
+
+    public static final String WRITE_SPLITTER_OUTPUT = "spark.marklogic.write.splitter.output";
+    public static final String WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE = "spark.marklogic.write.splitter.output.documentType";
+    public static final String WRITE_SPLITTER_OUTPUT_ROOT_NAME = "spark.marklogic.write.splitter.output.rootName";
+    public static final String WRITE_SPLITTER_OUTPUT_NAMESPACE = "spark.marklogic.write.splitter.output.namespace";
+    public static final String WRITE_SPLITTER_OUTPUT_COLLECTIONS = "spark.marklogic.write.splitter.output.collections";
+    public static final String WRITE_SPLITTER_OUTPUT_PERMISSIONS = "spark.marklogic.write.splitter.output.permissions";
+
     /**
      * When used in the reader phase while reading generic files, the connector will put a serialized {@code FileContext}
      * into the content column instead of the contents of the file. When used during the writer phase when writing rows
