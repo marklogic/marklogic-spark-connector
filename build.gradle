@@ -9,7 +9,7 @@ plugins {
 }
 
 group 'com.marklogic'
-version '2.4.0'
+version '2.4.1'
 
 java {
   // To support reading RDF files, Apache Jena is used - but that requires Java 11.
@@ -37,6 +37,14 @@ configurations {
   testImplementation.extendsFrom(compileOnly)
 }
 
+configurations.all {
+  // Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can lead to this
+  // issue - https://www.slf4j.org/codes.html#StaticLoggerBinder .
+  resolutionStrategy {
+    force "org.slf4j:slf4j-api:2.0.13"
+  }
+}
+
 dependencies {
   // This is compileOnly as any environment this is used in will provide the Spark dependencies itself.
   compileOnly ('org.apache.spark:spark-sql_2.12:' + sparkVersion) {
@@ -53,7 +61,10 @@ dependencies {
   }
 
   // Required for converting JSON to XML. Using 2.15.2 to align with Spark 3.5.3.
-  shadowDependencies "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2"
+  shadowDependencies ("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2") {
+    // Not needed, as the modules in this group that this dependency depends on are all provided by Spark.
+    exclude group: "com.fasterxml.jackson.core"
+  }
 
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
