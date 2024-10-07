@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
   implementation 'org.apache.spark:spark-sql_2.12:3.5.3'
-  implementation "com.marklogic:marklogic-spark-connector:2.4.0"
+  implementation "com.marklogic:marklogic-spark-connector:2.4.1"
   implementation "org.postgresql:postgresql:42.6.2"
 }
 
