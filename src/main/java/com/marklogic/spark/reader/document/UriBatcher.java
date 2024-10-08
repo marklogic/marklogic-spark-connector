@@ -25,13 +25,15 @@ class UriBatcher {
     private final ForestPartition partition;
     private final int pageLength;
     private final boolean filtered;
+    private final boolean useConsistentSnapshot;
 
     // These change as batches of URIs are retrieved.
     private String lastUri;
     private long offsetStart = 1;
 
 
-    UriBatcher(DatabaseClient client, SearchQueryDefinition query, ForestPartition partition, int pageLength, boolean filtered) {
+    UriBatcher(DatabaseClient client, SearchQueryDefinition query, ForestPartition partition, int pageLength,
+               boolean filtered, boolean useConsistentSnapshot) {
         this.client = client;
         this.queryManager = (QueryManagerImpl) this.client.newQueryManager();
         this.queryManager.setPageLength(pageLength);
@@ -40,6 +42,7 @@ class UriBatcher {
         this.offsetStart = this.partition.getOffsetStart();
         this.pageLength = pageLength;
         this.filtered = filtered;
+        this.useConsistentSnapshot = useConsistentSnapshot;
     }
 
     /**
@@ -53,7 +56,9 @@ class UriBatcher {
         }
 
         UrisHandle urisHandle = new UrisHandle();
-        urisHandle.setPointInTimeQueryTimestamp(partition.getServerTimestamp());
+        if (useConsistentSnapshot) {
+            urisHandle.setPointInTimeQueryTimestamp(partition.getServerTimestamp());
+        }
 
         // If we have an offsetEnd, the page length is adjusted to ensure we do not go past offsetEnd.
         if (partition.getOffsetEnd() != null && (this.offsetStart + this.pageLength > partition.getOffsetEnd())) {
