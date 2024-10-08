@@ -61,10 +61,7 @@ public class FileContext extends ContextSupport implements Serializable {
     }
 
     public boolean isReadAbortOnFailure() {
-        if (hasOption(Options.READ_FILES_ABORT_ON_FAILURE)) {
-            return Boolean.parseBoolean(getStringOption(Options.READ_FILES_ABORT_ON_FAILURE));
-        }
-        return true;
+        return getBooleanOption(Options.READ_FILES_ABORT_ON_FAILURE, true);
     }
 
     byte[] readBytes(InputStream inputStream) throws IOException {

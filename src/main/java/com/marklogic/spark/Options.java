@@ -59,6 +59,14 @@ public abstract class Options {
     public static final String READ_TRIPLES_FILTERED = "spark.marklogic.read.triples.filtered";
     public static final String READ_TRIPLES_BASE_IRI = "spark.marklogic.read.triples.baseIri";
 
+    /**
+     * The connector uses a consistent snapshot by default. Setting this to false results in queries being executed
+     * at multiple points of time, potentially yielding inconsistent results.
+     *
+     * @since 2.4.2
+     */
+    public static final String READ_SNAPSHOT = "spark.marklogic.read.snapshot";
+
     // For logging progress when reading documents, rows, or items via custom code. Defines the interval at which
     // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
     // being written/processed.

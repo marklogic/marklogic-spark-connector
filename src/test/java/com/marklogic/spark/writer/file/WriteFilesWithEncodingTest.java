@@ -142,7 +142,7 @@ class WriteFilesWithEncodingTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void invalidEncoding(@TempDir Path tempDir) {
+    void invalidEncoding() {
         DataFrameWriter writer = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_URIS, SAMPLE_JSON_DOC_URI)
@@ -151,7 +151,7 @@ class WriteFilesWithEncodingTest extends AbstractIntegrationTest {
             .option(Options.WRITE_FILES_ENCODING, "not-valid-encoding")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save(tempDir.toAbsolutePath().toString()));
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save("."));
         assertEquals("Unsupported encoding value: not-valid-encoding", ex.getMessage());
     }
 

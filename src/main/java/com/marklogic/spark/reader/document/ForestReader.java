@@ -61,16 +61,16 @@ class ForestReader implements PartitionReader<InternalRow> {
             context.connectToMarkLogic(forestPartition.getHost()) :
             context.connectToMarkLogic();
 
+        final boolean filtered = context.getBooleanOption(Options.READ_DOCUMENTS_FILTERED, false);
+        final boolean consistentSnapshot = context.isConsistentSnapshot();
+
         if (logger.isDebugEnabled()) {
-            logger.debug("Will read from host {} for partition: {}", client.getHost(), forestPartition);
+            logger.debug("Will read from host {} for partition: {}; filtered: {}; consistent snapshot: {}",
+                client.getHost(), forestPartition, filtered, consistentSnapshot);
         }
 
         SearchQueryDefinition query = context.buildSearchQuery(client);
-        boolean filtered = false;
-        if (context.hasOption(Options.READ_DOCUMENTS_FILTERED)) {
-            filtered = Boolean.parseBoolean(context.getProperties().get(Options.READ_DOCUMENTS_FILTERED));
-        }
-        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), filtered);
+        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
 
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());

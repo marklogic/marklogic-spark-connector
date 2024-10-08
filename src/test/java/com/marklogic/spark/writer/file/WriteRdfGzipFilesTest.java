@@ -54,7 +54,7 @@ class WriteRdfGzipFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void zipIsntValidChoice(@TempDir Path tempDir) {
+    void zipIsntValidChoice() {
         DataFrameWriter writer = newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -65,7 +65,7 @@ class WriteRdfGzipFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_FILES_COMPRESSION, "zip")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save(tempDir.toFile().getAbsolutePath()));
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save("."));
         assertEquals("Unsupported compression value; only 'gzip' is supported: zip", ex.getMessage());
     }
 }
