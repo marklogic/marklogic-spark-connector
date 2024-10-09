@@ -66,6 +66,8 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
   }
 
+  shadowDependencies "dev.langchain4j:langchain4j:0.35.0"
+
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
 
