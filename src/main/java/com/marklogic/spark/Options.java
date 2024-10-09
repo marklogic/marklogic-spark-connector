@@ -131,6 +131,7 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_XML_NAMESPACE_PREFIX = "spark.marklogic.write.splitter.xml.namespace.";
     public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
     public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
+    public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";

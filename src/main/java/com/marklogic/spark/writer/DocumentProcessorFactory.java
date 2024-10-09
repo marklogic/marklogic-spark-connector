@@ -5,6 +5,7 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.splitter.*;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
@@ -20,10 +21,19 @@ public abstract class DocumentProcessorFactory {
 
     public static DocumentProcessor buildDocumentProcessor(ContextSupport context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XML_PATH)) {
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Will split XML documents using XPath: {}",
+                    context.getStringOption(Options.WRITE_SPLITTER_XML_PATH));
+            }
             TextSelector textSelector = makeTextSelector(context);
             DocumentSplitter splitter = makeDefaultSplitter(context);
-            ChunkAssembler chunkAssembler = makeChunkProcessor();
+            ChunkAssembler chunkAssembler = makeChunkAssembler(false);
             return new SplitterDocumentProcessor(textSelector, splitter, chunkAssembler);
+        } else if (context.getBooleanOption(Options.WRITE_SPLITTER_TEXT, false)) {
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
+            }
+            return new SplitterDocumentProcessor(new AllTextSelector(), makeDefaultSplitter(context), makeChunkAssembler(true));
         }
         return null;
     }
@@ -41,8 +51,8 @@ public abstract class DocumentProcessorFactory {
         return new JDOMTextSelector(path, namespaces);
     }
 
-    private static ChunkAssembler makeChunkProcessor() {
-        return new DefaultChunkAssembler();
+    private static ChunkAssembler makeChunkAssembler(boolean sourceDocumentsAreText) {
+        return new DefaultChunkAssembler(sourceDocumentsAreText);
     }
 
     private static DocumentSplitter makeDefaultSplitter(ContextSupport context) {
