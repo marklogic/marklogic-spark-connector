@@ -78,6 +78,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
         this.documentProcessor = DocumentProcessorFactory.buildDocumentProcessor(writeContext);
+        if (this.documentProcessor != null && Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Will use document processor: {}", this.documentProcessor.getClass().getName());
+        }
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;

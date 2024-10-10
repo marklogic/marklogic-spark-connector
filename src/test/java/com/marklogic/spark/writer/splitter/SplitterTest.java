@@ -103,7 +103,7 @@ class SplitterTest extends AbstractIntegrationTest {
         return new SplitterDocumentProcessor(
             new JDOMTextSelector(path, null),
             DocumentSplitters.recursive(500, 0),
-            new DefaultChunkAssembler()
+            new DefaultChunkAssembler(false)
         );
     }
 
