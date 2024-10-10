@@ -67,8 +67,6 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_XML_PATH, "/ex:root/ex:text/text()")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
@@ -76,6 +74,47 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
                 "Namespace with prefix 'ex' has not been declared.",
             ex.getMessage()
         );
+    }
+
+    @Test
+    void overlapSizeGreaterThanChunkSize() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 200)
+            .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 300)
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Unable to create splitter for documents; cause: spark.marklogic.write.splitter.maxOverlapSize " +
+            "must be between 0 and 200, but is: 300", ex.getMessage().trim());
+    }
+
+    @Test
+    void chunkSizeBelowZero() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, -1)
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("The value of 'spark.marklogic.write.splitter.maxChunkSize' must be 0 or greater.", ex.getMessage());
+    }
+
+    @Test
+    void overlapSizeBelowZero() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, -1)
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("The value of 'spark.marklogic.write.splitter.maxOverlapSize' must be 0 or greater.", ex.getMessage());
     }
 
     @Test

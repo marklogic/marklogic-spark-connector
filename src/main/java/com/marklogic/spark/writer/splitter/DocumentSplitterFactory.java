@@ -14,10 +14,19 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 public abstract class DocumentSplitterFactory {
 
     public static DocumentSplitter makeDocumentSplitter(ContextSupport context) {
-        if (context.hasOption(Options.WRITE_SPLITTER_REGEX)) {
-            return makeRegexSplitter(context);
+        try {
+            if (context.hasOption(Options.WRITE_SPLITTER_REGEX)) {
+                return makeRegexSplitter(context);
+            }
+            return makeDefaultSplitter(context);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage();
+            if (message != null) {
+                message = massageLangchain4jError(context, message);
+            }
+            // Not including the underlying error so that the langchain4j details aren't exposed to the user.
+            throw new ConnectorException(String.format("Unable to create splitter for documents; cause: %s", message));
         }
-        return makeDefaultSplitter(context);
     }
 
     private static DocumentSplitter makeDefaultSplitter(ContextSupport context) {
@@ -47,6 +56,22 @@ public abstract class DocumentSplitterFactory {
 
     private static int getMaxOverlapSize(ContextSupport context) {
         return (int) context.getNumericOption(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0, 0);
+    }
+
+    /**
+     * langchain4j does a nice job with validating inputs, but we don't want langchain4j-specific argument names to
+     * appear in our error messages.
+     */
+    private static String massageLangchain4jError(ContextSupport context, String message) {
+        if (message.contains("maxChunkSize")) {
+            String optionName = context.getOptionNameForMessage(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE);
+            message = message.replace("maxChunkSize", optionName);
+        }
+        if (message.contains("maxOverlapSize")) {
+            String optionName = context.getOptionNameForMessage(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE);
+            message = message.replace("maxOverlapSize", optionName);
+        }
+        return message;
     }
 
     private DocumentSplitterFactory() {
