@@ -127,11 +127,14 @@ public abstract class Options {
     // Example - "spark.marklogic.write.json.ignoreNullFields=false.
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
+    // Add @since annotations before we release.
     public static final String WRITE_SPLITTER_XML_PATH = "spark.marklogic.write.splitter.xml.path";
     public static final String WRITE_SPLITTER_XML_NAMESPACE_PREFIX = "spark.marklogic.write.splitter.xml.namespace.";
     public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
     public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
     public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
+    public static final String WRITE_SPLITTER_REGEX = "spark.marklogic.write.splitter.regex";
+    public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
