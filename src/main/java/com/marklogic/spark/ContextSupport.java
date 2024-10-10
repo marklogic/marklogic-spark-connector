@@ -142,7 +142,11 @@ public class ContextSupport implements Serializable {
     }
 
     public final String getStringOption(String option) {
-        return hasOption(option) ? properties.get(option).trim() : null;
+        return getStringOption(option, null);
+    }
+
+    public final String getStringOption(String option, String defaultValue) {
+        return hasOption(option) ? properties.get(option).trim() : defaultValue;
     }
 
     public final boolean getBooleanOption(String option, boolean defaultValue) {

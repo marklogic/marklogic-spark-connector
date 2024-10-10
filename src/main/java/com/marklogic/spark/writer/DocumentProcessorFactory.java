@@ -8,7 +8,6 @@ import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.splitter.*;
 import dev.langchain4j.data.document.DocumentSplitter;
-import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import org.jdom2.Namespace;
 
 import java.util.List;
@@ -26,14 +25,16 @@ public abstract class DocumentProcessorFactory {
                     context.getStringOption(Options.WRITE_SPLITTER_XML_PATH));
             }
             TextSelector textSelector = makeTextSelector(context);
-            DocumentSplitter splitter = makeDefaultSplitter(context);
+            DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
             ChunkAssembler chunkAssembler = makeChunkAssembler(false);
             return new SplitterDocumentProcessor(textSelector, splitter, chunkAssembler);
         } else if (context.getBooleanOption(Options.WRITE_SPLITTER_TEXT, false)) {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
                 Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
             }
-            return new SplitterDocumentProcessor(new AllTextSelector(), makeDefaultSplitter(context), makeChunkAssembler(true));
+            return new SplitterDocumentProcessor(new AllTextSelector(),
+                DocumentSplitterFactory.makeDocumentSplitter(context), makeChunkAssembler(true)
+            );
         }
         return null;
     }
@@ -53,12 +54,6 @@ public abstract class DocumentProcessorFactory {
 
     private static ChunkAssembler makeChunkAssembler(boolean sourceDocumentsAreText) {
         return new DefaultChunkAssembler(sourceDocumentsAreText);
-    }
-
-    private static DocumentSplitter makeDefaultSplitter(ContextSupport context) {
-        int maxChunkSize = (int) context.getNumericOption(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000, 0);
-        int maxOverlapSize = (int) context.getNumericOption(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0, 0);
-        return DocumentSplitters.recursive(maxChunkSize, maxOverlapSize);
     }
 
     private DocumentProcessorFactory() {

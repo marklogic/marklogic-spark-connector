@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.writer.DocumentProcessor;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
@@ -35,7 +36,15 @@ public class SplitterDocumentProcessor implements DocumentProcessor {
         if (text == null || text.trim().isEmpty()) {
             return Stream.of(sourceDocument).iterator();
         }
-        List<TextSegment> textSegments = documentSplitter.split(new Document(text));
+
+        List<TextSegment> textSegments;
+        try {
+            textSegments = documentSplitter.split(new Document(text));
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
+                sourceDocument.getUri(), e.getMessage()), e);
+        }
+        
         return chunkAssembler.assembleChunks(sourceDocument, textSegments);
     }
 }
