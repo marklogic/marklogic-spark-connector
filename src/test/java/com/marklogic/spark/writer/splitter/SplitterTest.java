@@ -3,10 +3,12 @@
  */
 package com.marklogic.spark.writer.splitter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -25,7 +27,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void textPath() {
-        XmlNode doc = splitTestDocument("/root/text/text()");
+        XmlNode doc = splitTextDocument("/root/text/text()");
 
         doc.assertElementCount(
             "Expecting the default splitter to split the 'text' element into 4 chunks, each having its own 'text' element.",
@@ -34,7 +36,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void elementPath() {
-        XmlNode doc = splitTestDocument("/root/nested");
+        XmlNode doc = splitTextDocument("/root/nested");
 
         doc.assertElementCount("Only expecting one chunk since the root/nested/text element has very little text",
             "/root/chunks/chunk", 1);
@@ -49,7 +51,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void attributePath() {
-        XmlNode doc = splitTestDocument("/root/attribute-test/@text");
+        XmlNode doc = splitTextDocument("/root/attribute-test/@text");
         doc.assertElementCount("/root/chunks/chunk", 1);
         doc.assertElementValue("It should be rare that a user wants to split the text in an attribute, but it should " +
                 "be feasible. We don't have a way though of preserving the attribute name in some sort of serialization " +
@@ -61,7 +63,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void wholeDocument() {
-        XmlNode doc = splitTestDocument("/");
+        XmlNode doc = splitTextDocument("/");
 
         doc.assertElementCount(
             "When the user selects the entire document, it should be serialized into a string that is passed to the " +
@@ -75,7 +77,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void multipleMatchingElements() {
-        XmlNode doc = splitTestDocument("//node()[local-name(.) = 'url' or (local-name(.) = 'text' and ancestor::nested)]/text()");
+        XmlNode doc = splitTextDocument("//node()[local-name(.) = 'url' or (local-name(.) = 'text' and ancestor::nested)]/text()");
 
         doc.assertElementCount(
             "Should have text from 2 elements, but that's small enough for 1 chunk",
@@ -88,15 +90,35 @@ class SplitterTest extends AbstractIntegrationTest {
 
     @Test
     void noMatches() {
-        XmlNode doc = splitTestDocument("/doesnt/match/anything");
+        XmlNode doc = splitTextDocument("/doesnt/match/anything");
         doc.assertElementMissing("When no text is selected, no chunks should be added.", "/root/chunks");
     }
 
-    private XmlNode splitTestDocument(String xpath) {
+    @Test
+    void json() {
+        JsonNode doc = splitJsonDocument("/text");
+        System.out.println(doc.toPrettyString());
+    }
+
+    private JsonNode splitJsonDocument(String... jsonPointers) {
+        DocumentWriteOperation sourceDocument = readJsonDocument();
+        DocumentWriteOperation output = newJsonSplitter(jsonPointers).apply(sourceDocument).next();
+        return ((JacksonHandle) output.getContent()).get();
+    }
+
+    private XmlNode splitTextDocument(String xpath) {
         DocumentWriteOperation sourceDocument = readXmlDocument();
         DocumentWriteOperation output = newXmlSplitter(xpath).apply(sourceDocument).next();
         String xml = HandleAccessor.contentAsString(output.getContent());
         return new XmlNode(xml);
+    }
+
+    private DocumentProcessor newJsonSplitter(String... jsonPointers) {
+        return new SplitterDocumentProcessor(
+            new JSONPointerTextSelector(jsonPointers, null),
+            DocumentSplitters.recursive(500, 0),
+            new DefaultChunkAssembler(false)
+        );
     }
 
     private DocumentProcessor newXmlSplitter(String path) {
@@ -105,6 +127,13 @@ class SplitterTest extends AbstractIntegrationTest {
             DocumentSplitters.recursive(500, 0),
             new DefaultChunkAssembler(false)
         );
+    }
+
+    private DocumentWriteOperation readJsonDocument() {
+        final String uri = "/marklogic-docs/java-client-intro.json";
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+        JacksonHandle contentHandle = getDatabaseClient().newJSONDocumentManager().read(uri, metadata, new JacksonHandle());
+        return new DocumentWriteOperationImpl(uri, metadata, contentHandle);
     }
 
     private DocumentWriteOperation readXmlDocument() {
