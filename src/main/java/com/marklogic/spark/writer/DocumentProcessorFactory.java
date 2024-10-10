@@ -10,6 +10,7 @@ import com.marklogic.spark.writer.splitter.*;
 import dev.langchain4j.data.document.DocumentSplitter;
 import org.jdom2.Namespace;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,26 +21,27 @@ public abstract class DocumentProcessorFactory {
 
     public static DocumentProcessor buildDocumentProcessor(ContextSupport context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XML_PATH)) {
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug("Will split XML documents using XPath: {}",
-                    context.getStringOption(Options.WRITE_SPLITTER_XML_PATH));
-            }
-            TextSelector textSelector = makeTextSelector(context);
-            DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
-            ChunkAssembler chunkAssembler = makeChunkAssembler(false);
-            return new SplitterDocumentProcessor(textSelector, splitter, chunkAssembler);
+            return makeXmlSplitter(context);
+        } else if (context.hasOption(Options.WRITE_SPLITTER_JSON_POINTERS)) {
+            return makeJsonSplitter(context);
         } else if (context.getBooleanOption(Options.WRITE_SPLITTER_TEXT, false)) {
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
-            }
-            return new SplitterDocumentProcessor(new AllTextSelector(),
-                DocumentSplitterFactory.makeDocumentSplitter(context), makeChunkAssembler(true)
-            );
+            return makeTextSplitter(context);
         }
         return null;
     }
 
-    private static TextSelector makeTextSelector(ContextSupport context) {
+    private static SplitterDocumentProcessor makeXmlSplitter(ContextSupport context) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Will split XML documents using XPath: {}",
+                context.getStringOption(Options.WRITE_SPLITTER_XML_PATH));
+        }
+        TextSelector textSelector = makeXmlTextSelector(context);
+        DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
+        ChunkAssembler chunkAssembler = new DefaultChunkAssembler();
+        return new SplitterDocumentProcessor(textSelector, splitter, chunkAssembler);
+    }
+
+    private static TextSelector makeXmlTextSelector(ContextSupport context) {
         String path = context.getStringOption(Options.WRITE_SPLITTER_XML_PATH);
         List<Namespace> namespaces = context.getProperties().keySet()
             .stream()
@@ -52,8 +54,28 @@ public abstract class DocumentProcessorFactory {
         return new JDOMTextSelector(path, namespaces);
     }
 
-    private static ChunkAssembler makeChunkAssembler(boolean sourceDocumentsAreText) {
-        return new DefaultChunkAssembler(sourceDocumentsAreText);
+    private static SplitterDocumentProcessor makeJsonSplitter(ContextSupport context) {
+        TextSelector textSelector = makeJsonTextSelector(context);
+        DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
+        return new SplitterDocumentProcessor(textSelector, splitter, new DefaultChunkAssembler());
+    }
+
+    private static TextSelector makeJsonTextSelector(ContextSupport context) {
+        String[] pointers = context.getStringOption(Options.WRITE_SPLITTER_JSON_POINTERS).split("\n");
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Will split JSON documents using JSON Pointers: {}", Arrays.asList(pointers));
+        }
+        String delimiter = context.getStringOption(Options.WRITE_SPLITTER_JOIN_DELIMITER);
+        return new JSONPointerTextSelector(pointers, delimiter);
+    }
+
+    private static SplitterDocumentProcessor makeTextSplitter(ContextSupport context) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
+        }
+        return new SplitterDocumentProcessor(new AllTextSelector(),
+            DocumentSplitterFactory.makeDocumentSplitter(context), new DefaultChunkAssembler()
+        );
     }
 
     private DocumentProcessorFactory() {
