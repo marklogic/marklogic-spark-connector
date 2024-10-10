@@ -66,17 +66,23 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
   }
 
-  shadowDependencies "dev.langchain4j:langchain4j:0.35.0"
-
   // Need this so that an OkHttpClientConfigurator can be created.
   shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
 
+  // Supports reading and writing RDF data.
   shadowDependencies ("org.apache.jena:jena-arq:4.10.0") {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
+  // Supports splitting documents.
+  shadowDependencies "dev.langchain4j:langchain4j:0.35.0"
+
+  // Needed for constructing XML documents and for splitting them.
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
+
+  // Needed for splitting XML documents via XPath.
+  shadowDependencies "jaxen:jaxen:2.0.0"
 
   testImplementation ('com.marklogic:ml-app-deployer:5.0.0') {
     exclude group: "com.fasterxml.jackson.core"
