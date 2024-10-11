@@ -65,8 +65,8 @@ public abstract class DocumentProcessorFactory {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split JSON documents using JSON Pointers: {}", Arrays.asList(pointers));
         }
-        String delimiter = context.getStringOption(Options.WRITE_SPLITTER_JOIN_DELIMITER);
-        return new JSONPointerTextSelector(pointers, delimiter);
+        // Need an option other than "join delimiter", which applies to joining split text, not selected text.
+        return new JSONPointerTextSelector(pointers, null);
     }
 
     private static SplitterDocumentProcessor makeTextSplitter(ContextSupport context) {

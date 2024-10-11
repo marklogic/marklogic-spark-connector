@@ -57,26 +57,6 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void twoJsonPointersWithCustomJoinDelimiter() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text\n/more-text")
-            .option(Options.WRITE_SPLITTER_JOIN_DELIMITER, "---")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
-            .mode(SaveMode.Append)
-            .save();
-
-        JsonNode doc = readJsonDocument("/split-test.json");
-        assertEquals(2, doc.get("chunks").size(), "Expecting 2 chunks based on default max chunk size of 100.");
-        String lastChunk = doc.get("chunks").get(1).get("text").asText();
-        assertTrue(lastChunk.endsWith("Choose a REST API Instance.---Hello world."), "The last chunk should " +
-            "end with the '/more-text' concatenated to the end of the '/text/' text, using the custom " +
-            "join delimiter. Actual chunk: " + lastChunk);
-    }
-
-    @Test
     void arrayDoc() {
         readDocument("/marklogic-docs/array-doc.json")
             .write().format(CONNECTOR_IDENTIFIER)
