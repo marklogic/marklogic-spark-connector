@@ -79,11 +79,17 @@ class WriteDocumentRowsToMarkLogicTest extends AbstractIntegrationTest {
         assertInCollections("/backup/test/2.xml", "backup-docs");
     }
 
+    /**
+     * Had to tweak this test after DocumentRowConverter was enhanced to populate the "format" column correctly.
+     * That resulted in the format for each row being "XML", which would be used by MarkLogic regardless of the URI
+     * extension.
+     */
     @Test
     void writeXmlAsBinary() {
         readTheTwoTestDocuments()
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_DOCUMENT_TYPE, "binary")
             .option(Options.WRITE_URI_SUFFIX, ".unknown")
             .mode(SaveMode.Append)
             .save();

@@ -12,6 +12,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
@@ -65,16 +66,37 @@ class DocumentRowConverter implements RowConverter {
 
     private Iterator<DocBuilder.DocumentInputs> readContentFromRow(String uri, InternalRow row) {
         BytesHandle bytesHandle = new BytesHandle(row.getBinary(1));
-        if (this.documentFormat != null) {
-            bytesHandle.withFormat(this.documentFormat);
-        }
+        setHandleFormat(bytesHandle, row);
+
         JsonNode uriTemplateValues = null;
         if (this.uriTemplate != null && this.uriTemplate.trim().length() > 0) {
             String format = row.isNullAt(2) ? null : row.getString(2);
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }
+
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
         return Stream.of(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata)).iterator();
+    }
+
+    /**
+     * Setting the format now to assist with operations that occur before the document is written to MarkLogic.
+     */
+    private void setHandleFormat(BytesHandle bytesHandle, InternalRow row) {
+        if (this.documentFormat != null) {
+            bytesHandle.withFormat(this.documentFormat);
+        } else if (!row.isNullAt(2)) {
+            String format = row.getString(2);
+            try {
+                bytesHandle.withFormat(Format.valueOf(format));
+            } catch (IllegalArgumentException e) {
+                // We don't ever expect this to happen, but in case it does - we'll proceed with a null format
+                // on the handle, as it's not essential that it be set.
+                if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                    Util.MAIN_LOGGER.debug("Unable to set format on row with URI: {}; format: {}; error: {}",
+                        row.getString(0), format, e.getMessage());
+                }
+            }
+        }
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
