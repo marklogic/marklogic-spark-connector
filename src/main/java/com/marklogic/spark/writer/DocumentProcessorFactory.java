@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -37,7 +38,7 @@ public abstract class DocumentProcessorFactory {
         }
         TextSelector textSelector = makeXmlTextSelector(context);
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
-        ChunkAssembler chunkAssembler = new DefaultChunkAssembler();
+        ChunkAssembler chunkAssembler = makeChunkAssembler(context);
         return new SplitterDocumentProcessor(textSelector, splitter, chunkAssembler);
     }
 
@@ -57,7 +58,7 @@ public abstract class DocumentProcessorFactory {
     private static SplitterDocumentProcessor makeJsonSplitter(ContextSupport context) {
         TextSelector textSelector = makeJsonTextSelector(context);
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
-        return new SplitterDocumentProcessor(textSelector, splitter, new DefaultChunkAssembler());
+        return new SplitterDocumentProcessor(textSelector, splitter, makeChunkAssembler(context));
     }
 
     private static TextSelector makeJsonTextSelector(ContextSupport context) {
@@ -74,8 +75,26 @@ public abstract class DocumentProcessorFactory {
             Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
         }
         return new SplitterDocumentProcessor(new AllTextSelector(),
-            DocumentSplitterFactory.makeDocumentSplitter(context), new DefaultChunkAssembler()
+            DocumentSplitterFactory.makeDocumentSplitter(context), makeChunkAssembler(context)
         );
+    }
+
+    private static ChunkAssembler makeChunkAssembler(ContextSupport context) {
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+        if (context.hasOption(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS)) {
+            metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS).split(","));
+        }
+        if (context.hasOption(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS)) {
+            String value = context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS);
+            metadata.getPermissions().addFromDelimitedString(value);
+        } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
+            String value = context.getStringOption(Options.WRITE_PERMISSIONS);
+            metadata.getPermissions().addFromDelimitedString(value);
+        }
+
+        int maxChunks = (int) context.getNumericOption(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 0, 0);
+
+        return new DefaultChunkAssembler(metadata, maxChunks);
     }
 
     private DocumentProcessorFactory() {

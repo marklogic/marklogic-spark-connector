@@ -14,8 +14,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
@@ -86,6 +85,37 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         assertEquals("Unable to use JSON pointer expression: not-valid; cause: Invalid input: " +
                 "JSON Pointer expression must start with '/': \"not-valid\"",
             ex.getMessage());
+    }
+
+    @Test
+    void maxChunksOfThree() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 3)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertFalse(doc.has("chunks"), "The source document should not be modified since max chunks is greater than " +
+            "zero, which means chunks should be added to one or more sidecar documents.");
+
+        assertCollectionSize("2 chunk documents should have been created, as 4 chunks were created and " +
+            "the max chunk count per document is 3. So the first chunk doc should have 3 chunks, and the second " +
+            "should have 1 chunk.", "chunks", 2);
+
+        JsonNode firstChunkDoc = readJsonDocument("/split-test.json-chunk-0.json");
+        assertEquals("/split-test.json", firstChunkDoc.get("source-uri").asText());
+        assertEquals(3, firstChunkDoc.get("chunks").size());
+
+        JsonNode secondChunkDoc = readJsonDocument("/split-test.json-chunk-1.json");
+        assertEquals("/split-test.json", secondChunkDoc.get("source-uri").asText());
+        assertEquals(1, secondChunkDoc.get("chunks").size());
     }
 
     private Dataset<Row> readDocument(String uri) {
