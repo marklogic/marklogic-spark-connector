@@ -10,13 +10,15 @@ public class ChunkConfig {
     private final DocumentMetadataHandle metadata;
     private final int maxChunks;
     private final String rootName;
+    private final String xmlNamespace;
     private final String uriPrefix;
     private final String uriSuffix;
 
-    private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String rootName, String uriPrefix, String uriSuffix) {
+    private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String rootName, String xmlNamespace, String uriPrefix, String uriSuffix) {
         this.metadata = metadata;
         this.maxChunks = maxChunks;
         this.rootName = rootName;
+        this.xmlNamespace = xmlNamespace;
         this.uriPrefix = uriPrefix;
         this.uriSuffix = uriSuffix;
     }
@@ -25,11 +27,12 @@ public class ChunkConfig {
         private DocumentMetadataHandle metadata;
         private int maxChunks;
         private String rootName;
+        private String xmlNamespace;
         private String uriPrefix;
         private String uriSuffix;
 
         public ChunkConfig build() {
-            return new ChunkConfig(metadata, maxChunks, rootName, uriPrefix, uriSuffix);
+            return new ChunkConfig(metadata, maxChunks, rootName, xmlNamespace, uriPrefix, uriSuffix);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {
@@ -44,6 +47,11 @@ public class ChunkConfig {
 
         public Builder withRootName(String rootName) {
             this.rootName = rootName;
+            return this;
+        }
+
+        public Builder withXmlNamespace(String xmlNamespace) {
+            this.xmlNamespace = xmlNamespace;
             return this;
         }
 
@@ -76,5 +84,9 @@ public class ChunkConfig {
 
     public String getUriSuffix() {
         return uriSuffix;
+    }
+
+    public String getXmlNamespace() {
+        return xmlNamespace;
     }
 }
