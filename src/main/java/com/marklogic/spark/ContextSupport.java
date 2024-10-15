@@ -109,6 +109,10 @@ public class ContextSupport implements Serializable {
         }
     }
 
+    public final int getIntOption(String optionName, int defaultValue, int minimumValue) {
+        return (int) getNumericOption(optionName, defaultValue, minimumValue);
+    }
+    
     public final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
         try {
             long value = this.getProperties().containsKey(optionName) ?

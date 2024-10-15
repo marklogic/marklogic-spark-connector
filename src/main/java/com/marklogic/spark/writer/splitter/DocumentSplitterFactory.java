@@ -51,11 +51,11 @@ public abstract class DocumentSplitterFactory {
     }
 
     private static int getMaxChunkSize(ContextSupport context) {
-        return (int) context.getNumericOption(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000, 0);
+        return context.getIntOption(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000, 0);
     }
 
     private static int getMaxOverlapSize(ContextSupport context) {
-        return (int) context.getNumericOption(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0, 0);
+        return context.getIntOption(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0, 0);
     }
 
     /**

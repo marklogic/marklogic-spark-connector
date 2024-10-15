@@ -92,9 +92,13 @@ public abstract class DocumentProcessorFactory {
             metadata.getPermissions().addFromDelimitedString(value);
         }
 
-        int maxChunks = (int) context.getNumericOption(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 0, 0);
-
-        return new DefaultChunkAssembler(metadata, maxChunks);
+        return new DefaultChunkAssembler(new ChunkConfig.Builder()
+            .withMetadata(metadata)
+            .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 0, 0))
+            .withRootName(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME))
+            .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX))
+            .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX))
+            .build());
     }
 
     private DocumentProcessorFactory() {

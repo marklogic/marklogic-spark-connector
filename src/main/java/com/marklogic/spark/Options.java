@@ -139,6 +139,9 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_OUTPUT_MAX_CHUNKS = "spark.marklogic.write.splitter.output.maxChunks";
     public static final String WRITE_SPLITTER_OUTPUT_COLLECTIONS = "spark.marklogic.write.splitter.output.collections";
     public static final String WRITE_SPLITTER_OUTPUT_PERMISSIONS = "spark.marklogic.write.splitter.output.permissions";
+    public static final String WRITE_SPLITTER_OUTPUT_ROOT_NAME = "spark.marklogic.write.splitter.output.rootName";
+    public static final String WRITE_SPLITTER_OUTPUT_URI_PREFIX = "spark.marklogic.write.splitter.output.uriPrefix";
+    public static final String WRITE_SPLITTER_OUTPUT_URI_SUFFIX = "spark.marklogic.write.splitter.output.uriSuffix";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
