@@ -91,12 +91,12 @@ class DocumentContext extends ContextSupport {
         // like 1000 or even 10000. 500 is thus used as a default that should still be reasonably performant for larger
         // documents.
         int defaultBatchSize = 500;
-        return (int) getNumericOption(Options.READ_BATCH_SIZE, defaultBatchSize, 1);
+        return getIntOption(Options.READ_BATCH_SIZE, defaultBatchSize, 1);
     }
 
     int getPartitionsPerForest() {
         int defaultPartitionsPerForest = 4;
-        return (int) getNumericOption(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, defaultPartitionsPerForest, 1);
+        return getIntOption(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, defaultPartitionsPerForest, 1);
     }
 
     boolean isConsistentSnapshot() {

@@ -5,6 +5,7 @@ package com.marklogic.spark.writer.splitter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
@@ -109,13 +110,87 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             "the max chunk count per document is 3. So the first chunk doc should have 3 chunks, and the second " +
             "should have 1 chunk.", "chunks", 2);
 
-        JsonNode firstChunkDoc = readJsonDocument("/split-test.json-chunk-0.json");
+        JsonNode firstChunkDoc = readJsonDocument("/split-test.json-chunks-0.json");
         assertEquals("/split-test.json", firstChunkDoc.get("source-uri").asText());
         assertEquals(3, firstChunkDoc.get("chunks").size());
 
-        JsonNode secondChunkDoc = readJsonDocument("/split-test.json-chunk-1.json");
+        JsonNode secondChunkDoc = readJsonDocument("/split-test.json-chunks-1.json");
         assertEquals("/split-test.json", secondChunkDoc.get("source-uri").asText());
         assertEquals(1, secondChunkDoc.get("chunks").size());
+
+        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-0.json");
+        tester.assertReadPermissionExists("The chunk documents should default to the permissions specified " +
+            "via Options.WRITE_PERMISSIONS", "spark-user-role");
+        tester.assertUpdatePermissionExists("spark-user-role");
+    }
+
+    @Test
+    void maxChunksWithCustomPermissions() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS,
+                "spark-user-role,read,spark-user-role,update,qconsole-user,read")
+            .mode(SaveMode.Append)
+            .save();
+
+        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-0.json");
+        tester.assertReadPermissionExists("spark-user-role");
+        tester.assertUpdatePermissionExists("spark-user-role");
+        tester.assertReadPermissionExists("qconsole-user");
+    }
+
+    @Test
+    void maxChunksWithCustomUri() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX, "/chunk/")
+            .option(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX, ".json")
+            .mode(SaveMode.Append)
+            .save();
+
+        getUrisInCollection("chunks", 2).forEach(uri -> {
+            assertTrue(uri.startsWith("/chunk/"), "Unexpected URI: " + uri);
+            assertTrue(uri.endsWith(".json"), "Unexpected URI: " + uri);
+            JsonNode doc = readJsonDocument(uri);
+            assertEquals("/split-test.json", doc.get("source-uri").asText());
+            assertEquals(2, doc.get("chunks").size());
+        });
+    }
+
+    @Test
+    void maxChunksWithCustomRootName() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 4)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME, "sidecar")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json-chunks-0.json");
+        assertTrue(doc.has("sidecar"));
+        assertEquals("/split-test.json", doc.get("sidecar").get("source-uri").asText());
+        assertEquals(4, doc.get("sidecar").get("chunks").size(), "The sidecar document should have all 4 chunks in " +
+            "it.");
+        assertCollectionSize("Should only have one document as all 4 chunks fit in it", "chunks", 1);
     }
 
     private Dataset<Row> readDocument(String uri) {

@@ -9,7 +9,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.extra.jdom.JDOMHandle;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
-import com.marklogic.client.io.*;
+import com.marklogic.client.io.BaseHandle;
+import com.marklogic.client.io.DOMHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.JsonUtil;
@@ -20,18 +23,17 @@ import org.jdom2.Element;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 public class DefaultChunkAssembler implements ChunkAssembler {
 
     private static final String CHUNKS_ARRAY = "chunks";
 
-    private final DocumentMetadataHandle chunkMetadata;
-    private final int maxChunksPerDocument;
+    private final ChunkConfig chunkConfig;
 
-    public DefaultChunkAssembler(DocumentMetadataHandle chunkMetadata, int maxChunksPerDocument) {
-        this.chunkMetadata = chunkMetadata;
-        this.maxChunksPerDocument = maxChunksPerDocument;
+    public DefaultChunkAssembler(ChunkConfig chunkConfig) {
+        this.chunkConfig = chunkConfig;
     }
 
     @Override
@@ -47,8 +49,8 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         }
 
         if (Format.JSON.equals(format)) {
-            if (maxChunksPerDocument > 0) {
-                return new JsonChunkDocumentProducer(sourceDocument, textSegments, chunkMetadata, maxChunksPerDocument);
+            if (chunkConfig.getMaxChunks() > 0) {
+                return new JsonChunkDocumentProducer(sourceDocument, textSegments, chunkConfig);
             }
             return addChunksToJsonDocument(sourceDocument, textSegments);
         }
@@ -87,7 +89,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         String uri = sourceDocument.getUri() + "-chunks.xml";
         return Stream.of(
             sourceDocument,
-            new DocumentWriteOperationImpl(uri, this.chunkMetadata, new JDOMHandle(doc))
+            new DocumentWriteOperationImpl(uri, chunkConfig.getMetadata(), new JDOMHandle(doc))
         ).iterator();
     }
 
@@ -116,18 +118,16 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     private static class JsonChunkDocumentProducer implements Iterator<DocumentWriteOperation> {
         private final DocumentWriteOperation sourceDocument;
         private final List<TextSegment> textSegments;
-        private final DocumentMetadataHandle chunkMetadata;
-        private final int maxChunks;
+        private final ChunkConfig chunkConfig;
         private final ObjectMapper objectMapper = new ObjectMapper();
 
         private int listIndex = -1;
         private int counter;
 
-        JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments, DocumentMetadataHandle chunkMetadata, int maxChunks) {
+        JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments, ChunkConfig chunkConfig) {
             this.sourceDocument = sourceDocument;
             this.textSegments = textSegments;
-            this.chunkMetadata = chunkMetadata;
-            this.maxChunks = maxChunks;
+            this.chunkConfig = chunkConfig;
         }
 
         @Override
@@ -144,14 +144,36 @@ public class DefaultChunkAssembler implements ChunkAssembler {
                 listIndex++;
                 return sourceDocument;
             }
-            String uri = sourceDocument.getUri() + "-chunk-" + counter++ + ".json";
+
             ObjectNode doc = objectMapper.createObjectNode();
-            doc.put("source-uri", sourceDocument.getUri());
-            ArrayNode chunks = doc.putArray(CHUNKS_ARRAY);
-            for (int i = 0; i < maxChunks && hasNext(); i++) {
+            ObjectNode rootElement = doc;
+            if (chunkConfig.getRootName() != null) {
+                rootElement = doc.putObject(chunkConfig.getRootName());
+            }
+            rootElement.put("source-uri", sourceDocument.getUri());
+            ArrayNode chunks = rootElement.putArray(CHUNKS_ARRAY);
+            for (int i = 0; i < chunkConfig.getMaxChunks() && hasNext(); i++) {
                 chunks.addObject().put("text", textSegments.get(listIndex++).text());
             }
-            return new DocumentWriteOperationImpl(uri, chunkMetadata, new JacksonHandle(doc));
+
+            final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument);
+            counter++;
+            return new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc));
+        }
+
+        private String makeChunkDocumentUri(DocumentWriteOperation sourceDocument) {
+            if (chunkConfig.getUriPrefix() == null && chunkConfig.getUriSuffix() == null) {
+                return String.format("%s-chunks-%d.json", sourceDocument.getUri(), counter);
+            }
+
+            String uri = UUID.randomUUID().toString();
+            if (chunkConfig.getUriPrefix() != null) {
+                uri = chunkConfig.getUriPrefix() + uri;
+            }
+            if (chunkConfig.getUriSuffix() != null) {
+                uri += chunkConfig.getUriSuffix();
+            }
+            return uri;
         }
     }
 }

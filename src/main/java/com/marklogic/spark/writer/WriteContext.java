@@ -40,7 +40,7 @@ public class WriteContext extends ContextSupport {
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
         this.schema = schema;
-        this.batchSize = (int) getNumericOption(Options.WRITE_BATCH_SIZE, 100, 1);
+        this.batchSize = getIntOption(Options.WRITE_BATCH_SIZE, 100, 1);
 
         // We support the Spark binaryFile schema - https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html -
         // so that reader can be reused for loading files as-is.
@@ -64,7 +64,7 @@ public class WriteContext extends ContextSupport {
      * hosts are in their MarkLogic cluster and how many threads are available to an app server on each host.
      */
     int getTotalThreadCount() {
-        return (int) getNumericOption(Options.WRITE_THREAD_COUNT, 4, 1);
+        return getIntOption(Options.WRITE_THREAD_COUNT, 4, 1);
     }
 
     /**
@@ -84,7 +84,7 @@ public class WriteContext extends ContextSupport {
      * threads should be used by a partition.
      */
     int getUserDefinedThreadCountPerPartition() {
-        return (int) getNumericOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
+        return getIntOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
     }
 
     WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {

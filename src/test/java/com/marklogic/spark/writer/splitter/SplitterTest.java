@@ -135,7 +135,7 @@ class SplitterTest extends AbstractIntegrationTest {
         return new SplitterDocumentProcessor(
             new JSONPointerTextSelector(jsonPointers, null),
             DocumentSplitters.recursive(500, 0),
-            new DefaultChunkAssembler(null, 0)
+            new DefaultChunkAssembler(new ChunkConfig.Builder().build())
         );
     }
 
@@ -143,7 +143,7 @@ class SplitterTest extends AbstractIntegrationTest {
         return new SplitterDocumentProcessor(
             new JDOMTextSelector(path, null),
             DocumentSplitters.recursive(500, 0),
-            new DefaultChunkAssembler(null, 0)
+            new DefaultChunkAssembler(new ChunkConfig.Builder().build())
         );
     }
 

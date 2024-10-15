@@ -47,7 +47,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         this.databaseClient = customCodeContext.connectToMarkLogic();
         this.jsonRowSerializer = new JsonRowSerializer(customCodeContext.getSchema(), customCodeContext.getProperties());
 
-        this.batchSize = (int) customCodeContext.getNumericOption(Options.WRITE_BATCH_SIZE, 1, 1);
+        this.batchSize = customCodeContext.getIntOption(Options.WRITE_BATCH_SIZE, 1, 1);
 
         this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";

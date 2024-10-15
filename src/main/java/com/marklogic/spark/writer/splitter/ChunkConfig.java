@@ -1,0 +1,80 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
+package com.marklogic.spark.writer.splitter;
+
+import com.marklogic.client.io.DocumentMetadataHandle;
+
+public class ChunkConfig {
+
+    private final DocumentMetadataHandle metadata;
+    private final int maxChunks;
+    private final String rootName;
+    private final String uriPrefix;
+    private final String uriSuffix;
+
+    private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String rootName, String uriPrefix, String uriSuffix) {
+        this.metadata = metadata;
+        this.maxChunks = maxChunks;
+        this.rootName = rootName;
+        this.uriPrefix = uriPrefix;
+        this.uriSuffix = uriSuffix;
+    }
+
+    public static class Builder {
+        private DocumentMetadataHandle metadata;
+        private int maxChunks;
+        private String rootName;
+        private String uriPrefix;
+        private String uriSuffix;
+
+        public ChunkConfig build() {
+            return new ChunkConfig(metadata, maxChunks, rootName, uriPrefix, uriSuffix);
+        }
+
+        public Builder withMetadata(DocumentMetadataHandle metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
+        public Builder withMaxChunks(int maxChunks) {
+            this.maxChunks = maxChunks;
+            return this;
+        }
+
+        public Builder withRootName(String rootName) {
+            this.rootName = rootName;
+            return this;
+        }
+
+        public Builder withUriPrefix(String uriPrefix) {
+            this.uriPrefix = uriPrefix;
+            return this;
+        }
+
+        public Builder withUriSuffix(String uriSuffix) {
+            this.uriSuffix = uriSuffix;
+            return this;
+        }
+    }
+
+    public DocumentMetadataHandle getMetadata() {
+        return metadata;
+    }
+
+    public int getMaxChunks() {
+        return maxChunks;
+    }
+
+    public String getRootName() {
+        return rootName;
+    }
+
+    public String getUriPrefix() {
+        return uriPrefix;
+    }
+
+    public String getUriSuffix() {
+        return uriSuffix;
+    }
+}
