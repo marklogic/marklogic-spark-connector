@@ -3,18 +3,14 @@
  */
 package com.marklogic.spark.writer.splitter;
 
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.extra.jdom.JDOMHandle;
-import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.BaseHandle;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.Util;
-import com.marklogic.spark.writer.JsonUtil;
 import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.Iterator;
@@ -31,21 +27,16 @@ public class DefaultChunkAssembler implements ChunkAssembler {
 
     @Override
     public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments) {
-        final Format format = determineSourceDocumentFormat(sourceDocument);
-        if (format == null) {
+        final Format sourceDocumentFormat = determineSourceDocumentFormat(sourceDocument);
+        if (sourceDocumentFormat == null) {
             Util.MAIN_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
             return Stream.of(sourceDocument).iterator();
         }
 
-        // Will refactor this soon so that it's all in the separate class.
-        if (Format.JSON.equals(format)) {
-            if (chunkConfig.getMaxChunks() > 0) {
-                return new JsonChunkDocumentProducer(sourceDocument, textSegments, chunkConfig);
-            }
-            return addChunksToJsonDocument(sourceDocument, textSegments);
-        }
-
-        return new XmlChunkDocumentProducer(sourceDocument, format, textSegments, chunkConfig);
+        final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
+        return Format.XML.equals(chunkDocumentFormat) ?
+            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig) :
+            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
     }
 
     private Format determineSourceDocumentFormat(DocumentWriteOperation sourceDocument) {
@@ -63,16 +54,17 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         return null;
     }
 
-    private Iterator<DocumentWriteOperation> addChunksToJsonDocument(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments) {
-        AbstractWriteHandle content = sourceDocument.getContent();
-        ObjectNode doc = (ObjectNode) JsonUtil.getJsonFromHandle(content);
+    private Format determineChunkDocumentFormat(Format sourceDocumentFormat) {
+        final boolean addChunksToSourceDocument = !Format.TEXT.equals(sourceDocumentFormat) && chunkConfig.getMaxChunks() == 0;
+        if (addChunksToSourceDocument) {
+            return sourceDocumentFormat;
+        }
 
-        ArrayNode chunks = doc.putArray("chunks");
-        textSegments.forEach(textSegment -> chunks.addObject().put("text", textSegment.text()));
+        final String documentType = chunkConfig.getDocumentType();
+        if (documentType != null || Format.TEXT.equals(sourceDocumentFormat)) {
+            return "xml".equalsIgnoreCase(chunkConfig.getDocumentType()) ? Format.XML : Format.JSON;
+        }
 
-        DocumentWriteOperation result = new DocumentWriteOperationImpl(sourceDocument.getUri(),
-            sourceDocument.getMetadata(), new JacksonHandle(doc));
-
-        return Stream.of(result).iterator();
+        return sourceDocumentFormat;
     }
 }

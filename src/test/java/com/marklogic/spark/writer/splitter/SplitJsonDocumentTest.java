@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.splitter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.junit5.PermissionsTester;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
@@ -171,6 +172,28 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         assertEquals(4, doc.get("sidecar").get("chunks").size(), "The sidecar document should have all 4 chunks in " +
             "it.");
         assertCollectionSize("Should only have one document as all 4 chunks fit in it", "chunks", 1);
+    }
+
+    /**
+     * Demonstrates that XML chunk documents can be written even when the source document is JSON.
+     */
+    @Test
+    void xmlChunks() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("chunks", 2);
+
+        XmlNode doc = readXmlDocument("/split-test.json-chunks-0.xml");
+        doc.assertElementCount("/root/chunks/chunk", 2);
+
+        doc = readXmlDocument("/split-test.json-chunks-1.xml");
+        doc.assertElementCount("/root/chunks/chunk", 2);
     }
 
     private Dataset<Row> readDocument(String uri) {
