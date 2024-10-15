@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.splitter;
 
+import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
@@ -170,10 +171,100 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
                 "that exceeds the max chunk size. Actual error: " + ex.getMessage());
     }
 
+    @Test
+    void maxChunksOfThree() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 3)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementMissing("Chunks should have been written to separate documents since max chunks is " +
+            "greater than zero.", "//chunks");
+
+        assertCollectionSize("Two chunk documents should have been written, with the first having 3 chunks and " +
+            "the second having 1 chunk.", "chunks", 2);
+
+        XmlNode firstChunkDoc = readXmlDocument("/split-test.xml-chunks-0.xml");
+        firstChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
+        firstChunkDoc.assertElementCount("/root/chunks/chunk", 3);
+
+        XmlNode secondChunkDoc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        secondChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
+        secondChunkDoc.assertElementCount("/root/chunks/chunk", 1);
+    }
+
+    @Test
+    void maxChunksWithCustomPermissions() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS,
+                "spark-user-role,read,spark-user-role,update,qconsole-user,read")
+            .mode(SaveMode.Append)
+            .save();
+
+        PermissionsTester tester = readDocumentPermissions("/split-test.xml-chunks-0.xml");
+        tester.assertReadPermissionExists("spark-user-role");
+        tester.assertUpdatePermissionExists("spark-user-role");
+        tester.assertReadPermissionExists("qconsole-user");
+    }
+
+    @Test
+    void maxChunksWithCustomUri() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX, "/chunk/")
+            .option(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX, ".xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        getUrisInCollection("chunks", 2).forEach(uri -> {
+            assertTrue(uri.startsWith("/chunk/"), "Unexpected URI: " + uri);
+            assertTrue(uri.endsWith(".xml"), "Unexpected URI: " + uri);
+            XmlNode doc = readXmlDocument(uri);
+            doc.assertElementValue("/root/source-uri", "/split-test.xml");
+            doc.assertElementCount("/root/chunks/chunk", 2);
+        });
+    }
+
+    @Test
+    void maxChunksWithCustomRootNameAndNamespace() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 4)
+            .option(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME, "sidecar")
+            .option(Options.WRITE_SPLITTER_OUTPUT_XML_NAMESPACE, "org:example")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-0.xml");
+        doc.setNamespaces(new Namespace[]{Namespace.getNamespace("ex", "org:example")});
+        doc.assertElementExists("/ex:sidecar");
+        doc.assertElementValue("/ex:sidecar/ex:source-uri", "/split-test.xml");
+        doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_URIS, uri)
             .load();
+    }
+
+    private DataFrameWriter prepareToWriteChunkDocuments() {
+        return readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml");
     }
 }

@@ -98,6 +98,7 @@ public abstract class DocumentProcessorFactory {
             .withRootName(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME))
             .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX))
             .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX))
+            .withXmlNamespace(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_XML_NAMESPACE))
             .build());
     }
 

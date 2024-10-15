@@ -90,12 +90,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
     @Test
     void maxChunksOfThree() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+        prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 3)
             .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
@@ -126,12 +121,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
     @Test
     void maxChunksWithCustomPermissions() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+        prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
             .option(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS,
@@ -147,12 +137,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
     @Test
     void maxChunksWithCustomUri() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+        prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
             .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
@@ -172,12 +157,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
     @Test
     void maxChunksWithCustomRootName() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+        prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 4)
             .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
@@ -198,5 +178,14 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_URIS, uri)
             .load();
+    }
+
+    private DataFrameWriter prepareToWriteChunkDocuments() {
+        return readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json");
     }
 }
