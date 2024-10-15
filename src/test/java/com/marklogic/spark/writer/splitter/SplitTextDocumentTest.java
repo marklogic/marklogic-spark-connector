@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.splitter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -12,13 +13,33 @@ import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SplitTextDocumentTest extends AbstractIntegrationTest {
 
     @Test
-    void chunksInSeparateDocument() {
+    void jsonChunks() {
         prepareToWriteChunkDocuments()
+            .mode(SaveMode.Append)
+            .save();
+
+        final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-0.json";
+
+        JsonNode doc = readJsonDocument(chunksUri);
+        assertEquals("/test/marklogic-docs/java-client-intro.txt", doc.get("source-uri").asText());
+        assertEquals(2, doc.get("chunks").size());
+
+        PermissionsTester tester = readDocumentPermissions(chunksUri);
+        tester.assertUpdatePermissionExists("This is just a temporary permission until we allow the URI and " +
+            "metadata for chunk documents to be configurable", "spark-user-role");
+        tester.assertReadPermissionExists("spark-user-role");
+    }
+
+    @Test
+    void xmlChunks() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
 
@@ -41,6 +62,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 3)
             .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
 
@@ -61,6 +83,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
             .option(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS,
                 "spark-user-role,read,spark-user-role,update,qconsole-user,read")
             .mode(SaveMode.Append)
@@ -80,6 +103,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
             .option(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX, "/chunk/")
             .option(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX, ".xml")
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
 
@@ -99,6 +123,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 4)
             .option(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME, "sidecar")
             .option(Options.WRITE_SPLITTER_OUTPUT_XML_NAMESPACE, "org:example")
+            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
 

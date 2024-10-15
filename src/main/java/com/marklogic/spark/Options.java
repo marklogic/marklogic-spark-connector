@@ -137,6 +137,7 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
     public static final String WRITE_SPLITTER_JSON_POINTERS = "spark.marklogic.write.splitter.jsonPointers";
     public static final String WRITE_SPLITTER_OUTPUT_MAX_CHUNKS = "spark.marklogic.write.splitter.output.maxChunks";
+    public static final String WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE = "spark.marklogic.write.splitter.output.documentType";
     public static final String WRITE_SPLITTER_OUTPUT_COLLECTIONS = "spark.marklogic.write.splitter.output.collections";
     public static final String WRITE_SPLITTER_OUTPUT_PERMISSIONS = "spark.marklogic.write.splitter.output.permissions";
     public static final String WRITE_SPLITTER_OUTPUT_ROOT_NAME = "spark.marklogic.write.splitter.output.rootName";
