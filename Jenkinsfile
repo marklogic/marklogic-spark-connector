@@ -55,10 +55,10 @@ pipeline{
         sh label:'mlsetup', script: '''#!/bin/bash
             echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
             sudo /usr/local/sbin/mladmin remove
+            docker-compose down -v || true
             sudo /usr/local/sbin/mladmin cleandata
             cd marklogic-spark-connector
             mkdir -p docker/marklogic/logs
-            docker-compose down -v || true
             docker-compose up -d --build
           '''
         runtests('JAVA17_HOME_DIR')

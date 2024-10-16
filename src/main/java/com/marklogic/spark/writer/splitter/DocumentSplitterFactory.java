@@ -11,9 +11,16 @@ import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentByRegexSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public abstract class DocumentSplitterFactory {
 
     public static DocumentSplitter makeDocumentSplitter(ContextSupport context) {
+        if (context.hasOption(Options.WRITE_SPLITTER_CUSTOM_CLASS)) {
+            return makeCustomSplitter(context);
+        }
+
         try {
             if (context.hasOption(Options.WRITE_SPLITTER_REGEX)) {
                 return makeRegexSplitter(context);
@@ -26,6 +33,25 @@ public abstract class DocumentSplitterFactory {
             }
             // Not including the underlying error so that the langchain4j details aren't exposed to the user.
             throw new ConnectorException(String.format("Unable to create splitter for documents; cause: %s", message));
+        }
+    }
+
+    private static DocumentSplitter makeCustomSplitter(ContextSupport context) {
+        String className = context.getStringOption(Options.WRITE_SPLITTER_CUSTOM_CLASS);
+        Map<String, String> options = new HashMap<>();
+        context.getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX))
+            .forEach(key -> options.put(key.substring(Options.WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX.length()), context.getStringOption(key)));
+        try {
+            return (DocumentSplitter) Class.forName(className).getDeclaredConstructor(Map.class).newInstance(options);
+        } catch (ClassNotFoundException ex) {
+            throw new ConnectorException(String.format("Cannot find custom splitter with class name: %s", className), ex);
+        } catch (NoSuchMethodException ex) {
+            throw new ConnectorException(String.format("Cannot create custom splitter with class name: %s; " +
+                "the class must have a public constructor that accepts a java.util.Map<String, String>.", className), ex);
+        } catch (Exception ex) {
+            throw new ConnectorException(String.format("Unable to instantiate custom splitter with class name " +
+                "%s; cause: %s", className, ex.getMessage()), ex);
         }
     }
 

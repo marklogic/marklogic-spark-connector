@@ -247,6 +247,53 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         doc.assertElementCount("/root/chunks/chunk", 2);
     }
 
+    @Test
+    void customSplitter() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.CustomSplitter")
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX + "textToReturn", "this is a test")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertEquals("this is a test", doc.at("/chunks/0/text").asText(),
+            "The custom splitter should have been used, which results in a single chunk being added with the " +
+                "value of the 'textToReturn' option used as the chunk text.");
+    }
+
+    @Test
+    void customSplitterNoClassOptions() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.CustomSplitter")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertEquals("You passed in null!", doc.at("/chunks/0/text").asText());
+    }
+
+    @Test
+    void customSplitterInvalidClass() {
+        DataFrameWriter writer = prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "not.valid")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Cannot find custom splitter with class name: not.valid", ex.getMessage());
+    }
+
+    @Test
+    void customSplitterNotADocumentSplitter() {
+        DataFrameWriter writer = prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.BadCustomSplitter")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Cannot create custom splitter with class name: com.marklogic.spark.writer.splitter.BadCustomSplitter; " +
+                "the class must have a public constructor that accepts a java.util.Map<String, String>.",
+            ex.getMessage());
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
