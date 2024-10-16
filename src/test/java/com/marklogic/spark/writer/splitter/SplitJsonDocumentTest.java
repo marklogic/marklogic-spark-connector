@@ -58,6 +58,57 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void jsonPointerEntireDoc() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        System.out.println(doc.toPrettyString());
+
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(3, chunks.size(), "Expecting 3 chunks based on the entire serialized doc and a size of 1000.");
+
+        String firstChunk = chunks.get(0).get("text").asText();
+        assertTrue(firstChunk.startsWith("{\"url\":\"https"), "The expression '\"\"' is a valid JSON Pointer " +
+            "expression that refers to the entire doc. So the first chunk should begin with the serialization of " +
+            "the entire doc. Actual first chunk: " + firstChunk);
+    }
+
+    @Test
+    void jsonPointerArray() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/test-array")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(2, chunks.size(), "Expecting 2 chunks based on the size of 100 and the amount of text in " +
+            "the entire /test-array array.");
+
+        String firstChunk = chunks.get(0).get("text").asText();
+        assertTrue(firstChunk.startsWith("[\"When working with the Java API"), "When a JSON Pointer expression " +
+            "selects an entire array, the serialized array should be used as the selected text. If a user wants a " +
+            "specific value, their expression should select it via its array index. Actual chunk: " + firstChunk);
+
+        String secondChunk = chunks.get(1).get("text").asText();
+        assertTrue(secondChunk.endsWith("you want to perform.\"}]"), "The second chunk should end with the " +
+            "serialized array ending. Actual chunk: " + secondChunk);
+    }
+
+    @Test
     void arrayDoc() {
         readDocument("/marklogic-docs/array-doc.json")
             .write().format(CONNECTOR_IDENTIFIER)

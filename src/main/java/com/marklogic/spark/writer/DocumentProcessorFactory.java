@@ -23,7 +23,8 @@ public abstract class DocumentProcessorFactory {
     public static DocumentProcessor buildDocumentProcessor(ContextSupport context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XML_PATH)) {
             return makeXmlSplitter(context);
-        } else if (context.hasOption(Options.WRITE_SPLITTER_JSON_POINTERS)) {
+        } else if (context.getProperties().containsKey(Options.WRITE_SPLITTER_JSON_POINTERS)) {
+            // "" is a valid JSON Pointer expression, so we only check to see if the key exists.
             return makeJsonSplitter(context);
         } else if (context.getBooleanOption(Options.WRITE_SPLITTER_TEXT, false)) {
             return makeTextSplitter(context);
@@ -62,12 +63,13 @@ public abstract class DocumentProcessorFactory {
     }
 
     private static TextSelector makeJsonTextSelector(ContextSupport context) {
-        String[] pointers = context.getStringOption(Options.WRITE_SPLITTER_JSON_POINTERS).split("\n");
+        String value = context.getProperties().get(Options.WRITE_SPLITTER_JSON_POINTERS);
+        String[] pointers = value.split("\n");
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split JSON documents using JSON Pointers: {}", Arrays.asList(pointers));
         }
         // Need an option other than "join delimiter", which applies to joining split text, not selected text.
-        return new JSONPointerTextSelector(pointers, null);
+        return new JsonPointerTextSelector(pointers, null);
     }
 
     private static SplitterDocumentProcessor makeTextSplitter(ContextSupport context) {
