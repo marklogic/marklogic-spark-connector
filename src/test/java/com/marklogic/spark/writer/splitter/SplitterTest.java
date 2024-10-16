@@ -17,8 +17,7 @@ import com.marklogic.spark.writer.DocumentProcessor;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * This test verifies the SplitterDocumentProcessor without involving Spark at all. The intent is to ensure that all
@@ -118,6 +117,13 @@ class SplitterTest extends AbstractIntegrationTest {
                 "Actual last chunk: " + lastChunk);
     }
 
+    @Test
+    void jsonPointerNoMatch() {
+        JsonNode doc = splitJsonDocument("/no-match");
+        assertFalse(doc.has("chunks"), "If the JSON Pointer expression doesn't match anything, no error should " +
+            "be thrown, but rather no chunks will be produced.");
+    }
+
     private JsonNode splitJsonDocument(String... jsonPointers) {
         DocumentWriteOperation sourceDocument = readJsonDocument();
         DocumentWriteOperation output = newJsonSplitter(jsonPointers).apply(sourceDocument).next();
@@ -133,7 +139,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     private DocumentProcessor newJsonSplitter(String... jsonPointers) {
         return new SplitterDocumentProcessor(
-            new JSONPointerTextSelector(jsonPointers, null),
+            new JsonPointerTextSelector(jsonPointers, null),
             DocumentSplitters.recursive(500, 0),
             new DefaultChunkAssembler(new ChunkConfig.Builder().build())
         );

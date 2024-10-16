@@ -13,12 +13,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class JSONPointerTextSelector implements TextSelector {
+public class JsonPointerTextSelector implements TextSelector {
 
     private final List<JsonPointer> jsonPointers;
     private final String joinDelimiter;
 
-    public JSONPointerTextSelector(String[] jsonPointerArray, String joinDelimiter) {
+    public JsonPointerTextSelector(String[] jsonPointerArray, String joinDelimiter) {
         jsonPointers = new ArrayList<>();
         for (String jsonPointer : jsonPointerArray) {
             try {
@@ -35,8 +35,12 @@ public class JSONPointerTextSelector implements TextSelector {
     @Override
     public String selectTextToSplit(DocumentWriteOperation operation) {
         JsonNode doc = JsonUtil.getJsonFromHandle(operation.getContent());
+
         return jsonPointers.stream()
-            .map(jsonPointer -> doc.at(jsonPointer).asText())
+            .map(jsonPointer -> {
+                JsonNode result = doc.at(jsonPointer);
+                return result.isValueNode() ? result.asText() : result.toString();
+            })
             .collect(Collectors.joining(joinDelimiter));
     }
 }
