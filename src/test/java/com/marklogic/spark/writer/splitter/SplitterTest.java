@@ -11,11 +11,14 @@ import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.writer.DocumentProcessor;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -122,6 +125,18 @@ class SplitterTest extends AbstractIntegrationTest {
         JsonNode doc = splitJsonDocument("/no-match");
         assertFalse(doc.has("chunks"), "If the JSON Pointer expression doesn't match anything, no error should " +
             "be thrown, but rather no chunks will be produced.");
+    }
+
+    @Test
+    void customSplitter() {
+        AbstractWriteHandle newContent = new SplitterDocumentProcessor(
+            new JsonPointerTextSelector(new String[]{"/text"}, null),
+            new CustomSplitter(Map.of("textToReturn", "hello")),
+            new DefaultChunkAssembler(new ChunkConfig.Builder().build())
+        ).apply(readJsonDocument()).next().getContent();
+
+        JsonNode doc = ((JacksonHandle) newContent).get();
+        assertEquals("hello", doc.at("/chunks/0/text").asText());
     }
 
     private JsonNode splitJsonDocument(String... jsonPointers) {
