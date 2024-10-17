@@ -15,6 +15,8 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.UTF8String;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -26,6 +28,8 @@ import java.util.List;
  * Reads triples from a batch of document URIs via the Optic fromTriples data accessor.
  */
 class OpticTriplesReader implements PartitionReader<InternalRow> {
+
+    private static final Logger logger = LoggerFactory.getLogger(OpticTriplesReader.class);
 
     private static final String DATATYPE_COLUMN = "datatype";
     private static final String GRAPH_COLUMN = "graph";
@@ -54,12 +58,15 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         this.op = this.rowManager.newPlanBuilder();
 
         final SearchQueryDefinition query = context.buildTriplesSearchQuery(this.databaseClient);
-        boolean filtered = false;
-        if (context.hasOption(Options.READ_TRIPLES_FILTERED)) {
-            filtered = Boolean.parseBoolean(context.getProperties().get(Options.READ_TRIPLES_FILTERED));
-        }
-        this.uriBatcher = new UriBatcher(this.databaseClient, query, forestPartition, context.getBatchSize(), filtered);
+        final boolean filtered = context.getBooleanOption(Options.READ_TRIPLES_FILTERED, false);
+        final boolean consistentSnapshot = context.isConsistentSnapshot();
 
+        if (logger.isDebugEnabled()) {
+            logger.debug("Will read from host {} for partition: {}; filtered: {}; consistent snapshot: {}",
+                databaseClient.getHost(), forestPartition, filtered, consistentSnapshot);
+        }
+
+        this.uriBatcher = new UriBatcher(this.databaseClient, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
         this.batchSize = context.getBatchSize();
     }
 

@@ -99,6 +99,11 @@ class DocumentContext extends ContextSupport {
         return (int) getNumericOption(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, defaultPartitionsPerForest, 1);
     }
 
+    boolean isConsistentSnapshot() {
+        // Starting in 2.2.0 and through 2.4.2, the default is a consistent snapshot. We may change this later.
+        return getBooleanOption(Options.READ_SNAPSHOT, true);
+    }
+
     void setLimit(Integer limit) {
         this.limit = limit;
     }

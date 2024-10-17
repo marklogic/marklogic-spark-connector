@@ -145,6 +145,10 @@ public class ContextSupport implements Serializable {
         return hasOption(option) ? properties.get(option).trim() : null;
     }
 
+    public final boolean getBooleanOption(String option, boolean defaultValue) {
+        return hasOption(option) ? Boolean.parseBoolean(getStringOption(option)) : defaultValue;
+    }
+
     public final boolean isStreamingFiles() {
         return "true".equalsIgnoreCase(getStringOption(Options.STREAM_FILES));
     }
