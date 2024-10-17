@@ -1,0 +1,2 @@
+{"text": "Istituto di Anatomia e Istologia Patologica, Università di Ferrara, Italy"}
+{"text": "This doesn't require encoding."}
