@@ -12,10 +12,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.util.SerializableConfiguration;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -49,11 +46,28 @@ public class FileContext extends ContextSupport implements Serializable {
     }
 
     public InputStream openFile(String filePath) {
+        return openFile(filePath, false);
+    }
+
+    public InputStream openFile(String filePath, boolean guessIfGzipped) {
         try {
             Path hadoopPath = new Path(filePath);
             FileSystem fileSystem = hadoopPath.getFileSystem(hadoopConfiguration.value());
             FSDataInputStream inputStream = fileSystem.open(hadoopPath);
-            return this.isGzip() ? new GZIPInputStream(inputStream) : inputStream;
+            return isFileGzipped(filePath, guessIfGzipped) ? new GZIPInputStream(inputStream) : inputStream;
+        } catch (Exception e) {
+            throw new ConnectorException(String.format(
+                "Unable to read file at %s; cause: %s", filePath, e.getMessage()), e);
+        }
+    }
+
+    BufferedReader openFileReader(String filePath, boolean guessIfGzipped) {
+        try {
+            InputStream inputStream = openFile(filePath, guessIfGzipped);
+            InputStreamReader inputStreamReader = this.encoding != null ?
+                new InputStreamReader(inputStream, encoding) :
+                new InputStreamReader(inputStream);
+            return new BufferedReader(inputStreamReader);
         } catch (Exception e) {
             throw new ConnectorException(String.format(
                 "Unable to read file at %s; cause: %s", filePath, e.getMessage()), e);
@@ -81,5 +95,12 @@ public class FileContext extends ContextSupport implements Serializable {
             }
             return path;
         }
+    }
+
+    private boolean isFileGzipped(String filePath, boolean guessIfGzipped) {
+        if (this.isGzip()) {
+            return true;
+        }
+        return guessIfGzipped && filePath != null && (filePath.endsWith(".gz") || filePath.endsWith(".gzip"));
     }
 }
