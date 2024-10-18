@@ -44,7 +44,7 @@ public class SplitterDocumentProcessor implements DocumentProcessor {
             throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
                 sourceDocument.getUri(), e.getMessage()), e);
         }
-        
+
         return chunkAssembler.assembleChunks(sourceDocument, textSegments);
     }
 }
