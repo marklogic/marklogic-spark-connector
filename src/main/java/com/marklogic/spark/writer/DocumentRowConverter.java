@@ -87,7 +87,7 @@ class DocumentRowConverter implements RowConverter {
         } else if (!row.isNullAt(2)) {
             String format = row.getString(2);
             try {
-                bytesHandle.withFormat(Format.valueOf(format));
+                bytesHandle.withFormat(Format.valueOf(format.toUpperCase()));
             } catch (IllegalArgumentException e) {
                 // We don't ever expect this to happen, but in case it does - we'll proceed with a null format
                 // on the handle, as it's not essential that it be set.
