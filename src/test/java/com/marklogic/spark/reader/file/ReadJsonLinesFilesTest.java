@@ -11,6 +11,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
+import java.util.stream.Stream;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
@@ -64,6 +66,39 @@ class ReadJsonLinesFilesTest extends AbstractIntegrationTest {
 
         doc = readJsonDocument("/a/2.json");
         assertEquals(2, doc.get("id").asInt());
+    }
+
+    @Test
+    void withUriTemplateThatDoesntEndInJson() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "json_lines")
+            .load("src/test/resources/json-lines/nested-objects.txt");
+
+        dataset.collectAsList().forEach(row -> assertEquals("JSON", row.getString(2),
+            "The format column should default to 'JSON' since we know we're reading from a JSON Lines file."));
+        
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/a/{id}")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/a/1");
+        assertEquals(1, doc.get("id").asInt());
+
+        doc = readJsonDocument("/a/2");
+        assertEquals(2, doc.get("id").asInt());
+
+        Stream.of("/a/1", "/a/2").forEach(uri -> {
+            String response = getDatabaseClient().newServerEval()
+                .javascript(String.format("xdmp.nodeKind(cts.doc('%s').toObject())", uri))
+                .evalAs(String.class);
+            assertEquals("object", response, "While the URI template does not define an extension, the document " +
+                "should still be stored in MarkLogic with a document type of JSON due to the 'format' column being " +
+                "set to JSON. If it were a binary, this eval call would fail.");
+        });
+
     }
 
     @Test

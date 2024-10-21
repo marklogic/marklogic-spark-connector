@@ -79,7 +79,8 @@ class JsonLinesFileReader implements PartitionReader<InternalRow> {
         return new GenericInternalRow(new Object[]{
             UTF8String.fromString(uri),
             ByteArray.concat(line.getBytes()),
-            null, null, null, null, null, null
+            UTF8String.fromString("JSON"),
+            null, null, null, null, null
         });
     }
 }
