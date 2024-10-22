@@ -191,6 +191,10 @@ public abstract class Options {
      */
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
 
+    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = "spark.marklogic.write.embedder.modelFunction.className";
+    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = "spark.marklogic.write.embedder.modelFunction.option.";
+    public static final String WRITE_EMBEDDER_BATCH_SIZE = "spark.marklogic.write.embedder.batchSize";
+
     private Options() {
     }
 }

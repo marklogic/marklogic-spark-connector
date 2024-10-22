@@ -17,19 +17,6 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-/**
- * This class is fine here because it has no dependency on Spring.
- *
- * What we need is a Spring-dependent factory that can produce this class. Maybe that class goes into Flux?
- *
- * A factory might be over-engineered. We need to know if we should include this or not. What we really need is
- * an EmbeddingModelFactory - Function<Map<String, String>, EmbeddingModel>. If the user gives us a class name for
- * one of those, then we can create one of these.
- *
- * spark.marklogic.write.embedder.modelFactory=org.example.MyFactory
- * spark.marklogic.write.embedder.option.api-key=blah
- * spark.marklogic.write.embedder.batchSize=
- */
 public class EmbedderDocumentProcessor implements DocumentProcessor, Supplier<Iterator<DocumentWriteOperation>> {
 
     private static final Metadata EMPTY_METADATA = new Metadata();

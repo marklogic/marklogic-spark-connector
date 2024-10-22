@@ -78,6 +78,9 @@ dependencies {
   // Supports splitting documents.
   shadowDependencies "dev.langchain4j:langchain4j:0.35.0"
 
+  // Supports testing the embedder feature.
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
+
   // Needed for constructing XML documents and for splitting them.
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 
