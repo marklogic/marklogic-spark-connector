@@ -18,6 +18,8 @@ import java.util.List;
 
 class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
+    private static final String DEFAULT_CHUNKS_ARRAY_NAME = "chunks";
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<TextSegment> textSegments, ChunkConfig chunkConfig) {
@@ -29,7 +31,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         AbstractWriteHandle content = sourceDocument.getContent();
         ObjectNode doc = (ObjectNode) JsonUtil.getJsonFromHandle(content);
 
-        ArrayNode chunks = doc.putArray("chunks");
+        ArrayNode chunks = doc.putArray(determineChunksArrayName(doc));
         textSegments.forEach(textSegment -> {
             String text = textSegment.text();
             chunks.addObject().put("text", text);
@@ -48,7 +50,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         String uri = sourceDocument.getUri();
         rootField.put("source-uri", uri);
 
-        ArrayNode chunks = rootField.putArray("chunks");
+        ArrayNode chunks = rootField.putArray(DEFAULT_CHUNKS_ARRAY_NAME);
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             String text = textSegments.get(listIndex++).text();
             chunks.addObject().put("text", text);
@@ -56,5 +58,9 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "json");
         return new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc));
+    }
+
+    private String determineChunksArrayName(ObjectNode doc) {
+        return doc.has(DEFAULT_CHUNKS_ARRAY_NAME) ? "splitter-chunks" : DEFAULT_CHUNKS_ARRAY_NAME;
     }
 }

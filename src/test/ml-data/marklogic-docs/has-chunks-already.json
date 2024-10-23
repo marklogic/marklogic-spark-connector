@@ -1,0 +1,5 @@
+{
+  "url": "https://docs.marklogic.com/guide/java/intro",
+  "text": "When working with the Java API, you first create a manager for the type of document or operation you want to\nperform on the database (for instance, a JSONDocumentManager to write and read JSON documents or a QueryManager to\nsearch the database).",
+  "chunks": "already exists"
+}

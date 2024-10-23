@@ -1,0 +1,9 @@
+<root>
+  <url>https://docs.marklogic.com/guide/java/intro</url>
+  <text>When working with the Java API, you first create a manager for the type of document or operation you want to
+    perform on the database (for instance, a JSONDocumentManager to write and read JSON documents or a QueryManager to
+    search the database). To write or read the content for a database operation, you use standard Java APIs such as
+    InputStream, DOM, StAX, JAXB, and Transformer as well as Open Source APIs such as JDOM and Jackson.
+  </text>
+  <chunks>Already exists.</chunks>
+</root>

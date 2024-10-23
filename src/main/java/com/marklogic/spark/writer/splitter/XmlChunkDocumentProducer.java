@@ -16,6 +16,8 @@ import java.util.List;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
+    private static final String DEFAULT_CHUNKS_ELEMENT_NAME = "chunks";
+
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
                              List<TextSegment> textSegments, ChunkConfig chunkConfig) {
         super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
@@ -27,7 +29,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element root = newElement(chunkConfig.getRootName() != null ? chunkConfig.getRootName() : "root");
         doc.addContent(root);
         root.addContent(newElement("source-uri").addContent(sourceDocument.getUri()));
-        final Element chunks = newElement("chunks");
+        final Element chunks = newElement(DEFAULT_CHUNKS_ELEMENT_NAME);
         doc.getRootElement().addContent(chunks);
 
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
@@ -43,7 +45,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     protected DocumentWriteOperation addChunksToSourceDocument() {
         Document doc = XmlUtil.extractDocument(sourceDocument.getContent());
 
-        final Element chunks = new Element("chunks");
+        final Element chunks = new Element(determineChunksElementName(doc));
         doc.getRootElement().addContent(chunks);
         for (TextSegment textSegment : textSegments) {
             chunks.addContent(new Element("chunk")
@@ -52,6 +54,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
 
         return new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new JDOMHandle(doc));
+    }
+
+    private String determineChunksElementName(Document doc) {
+        return doc.getRootElement().getChildren(DEFAULT_CHUNKS_ELEMENT_NAME).isEmpty() ?
+            DEFAULT_CHUNKS_ELEMENT_NAME : "splitter-chunks";
     }
 
     private Element newElement(String name) {
