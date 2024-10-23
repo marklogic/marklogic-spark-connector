@@ -275,6 +275,25 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         assertEquals(2, doc.get("chunks").size());
     }
 
+    @Test
+    void hasChunksAlready() {
+        readDocument("/marklogic-docs/has-chunks-already.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        System.out.println(doc.getPrettyXml());
+        doc.assertElementValue("/root/chunks", "Already exists.");
+        doc.assertElementCount("If a 'chunks' element exists already under the root element, the connector " +
+            "should use 'splitter-chunks' as a name instead. This is expected to be unique enough, such that we do " +
+            "not yet need to offer a configuration option for the name.", "/root/splitter-chunks/chunk", 1);
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())

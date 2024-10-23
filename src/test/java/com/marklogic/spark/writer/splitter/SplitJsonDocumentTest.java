@@ -294,6 +294,27 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             ex.getMessage());
     }
 
+    @Test
+    void chunksFieldAlreadyExists() {
+        readDocument("/marklogic-docs/has-chunks-already.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertEquals("already exists", doc.get("chunks").asText(), "If a top-level 'chunks' field already exists, " +
+            "it should not be modified.");
+
+        ArrayNode chunks = (ArrayNode) doc.get("splitter-chunks");
+        assertEquals(1, chunks.size(), "If a top-level 'chunks' field exists, then the connector should " +
+            "use 'splitter-chunks' as a name. The expectation is that this name is extremely unlikely to be in use " +
+            "already, such that we do not need to provide a configuration option for defining the chunks array name.");
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
