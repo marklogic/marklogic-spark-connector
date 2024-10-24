@@ -22,7 +22,7 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
     protected final int maxChunksPerDocument;
 
     protected int listIndex = -1;
-    private int chunkDocumentCounter;
+    private int chunkDocumentCounter = 1;
 
     AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<TextSegment> textSegments, ChunkConfig chunkConfig) {
         this.sourceDocument = sourceDocument;
