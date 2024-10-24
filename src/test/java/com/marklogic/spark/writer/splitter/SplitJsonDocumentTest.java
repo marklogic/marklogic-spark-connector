@@ -157,15 +157,15 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             "the max chunk count per document is 3. So the first chunk doc should have 3 chunks, and the second " +
             "should have 1 chunk.", "chunks", 2);
 
-        JsonNode firstChunkDoc = readJsonDocument("/split-test.json-chunks-0.json");
+        JsonNode firstChunkDoc = readJsonDocument("/split-test.json-chunks-1.json");
         assertEquals("/split-test.json", firstChunkDoc.get("source-uri").asText());
         assertEquals(3, firstChunkDoc.get("chunks").size());
 
-        JsonNode secondChunkDoc = readJsonDocument("/split-test.json-chunks-1.json");
+        JsonNode secondChunkDoc = readJsonDocument("/split-test.json-chunks-2.json");
         assertEquals("/split-test.json", secondChunkDoc.get("source-uri").asText());
         assertEquals(1, secondChunkDoc.get("chunks").size());
 
-        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-0.json");
+        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-1.json");
         tester.assertReadPermissionExists("The chunk documents should default to the permissions specified " +
             "via Options.WRITE_PERMISSIONS", "spark-user-role");
         tester.assertUpdatePermissionExists("spark-user-role");
@@ -181,7 +181,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-0.json");
+        PermissionsTester tester = readDocumentPermissions("/split-test.json-chunks-1.json");
         tester.assertReadPermissionExists("spark-user-role");
         tester.assertUpdatePermissionExists("spark-user-role");
         tester.assertReadPermissionExists("qconsole-user");
@@ -217,7 +217,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        JsonNode doc = readJsonDocument("/split-test.json-chunks-0.json");
+        JsonNode doc = readJsonDocument("/split-test.json-chunks-1.json");
         assertTrue(doc.has("sidecar"));
         assertEquals("/split-test.json", doc.get("sidecar").get("source-uri").asText());
         assertEquals(4, doc.get("sidecar").get("chunks").size(), "The sidecar document should have all 4 chunks in " +
@@ -240,10 +240,10 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
         assertCollectionSize("chunks", 2);
 
-        XmlNode doc = readXmlDocument("/split-test.json-chunks-0.xml");
+        XmlNode doc = readXmlDocument("/split-test.json-chunks-1.xml");
         doc.assertElementCount("/root/chunks/chunk", 2);
 
-        doc = readXmlDocument("/split-test.json-chunks-1.xml");
+        doc = readXmlDocument("/split-test.json-chunks-2.xml");
         doc.assertElementCount("/root/chunks/chunk", 2);
     }
 

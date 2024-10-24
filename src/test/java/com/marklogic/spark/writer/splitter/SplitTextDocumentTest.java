@@ -24,7 +24,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-0.json";
+        final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-1.json";
 
         JsonNode doc = readJsonDocument(chunksUri);
         assertEquals("/test/marklogic-docs/java-client-intro.txt", doc.get("source-uri").asText());
@@ -43,7 +43,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-0.xml";
+        final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-1.xml";
 
         XmlNode doc = readXmlDocument(chunksUri);
         doc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
@@ -69,11 +69,11 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
         assertCollectionSize("Two chunk documents should have been written, with the first having 3 chunks and " +
             "the second having 1 chunk.", "chunks", 2);
 
-        XmlNode firstChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-0.xml");
+        XmlNode firstChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-1.xml");
         firstChunkDoc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
         firstChunkDoc.assertElementCount("/root/chunks/chunk", 3);
 
-        XmlNode secondChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-1.xml");
+        XmlNode secondChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-2.xml");
         secondChunkDoc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
         secondChunkDoc.assertElementCount("/root/chunks/chunk", 1);
     }
@@ -89,7 +89,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        PermissionsTester tester = readDocumentPermissions("/test/marklogic-docs/java-client-intro.txt-chunks-0.xml");
+        PermissionsTester tester = readDocumentPermissions("/test/marklogic-docs/java-client-intro.txt-chunks-1.xml");
         tester.assertReadPermissionExists("spark-user-role");
         tester.assertUpdatePermissionExists("spark-user-role");
         tester.assertReadPermissionExists("qconsole-user");
@@ -127,7 +127,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-0.xml");
+        XmlNode doc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-1.xml");
         doc.setNamespaces(new Namespace[]{Namespace.getNamespace("ex", "org:example")});
         doc.assertElementExists("/ex:sidecar");
         doc.assertElementValue("/ex:sidecar/ex:source-uri", "/test/marklogic-docs/java-client-intro.txt");

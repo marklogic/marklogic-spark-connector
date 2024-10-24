@@ -189,11 +189,11 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         assertCollectionSize("Two chunk documents should have been written, with the first having 3 chunks and " +
             "the second having 1 chunk.", "chunks", 2);
 
-        XmlNode firstChunkDoc = readXmlDocument("/split-test.xml-chunks-0.xml");
+        XmlNode firstChunkDoc = readXmlDocument("/split-test.xml-chunks-1.xml");
         firstChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
         firstChunkDoc.assertElementCount("/root/chunks/chunk", 3);
 
-        XmlNode secondChunkDoc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        XmlNode secondChunkDoc = readXmlDocument("/split-test.xml-chunks-2.xml");
         secondChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
         secondChunkDoc.assertElementCount("/root/chunks/chunk", 1);
     }
@@ -209,7 +209,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        PermissionsTester tester = readDocumentPermissions("/split-test.xml-chunks-0.xml");
+        PermissionsTester tester = readDocumentPermissions("/split-test.xml-chunks-1.xml");
         tester.assertReadPermissionExists("spark-user-role");
         tester.assertUpdatePermissionExists("spark-user-role");
         tester.assertReadPermissionExists("qconsole-user");
@@ -246,7 +246,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/split-test.xml-chunks-0.xml");
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
         doc.setNamespaces(new Namespace[]{Namespace.getNamespace("ex", "org:example")});
         doc.assertElementExists("/ex:sidecar");
         doc.assertElementValue("/ex:sidecar/ex:source-uri", "/split-test.xml");
@@ -268,10 +268,10 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
         assertCollectionSize("chunks", 2);
 
-        JsonNode doc = readJsonDocument("/split-test.xml-chunks-0.json");
+        JsonNode doc = readJsonDocument("/split-test.xml-chunks-1.json");
         assertEquals(2, doc.get("chunks").size());
 
-        doc = readJsonDocument("/split-test.xml-chunks-1.json");
+        doc = readJsonDocument("/split-test.xml-chunks-2.json");
         assertEquals(2, doc.get("chunks").size());
     }
 
