@@ -177,8 +177,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 3)
-            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 3)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
             .mode(SaveMode.Append)
             .save();
 
@@ -203,8 +203,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
-            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
-            .option(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS,
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS,
                 "spark-user-role,read,spark-user-role,update,qconsole-user,read")
             .mode(SaveMode.Append)
             .save();
@@ -219,10 +219,10 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     void maxChunksWithCustomUri() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
-            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
-            .option(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX, "/chunk/")
-            .option(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX, ".xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_SIDECAR_URI_PREFIX, "/chunk/")
+            .option(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX, ".xml")
             .mode(SaveMode.Append)
             .save();
 
@@ -240,9 +240,9 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 4)
-            .option(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME, "sidecar")
-            .option(Options.WRITE_SPLITTER_OUTPUT_XML_NAMESPACE, "org:example")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 4)
+            .option(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME, "sidecar")
+            .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "org:example")
             .mode(SaveMode.Append)
             .save();
 
@@ -260,9 +260,9 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     void jsonChunks() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 2)
-            .option(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS, "chunks")
-            .option(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE, "json")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE, "json")
             .mode(SaveMode.Append)
             .save();
 

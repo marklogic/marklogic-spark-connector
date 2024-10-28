@@ -138,14 +138,14 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_JSON_POINTERS = "spark.marklogic.write.splitter.jsonPointers";
     public static final String WRITE_SPLITTER_CUSTOM_CLASS = "spark.marklogic.write.splitter.customClass";
     public static final String WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX = "spark.marklogic.write.splitter.customClass.option.";
-    public static final String WRITE_SPLITTER_OUTPUT_MAX_CHUNKS = "spark.marklogic.write.splitter.output.maxChunks";
-    public static final String WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE = "spark.marklogic.write.splitter.output.documentType";
-    public static final String WRITE_SPLITTER_OUTPUT_COLLECTIONS = "spark.marklogic.write.splitter.output.collections";
-    public static final String WRITE_SPLITTER_OUTPUT_PERMISSIONS = "spark.marklogic.write.splitter.output.permissions";
-    public static final String WRITE_SPLITTER_OUTPUT_ROOT_NAME = "spark.marklogic.write.splitter.output.rootName";
-    public static final String WRITE_SPLITTER_OUTPUT_URI_PREFIX = "spark.marklogic.write.splitter.output.uriPrefix";
-    public static final String WRITE_SPLITTER_OUTPUT_URI_SUFFIX = "spark.marklogic.write.splitter.output.uriSuffix";
-    public static final String WRITE_SPLITTER_OUTPUT_XML_NAMESPACE = "spark.marklogic.write.splitter.output.xmlNamespace";
+    public static final String WRITE_SPLITTER_SIDECAR_MAX_CHUNKS = "spark.marklogic.write.splitter.sidecar.maxChunks";
+    public static final String WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE = "spark.marklogic.write.splitter.sidecar.documentType";
+    public static final String WRITE_SPLITTER_SIDECAR_COLLECTIONS = "spark.marklogic.write.splitter.sidecar.collections";
+    public static final String WRITE_SPLITTER_SIDECAR_PERMISSIONS = "spark.marklogic.write.splitter.sidecar.permissions";
+    public static final String WRITE_SPLITTER_SIDECAR_ROOT_NAME = "spark.marklogic.write.splitter.sidecar.rootName";
+    public static final String WRITE_SPLITTER_SIDECAR_URI_PREFIX = "spark.marklogic.write.splitter.sidecar.uriPrefix";
+    public static final String WRITE_SPLITTER_SIDECAR_URI_SUFFIX = "spark.marklogic.write.splitter.sidecar.uriSuffix";
+    public static final String WRITE_SPLITTER_SIDECAR_XML_NAMESPACE = "spark.marklogic.write.splitter.sidecar.xmlNamespace";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
