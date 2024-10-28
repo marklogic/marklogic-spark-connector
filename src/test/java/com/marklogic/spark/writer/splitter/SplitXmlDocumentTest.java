@@ -26,7 +26,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0)
@@ -47,7 +47,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/ex:root/ex:text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
@@ -68,7 +68,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/ex:root/ex:text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
@@ -83,7 +83,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 200)
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 300)
             .mode(SaveMode.Append);
@@ -98,7 +98,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, -1)
             .mode(SaveMode.Append);
 
@@ -111,7 +111,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, -1)
             .mode(SaveMode.Append);
 
@@ -124,7 +124,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_REGEX, "basic architecture")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
@@ -145,7 +145,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_REGEX, ".*(not valid")
             .mode(SaveMode.Append);
 
@@ -159,7 +159,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_REGEX, "basic architecture")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
             .mode(SaveMode.Append);
@@ -280,7 +280,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/has-chunks-already.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .mode(SaveMode.Append)
@@ -305,7 +305,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         return readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XML_PATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml");
     }
