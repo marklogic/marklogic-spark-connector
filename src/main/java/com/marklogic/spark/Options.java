@@ -128,7 +128,7 @@ public abstract class Options {
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
     // Add @since annotations before we release.
-    public static final String WRITE_SPLITTER_XML_PATH = "spark.marklogic.write.splitter.xml.path";
+    public static final String WRITE_SPLITTER_XPATH = "spark.marklogic.write.splitter.xpath";
     public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
     public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
     public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";

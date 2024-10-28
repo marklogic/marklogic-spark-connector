@@ -22,16 +22,16 @@ import java.util.stream.Collectors;
  */
 public class JDOMTextSelector implements TextSelector {
 
-    private final XPathExpression<Object> expression;
+    private final XPathExpression<Object> xpathExpression;
     private final XMLOutputter xmlOutputter;
 
     // Will make this configurable later.
     private static final String JOIN_DELIMITER = " ";
 
-    public JDOMTextSelector(String path, Collection<Namespace> namespaces) {
-        this.expression = namespaces != null ?
-            XPathFactory.instance().compile(path, Filters.fpassthrough(), null, namespaces) :
-            XPathFactory.instance().compile(path);
+    public JDOMTextSelector(String xpath, Collection<Namespace> namespaces) {
+        this.xpathExpression = namespaces != null ?
+            XPathFactory.instance().compile(xpath, Filters.fpassthrough(), null, namespaces) :
+            XPathFactory.instance().compile(xpath);
         this.xmlOutputter = new XMLOutputter(Format.getPrettyFormat());
     }
 
@@ -41,10 +41,10 @@ public class JDOMTextSelector implements TextSelector {
 
         List<Object> results;
         try {
-            results = this.expression.evaluate(doc);
+            results = this.xpathExpression.evaluate(doc);
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to split document using XPath expression: %s; cause: %s",
-                expression.getExpression(), e.getMessage()), e);
+                xpathExpression.getExpression(), e.getMessage()), e);
         }
 
         return results.stream().map(this::objectToString).collect(Collectors.joining(JOIN_DELIMITER));

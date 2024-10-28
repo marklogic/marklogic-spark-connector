@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public abstract class DocumentProcessorFactory {
 
     public static DocumentProcessor buildDocumentProcessor(ContextSupport context) {
-        if (context.hasOption(Options.WRITE_SPLITTER_XML_PATH)) {
+        if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
             return makeXmlSplitter(context);
         } else if (context.getProperties().containsKey(Options.WRITE_SPLITTER_JSON_POINTERS)) {
             // "" is a valid JSON Pointer expression, so we only check to see if the key exists.
@@ -35,7 +35,7 @@ public abstract class DocumentProcessorFactory {
     private static SplitterDocumentProcessor makeXmlSplitter(ContextSupport context) {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split XML documents using XPath: {}",
-                context.getStringOption(Options.WRITE_SPLITTER_XML_PATH));
+                context.getStringOption(Options.WRITE_SPLITTER_XPATH));
         }
         TextSelector textSelector = makeXmlTextSelector(context);
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
@@ -44,7 +44,7 @@ public abstract class DocumentProcessorFactory {
     }
 
     private static TextSelector makeXmlTextSelector(ContextSupport context) {
-        String path = context.getStringOption(Options.WRITE_SPLITTER_XML_PATH);
+        String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
         List<Namespace> namespaces = context.getProperties().keySet()
             .stream()
             .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
@@ -53,7 +53,7 @@ public abstract class DocumentProcessorFactory {
                 return Namespace.getNamespace(prefix, context.getStringOption(key));
             })
             .collect(Collectors.toList());
-        return new JDOMTextSelector(path, namespaces);
+        return new JDOMTextSelector(xpath, namespaces);
     }
 
     private static SplitterDocumentProcessor makeJsonSplitter(ContextSupport context) {
