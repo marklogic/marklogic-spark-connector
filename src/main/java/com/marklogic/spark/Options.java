@@ -129,7 +129,6 @@ public abstract class Options {
 
     // Add @since annotations before we release.
     public static final String WRITE_SPLITTER_XML_PATH = "spark.marklogic.write.splitter.xml.path";
-    public static final String WRITE_SPLITTER_XML_NAMESPACE_PREFIX = "spark.marklogic.write.splitter.xml.namespace.";
     public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
     public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
     public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
@@ -190,6 +189,14 @@ public abstract class Options {
      * @since 2.4.0
      */
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
+
+    /**
+     * Provides a "global" option for registering XML namespace prefixes and URIs that can be reused in any connector
+     * feature that accepts an XPath expression.
+     *
+     * @since 2.5.0
+     */
+    public static final String XPATH_NAMESPACE_PREFIX = "spark.marklogic.xpath.";
 
     private Options() {
     }

@@ -48,7 +48,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_XML_PATH, "/ex:root/ex:text/text()")
-            .option(Options.WRITE_SPLITTER_XML_NAMESPACE_PREFIX + "ex", "org:example")
+            .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
             .mode(SaveMode.Append)

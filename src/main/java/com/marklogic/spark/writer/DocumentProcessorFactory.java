@@ -47,9 +47,9 @@ public abstract class DocumentProcessorFactory {
         String path = context.getStringOption(Options.WRITE_SPLITTER_XML_PATH);
         List<Namespace> namespaces = context.getProperties().keySet()
             .stream()
-            .filter(key -> key.startsWith(Options.WRITE_SPLITTER_XML_NAMESPACE_PREFIX))
+            .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
             .map(key -> {
-                String prefix = key.substring(Options.WRITE_SPLITTER_XML_NAMESPACE_PREFIX.length());
+                String prefix = key.substring(Options.XPATH_NAMESPACE_PREFIX.length());
                 return Namespace.getNamespace(prefix, context.getStringOption(key));
             })
             .collect(Collectors.toList());
