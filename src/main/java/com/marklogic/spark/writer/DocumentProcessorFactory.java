@@ -83,11 +83,11 @@ public abstract class DocumentProcessorFactory {
 
     private static ChunkAssembler makeChunkAssembler(ContextSupport context) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-        if (context.hasOption(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS)) {
-            metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_COLLECTIONS).split(","));
+        if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {
+            metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS).split(","));
         }
-        if (context.hasOption(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS)) {
-            String value = context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_PERMISSIONS);
+        if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS)) {
+            String value = context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS);
             metadata.getPermissions().addFromDelimitedString(value);
         } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_PERMISSIONS);
@@ -96,12 +96,12 @@ public abstract class DocumentProcessorFactory {
 
         return new DefaultChunkAssembler(new ChunkConfig.Builder()
             .withMetadata(metadata)
-            .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_OUTPUT_MAX_CHUNKS, 0, 0))
-            .withDocumentType(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_DOCUMENT_TYPE))
-            .withRootName(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_ROOT_NAME))
-            .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_PREFIX))
-            .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_URI_SUFFIX))
-            .withXmlNamespace(context.getStringOption(Options.WRITE_SPLITTER_OUTPUT_XML_NAMESPACE))
+            .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0, 0))
+            .withDocumentType(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE))
+            .withRootName(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME))
+            .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_PREFIX))
+            .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
+            .withXmlNamespace(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
             .build());
     }
 
