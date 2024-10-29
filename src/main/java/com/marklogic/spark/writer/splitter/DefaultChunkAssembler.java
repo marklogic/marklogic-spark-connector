@@ -11,6 +11,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.writer.embedding.EmbeddingGenerator;
 import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.Iterator;
@@ -20,9 +21,22 @@ import java.util.stream.Stream;
 public class DefaultChunkAssembler implements ChunkAssembler {
 
     private final ChunkConfig chunkConfig;
+    private final EmbeddingGenerator embeddingGenerator;
 
     public DefaultChunkAssembler(ChunkConfig chunkConfig) {
+        this(chunkConfig, null);
+    }
+
+    /**
+     * Supports a use case of splitting text in a document and adding embeddings to each chunk before writing the
+     * document to MarkLogic.
+     *
+     * @param chunkConfig
+     * @param embeddingGenerator
+     */
+    public DefaultChunkAssembler(ChunkConfig chunkConfig, EmbeddingGenerator embeddingGenerator) {
         this.chunkConfig = chunkConfig;
+        this.embeddingGenerator = embeddingGenerator;
     }
 
     @Override
@@ -34,9 +48,10 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         }
 
         final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
+
         return Format.XML.equals(chunkDocumentFormat) ?
             new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig) :
-            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
+            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, embeddingGenerator);
     }
 
     private Format determineSourceDocumentFormat(DocumentWriteOperation sourceDocument) {

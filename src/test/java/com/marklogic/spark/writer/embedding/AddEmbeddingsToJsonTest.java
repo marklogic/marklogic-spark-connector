@@ -1,0 +1,130 @@
+/*
+ * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ */
+package com.marklogic.spark.writer.embedding;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.marklogic.client.expression.PlanBuilder;
+import com.marklogic.client.row.RowManager;
+import com.marklogic.client.row.RowRecord;
+import com.marklogic.client.row.RowSet;
+import com.marklogic.junit5.RequiresMarkLogic12;
+import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameWriter;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
+
+    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
+
+    /**
+     * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
+     * as part of one write process.
+     */
+    @ExtendWith(RequiresMarkLogic12.class)
+    @Test
+    void splitToSeparateDocumentsAndAddEmbeddings() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "json-vector-chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyEachChunkOnDocumentHasAnEmbedding("/split-test.json-chunks-1.json");
+        verifyEachChunkOnDocumentHasAnEmbedding("/split-test.json-chunks-2.json");
+        verifyEachChunkIsReturnedByAVectorQuery();
+    }
+
+    @ExtendWith(RequiresMarkLogic12.class)
+    @Test
+    void splitToSameDocumentAndAddEmbeddings() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_COLLECTIONS, "json-vector-chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyEachChunkOnDocumentHasAnEmbedding("/split-test.json");
+        verifyEachChunkIsReturnedByAVectorQuery();
+    }
+
+    @Test
+    void invalidEmbeddingModelFunctionClass() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "not.valid")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Unable to instantiate class for creating an embedding model; class name: not.valid; " +
+                "cause: Could not load class not.valid",
+            ex.getMessage());
+    }
+
+    private Dataset<Row> readDocument(String uri) {
+        return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .option(Options.READ_DOCUMENTS_URIS, uri)
+            .load();
+    }
+
+    private void verifyEachChunkOnDocumentHasAnEmbedding(String uri) {
+        JsonNode doc = readJsonDocument(uri);
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        chunks.forEach(node -> {
+            assertTrue(node.has("text"));
+            assertTrue(node.has("embedding"));
+            assertEquals(JsonNodeType.ARRAY, node.get("embedding").getNodeType());
+        });
+    }
+
+    private void verifyEachChunkIsReturnedByAVectorQuery() {
+        RowManager rowManager = getDatabaseClient().newRowManager();
+        PlanBuilder op = rowManager.newPlanBuilder();
+        RowSet<RowRecord> rows = rowManager.resultRows(
+            op.fromView("example", "json_chunks", "")
+                .bind(op.as(
+                    op.col("vector_test"),
+                    op.vec.vector(op.col("embedding"))
+                ))
+        );
+
+        int counter = 0;
+        for (RowRecord row : rows) {
+            assertEquals("xs:string", row.getDatatype("uri"));
+            assertEquals("http://marklogic.com/vector#vector", row.getDatatype("embedding"));
+            assertEquals("http://marklogic.com/vector#vector", row.getDatatype("vector_test"));
+            counter++;
+        }
+
+        assertEquals(4, counter, "Each test is expected to produce 4 chunks based on the max chunk size of 500.");
+    }
+}
