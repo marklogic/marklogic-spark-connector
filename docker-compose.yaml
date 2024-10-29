@@ -1,10 +1,9 @@
-version: '3.8'
 name: marklogic_spark
 
 services:
 
   marklogic:
-    image: "progressofficial/marklogic-db:${MARKLOGIC_TAG}"
+    image: "${MARKLOGIC_TAG}"
     platform: linux/amd64
     environment:
       - MARKLOGIC_INIT=true

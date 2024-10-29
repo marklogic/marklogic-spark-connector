@@ -92,7 +92,7 @@ dependencies {
     exclude module: "marklogic-client-api"
   }
 
-  testImplementation ('com.marklogic:marklogic-junit5:1.4.0') {
+  testImplementation ('com.marklogic:marklogic-junit5:1.5.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
 
@@ -162,28 +162,15 @@ shadowJar {
   relocate "okio", "com.marklogic.okio"
 }
 
-task perfTest(type: JavaExec) {
-  mainClass = "com.marklogic.spark.reader.PerformanceTester"
-  classpath = sourceSets.test.runtimeClasspath
-  args mlHost
+// Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .
+java {
+  withJavadocJar()
+  withSourcesJar()
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveClassifier = "sources"
-  from sourceSets.main.allSource
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  archiveClassifier = "javadoc"
-  from javadoc
-}
 javadoc.failOnError = false
 // Ignores warnings on params that don't have descriptions, which is a little too noisy
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
-
-artifacts {
-  archives javadocJar, sourcesJar
-}
 
 publishing {
   publications {
@@ -192,6 +179,7 @@ publishing {
         name = "${group}:${project.name}"
         description = "Spark 3 connector for MarkLogic"
         packaging = "jar"
+        from components.java
         url = "https://github.com/marklogic/${project.name}"
         licenses {
           license {
@@ -214,9 +202,6 @@ publishing {
           developerConnection = "scm:git@github.com:marklogic/${project.name}.git"
         }
       }
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
     }
   }
   repositories {

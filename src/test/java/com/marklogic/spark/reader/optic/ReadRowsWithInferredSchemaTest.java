@@ -3,11 +3,13 @@
  */
 package com.marklogic.spark.reader.optic;
 
+import com.marklogic.junit5.RequiresMarkLogic12;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 
@@ -19,20 +21,18 @@ import static org.junit.jupiter.api.Assertions.*;
 @Order(1)
 class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
 
+    /**
+     * On MarkLogic 10.0-9.5, longLatPoint is defined as an "int" by columnInfo. In MarkLogic 11+, it's
+     * correctly identified as a "point". In MarkLogic 10, the value that's returned is oddly either null or
+     * "50,50". When it's null, this test passes. When it's "50,50", Spark throws an error because that's not
+     * of type "int". Due to this intermittent behavior, this test is now being skipped on MarkLogic 10, which
+     * avoids the core problem of "int" being returned for longLatPoint.
+     */
     @SuppressWarnings("java:S5961") // This method is easy to understand despite the number of assertions.
     @Test
+    // The types have been updated for MarkLogic 12, such that this won't pass on MarkLogic 11.
+    @ExtendWith(RequiresMarkLogic12.class)
     void allTypes() {
-        if (isMarkLogic10()) {
-            /**
-             * On MarkLogic 10.0-9.5, longLatPoint is defined as an "int" by columnInfo. In MarkLogic 11+, it's
-             * correctly identified as a "point". In MarkLogic 10, the value that's returned is oddly either null or
-             * "50,50". When it's null, this test passes. When it's "50,50", Spark throws an error because that's not
-             * of type "int". Due to this intermittent behavior, this test is now being skipped on MarkLogic 10, which
-             * avoids the core problem of "int" being returned for longLatPoint.
-             */
-            return;
-        }
-
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY,
                 "op.fromView('sparkTest', 'allTypes').where(op.sqlCondition('intValue = 1'))")
@@ -66,10 +66,10 @@ class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals("50,50", row.getString(19)); // point
         assertEquals("50,50", row.getString(20)); // longLatPoint
         assertTrue(row.getBoolean(21));
-        assertEquals("c2xpbmdzIGFuZCBhcnJvd3Mgb2Ygb3V0cmFnZW91cyBmb3J0dW5l", row.getString(22)); // base64Binary
-        assertEquals("499602D2", row.getString(23)); // hexBinary
-        assertEquals("1", row.getString(24), "Because MarkLogic defines the type of 'byte' as 'none', the Spark " +
-            "connector treats it as a string."); // byte
+        assertEquals("slings and arrows of outrageous fortune", new String((byte[]) row.get(22))); // base64Binary
+        byte[] hexBinaryValue = (byte[]) row.get(23); // hexBinary
+        assertEquals(6, hexBinaryValue.length);
+        assertEquals(Byte.parseByte("1"), row.getByte(24)); // byte
         assertEquals("PT1M", row.getString(25)); // duration
         assertEquals("--04-18", row.getString(26)); // gMonthDay
         assertEquals(1, row.getInt(27));
@@ -77,9 +77,9 @@ class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
         assertEquals(11, row.getInt(29)); // nonNegativeInteger
         assertEquals(-11, row.getInt(30)); // nonPositiveInteger
         assertEquals(20, row.getInt(31)); // positiveInteger
-        assertEquals(7, row.getInt(32)); // short
-        assertEquals(4, row.getInt(33)); // unsignedByte
-        assertEquals(8, row.getInt(34)); // unsignedShort
+        assertEquals(7, row.getShort(32)); // short
+        assertEquals(Byte.parseByte("4"), row.getByte(33)); // unsignedByte
+        assertEquals(8, row.getShort(34)); // unsignedShort
         assertEquals("http://example.org/", row.getString(35)); // IRI
     }
 

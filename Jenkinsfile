@@ -108,7 +108,7 @@ pipeline{
                 cd marklogic-spark-connector
                 mkdir -p docker/marklogic/logs
                 docker-compose down -v || true
-                MARKLOGIC_TAG=latest-10.0 docker-compose up -d --build
+                MARKLOGIC_TAG=progressofficial/marklogic-db:latest-11 docker-compose up -d --build
             '''
             runtests('JAVA17_HOME_DIR')
       }
