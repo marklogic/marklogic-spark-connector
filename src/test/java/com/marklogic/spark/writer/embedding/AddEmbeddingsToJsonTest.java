@@ -104,6 +104,25 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void passOptionsToEmbeddingModelFunction() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX + "throwError", "true")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("Unable to instantiate class for creating an embedding model; class name: com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction; " +
+                "cause: Intentional error.", ex.getMessage(),
+            "This test verifies that a custom option can be sent to the embedding model function class. In this " +
+                "case, we expect our custom class to throw an error when it receives the 'throwError' option.");
+    }
+
+    @Test
     void invalidEmbeddingModelFunctionClass() {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
