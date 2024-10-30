@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.embedding;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.DocumentProcessor;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
@@ -13,8 +14,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-// Will add the actual processor in the next PR, when we support embedding after splits have been written already.
 public abstract class EmbedderDocumentProcessorFactory {
+
+    public static Optional<DocumentProcessor> makeEmbedder(ContextSupport context) {
+        Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
+        if (embeddingModel.isPresent()) {
+            // Will make this configurable soon.
+            ChunkSelector chunkSelector = new JsonChunkSelector();
+            return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingModel.get()));
+        }
+        return Optional.empty();
+    }
 
     public static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {
         if (!context.hasOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME)) {

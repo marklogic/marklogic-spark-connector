@@ -72,6 +72,37 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         verifyEachChunkIsReturnedByAVectorQuery();
     }
 
+    /**
+     * Tests the use case where a user first loads test with the text split into chunks. Then later on, the user
+     * decides to add embeddings to the chunks.
+     */
+    @ExtendWith(RequiresMarkLogic12.class)
+    @Test
+    void addEmbeddingsToExistingSplits() {
+        // Add splits to the test doc first.
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .mode(SaveMode.Append)
+            .save();
+
+        // Now add embeddings to the existing chunks, which are all on one document.
+        readDocument("/split-test.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "json-vector-chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyEachChunkOnDocumentHasAnEmbedding("/split-test.json");
+        verifyEachChunkIsReturnedByAVectorQuery();
+    }
+
     @Test
     void invalidEmbeddingModelFunctionClass() {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")

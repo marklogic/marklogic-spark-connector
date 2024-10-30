@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.writer.embedding.EmbedderDocumentProcessorFactory;
 import com.marklogic.spark.writer.splitter.SplitterDocumentProcessorFactory;
 
 import java.util.Optional;
@@ -15,7 +16,8 @@ abstract class DocumentProcessorFactory {
         if (splitter.isPresent()) {
             return splitter.get();
         }
-        return null;
+        Optional<DocumentProcessor> embedder = EmbedderDocumentProcessorFactory.makeEmbedder(context);
+        return embedder.isPresent() ? embedder.get() : null;
     }
 
     private DocumentProcessorFactory() {
