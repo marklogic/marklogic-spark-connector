@@ -32,12 +32,11 @@ public abstract class EmbedderDocumentProcessorFactory {
         }
 
         final String className = context.getStringOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME);
-
         try {
             Object instance = Class.forName(className).getDeclaredConstructor().newInstance();
             Function<Map<String, String>, EmbeddingModel> modelFunction = (Function<Map<String, String>, EmbeddingModel>) instance;
-            // Will add options once we support Azure.
-            return Optional.of(modelFunction.apply(new HashMap<>()));
+            Map<String, String> embedderOptions = makeEmbedderOptions(context);
+            return Optional.of(modelFunction.apply(embedderOptions));
         } catch (Exception ex) {
             String message = ex.getMessage();
             if (ex instanceof ClassNotFoundException) {
@@ -46,6 +45,14 @@ public abstract class EmbedderDocumentProcessorFactory {
             throw new ConnectorException(String.format("Unable to instantiate class for creating an embedding model; " +
                 "class name: %s; cause: %s", className, message), ex);
         }
+    }
+
+    private static Map<String, String> makeEmbedderOptions(ContextSupport context) {
+        Map<String, String> options = new HashMap<>();
+        context.getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX))
+            .forEach(key -> options.put(key.substring(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX.length()), context.getProperties().get(key)));
+        return options;
     }
 
     private EmbedderDocumentProcessorFactory() {

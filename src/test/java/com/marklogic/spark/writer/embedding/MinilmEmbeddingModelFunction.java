@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.embedding;
 
+import com.marklogic.spark.ConnectorException;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 
@@ -13,6 +14,9 @@ public class MinilmEmbeddingModelFunction implements Function<Map<String, String
 
     @Override
     public EmbeddingModel apply(Map<String, String> options) {
+        if ("true".equals(options.get("throwError"))) {
+            throw new ConnectorException("Intentional error.");
+        }
         return new AllMiniLmL6V2EmbeddingModel();
     }
 }
