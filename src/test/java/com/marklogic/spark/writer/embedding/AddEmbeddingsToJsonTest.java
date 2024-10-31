@@ -21,8 +21,7 @@ import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
@@ -136,6 +135,56 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         assertEquals("Unable to instantiate class for creating an embedding model; class name: not.valid; " +
                 "cause: Could not load class not.valid",
             ex.getMessage());
+    }
+
+    @Test
+    void customPaths() {
+        readDocument("/marklogic-docs/custom-chunks.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/envelope/my-chunks")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/wrapper/my-text")
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAME, "my-embedding")
+            .option(Options.WRITE_URI_TEMPLATE, "/custom-path-test.json")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/custom-path-test.json");
+        ArrayNode chunks = (ArrayNode) doc.get("envelope").get("my-chunks");
+        assertEquals(2, chunks.size());
+        chunks.forEach(chunk -> {
+            assertTrue(chunk.has("my-embedding"));
+            assertEquals(JsonNodeType.ARRAY, chunk.get("my-embedding").getNodeType());
+        });
+    }
+
+    @Test
+    void invalidCustomTextPointer() {
+        readDocument("/marklogic-docs/custom-chunks.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/envelope/my-chunks")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/doesnt-point-to-anything")
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAME, "my-embedding")
+            .option(Options.WRITE_URI_TEMPLATE, "/custom-path-test.json")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/custom-path-test.json");
+        ArrayNode chunks = (ArrayNode) doc.get("envelope").get("my-chunks");
+        assertEquals(2, chunks.size());
+        chunks.forEach(chunk -> {
+            assertFalse(chunk.has("my-embedding"), "No embedding should have been added since the text pointer did " +
+                "not to any text. Not adding an embedding currently seems preferable versus throwing an error when " +
+                "a chunk does not have any text.");
+            assertTrue(chunk.has("wrapper"));
+            assertEquals(1, chunk.size(), "The chunk is expected to only have the wrapper/text field that it " +
+                "had when the document was loaded.");
+        });
     }
 
     private Dataset<Row> readDocument(String uri) {

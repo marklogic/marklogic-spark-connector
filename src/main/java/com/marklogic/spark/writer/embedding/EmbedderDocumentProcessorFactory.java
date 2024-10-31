@@ -19,11 +19,18 @@ public abstract class EmbedderDocumentProcessorFactory {
     public static Optional<DocumentProcessor> makeEmbedder(ContextSupport context) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
-            // Will make this configurable soon.
-            ChunkSelector chunkSelector = new JsonChunkSelector();
+            ChunkSelector chunkSelector = makeChunkSelector(context);
             return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingModel.get()));
         }
         return Optional.empty();
+    }
+
+    private static ChunkSelector makeChunkSelector(ContextSupport context) {
+        return new JsonChunkSelector.Builder()
+            .withChunksPointer(context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
+            .withTextPointer(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER))
+            .withEmbeddingArrayName(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME))
+            .build();
     }
 
     public static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {

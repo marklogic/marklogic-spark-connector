@@ -24,8 +24,14 @@ public class EmbeddingGenerator {
     public void addEmbeddings(List<Chunk> chunks) {
         if (chunks != null) {
             chunks.forEach(chunk -> {
-                Response<Embedding> response = embeddingModel.embed(chunk.getEmbeddingText());
-                chunk.addEmbedding(response.content());
+                String text = chunk.getEmbeddingText();
+                // Not yet clear if an error should be thrown here or not. It may be okay if most documents in a query
+                // adhere to an expected structure, but some do not - i.e. if some documents have chunks that do not
+                // have their text in the same place.
+                if (text != null && text.trim().length() > 0) {
+                    Response<Embedding> response = embeddingModel.embed(text);
+                    chunk.addEmbedding(response.content());
+                }
             });
         }
     }

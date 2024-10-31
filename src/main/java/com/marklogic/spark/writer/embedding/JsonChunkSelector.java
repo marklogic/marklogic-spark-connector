@@ -17,13 +17,44 @@ import java.util.List;
 class JsonChunkSelector implements ChunkSelector {
 
     private final JsonPointer chunksPointer;
+    private final JsonPointer textPointer;
+    private final String embeddingArrayName;
 
-    JsonChunkSelector() {
-        this("/chunks");
+    static class Builder {
+        String chunksPointer = "/chunks";
+        String textPointer = "/text";
+        String embeddingArrayName = "embedding";
+
+        Builder withChunksPointer(String chunksPointer) {
+            if (chunksPointer != null) {
+                this.chunksPointer = chunksPointer;
+            }
+            return this;
+        }
+
+        Builder withTextPointer(String textPointer) {
+            if (textPointer != null) {
+                this.textPointer = textPointer;
+            }
+            return this;
+        }
+
+        Builder withEmbeddingArrayName(String embeddingArrayName) {
+            if (embeddingArrayName != null) {
+                this.embeddingArrayName = embeddingArrayName;
+            }
+            return this;
+        }
+
+        JsonChunkSelector build() {
+            return new JsonChunkSelector(chunksPointer, textPointer, embeddingArrayName);
+        }
     }
 
-    JsonChunkSelector(String jsonPointerExpression) {
-        this.chunksPointer = JsonPointer.compile(jsonPointerExpression);
+    private JsonChunkSelector(String chunksPointerExpression, String textPointerExpression, String embeddingArrayName) {
+        this.chunksPointer = JsonPointer.compile(chunksPointerExpression);
+        this.textPointer = JsonPointer.compile(textPointerExpression);
+        this.embeddingArrayName = embeddingArrayName;
     }
 
     @Override
@@ -36,12 +67,12 @@ class JsonChunkSelector implements ChunkSelector {
             return new DocumentAndChunks(sourceDocument, null);
         }
 
-        chunksNode.forEach(obj -> chunks.add(new JsonChunk((ObjectNode) obj)));
+        chunksNode.forEach(obj -> chunks.add(new JsonChunk((ObjectNode) obj, textPointer, embeddingArrayName)));
 
         DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(
             sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc)
         );
-        
+
         return new DocumentAndChunks(documentToWrite, chunks);
     }
 }

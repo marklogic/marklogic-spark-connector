@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.embedding;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
@@ -48,6 +49,29 @@ class EmbedderTest extends AbstractIntegrationTest {
                 assertEquals(JsonNodeType.ARRAY, chunk.get("embedding").getNodeType());
             }
         });
+    }
+
+    @Test
+    void customizedPaths() {
+        ObjectNode doc = objectMapper.createObjectNode();
+        doc.putObject("custom").putArray("custom-chunks").addObject().putObject("wrapper").put("custom-text", "Hello world");
+
+        EmbedderDocumentProcessor embedder = new EmbedderDocumentProcessor(
+            new JsonChunkSelector.Builder()
+                .withChunksPointer("/custom/custom-chunks")
+                .withTextPointer("/wrapper/custom-text")
+                .withEmbeddingArrayName("custom-embedding")
+                .build(),
+            new AllMiniLmL6V2EmbeddingModel()
+        );
+
+        DocumentWriteOperation output = embedder.apply(new DocumentWriteOperationImpl("a.json", null, new JacksonHandle(doc))).next();
+        JsonNode outputDoc = JsonUtil.getJsonFromHandle(output.getContent());
+
+        assertEquals("Hello world", outputDoc.at("/custom/custom-chunks/0/wrapper/custom-text").asText());
+        JsonNode chunk = outputDoc.get("custom").get("custom-chunks").get(0);
+        assertTrue(chunk.has("custom-embedding"));
+        assertEquals(JsonNodeType.ARRAY, chunk.get("custom-embedding").getNodeType());
     }
 
     private DocumentWriteOperation readJsonDocument() {

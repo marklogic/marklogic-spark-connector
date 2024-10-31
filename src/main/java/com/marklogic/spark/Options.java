@@ -200,6 +200,9 @@ public abstract class Options {
 
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = "spark.marklogic.write.embedder.modelFunction.className";
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = "spark.marklogic.write.embedder.modelFunction.option.";
+    public static final String WRITE_EMBEDDER_CHUNKS_JSON_POINTER = "spark.marklogic.write.embedder.chunks.jsonPointer";
+    public static final String WRITE_EMBEDDER_TEXT_JSON_POINTER = "spark.marklogic.write.embedder.text.jsonPointer";
+    public static final String WRITE_EMBEDDER_EMBEDDING_NAME = "spark.marklogic.write.embedder.embedding.name";
 
     private Options() {
     }
