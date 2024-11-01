@@ -27,7 +27,7 @@ class EmbedderDocumentProcessor implements DocumentProcessor {
     @Override
     public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
         ChunkSelector.DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(sourceDocument);
-        if (documentAndChunks.getChunks() != null) {
+        if (documentAndChunks.getChunks() != null && !documentAndChunks.getChunks().isEmpty()) {
             embeddingGenerator.addEmbeddings(documentAndChunks.getChunks());
         }
         return Stream.of(documentAndChunks.getDocumentToWrite()).iterator();

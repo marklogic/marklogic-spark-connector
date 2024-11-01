@@ -27,7 +27,7 @@ public abstract class EmbedderDocumentProcessorFactory {
 
     private static ChunkSelector makeChunkSelector(ContextSupport context) {
         return new JsonChunkSelector.Builder()
-            .withChunksPointer(context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
+            .withChunksPointer(context.getProperties().get(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
             .withTextPointer(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER))
             .withEmbeddingArrayName(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME))
             .build();
