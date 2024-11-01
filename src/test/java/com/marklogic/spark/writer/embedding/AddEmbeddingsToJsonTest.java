@@ -187,6 +187,24 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         });
     }
 
+    @Test
+    void chunksIsAnObjectInsteadOfAnArray() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/text")
+            .option(Options.WRITE_URI_TEMPLATE, "/custom-path-test.json")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/custom-path-test.json");
+        assertTrue(doc.has("embedding"));
+        assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType());
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())

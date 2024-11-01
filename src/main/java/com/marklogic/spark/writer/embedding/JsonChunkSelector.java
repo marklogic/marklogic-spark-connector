@@ -5,6 +5,7 @@ package com.marklogic.spark.writer.embedding;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
@@ -67,12 +68,18 @@ class JsonChunkSelector implements ChunkSelector {
             return new DocumentAndChunks(sourceDocument, null);
         }
 
-        chunksNode.forEach(obj -> chunks.add(new JsonChunk((ObjectNode) obj, textPointer, embeddingArrayName)));
+        if (chunksNode instanceof ArrayNode) {
+            chunksNode.forEach(obj -> chunks.add(new JsonChunk((ObjectNode) obj, textPointer, embeddingArrayName)));
+        } else if (chunksNode instanceof ObjectNode) {
+            chunks.add(new JsonChunk((ObjectNode) chunksNode, textPointer, embeddingArrayName));
+        } else {
+            // No valid chunks found, just return the original document.
+            return new DocumentAndChunks(sourceDocument, null);
+        }
 
         DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(
             sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc)
         );
-
         return new DocumentAndChunks(documentToWrite, chunks);
     }
 }
