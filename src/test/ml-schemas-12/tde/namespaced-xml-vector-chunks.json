@@ -1,0 +1,35 @@
+{
+  "template": {
+    "pathNamespace": [
+      {
+        "prefix": "ex",
+        "namespaceUri": "org:example"
+      }
+    ],
+    "context": "/ex:sidecar/ex:chunks/ex:chunk",
+    "collections": [
+      "namespaced-xml-vector-chunks"
+    ],
+    "rows": [
+      {
+        "schemaName": "example",
+        "viewName": "namespaced_xml_chunks",
+        "columns": [
+          {
+            "name": "uri",
+            "scalarType": "string",
+            "val": "xdmp:node-uri(.)"
+          },
+          {
+            "name": "embedding",
+            "scalarType": "vector",
+            "val": "vec:vector(ex:embedding)",
+            "dimension": "384",
+            "invalidValues": "reject",
+            "nullable": true
+          }
+        ]
+      }
+    ]
+  }
+}
