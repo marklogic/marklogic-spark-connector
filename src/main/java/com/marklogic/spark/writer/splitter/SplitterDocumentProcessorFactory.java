@@ -17,7 +17,6 @@ import org.jdom2.Namespace;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public abstract class SplitterDocumentProcessorFactory {
 
@@ -46,14 +45,7 @@ public abstract class SplitterDocumentProcessorFactory {
 
     private static TextSelector makeXmlTextSelector(ContextSupport context) {
         String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
-        List<Namespace> namespaces = context.getProperties().keySet()
-            .stream()
-            .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
-            .map(key -> {
-                String prefix = key.substring(Options.XPATH_NAMESPACE_PREFIX.length());
-                return Namespace.getNamespace(prefix, context.getStringOption(key));
-            })
-            .collect(Collectors.toList());
+        List<Namespace> namespaces = context.getGlobalNamespaces();
         return new JDOMTextSelector(xpath, namespaces);
     }
 

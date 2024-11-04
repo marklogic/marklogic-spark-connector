@@ -1,0 +1,29 @@
+{
+  "template": {
+    "context": "/root/chunks/chunk",
+    "collections": [
+      "xml-vector-chunks"
+    ],
+    "rows": [
+      {
+        "schemaName": "example",
+        "viewName": "xml_chunks",
+        "columns": [
+          {
+            "name": "uri",
+            "scalarType": "string",
+            "val": "xdmp:node-uri(.)"
+          },
+          {
+            "name": "embedding",
+            "scalarType": "vector",
+            "val": "vec:vector(embedding)",
+            "dimension": "384",
+            "invalidValues": "reject",
+            "nullable": true
+          }
+        ]
+      }
+    ]
+  }
+}

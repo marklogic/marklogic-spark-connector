@@ -5,26 +5,31 @@ package com.marklogic.spark.writer.embedding;
 
 import dev.langchain4j.data.embedding.Embedding;
 import org.jdom2.Element;
+import org.jdom2.Namespace;
 import org.jdom2.Text;
 import org.jdom2.filter.Filters;
 import org.jdom2.xpath.XPathExpression;
 import org.jdom2.xpath.XPathFactory;
 
+import java.util.Collection;
+
 public class XmlChunk implements Chunk {
 
     private final Element chunk;
     private final XPathExpression<Text> textXPathExpression;
-    // Include namespace?
-    private final String embeddingArrayName;
+    private final String embeddingName;
+    private final String embeddingNamespace;
 
-    public XmlChunk(Element chunk) {
-        this(chunk, XPathFactory.instance().compile("text/text()", Filters.text()), "embedding");
-    }
-
-    public XmlChunk(Element chunk, XPathExpression<Text> textXPathExpression, String embeddingArrayName) {
+    public XmlChunk(Element chunk, String textXPathExpression, String embeddingName, String embeddingNamespace, Collection<Namespace> namespaces) {
         this.chunk = chunk;
-        this.textXPathExpression = textXPathExpression;
-        this.embeddingArrayName = embeddingArrayName;
+
+        String xpath = textXPathExpression != null ? textXPathExpression : "node()[local-name(.) = 'text']/text()";
+        this.textXPathExpression = namespaces != null ?
+            XPathFactory.instance().compile(xpath, Filters.text(), null, namespaces) :
+            XPathFactory.instance().compile(xpath, Filters.text());
+
+        this.embeddingName = embeddingName != null ? embeddingName : "embedding";
+        this.embeddingNamespace = embeddingNamespace;
     }
 
     @Override
@@ -36,6 +41,7 @@ public class XmlChunk implements Chunk {
 
     @Override
     public void addEmbedding(Embedding embedding) {
-        chunk.addContent(new Element(embeddingArrayName).setText(embedding.vectorAsList().toString()));
+        Element el = embeddingNamespace != null ? new Element(embeddingName, embeddingNamespace) : new Element(embeddingName);
+        chunk.addContent(el.setText(embedding.vectorAsList().toString()));
     }
 }
