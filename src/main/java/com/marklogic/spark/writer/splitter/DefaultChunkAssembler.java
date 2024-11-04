@@ -50,7 +50,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
 
         return Format.XML.equals(chunkDocumentFormat) ?
-            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig) :
+            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, embeddingGenerator) :
             new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, embeddingGenerator);
     }
 

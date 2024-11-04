@@ -28,6 +28,10 @@ public class JDOMTextSelector implements TextSelector {
     // Will make this configurable later.
     private static final String JOIN_DELIMITER = " ";
 
+    public JDOMTextSelector(String xpath) {
+        this(xpath, null);
+    }
+
     public JDOMTextSelector(String xpath, Collection<Namespace> namespaces) {
         this.xpathExpression = namespaces != null ?
             XPathFactory.instance().compile(xpath, Filters.fpassthrough(), null, namespaces) :
