@@ -15,14 +15,17 @@ import java.util.Collection;
 
 public class XmlChunk implements Chunk {
 
+    private final String documentUri;
     private final Element chunk;
     private final XPathExpression<Text> textXPathExpression;
     private final String embeddingName;
     private final String embeddingNamespace;
 
-    public XmlChunk(Element chunk, String textXPathExpression, String embeddingName, String embeddingNamespace, Collection<Namespace> namespaces) {
+    public XmlChunk(String documentUri, Element chunk, String textXPathExpression, String embeddingName, String embeddingNamespace, Collection<Namespace> namespaces) {
+        this.documentUri = documentUri;
         this.chunk = chunk;
 
+        // The default expression ignores namespaces in case the user specified a custom namespace for the chunks document.
         String xpath = textXPathExpression != null ? textXPathExpression : "node()[local-name(.) = 'text']/text()";
         this.textXPathExpression = namespaces != null ?
             XPathFactory.instance().compile(xpath, Filters.text(), null, namespaces) :
@@ -33,10 +36,14 @@ public class XmlChunk implements Chunk {
     }
 
     @Override
+    public String getDocumentUri() {
+        return documentUri;
+    }
+
+    @Override
     public String getEmbeddingText() {
         Text text = textXPathExpression.evaluateFirst(this.chunk);
-        // Need a test for not finding the text.
-        return text.getText();
+        return text != null ? text.getText() : null;
     }
 
     @Override

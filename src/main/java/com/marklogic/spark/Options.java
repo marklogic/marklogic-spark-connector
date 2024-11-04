@@ -198,11 +198,57 @@ public abstract class Options {
      */
     public static final String XPATH_NAMESPACE_PREFIX = "spark.marklogic.xpath.";
 
+    /**
+     * @since 2.5.0
+     */
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = "spark.marklogic.write.embedder.modelFunction.className";
+
+    /**
+     * @since 2.5.0
+     */
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = "spark.marklogic.write.embedder.modelFunction.option.";
+
+    /**
+     * Defines the location of JSON chunks when using the embedder separate from the splitter.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_EMBEDDER_CHUNKS_JSON_POINTER = "spark.marklogic.write.embedder.chunks.jsonPointer";
+
+    /**
+     * Defines the location of text in JSON chunks when using the embedder separate from the splitter.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_EMBEDDER_TEXT_JSON_POINTER = "spark.marklogic.write.embedder.text.jsonPointer";
+
+    /**
+     * Defines the location of XML chunks when using the embedder separate from the splitter.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_EMBEDDER_CHUNKS_XPATH = "spark.marklogic.write.embedder.chunks.xpath";
+
+    /**
+     * Defines the location of text in XML chunks when using the embedder separate from the splitter.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_EMBEDDER_TEXT_XPATH = "spark.marklogic.write.embedder.text.xpath";
+
+    /**
+     * Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_EMBEDDER_EMBEDDING_NAME = "spark.marklogic.write.embedder.embedding.name";
+
+    /**
+     * Allows for an optional namespace to be assigned to the embedding element in an XML chunk.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_EMBEDDER_EMBEDDING_NAMESPACE = "spark.marklogic.write.embedder.embedding.namespace";
 
     private Options() {
     }

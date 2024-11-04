@@ -95,6 +95,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "json-vector-chunks")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
             .mode(SaveMode.Append)
             .save();
 
