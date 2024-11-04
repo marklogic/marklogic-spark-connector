@@ -8,15 +8,15 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.extra.jdom.JDOMHandle;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.writer.JsonUtil;
-import com.marklogic.spark.writer.splitter.ChunkConfig;
-import com.marklogic.spark.writer.splitter.DefaultChunkAssembler;
-import com.marklogic.spark.writer.splitter.JsonPointerTextSelector;
-import com.marklogic.spark.writer.splitter.SplitterDocumentProcessor;
+import com.marklogic.spark.writer.XmlUtil;
+import com.marklogic.spark.writer.splitter.*;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import org.junit.jupiter.api.Test;
@@ -74,6 +74,22 @@ class EmbedderTest extends AbstractIntegrationTest {
         assertEquals(JsonNodeType.ARRAY, chunk.get("custom-embedding").getNodeType());
     }
 
+    @Test
+    void xml() {
+        SplitterDocumentProcessor splitter = newXmlSplitter(500, 2, "/node()/text");
+        Iterator<DocumentWriteOperation> docs = splitter.apply(readXmlDocument());
+
+        // Skip the source document.
+        docs.next();
+
+        docs.forEachRemaining(doc -> {
+            XmlNode node = new XmlNode(XmlUtil.extractDocument(doc.getContent()));
+            node.assertElementCount("/root/chunks/chunk", 2);
+            node.assertElementExists("/root/chunks/chunk[1]/embedding");
+            node.assertElementExists("/root/chunks/chunk[2]/embedding");
+        });
+    }
+
     private DocumentWriteOperation readJsonDocument() {
         final String uri = "/marklogic-docs/java-client-intro.json";
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
@@ -81,9 +97,27 @@ class EmbedderTest extends AbstractIntegrationTest {
         return new DocumentWriteOperationImpl(uri, metadata, contentHandle);
     }
 
+    private DocumentWriteOperation readXmlDocument() {
+        final String uri = "/marklogic-docs/java-client-intro.xml";
+        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+        JDOMHandle contentHandle = getDatabaseClient().newXMLDocumentManager().read(uri, metadata, new JDOMHandle());
+        return new DocumentWriteOperationImpl(uri, metadata, contentHandle);
+    }
+
     private SplitterDocumentProcessor newJsonSplitter(int maxChunkSize, int maxChunks, String... jsonPointers) {
         return new SplitterDocumentProcessor(
             new JsonPointerTextSelector(jsonPointers, null),
+            DocumentSplitters.recursive(maxChunkSize, 0),
+            new DefaultChunkAssembler(
+                new ChunkConfig.Builder().withMaxChunks(maxChunks).build(),
+                new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
+            )
+        );
+    }
+
+    private SplitterDocumentProcessor newXmlSplitter(int maxChunkSize, int maxChunks, String xpath) {
+        return new SplitterDocumentProcessor(
+            new JDOMTextSelector(xpath),
             DocumentSplitters.recursive(maxChunkSize, 0),
             new DefaultChunkAssembler(
                 new ChunkConfig.Builder().withMaxChunks(maxChunks).build(),
