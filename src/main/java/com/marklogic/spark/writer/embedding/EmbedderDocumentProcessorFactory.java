@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.embedding;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.dom.XPathNamespaceContext;
 import com.marklogic.spark.writer.DocumentProcessor;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
@@ -61,13 +62,16 @@ public abstract class EmbedderDocumentProcessorFactory {
     }
 
     private static ChunkSelector makeXmlChunkSelector(ContextSupport context) {
-        return new XmlChunkSelector.Builder()
-            .withChunksXPathExpression(context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH))
-            .withTextXPathExpression(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH))
-            .withEmbeddingName(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME))
-            .withEmbeddingNamespace(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE))
-            .withXPathNamespaces(context.getGlobalNamespaces())
-            .build();
+        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(
+            context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
+            context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
+            context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
+            new XPathNamespaceContext(context.getProperties())
+        );
+        return new DOMChunkSelector(
+            context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH),
+            xmlChunkConfig
+        );
     }
 
     public static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {

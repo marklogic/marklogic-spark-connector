@@ -23,7 +23,7 @@
           {
             "name": "embedding",
             "scalarType": "vector",
-            "val": "vec:vector(ex:embedding)",
+            "val": "vec:vector(embedding)",
             "dimension": "384",
             "invalidValues": "reject",
             "nullable": true

@@ -6,16 +6,13 @@ package com.marklogic.spark;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.extra.okhttpclient.OkHttpClientConfigurator;
-import org.jdom2.Namespace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 public class ContextSupport implements Serializable {
 
@@ -162,16 +159,6 @@ public class ContextSupport implements Serializable {
 
     public final boolean isStreamingFiles() {
         return "true".equalsIgnoreCase(getStringOption(Options.STREAM_FILES));
-    }
-
-    public List<Namespace> getGlobalNamespaces() {
-        return getProperties().keySet().stream()
-            .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
-            .map(key -> {
-                String prefix = key.substring(Options.XPATH_NAMESPACE_PREFIX.length());
-                return Namespace.getNamespace(prefix, getStringOption(key));
-            })
-            .collect(Collectors.toList());
     }
 
     public Map<String, String> getProperties() {

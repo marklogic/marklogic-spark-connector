@@ -81,7 +81,7 @@ dependencies {
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
 
-  // Needed for constructing XML documents and for splitting them.
+  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
 
   // Needed for splitting XML documents via XPath.
