@@ -35,7 +35,9 @@ class XmlChunkSelector implements ChunkSelector {
 
         public XmlChunkSelector build() {
             String tmp = chunksXPathExpression != null ? chunksXPathExpression : "/node()/chunks";
-            XPathExpression<Element> chunksExpression = XPathFactory.instance().compile(tmp, Filters.element(), null, xpathNamespaces);
+            XPathExpression<Element> chunksExpression = xpathNamespaces != null ?
+                XPathFactory.instance().compile(tmp, Filters.element(), null, xpathNamespaces) :
+                XPathFactory.instance().compile(tmp, Filters.element());
             return new XmlChunkSelector(chunksExpression, textXPathExpression, embeddingName, embeddingNamespace, xpathNamespaces);
         }
 
