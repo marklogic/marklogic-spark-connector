@@ -44,7 +44,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             String text = textSegment.text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            chunks.add(new JsonChunk(chunk));
+            chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         });
         addEmbeddingsToChunks(chunks);
 
@@ -67,7 +67,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             String text = textSegments.get(listIndex++).text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            chunks.add(new JsonChunk(chunk));
+            chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         }
         addEmbeddingsToChunks(chunks);
 

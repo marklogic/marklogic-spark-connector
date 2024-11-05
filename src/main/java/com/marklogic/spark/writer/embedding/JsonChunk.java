@@ -10,18 +10,25 @@ import dev.langchain4j.data.embedding.Embedding;
 
 public class JsonChunk implements Chunk {
 
+    private final String documentUri;
     private final ObjectNode chunk;
     private final JsonPointer textPointer;
     private final String embeddingArrayName;
 
-    public JsonChunk(ObjectNode chunk) {
-        this(chunk, JsonPointer.compile("/text"), "embedding");
+    public JsonChunk(String documentUri, ObjectNode chunk) {
+        this(documentUri, chunk, null, null);
     }
 
-    public JsonChunk(ObjectNode chunk, JsonPointer textPointer, String embeddingArrayName) {
+    public JsonChunk(String documentUri, ObjectNode chunk, String textPointer, String embeddingArrayName) {
+        this.documentUri = documentUri;
         this.chunk = chunk;
-        this.textPointer = textPointer;
-        this.embeddingArrayName = embeddingArrayName;
+        this.textPointer = JsonPointer.compile(textPointer != null ? textPointer : "/text");
+        this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "embedding";
+    }
+
+    @Override
+    public String getDocumentUri() {
+        return documentUri;
     }
 
     @Override

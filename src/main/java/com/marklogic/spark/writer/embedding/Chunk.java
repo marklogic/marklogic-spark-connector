@@ -11,6 +11,11 @@ import dev.langchain4j.data.embedding.Embedding;
 public interface Chunk {
 
     /**
+     * @return the URI of the document containing this chunk
+     */
+    String getDocumentUri();
+
+    /**
      * @return the text to be used for generating an embedding.
      */
     String getEmbeddingText();

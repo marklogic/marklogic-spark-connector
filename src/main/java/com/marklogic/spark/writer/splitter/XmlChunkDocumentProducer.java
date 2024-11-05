@@ -68,7 +68,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private void addChunk(TextSegment textSegment, Element chunksElement, List<Chunk> chunks) {
         Element chunk = newElement("chunk").addContent(newElement("text").addContent(textSegment.text()));
         chunksElement.addContent(chunk);
-        chunks.add(new XmlChunk(chunk, null, null, chunkConfig.getXmlNamespace(), null));
+        chunks.add(new XmlChunk(super.sourceDocument.getUri(), chunk, null, null, chunkConfig.getXmlNamespace(), null));
     }
 
     private void addEmbeddingsToChunks(List<Chunk> chunks) {

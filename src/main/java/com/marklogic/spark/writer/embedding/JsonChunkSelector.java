@@ -18,13 +18,13 @@ import java.util.List;
 class JsonChunkSelector implements ChunkSelector {
 
     private final JsonPointer chunksPointer;
-    private final JsonPointer textPointer;
+    private final String textPointer;
     private final String embeddingArrayName;
 
     static class Builder {
-        String chunksPointer = "/chunks";
-        String textPointer = "/text";
-        String embeddingArrayName = "embedding";
+        private String chunksPointer = "/chunks";
+        private String textPointer;
+        private String embeddingArrayName;
 
         Builder withChunksPointer(String chunksPointer) {
             if (chunksPointer != null) {
@@ -52,9 +52,9 @@ class JsonChunkSelector implements ChunkSelector {
         }
     }
 
-    private JsonChunkSelector(String chunksPointerExpression, String textPointerExpression, String embeddingArrayName) {
+    private JsonChunkSelector(String chunksPointerExpression, String textPointer, String embeddingArrayName) {
         this.chunksPointer = JsonPointer.compile(chunksPointerExpression);
-        this.textPointer = JsonPointer.compile(textPointerExpression);
+        this.textPointer = textPointer;
         this.embeddingArrayName = embeddingArrayName;
     }
 
@@ -63,18 +63,16 @@ class JsonChunkSelector implements ChunkSelector {
         JsonNode doc = JsonUtil.getJsonFromHandle(sourceDocument.getContent());
 
         JsonNode chunksNode = doc.at(chunksPointer);
-        List<Chunk> chunks = new ArrayList<>();
-        if (chunksNode == null) {
+        if (chunksNode == null || (!(chunksNode instanceof ArrayNode) && !(chunksNode instanceof ObjectNode))) {
+            // No valid chunks found, just return the original document.
             return new DocumentAndChunks(sourceDocument, null);
         }
 
+        List<Chunk> chunks = new ArrayList<>();
         if (chunksNode instanceof ArrayNode) {
-            chunksNode.forEach(obj -> chunks.add(new JsonChunk((ObjectNode) obj, textPointer, embeddingArrayName)));
-        } else if (chunksNode instanceof ObjectNode) {
-            chunks.add(new JsonChunk((ObjectNode) chunksNode, textPointer, embeddingArrayName));
+            chunksNode.forEach(obj -> chunks.add(new JsonChunk(sourceDocument.getUri(), (ObjectNode) obj, textPointer, embeddingArrayName)));
         } else {
-            // No valid chunks found, just return the original document.
-            return new DocumentAndChunks(sourceDocument, null);
+            chunks.add(new JsonChunk(sourceDocument.getUri(), (ObjectNode) chunksNode, textPointer, embeddingArrayName));
         }
 
         DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(
