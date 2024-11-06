@@ -10,9 +10,7 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.DocumentProcessor;
 import com.marklogic.spark.writer.dom.XPathNamespaceContext;
 import com.marklogic.spark.writer.embedding.EmbedderDocumentProcessorFactory;
-import com.marklogic.spark.writer.embedding.EmbeddingGenerator;
 import dev.langchain4j.data.document.DocumentSplitter;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -85,12 +83,6 @@ public abstract class SplitterDocumentProcessorFactory {
             metadata.getPermissions().addFromDelimitedString(value);
         }
 
-        EmbeddingGenerator embeddingGenerator = null;
-        Optional<EmbeddingModel> embeddingModel = EmbedderDocumentProcessorFactory.makeEmbeddingModel(context);
-        if (embeddingModel.isPresent()) {
-            embeddingGenerator = new EmbeddingGenerator(embeddingModel.get());
-        }
-
         return new DefaultChunkAssembler(new ChunkConfig.Builder()
             .withMetadata(metadata)
             .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0, 0))
@@ -100,7 +92,7 @@ public abstract class SplitterDocumentProcessorFactory {
             .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
             .withXmlNamespace(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
             .build(),
-            embeddingGenerator
+            EmbedderDocumentProcessorFactory.makeEmbeddingGenerator(context)
         );
     }
 

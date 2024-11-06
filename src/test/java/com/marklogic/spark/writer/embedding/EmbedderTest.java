@@ -62,7 +62,7 @@ class EmbedderTest extends AbstractIntegrationTest {
                 .withTextPointer("/wrapper/custom-text")
                 .withEmbeddingArrayName("custom-embedding")
                 .build(),
-            new AllMiniLmL6V2EmbeddingModel()
+            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
         );
 
         DocumentWriteOperation output = embedder.apply(new DocumentWriteOperationImpl("a.json", null, new JacksonHandle(doc))).next();

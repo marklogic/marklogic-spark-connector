@@ -206,6 +206,45 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType());
     }
 
+    @Test
+    void testBatchSize() {
+        TestEmbeddingModel.batchCounter = 0;
+        
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BATCH_SIZE, 2)
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertEquals(4, doc.get("chunks").size());
+
+        assertEquals(2, TestEmbeddingModel.batchCounter, "Expecting 2 batches to be sent to the test " +
+            "embedding model, given the batch size of 2 and 4 chunks being created.");
+    }
+
+    @Test
+    void invalidBatchSize() {
+        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BATCH_SIZE, "abc")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        assertEquals("The value of 'spark.marklogic.write.embedder.batchSize' must be numeric.", ex.getMessage());
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
