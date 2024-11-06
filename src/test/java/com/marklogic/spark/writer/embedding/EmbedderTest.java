@@ -117,7 +117,7 @@ class EmbedderTest extends AbstractIntegrationTest {
 
     private SplitterDocumentProcessor newXmlSplitter(int maxChunkSize, int maxChunks, String xpath) {
         return new SplitterDocumentProcessor(
-            new JDOMTextSelector(xpath),
+            new DOMTextSelector(xpath, null),
             DocumentSplitters.recursive(maxChunkSize, 0),
             new DefaultChunkAssembler(
                 new ChunkConfig.Builder().withMaxChunks(maxChunks).build(),

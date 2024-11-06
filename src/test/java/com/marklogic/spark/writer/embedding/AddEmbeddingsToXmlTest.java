@@ -84,7 +84,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("/ex:chunk/ex:embedding");
+            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
+                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
+                "content.", "/ex:chunk/embedding");
         }
 
         verifyEachChunkIsReturnedByAVectorQuery("namespaced_xml_chunks");

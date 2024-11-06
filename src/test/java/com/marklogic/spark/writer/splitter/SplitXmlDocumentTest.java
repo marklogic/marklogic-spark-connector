@@ -72,8 +72,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
-        assertEquals("Unable to split document using XPath expression: /ex:root/ex:text/text(); cause: " +
-                "Namespace with prefix 'ex' has not been declared.",
+        assertEquals(
+            "Unable to compile XPath expression for selecting text: /ex:root/ex:text/text(); cause: Prefix must resolve to a namespace: ex",
             ex.getMessage()
         );
     }

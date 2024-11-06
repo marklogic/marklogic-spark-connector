@@ -10,5 +10,5 @@ import com.marklogic.client.document.DocumentWriteOperation;
  */
 public interface TextSelector {
 
-    String selectTextToSplit(DocumentWriteOperation operation);
+    String selectTextToSplit(DocumentWriteOperation sourceDocument);
 }

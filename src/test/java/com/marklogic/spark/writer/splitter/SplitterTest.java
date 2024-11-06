@@ -41,16 +41,13 @@ class SplitterTest extends AbstractIntegrationTest {
     @Test
     void elementPath() {
         XmlNode doc = splitTextDocument("/root/nested");
-
         doc.assertElementCount("Only expecting one chunk since the root/nested/text element has very little text",
             "/root/chunks/chunk", 1);
 
         String value = doc.getElementValue("/root/chunks/chunk/text");
-        assertTrue(value.startsWith("<nested>"), "When a user selects an element, the expectation is that the " +
-            "entire XML fragment is returned and sent to the splitter. For our default langchain4j splitter, this " +
-            "isn't useful because it doesn't know to do anything useful with XML tags. But this verifies that the " +
-            "splitter did receive the XML fragment, which is then set as the value of the 'text' element " +
-            "in the only chunk. Actual value: " + value);
+        assertEquals("This is for testing.", value, "With our DOM-based implementation, we can easily return the " +
+            "text content of any node selected by the user's path. We may eventually support an option to instead " +
+            "serialize the selected node into a string.");
     }
 
     @Test
@@ -68,15 +65,8 @@ class SplitterTest extends AbstractIntegrationTest {
     @Test
     void wholeDocument() {
         XmlNode doc = splitTextDocument("/");
-
-        doc.assertElementCount(
-            "When the user selects the entire document, it should be serialized into a string that is passed to the " +
-                "splitter. And the default splitter will turn that into 6 chunks.",
-            "/root/chunks/chunk", 6);
-
-        String firstChunk = doc.getElementValue("/root/chunks/chunk[1]/text");
-        assertTrue(firstChunk.startsWith("<?xml version="), "The first chunk is expected to contain the " +
-            "start of the serialized document, which will begin with the XML declaration. Actual chunk: " + firstChunk);
+        doc.assertElementMissing("With the DOM library, the user needs to select something - '/' does not have any " +
+            "text content, so no text is selected, and thus no chunks are created.", "/root/chunks");
     }
 
     @Test
@@ -162,7 +152,7 @@ class SplitterTest extends AbstractIntegrationTest {
 
     private DocumentProcessor newXmlSplitter(String path) {
         return new SplitterDocumentProcessor(
-            new JDOMTextSelector(path, null),
+            new DOMTextSelector(path, null),
             DocumentSplitters.recursive(500, 0),
             new DefaultChunkAssembler(new ChunkConfig.Builder().build())
         );

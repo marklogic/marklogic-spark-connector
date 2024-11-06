@@ -9,6 +9,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
@@ -18,14 +19,14 @@ public class DOMChunk implements Chunk {
     private final String documentUri;
     private final Document document;
     private final Element chunkElement;
-    private final String textExpression;
+    private final XmlChunkConfig xmlChunkConfig;
     private final XPathFactory xpathFactory;
 
-    public DOMChunk(String documentUri, Document document, Element chunkElement, String textExpression, XPathFactory xpathFactory) {
+    public DOMChunk(String documentUri, Document document, Element chunkElement, XmlChunkConfig xmlChunkConfig, XPathFactory xpathFactory) {
         this.documentUri = documentUri;
         this.document = document;
         this.chunkElement = chunkElement;
-        this.textExpression = textExpression;
+        this.xmlChunkConfig = xmlChunkConfig;
         this.xpathFactory = xpathFactory;
     }
 
@@ -37,8 +38,15 @@ public class DOMChunk implements Chunk {
     @Override
     public String getEmbeddingText() {
         NodeList embeddingTextNodes;
+        String textExpression = xmlChunkConfig.getTextExpression();
+
+        XPath xpath = xpathFactory.newXPath();
+        if (xmlChunkConfig.getNamespaceContext() != null) {
+            xpath.setNamespaceContext(xmlChunkConfig.getNamespaceContext());
+        }
+
         try {
-            embeddingTextNodes = (NodeList) xpathFactory.newXPath().evaluate(textExpression, chunkElement, XPathConstants.NODESET);
+            embeddingTextNodes = (NodeList) xpath.evaluate(textExpression, chunkElement, XPathConstants.NODESET);
         } catch (XPathExpressionException e) {
             throw new ConnectorException(String.format("Unable to evaluate XPath expression: %s; cause: %s",
                 textExpression, e.getMessage()), e);
@@ -49,7 +57,10 @@ public class DOMChunk implements Chunk {
 
     @Override
     public void addEmbedding(Embedding embedding) {
-        this.document.createElement("embedding").setTextContent(embedding.vectorAsList().toString());
+        // DOM is fine with null as a value for the namespace.
+        Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
+        embeddingElement.setTextContent(embedding.vectorAsList().toString());
+        chunkElement.appendChild(embeddingElement);
     }
 
     private String concatenateNodesIntoString(NodeList embeddingTextNodes) {

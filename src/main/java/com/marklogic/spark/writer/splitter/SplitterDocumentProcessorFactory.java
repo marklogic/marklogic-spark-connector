@@ -8,14 +8,13 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.DocumentProcessor;
+import com.marklogic.spark.writer.dom.XPathNamespaceContext;
 import com.marklogic.spark.writer.embedding.EmbedderDocumentProcessorFactory;
 import com.marklogic.spark.writer.embedding.EmbeddingGenerator;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.model.embedding.EmbeddingModel;
-import org.jdom2.Namespace;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 public abstract class SplitterDocumentProcessorFactory {
@@ -45,8 +44,7 @@ public abstract class SplitterDocumentProcessorFactory {
 
     private static TextSelector makeXmlTextSelector(ContextSupport context) {
         String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
-        List<Namespace> namespaces = context.getGlobalNamespaces();
-        return new JDOMTextSelector(xpath, namespaces);
+        return new DOMTextSelector(xpath, new XPathNamespaceContext(context.getProperties()));
     }
 
     private static SplitterDocumentProcessor makeJsonSplitter(ContextSupport context) {
