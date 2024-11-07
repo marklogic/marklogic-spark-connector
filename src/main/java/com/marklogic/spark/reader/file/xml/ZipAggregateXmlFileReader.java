@@ -83,7 +83,7 @@ public class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
     }
 
     private void openNextFile() {
-        this.currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
+        this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
     }

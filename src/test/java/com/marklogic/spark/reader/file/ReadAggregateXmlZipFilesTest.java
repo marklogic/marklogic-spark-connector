@@ -82,7 +82,7 @@ class ReadAggregateXmlZipFilesTest extends AbstractIntegrationTest {
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
         String message = ex.getMessage();
         assertTrue(
-            message.startsWith("No occurrence of URI element 'elementDoesntExist' found in aggregate element 1 in entry employees.xml in file:///"),
+            message.startsWith("No occurrence of URI element 'elementDoesntExist' found in aggregate element 1 in entry employees.xml in file:/"),
             "The error should identify which aggregate element did not contain the URI element; actual error: " + message
         );
     }
@@ -112,7 +112,7 @@ class ReadAggregateXmlZipFilesTest extends AbstractIntegrationTest {
 
         ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
         String message = ex.getMessage();
-        assertTrue(message.startsWith("Unable to read XML from entry 500-employees.json in file:///"),
+        assertTrue(message.startsWith("Unable to read XML from entry 500-employees.json in file:/"),
             "The error should identify the file and the entry name; actual error: " + message);
         assertTrue(message.endsWith("json-employees.zip; cause: Failed to traverse document"),
             "The error should identify the file and the root cause; actual error: " + message);

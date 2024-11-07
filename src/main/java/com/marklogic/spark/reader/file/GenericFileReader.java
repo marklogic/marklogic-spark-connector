@@ -38,12 +38,9 @@ class GenericFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        // If streaming, we want to put the unaltered file path in the row. The writer can then decode it and also use
-        // its original value as the URI, as the PUT v1/documents endpoint does not allow e.g. spaces.
-        final String originalFilePath = filePartition.getPaths().get(filePathIndex);
-        final String path = this.isStreaming ? originalFilePath : fileContext.decodeFilePath(originalFilePath);
-
+        final String path = filePartition.getPaths().get(filePathIndex);
         filePathIndex++;
+
         try {
             byte[] content = this.isStreaming ?
                 FileUtil.serializeFileContext(fileContext, path) :

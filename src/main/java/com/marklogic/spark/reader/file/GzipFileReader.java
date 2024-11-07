@@ -48,7 +48,7 @@ public class GzipFileReader implements PartitionReader<InternalRow> {
             return false;
         }
 
-        String currentFilePath = fileContext.decodeFilePath(filePartition.getPaths().get(nextFilePathIndex));
+        String currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
         String uri = makeURI(currentFilePath);
 
