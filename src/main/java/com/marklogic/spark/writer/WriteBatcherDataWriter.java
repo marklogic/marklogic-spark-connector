@@ -249,7 +249,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         } catch (Exception e) {
             ConnectorException ex = new ConnectorException(String.format(
                 "Unable to write failed documents to archive file at %s; URI of failed document: %s; cause: %s",
-                archiveWriter.getZipPath(), failedDoc.getUri(), e.getMessage()
+                archiveWriter.getZipFilePath(), failedDoc.getUri(), e.getMessage()
             ), e);
             this.writeFailure.compareAndSet(null, ex);
             throw ex;
@@ -266,7 +266,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void closeArchiveWriter() {
         if (archiveWriter != null) {
             if (failedItemCount.get() > 0) {
-                Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipPath());
+                Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipFilePath());
             }
             archiveWriter.close();
         }
