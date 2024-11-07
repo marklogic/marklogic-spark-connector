@@ -250,6 +250,13 @@ public abstract class Options {
      */
     public static final String WRITE_EMBEDDER_EMBEDDING_NAMESPACE = "spark.marklogic.write.embedder.embedding.namespace";
 
+    /**
+     * Defines the number of chunks to send to the embedding model in a single call. Defaults to 1.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_EMBEDDER_BATCH_SIZE = "spark.marklogic.write.embedder.batchSize";
+
     private Options() {
     }
 }

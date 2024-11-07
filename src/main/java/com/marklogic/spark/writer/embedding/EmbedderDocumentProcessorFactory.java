@@ -6,8 +6,8 @@ package com.marklogic.spark.writer.embedding;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.writer.dom.XPathNamespaceContext;
 import com.marklogic.spark.writer.DocumentProcessor;
+import com.marklogic.spark.writer.dom.XPathNamespaceContext;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
@@ -21,9 +21,19 @@ public abstract class EmbedderDocumentProcessorFactory {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             ChunkSelector chunkSelector = makeChunkSelector(context);
-            return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingModel.get()));
+            EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context);
+            return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingGenerator));
         }
         return Optional.empty();
+    }
+
+    public static EmbeddingGenerator makeEmbeddingGenerator(ContextSupport context) {
+        Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
+        if (embeddingModel.isPresent()) {
+            int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
+            return new EmbeddingGenerator(embeddingModel.get(), batchSize);
+        }
+        return null;
     }
 
     /**
@@ -74,7 +84,7 @@ public abstract class EmbedderDocumentProcessorFactory {
         );
     }
 
-    public static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {
+    private static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {
         if (!context.hasOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME)) {
             return Optional.empty();
         }

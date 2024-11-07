@@ -5,7 +5,6 @@ package com.marklogic.spark.writer.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.spark.writer.DocumentProcessor;
-import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.Iterator;
 import java.util.stream.Stream;
@@ -19,9 +18,9 @@ class EmbedderDocumentProcessor implements DocumentProcessor {
     private final ChunkSelector chunkSelector;
     private final EmbeddingGenerator embeddingGenerator;
 
-    EmbedderDocumentProcessor(ChunkSelector chunkSelector, EmbeddingModel embeddingModel) {
+    EmbedderDocumentProcessor(ChunkSelector chunkSelector, EmbeddingGenerator embeddingGenerator) {
         this.chunkSelector = chunkSelector;
-        this.embeddingGenerator = new EmbeddingGenerator(embeddingModel);
+        this.embeddingGenerator = embeddingGenerator;
     }
 
     @Override
