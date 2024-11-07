@@ -315,6 +315,23 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             "already, such that we do not need to provide a configuration option for defining the chunks array name.");
     }
 
+    @Test
+    void xpathOnJsonDocument() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/split-test.json");
+        assertFalse(doc.has("chunks"), "If a user specifies an XPath split expression and the connector encounters a " +
+            "non-XML document, a warning should be logged and no chunks should be added. This scenario could happen " +
+            "when e.g. processing a zip file that contains mostly XML documents, but also a few non-XML documents.");
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())

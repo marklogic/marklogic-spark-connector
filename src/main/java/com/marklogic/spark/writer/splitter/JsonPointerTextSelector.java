@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.JsonUtil;
 
 import java.util.ArrayList;
@@ -33,8 +34,14 @@ public class JsonPointerTextSelector implements TextSelector {
     }
 
     @Override
-    public String selectTextToSplit(DocumentWriteOperation operation) {
-        JsonNode doc = JsonUtil.getJsonFromHandle(operation.getContent());
+    public String selectTextToSplit(DocumentWriteOperation sourceDocument) {
+        JsonNode doc;
+        try {
+            doc = JsonUtil.getJsonFromHandle(sourceDocument.getContent());
+        } catch (Exception ex) {
+            Util.MAIN_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
+            return null;
+        }
 
         return jsonPointers.stream()
             .map(jsonPointer -> {

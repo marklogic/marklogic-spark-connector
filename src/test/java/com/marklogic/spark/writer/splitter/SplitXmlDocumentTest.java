@@ -79,6 +79,24 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void jsonPointerOnXmlDocument() {
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementMissing("If a user specifies a JSON Pointer split expression and the connector encounters a " +
+            "non-JSON document, a warning should be logged and no chunks should be added. This scenario could happen " +
+            "when e.g. processing a zip file that contains mostly JSON documents, but also a few non-JSON documents.",
+            "//chunks");
+    }
+
+    @Test
     void overlapSizeGreaterThanChunkSize() {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
