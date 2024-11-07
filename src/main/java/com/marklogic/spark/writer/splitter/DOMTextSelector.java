@@ -5,6 +5,7 @@ package com.marklogic.spark.writer.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.writer.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -28,7 +29,14 @@ public class DOMTextSelector implements TextSelector {
 
     @Override
     public String selectTextToSplit(DocumentWriteOperation sourceDocument) {
-        Document doc = domHelper.extractDocument(sourceDocument);
+        Document doc;
+        try {
+            doc = domHelper.extractDocument(sourceDocument);
+        } catch (Exception ex) {
+            Util.MAIN_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
+            return null;
+        }
+
         NodeList items;
         try {
             items = (NodeList) this.textExpression.evaluate(doc, XPathConstants.NODESET);
