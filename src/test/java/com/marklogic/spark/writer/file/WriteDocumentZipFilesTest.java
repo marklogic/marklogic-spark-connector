@@ -158,7 +158,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
         assertEquals(15, rows.size());
 
         // Verify each row was read correctly.
-        final String expectedUriPrefix = "file://" + tempDir.toFile().getAbsolutePath();
+        final String expectedUriPrefix = "file:" + tempDir.toFile().getAbsolutePath();
         for (Row row : rows) {
             String uri = row.getString(0);
             assertTrue(uri.startsWith(expectedUriPrefix), "Unexpected URI, which is expected to start with the " +

@@ -137,8 +137,7 @@ class DocumentRowConverter implements RowConverter {
     }
 
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForGenericFile(InternalRow row, String filePath, FileContext fileContext) {
-        final String decodedPath = fileContext.decodeFilePath(filePath);
-        InputStreamHandle contentHandle = new InputStreamHandle(fileContext.openFile(decodedPath));
+        InputStreamHandle contentHandle = new InputStreamHandle(fileContext.openFile(filePath));
         if (this.documentFormat != null) {
             contentHandle.withFormat(this.documentFormat);
         }

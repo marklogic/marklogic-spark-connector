@@ -61,8 +61,7 @@ class JsonLinesFileReader implements PartitionReader<InternalRow> {
     }
 
     private void openNextFile() {
-        final String originalFilePath = filePartition.getPaths().get(filePathIndex);
-        this.currentFilePath = fileContext.decodeFilePath(originalFilePath);
+        this.currentFilePath = filePartition.getPaths().get(filePathIndex);
         this.lineCounter = 1;
         this.filePathIndex++;
         // To mimic the behavior of the Spark JSON data source, this will guess if the file is gzipped based on its

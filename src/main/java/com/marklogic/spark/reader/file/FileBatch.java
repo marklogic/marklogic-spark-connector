@@ -13,6 +13,8 @@ import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.execution.datasources.PartitioningAwareFileIndex;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 class FileBatch implements Batch {
@@ -27,17 +29,14 @@ class FileBatch implements Batch {
 
     @Override
     public InputPartition[] planInputPartitions() {
-        String[] inputFiles = fileIndex.inputFiles();
-        int numPartitions = inputFiles.length;
-        if (properties.containsKey(Options.READ_NUM_PARTITIONS)) {
-            String value = properties.get(Options.READ_NUM_PARTITIONS);
-            try {
-                numPartitions = Integer.parseInt(value);
-            } catch (NumberFormatException e) {
-                throw new ConnectorException(String.format("Invalid value for number of partitions: %s", value));
-            }
-        }
-        return FileUtil.makeFilePartitions(inputFiles, numPartitions);
+        List<String> filePaths = new ArrayList<>();
+        // Need to use allFiles and not inputFiles; the latter surprisingly URL-encodes each file path.
+        // Would likely be better to soon refactor the FilePartition class to hold a FileStatus instead of a String so
+        // that we don't need to convert it at all.
+        fileIndex.allFiles().iterator().foreach(fileStatus -> filePaths.add(fileStatus.getPath().toString()));
+
+        int numPartitions = getNumberOfPartitions(filePaths);
+        return FileUtil.makeFilePartitions(filePaths.toArray(new String[0]), numPartitions);
     }
 
     @Override
@@ -47,5 +46,17 @@ class FileBatch implements Batch {
         Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
         FileContext fileContext = new FileContext(properties, new SerializableConfiguration(config));
         return new FilePartitionReaderFactory(fileContext);
+    }
+
+    private int getNumberOfPartitions(List<String> filePaths) {
+        if (properties.containsKey(Options.READ_NUM_PARTITIONS)) {
+            String value = properties.get(Options.READ_NUM_PARTITIONS);
+            try {
+                return Integer.parseInt(value);
+            } catch (NumberFormatException e) {
+                throw new ConnectorException(String.format("Invalid value for number of partitions: %s", value));
+            }
+        }
+        return filePaths.size();
     }
 }

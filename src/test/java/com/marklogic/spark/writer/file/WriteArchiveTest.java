@@ -104,7 +104,7 @@ class WriteArchiveTest extends AbstractIntegrationTest {
                 "This allows for the content to later be streamed back into MarkLogic. Entry name: " + entryName);
         }
 
-        final String expectedUriPrefix = "file://" + tempDir.toFile().getAbsolutePath();
+        final String expectedUriPrefix = "file:" + tempDir.toFile().getAbsolutePath();
         for (Row row : rows) {
             String uri = row.getString(0);
             assertTrue(uri.startsWith(expectedUriPrefix), "Unexpected URI, which is expected to start with the " +

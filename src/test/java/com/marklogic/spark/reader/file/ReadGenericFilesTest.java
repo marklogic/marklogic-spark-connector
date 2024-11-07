@@ -189,4 +189,14 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
         assertEquals(3, rows.size(), "This doesn't test our connector, but rather demonstrates that the OOTB " +
             "Spark file data sources correctly handle file paths with spaces in them.");
     }
+
+    @Test
+    void jsonFileWithPlusSign() {
+        List<Row> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/generic-files/has+plus.json")
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+    }
 }

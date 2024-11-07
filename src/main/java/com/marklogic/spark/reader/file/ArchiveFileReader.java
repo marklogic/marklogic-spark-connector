@@ -189,9 +189,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
 
     private void openNextFile() {
         final boolean isStreamingDuringRead = StreamingMode.STREAM_DURING_READER_PHASE.equals(this.streamingMode);
-        final String nextFilePath = filePartition.getPaths().get(nextFilePathIndex);
-
-        this.currentFilePath = isStreamingDuringRead ? nextFilePath : fileContext.decodeFilePath(nextFilePath);
+        this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
 
         if (!isStreamingDuringRead) {
