@@ -16,7 +16,8 @@ obtaining the connector and deploying an example application to MarkLogic.
 The [PySpark installation guide](https://spark.apache.org/docs/latest/api/python/getting_started/install.html) describes
 how to install PySpark. As noted in that guide, you will need to install Python 3 first if you do not already have it
 installed. [pyenv](https://github.com/pyenv/pyenv#installation) is a popular choice for doing so, as it simplifies
-installing and switching between multiple versions of Python.
+installing and switching between multiple versions of Python. Additionally, be sure to select a PySpark installation 
+that depends on Scala 2.12 and not Scala 2.13.
 
 Once you have installed PySpark, run the following from a command line to ensure PySpark is installed correctly:
 
