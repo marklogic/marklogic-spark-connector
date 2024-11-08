@@ -40,24 +40,26 @@ class DocumentFileBatch implements BatchWrite {
             int zipFileCount = 0;
             int zipEntryCount = 0;
             String path = null;
+            String zipFilePath = null;
             for (WriterCommitMessage message : messages) {
                 if (message instanceof FileCommitMessage) {
-                    path = ((FileCommitMessage)message).getPath();
+                    path = ((FileCommitMessage) message).getPath();
                     fileCount += ((FileCommitMessage) message).getFileCount();
                 } else if (message instanceof ZipCommitMessage) {
                     path = ((ZipCommitMessage)message).getPath();
+                    zipFilePath = ((ZipCommitMessage) message).getZipFilePath();
                     zipFileCount++;
                     zipEntryCount += ((ZipCommitMessage) message).getZipEntryCount();
                 }
             }
             if (fileCount == 1) {
-                Util.MAIN_LOGGER.info("Wrote 1 file to {}.", path);
+                Util.MAIN_LOGGER.info("Wrote 1 file to: {}.", path);
             } else if (fileCount > 1) {
-                Util.MAIN_LOGGER.info("Wrote {} files to {}.", fileCount, path);
+                Util.MAIN_LOGGER.info("Wrote {} files to: {}.", fileCount, path);
             } else if (zipFileCount == 1) {
-                Util.MAIN_LOGGER.info("Wrote 1 zip file containing {} entries to {}.", zipEntryCount, path);
+                Util.MAIN_LOGGER.info("Wrote 1 zip file containing {} entries to: {}.", zipEntryCount, zipFilePath);
             } else if (zipFileCount > 1) {
-                Util.MAIN_LOGGER.info("Wrote {} zip files containing a total of {} entries to {}.", zipFileCount, zipEntryCount, path);
+                Util.MAIN_LOGGER.info("Wrote {} zip files containing a total of {} entries to: {}.", zipFileCount, zipEntryCount, path);
             }
         }
     }

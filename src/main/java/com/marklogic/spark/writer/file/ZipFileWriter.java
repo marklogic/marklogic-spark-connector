@@ -31,7 +31,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
 
-    private final String zipPath;
+    private final String path;
+    private final String zipFilePath;
 
     // These can be instantiated lazily depending on which constructor is used.
     private ContentWriter contentWriter;
@@ -45,7 +46,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration,
                          int partitionId, boolean createZipFileImmediately) {
-        this.zipPath = makeFilePath(path, partitionId);
+        this.path = path;
+        this.zipFilePath = makeFilePath(path, partitionId);
         this.context = new ContextSupport(properties);
         this.hadoopConfiguration = hadoopConfiguration;
         if (createZipFileImmediately) {
@@ -75,7 +77,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
-        return new ZipCommitMessage(zipPath, zipEntryCounter);
+        return new ZipCommitMessage(path, zipFilePath, zipEntryCounter);
     }
 
     @Override
@@ -84,7 +86,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     private void createZipFileAndContentWriter() {
-        Path filePath = new Path(zipPath);
+        Path filePath = new Path(zipFilePath);
         if (logger.isDebugEnabled()) {
             logger.debug("Will write to: {}", filePath);
         }
@@ -131,7 +133,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         return String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
     }
 
-    public String getZipPath() {
-        return zipPath;
+    public String getZipFilePath() {
+        return zipFilePath;
     }
 }
