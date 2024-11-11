@@ -19,6 +19,12 @@ import java.util.function.Function;
 class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, String>, EmbeddingModel> {
 
     static int batchCounter;
+    static int chunkCounter;
+
+    static void reset() {
+        batchCounter = 0;
+        chunkCounter = 0;
+    }
 
     @Override
     public EmbeddingModel apply(Map<String, String> options) {
@@ -28,6 +34,7 @@ class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, String>
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         batchCounter++;
+        chunkCounter += textSegments.size();
         return Response.from(Arrays.asList(new Embedding(new float[]{1})));
     }
 

@@ -7,8 +7,8 @@ services:
   caddy-load-balancer:
     image: caddy:2-alpine
     volumes:
-      - ./caddy/data:/data
-      - ./caddy/config/Caddyfile:/etc/caddy/Caddyfile
+      # Not mapping the Caddy data directory, as that causes issues for Jenkins.
+      - ./docker/caddy/config/Caddyfile:/etc/caddy/Caddyfile
     ports:
       # Expand this range as needed. See Caddyfile for which ports are used for reverse proxies.
       - "8115:8115"

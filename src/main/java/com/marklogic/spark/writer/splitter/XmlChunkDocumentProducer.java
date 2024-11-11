@@ -10,7 +10,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.spark.writer.dom.DOMHelper;
 import com.marklogic.spark.writer.embedding.Chunk;
 import com.marklogic.spark.writer.embedding.DOMChunk;
-import com.marklogic.spark.writer.embedding.EmbeddingGenerator;
+import com.marklogic.spark.writer.embedding.DocumentAndChunks;
 import com.marklogic.spark.writer.embedding.XmlChunkConfig;
 import dev.langchain4j.data.segment.TextSegment;
 import org.w3c.dom.Document;
@@ -24,15 +24,13 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
     private static final String DEFAULT_CHUNKS_ELEMENT_NAME = "chunks";
 
-    private final EmbeddingGenerator embeddingGenerator;
     private final DOMHelper domHelper;
     private final XmlChunkConfig xmlChunkConfig;
     private final XPathFactory xPathFactory = XPathFactory.newInstance();
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<TextSegment> textSegments, ChunkConfig chunkConfig, EmbeddingGenerator embeddingGenerator) {
+                             List<TextSegment> textSegments, ChunkConfig chunkConfig) {
         super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
-        this.embeddingGenerator = embeddingGenerator;
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
@@ -59,10 +57,12 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks);
         }
-        addEmbeddingsToChunks(chunks);
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
-        return new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new DOMHandle(doc));
+        return new DocumentAndChunks(
+            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new DOMHandle(doc)),
+            chunks
+        );
     }
 
     protected DocumentWriteOperation addChunksToSourceDocument() {
@@ -75,9 +75,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         for (TextSegment textSegment : textSegments) {
             addChunk(doc, textSegment, chunksElement, chunks);
         }
-        addEmbeddingsToChunks(chunks);
 
-        return new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new DOMHandle(doc));
+        return new DocumentAndChunks(
+            new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new DOMHandle(doc)),
+            chunks
+        );
     }
 
     private void addChunk(Document doc, TextSegment textSegment, Element chunksElement, List<Chunk> chunks) {
@@ -87,12 +89,6 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         text.setTextContent(textSegment.text());
         chunk.appendChild(text);
         chunks.add(new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory));
-    }
-
-    private void addEmbeddingsToChunks(List<Chunk> chunks) {
-        if (this.embeddingGenerator != null) {
-            this.embeddingGenerator.addEmbeddings(chunks);
-        }
     }
 
     private String determineChunksElementName(Document doc) {

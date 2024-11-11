@@ -15,11 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Knows how to generate and add embeddings for each chunk. Will soon support a batch size so that more than one
- * chunk can be sent to an embedding model in a single call.
- */
-public class EmbeddingGenerator {
+class EmbeddingGenerator {
 
     // We don't have any use for metadata, so just need a single instance for constructing text segments.
     private static final Metadata TEXT_SEGMENT_METADATA = new Metadata();
@@ -27,39 +23,61 @@ public class EmbeddingGenerator {
     private final EmbeddingModel embeddingModel;
     private final int batchSize;
 
-    public EmbeddingGenerator(EmbeddingModel embeddingModel) {
+    private List<Chunk> pendingChunks = new ArrayList<>();
+
+    EmbeddingGenerator(EmbeddingModel embeddingModel) {
         this(embeddingModel, 1);
     }
 
-    public EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize) {
+    EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize) {
         this.embeddingModel = embeddingModel;
         this.batchSize = batchSize;
     }
 
-    public void addEmbeddings(List<Chunk> chunks) {
+    boolean addEmbeddings(DocumentAndChunks documentAndChunks) {
+        List<Chunk> chunks = documentAndChunks.getChunks();
         if (chunks == null || chunks.isEmpty()) {
-            return;
+            return false;
         }
 
+        // Iterate over the chunks, flushing as necessary.
         Iterator<Chunk> chunkIterator = chunks.iterator();
-        List<Chunk> batch = new ArrayList<>();
+        boolean flushOccurred = false;
         while (chunkIterator.hasNext()) {
-            Chunk chunk = chunkIterator.next();
-            String text = chunk.getEmbeddingText();
-            if (text != null && text.trim().length() > 0) {
-                batch.add(chunk);
-                if (batch.size() >= this.batchSize) {
-                    addEmbeddingsToChunks(batch);
-                    batch = new ArrayList<>();
-                }
-            } else if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug("Not generating embedding for chunk in URI {}; could not find text to use for generating an embedding.",
-                    chunk.getDocumentUri());
+            addChunkToPendingChunks(chunkIterator.next());
+            if (pendingChunks.size() >= batchSize) {
+                generateEmbeddingsForPendingChunks();
+                flushOccurred = true;
             }
         }
 
-        if (!batch.isEmpty()) {
-            addEmbeddingsToChunks(batch);
+        // If we flushed at least once while iterating, or if we now have enough pending chunks, flush the remaining
+        // chunks.
+        if (flushOccurred || pendingChunks.size() >= batchSize) {
+            generateEmbeddingsForPendingChunks();
+            return true;
+        }
+
+        return false;
+    }
+
+    void generateEmbeddingsForPendingChunks() {
+        if (!pendingChunks.isEmpty()) {
+            if (Util.EMBEDDER_LOGGER.isDebugEnabled()) {
+                Util.EMBEDDER_LOGGER.debug("Generating embeddings for pending chunks; count: {}.", pendingChunks.size());
+            }
+            addEmbeddingsToChunks(pendingChunks);
+            pendingChunks.clear();
+        }
+    }
+
+    private void addChunkToPendingChunks(Chunk chunk) {
+        String text = chunk.getEmbeddingText();
+        if (text != null && text.trim().length() > 0) {
+            pendingChunks.add(chunk);
+        } else if (Util.EMBEDDER_LOGGER.isDebugEnabled()) {
+            Util.EMBEDDER_LOGGER.debug("Not generating embedding for chunk in URI {}; could not find text to use for generating an embedding.",
+                chunk.getDocumentUri());
         }
     }
 
@@ -69,8 +87,8 @@ public class EmbeddingGenerator {
             .collect(Collectors.toList());
 
         Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
-        if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
+        if (Util.EMBEDDER_LOGGER.isInfoEnabled()) {
+            Util.EMBEDDER_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
         }
 
         List<Embedding> embeddings = response.content();

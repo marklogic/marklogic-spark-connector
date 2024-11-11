@@ -13,6 +13,7 @@ import org.apache.spark.util.VersionUtils;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Use this as the base class for all tests that need to connect to MarkLogic.
  */
 @ContextConfiguration(classes = {TestConfig.class})
+@ExtendWith(IOExceptionTestExecutionListener.class)
 public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
     // User credentials for all calls to MarkLogic by the Spark connector

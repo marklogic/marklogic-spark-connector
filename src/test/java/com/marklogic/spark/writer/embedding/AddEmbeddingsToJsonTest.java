@@ -208,25 +208,49 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
     @Test
     void testBatchSize() {
-        TestEmbeddingModel.batchCounter = 0;
-        
+        TestEmbeddingModel.reset();
+
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
-            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 300)
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
-            .option(Options.WRITE_EMBEDDER_BATCH_SIZE, 2)
+            .option(Options.WRITE_EMBEDDER_BATCH_SIZE, 3)
             .mode(SaveMode.Append)
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertEquals(4, doc.get("chunks").size());
+        assertEquals(8, doc.get("chunks").size());
 
-        assertEquals(2, TestEmbeddingModel.batchCounter, "Expecting 2 batches to be sent to the test " +
+        assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 2 batches to be sent to the test " +
             "embedding model, given the batch size of 2 and 4 chunks being created.");
+    }
+
+    @Test
+    void batchSizeIsHigherThanChunkCount() {
+        TestEmbeddingModel.reset();
+
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BATCH_SIZE, 10)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(1, TestEmbeddingModel.batchCounter, "Verifies that a single batch is sent, as the batch size is " +
+            "higher then the total number of chunks. Debug logging should show the count of pending source documents " +
+            "when the job is about to finish and should indicate that embeddings are generated for each one.");
+        assertEquals(4, TestEmbeddingModel.chunkCounter);
     }
 
     @Test

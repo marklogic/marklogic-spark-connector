@@ -8,6 +8,7 @@ import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.writer.DocumentProcessor;
 import com.marklogic.spark.writer.dom.XPathNamespaceContext;
+import com.marklogic.spark.writer.splitter.SplitterDocumentProcessor;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
@@ -17,12 +18,12 @@ import java.util.function.Function;
 
 public abstract class EmbedderDocumentProcessorFactory {
 
-    public static Optional<DocumentProcessor> makeEmbedder(ContextSupport context) {
+    public static Optional<DocumentProcessor> makeEmbedder(ContextSupport context, SplitterDocumentProcessor splitter) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             ChunkSelector chunkSelector = makeChunkSelector(context);
             EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context);
-            return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingGenerator));
+            return Optional.of(new EmbedderDocumentProcessor(chunkSelector, embeddingGenerator, splitter));
         }
         return Optional.empty();
     }
