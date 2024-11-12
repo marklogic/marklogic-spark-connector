@@ -7,14 +7,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
-import com.marklogic.junit5.spring.SimpleTestConfig;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>
  * Use this as the base class for all tests that need to connect to MarkLogic.
  */
+@ContextConfiguration(classes = {TestConfig.class})
 public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTest {
 
     // User credentials for all calls to MarkLogic by the Spark connector
@@ -49,27 +51,19 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
      * operations requiring an admin-like user.
      */
     @Autowired
-    protected SimpleTestConfig testConfig;
+    protected TestConfig testConfig;
 
     protected SparkSession sparkSession;
+
+    @BeforeEach
+    void logConnectionString() {
+        logger.info("Default connection string: {}", makeClientUri());
+    }
 
     @AfterEach
     public void closeSparkSession() {
         if (sparkSession != null) {
             sparkSession.close();
-        }
-        smallDelayUntilNextTest();
-    }
-
-    // Tell Sonar not to worry about this for now.
-    @SuppressWarnings({"java:S2925"})
-    private void smallDelayUntilNextTest() {
-        // Hopefully a temporary hack to see if we get fewer random failures on Jenkins due to connectivity issues that
-        // are likely due to Docker restarting MarkLogic due to insufficient memory.
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // No need to handle.
         }
     }
 

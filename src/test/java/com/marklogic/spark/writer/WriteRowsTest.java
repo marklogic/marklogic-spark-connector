@@ -77,7 +77,8 @@ class WriteRowsTest extends AbstractWriteTest {
         DataFrameWriter writer = newWriter(2)
             .option(Options.WRITE_THREAD_COUNT_PER_PARTITION, 8)
             .option(Options.WRITE_BATCH_SIZE, 10)
-            .option(Options.CLIENT_URI, "spark-test-user:spark@localhost:8016/Documents");
+            .option(Options.CLIENT_URI, String.format("spark-test-user:spark@%s:%d/Documents",
+                testConfig.getHost(), testConfig.getRestPort()));
 
         SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertNull(ex.getCause(), "Surprisingly, in this scenario where the exception is thrown during the " +
