@@ -33,7 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -100,8 +99,48 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
+        buildAndWriteDocuments(rowConverter.convertRow(row));
+    }
 
-        Iterator<DocBuilder.DocumentInputs> iterator = rowConverter.convertRow(row);
+    @Override
+    public WriterCommitMessage commit() {
+        // The RDF row converter may have "pending" rows as it has not yet reached the max number of triples to include
+        // in a document. Those are retrieved here.
+        buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
+
+        this.writeBatcher.flushAndWait();
+
+        throwWriteFailureIfExists();
+
+        Set<String> graphs = getGraphNames();
+        return new CommitMessage(successItemCount.get(), failedItemCount.get(), graphs);
+    }
+
+    @Override
+    public void abort() {
+        Util.MAIN_LOGGER.warn("Abort called.");
+        stopJobAndRelease();
+        closeArchiveWriter();
+        Util.MAIN_LOGGER.info("Finished abort.");
+    }
+
+    @Override
+    public void close() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("Close called.");
+        }
+        stopJobAndRelease();
+        closeArchiveWriter();
+    }
+
+    /**
+     * Processes the document inputs returned by the RowConverter for a single row. A row can return multiple instances
+     * of document inputs. Each instance is run through the document processor if it's not null, which can produce
+     * additional documents.
+     *
+     * @param iterator
+     */
+    private void buildAndWriteDocuments(Iterator<DocBuilder.DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
                 DocumentWriteOperation sourceDocument = this.docBuilder.build(documentInputs);
@@ -128,44 +167,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
     }
 
-    @Override
-    public WriterCommitMessage commit() {
-        List<DocBuilder.DocumentInputs> documentInputs = rowConverter.getRemainingDocumentInputs();
-        if (documentInputs != null) {
-            documentInputs.forEach(inputs -> {
-                DocumentWriteOperation writeOp = this.docBuilder.build(inputs);
-                this.writeBatcher.add(writeOp);
-            });
-        }
-        this.writeBatcher.flushAndWait();
-
-        throwWriteFailureIfExists();
-
-        // Need this hack so that the complete set of graphs can be reported back to MarkLogicWrite, which handles
-        // creating the graphs after all documents have been written.
-        Set<String> graphs = null;
-        if (this.rowConverter instanceof RdfRowConverter) {
-            graphs = ((RdfRowConverter) rowConverter).getGraphs();
-        }
-
-        return new CommitMessage(successItemCount.get(), failedItemCount.get(), graphs);
-    }
-
-    @Override
-    public void abort() {
-        Util.MAIN_LOGGER.warn("Abort called.");
-        stopJobAndRelease();
-        closeArchiveWriter();
-        Util.MAIN_LOGGER.info("Finished abort.");
-    }
-
-    @Override
-    public void close() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Close called.");
-        }
-        stopJobAndRelease();
-        closeArchiveWriter();
+    /**
+     * This provides a mechanism for capturing the list of graph names detected while processing RDF rows. These need
+     * to be sent back to MarkLogicWrite, where each graph is written to MarkLogic as a graph document.
+     *
+     * @return
+     */
+    private Set<String> getGraphNames() {
+        return this.rowConverter instanceof RdfRowConverter ?
+            ((RdfRowConverter) rowConverter).getGraphs() :
+            null;
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {

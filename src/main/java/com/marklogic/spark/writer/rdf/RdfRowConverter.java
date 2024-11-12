@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -87,10 +86,10 @@ public class RdfRowConverter implements RowConverter {
      * @return
      */
     @Override
-    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
         return this.triplesDocuments.values().stream()
             .map(TriplesDocument::buildDocument)
-            .collect(Collectors.toList());
+            .iterator();
     }
 
     /**
