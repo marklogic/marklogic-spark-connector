@@ -1,0 +1,21 @@
+# See https://caddyserver.com/docs/caddyfile-tutorial for more information.
+
+:8115 {
+  reverse_proxy marklogic:8015 {
+    transport http {
+      dial_timeout 31s
+    }
+    # Required for MLCP to work; "ip_hash" also works.
+    # See https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#load-balancing for more information.
+    lb_policy cookie
+  }
+}
+
+:8116 {
+  reverse_proxy marklogic:8016 {
+    transport http {
+      dial_timeout 31s
+    }
+    lb_policy cookie
+  }
+}

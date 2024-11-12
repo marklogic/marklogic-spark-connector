@@ -2,6 +2,18 @@ name: marklogic_spark
 
 services:
 
+  # See https://caddyserver.com/docs/quick-starts/reverse-proxy for more information on using Caddy as a reverse proxy
+  # and load balancer.
+  caddy-load-balancer:
+    image: caddy:2-alpine
+    volumes:
+      - ./caddy/data:/data
+      - ./caddy/config/Caddyfile:/etc/caddy/Caddyfile
+    ports:
+      # Expand this range as needed. See Caddyfile for which ports are used for reverse proxies.
+      - "8115:8115"
+      - "8116:8116"
+
   marklogic:
     image: "${MARKLOGIC_TAG}"
     platform: linux/amd64
