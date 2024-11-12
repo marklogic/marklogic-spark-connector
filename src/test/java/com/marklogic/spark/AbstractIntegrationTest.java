@@ -58,6 +58,19 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
         if (sparkSession != null) {
             sparkSession.close();
         }
+        smallDelayUntilNextTest();
+    }
+
+    // Tell Sonar not to worry about this for now.
+    @SuppressWarnings({"java:S2925"})
+    private void smallDelayUntilNextTest() {
+        // Hopefully a temporary hack to see if we get fewer random failures on Jenkins due to connectivity issues that
+        // are likely due to Docker restarting MarkLogic due to insufficient memory.
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // No need to handle.
+        }
     }
 
     @Override

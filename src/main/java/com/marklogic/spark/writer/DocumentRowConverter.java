@@ -24,9 +24,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -60,8 +58,8 @@ class DocumentRowConverter implements RowConverter {
     }
 
     @Override
-    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return new ArrayList<>();
+    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
     }
 
     private Iterator<DocBuilder.DocumentInputs> readContentFromRow(String uri, InternalRow row) {

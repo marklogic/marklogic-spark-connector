@@ -13,9 +13,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.DataTypes;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -44,8 +42,8 @@ class FileRowConverter implements RowConverter {
     }
 
     @Override
-    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return new ArrayList<>();
+    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
     }
 
     // Telling Sonar to not tell us to remove this code, since we can't until 3.0.

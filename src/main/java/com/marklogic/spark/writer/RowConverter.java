@@ -6,7 +6,6 @@ package com.marklogic.spark.writer;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * Strategy interface for how a Spark row is converted into a set of inputs for writing a document to MarkLogic.
@@ -26,5 +25,5 @@ public interface RowConverter {
      *
      * @return
      */
-    List<DocBuilder.DocumentInputs> getRemainingDocumentInputs();
+    Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs();
 }

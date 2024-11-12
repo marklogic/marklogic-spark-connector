@@ -19,9 +19,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -108,8 +106,8 @@ class ArbitraryRowConverter implements RowConverter {
     }
 
     @Override
-    public List<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return new ArrayList<>();
+    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
     }
 
     /**
