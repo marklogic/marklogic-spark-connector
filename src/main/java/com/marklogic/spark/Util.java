@@ -18,6 +18,12 @@ public interface Util {
      */
     Logger MAIN_LOGGER = LoggerFactory.getLogger("com.marklogic.spark");
 
+    /**
+     * Intended for log messages pertaining to the embedder feature. Uses a separate logger so that it can be enabled
+     * at the info/debug level without enabling any other log messages.
+     */
+    Logger EMBEDDER_LOGGER = LoggerFactory.getLogger("com.marklogic.spark.embedder");
+
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
             .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);

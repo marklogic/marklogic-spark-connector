@@ -13,7 +13,7 @@ import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.writer.JsonUtil;
 import com.marklogic.spark.writer.embedding.Chunk;
-import com.marklogic.spark.writer.embedding.EmbeddingGenerator;
+import com.marklogic.spark.writer.embedding.DocumentAndChunks;
 import com.marklogic.spark.writer.embedding.JsonChunk;
 import dev.langchain4j.data.segment.TextSegment;
 
@@ -25,12 +25,10 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private static final String DEFAULT_CHUNKS_ARRAY_NAME = "chunks";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final EmbeddingGenerator embeddingGenerator;
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                              List<TextSegment> textSegments, ChunkConfig chunkConfig, EmbeddingGenerator embeddingGenerator) {
+                              List<TextSegment> textSegments, ChunkConfig chunkConfig) {
         super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
-        this.embeddingGenerator = embeddingGenerator;
     }
 
     @Override
@@ -46,9 +44,11 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             chunk.put("text", text);
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         });
-        addEmbeddingsToChunks(chunks);
 
-        return new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc));
+        return new DocumentAndChunks(
+            new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc)),
+            chunks
+        );
     }
 
     @Override
@@ -69,16 +69,12 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             chunk.put("text", text);
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         }
-        addEmbeddingsToChunks(chunks);
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "json");
-        return new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc));
-    }
-
-    private void addEmbeddingsToChunks(List<Chunk> chunks) {
-        if (this.embeddingGenerator != null) {
-            this.embeddingGenerator.addEmbeddings(chunks);
-        }
+        return new DocumentAndChunks(
+            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc)),
+            chunks
+        );
     }
 
     private String determineChunksArrayName(ObjectNode doc) {

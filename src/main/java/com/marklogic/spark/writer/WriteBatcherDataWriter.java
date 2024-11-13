@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -108,6 +109,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         // in a document. Those are retrieved here.
         buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
 
+        flushDocumentProcessor();
+
         this.writeBatcher.flushAndWait();
 
         throwWriteFailureIfExists();
@@ -177,6 +180,18 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return this.rowConverter instanceof RdfRowConverter ?
             ((RdfRowConverter) rowConverter).getGraphs() :
             null;
+    }
+
+    /**
+     * A document processor can implement Supplier so that it can batch up documents to be written and then return
+     * any pending documents during the commit operation. This allows for the embedder processor to batch calls to the
+     * embedding model.
+     */
+    private void flushDocumentProcessor() {
+        if (this.documentProcessor instanceof Supplier) {
+            Iterator<DocumentWriteOperation> remainingDocuments = ((Supplier<Iterator<DocumentWriteOperation>>) this.documentProcessor).get();
+            remainingDocuments.forEachRemaining(this::writeDocument);
+        }
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {

@@ -20,18 +20,20 @@ import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DOMChunkSelector implements ChunkSelector {
+class DOMChunkSelector implements ChunkSelector {
 
     private final XPathFactory xpathFactory;
     private final XPathExpression chunksExpression;
     private final XmlChunkConfig xmlChunkConfig;
     private final DOMHelper domHelper;
 
-    public DOMChunkSelector(String chunksExpression, XmlChunkConfig xmlChunkConfig) {
+    DOMChunkSelector(String chunksExpression, XmlChunkConfig xmlChunkConfig) {
         this.xpathFactory = XPathFactory.newInstance();
         this.xmlChunkConfig = xmlChunkConfig;
         this.domHelper = new DOMHelper(xmlChunkConfig.getNamespaceContext());
-        this.chunksExpression = domHelper.compileXPath(chunksExpression, "selecting chunks");
+
+        String chunksXPath = chunksExpression != null ? chunksExpression : "/node()/chunks";
+        this.chunksExpression = domHelper.compileXPath(chunksXPath, "selecting chunks");
     }
 
     @Override

@@ -34,7 +34,11 @@ class EmbedderTest extends AbstractIntegrationTest {
     @Test
     void defaultPaths() {
         SplitterDocumentProcessor splitter = newJsonSplitter(500, 2, "/text");
-        Iterator<DocumentWriteOperation> docs = splitter.apply(readJsonDocument());
+        EmbedderDocumentProcessor embedder = new EmbedderDocumentProcessor(
+            new JsonChunkSelector.Builder().build(), new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()), splitter
+        );
+
+        Iterator<DocumentWriteOperation> docs = embedder.apply(readJsonDocument());
 
         // Skip the first doc, which is the source document that doesn't have any chunks.
         docs.next();
@@ -62,7 +66,8 @@ class EmbedderTest extends AbstractIntegrationTest {
                 .withTextPointer("/wrapper/custom-text")
                 .withEmbeddingArrayName("custom-embedding")
                 .build(),
-            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
+            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()),
+            null
         );
 
         DocumentWriteOperation output = embedder.apply(new DocumentWriteOperationImpl("a.json", null, new JacksonHandle(doc))).next();
@@ -77,7 +82,12 @@ class EmbedderTest extends AbstractIntegrationTest {
     @Test
     void xml() {
         SplitterDocumentProcessor splitter = newXmlSplitter(500, 2, "/node()/text");
-        Iterator<DocumentWriteOperation> docs = splitter.apply(readXmlDocument());
+        EmbedderDocumentProcessor embedder = new EmbedderDocumentProcessor(
+            new DOMChunkSelector(null, new XmlChunkConfig()),
+            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()), splitter
+        );
+
+        Iterator<DocumentWriteOperation> docs = embedder.apply(readXmlDocument());
 
         // Skip the source document.
         docs.next();
@@ -109,8 +119,7 @@ class EmbedderTest extends AbstractIntegrationTest {
             new JsonPointerTextSelector(jsonPointers, null),
             DocumentSplitters.recursive(maxChunkSize, 0),
             new DefaultChunkAssembler(
-                new ChunkConfig.Builder().withMaxChunks(maxChunks).build(),
-                new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
+                new ChunkConfig.Builder().withMaxChunks(maxChunks).build()
             )
         );
     }
@@ -120,8 +129,7 @@ class EmbedderTest extends AbstractIntegrationTest {
             new DOMTextSelector(xpath, null),
             DocumentSplitters.recursive(maxChunkSize, 0),
             new DefaultChunkAssembler(
-                new ChunkConfig.Builder().withMaxChunks(maxChunks).build(),
-                new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
+                new ChunkConfig.Builder().withMaxChunks(maxChunks).build()
             )
         );
     }

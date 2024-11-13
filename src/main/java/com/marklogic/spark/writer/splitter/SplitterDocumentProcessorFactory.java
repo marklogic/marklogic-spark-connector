@@ -7,9 +7,7 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
-import com.marklogic.spark.writer.DocumentProcessor;
 import com.marklogic.spark.writer.dom.XPathNamespaceContext;
-import com.marklogic.spark.writer.embedding.EmbedderDocumentProcessorFactory;
 import dev.langchain4j.data.document.DocumentSplitter;
 
 import java.util.Arrays;
@@ -17,7 +15,7 @@ import java.util.Optional;
 
 public abstract class SplitterDocumentProcessorFactory {
 
-    public static Optional<DocumentProcessor> makeSplitter(ContextSupport context) {
+    public static Optional<SplitterDocumentProcessor> makeSplitter(ContextSupport context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
             return Optional.of(makeXmlSplitter(context));
         } else if (context.getProperties().containsKey(Options.WRITE_SPLITTER_JSON_POINTERS)) {
@@ -91,8 +89,7 @@ public abstract class SplitterDocumentProcessorFactory {
             .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_PREFIX))
             .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
             .withXmlNamespace(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
-            .build(),
-            EmbedderDocumentProcessorFactory.makeEmbeddingGenerator(context)
+            .build()
         );
     }
 

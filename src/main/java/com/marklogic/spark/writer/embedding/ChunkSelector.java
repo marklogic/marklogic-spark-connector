@@ -5,8 +5,6 @@ package com.marklogic.spark.writer.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 
-import java.util.List;
-
 /**
  * Abstracts how chunks are selected from a JSON or XML document.
  */
@@ -19,22 +17,4 @@ public interface ChunkSelector {
      */
     DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument);
 
-    class DocumentAndChunks {
-
-        private final DocumentWriteOperation documentToWrite;
-        private final List<Chunk> chunks;
-
-        DocumentAndChunks(DocumentWriteOperation documentToWrite, List<Chunk> chunks) {
-            this.documentToWrite = documentToWrite;
-            this.chunks = chunks;
-        }
-
-        public DocumentWriteOperation getDocumentToWrite() {
-            return documentToWrite;
-        }
-
-        public List<Chunk> getChunks() {
-            return chunks;
-        }
-    }
 }
