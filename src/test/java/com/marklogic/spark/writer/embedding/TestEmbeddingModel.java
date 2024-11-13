@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.embedding;
 
+import com.marklogic.langchain4j.embedding.Chunk;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
@@ -16,12 +17,12 @@ import java.util.function.Function;
 /**
  * Used for testing the embedder batch size feature.
  */
-class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, String>, EmbeddingModel> {
+public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, String>, EmbeddingModel> {
 
-    static int batchCounter;
-    static int chunkCounter;
+    public static int batchCounter;
+    public static int chunkCounter;
 
-    static void reset() {
+    public static void reset() {
         batchCounter = 0;
         chunkCounter = 0;
     }
@@ -38,11 +39,11 @@ class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, String>
         return Response.from(Arrays.asList(new Embedding(new float[]{1})));
     }
 
-    static class TestChunk implements Chunk {
+    public static class TestChunk implements Chunk {
 
         private final String text;
 
-        TestChunk(String text) {
+        public TestChunk(String text) {
             this.text = text;
         }
 

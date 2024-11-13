@@ -36,6 +36,7 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -63,7 +64,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
-    private final DocumentProcessor documentProcessor;
+    private final Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> documentProcessor;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
