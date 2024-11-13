@@ -13,6 +13,7 @@ import dev.langchain4j.model.output.Response;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 class EmbeddingGenerator {
@@ -22,6 +23,10 @@ class EmbeddingGenerator {
 
     private final EmbeddingModel embeddingModel;
     private final int batchSize;
+
+    // Only used for debug logging.
+    private static final AtomicLong tokenCount = new AtomicLong(0);
+    private static final AtomicLong requestCount = new AtomicLong(0);
 
     private List<Chunk> pendingChunks = new ArrayList<>();
 
@@ -82,18 +87,46 @@ class EmbeddingGenerator {
     }
 
     private void addEmbeddingsToChunks(List<Chunk> chunks) {
-        List<TextSegment> textSegments = chunks.stream()
+        List<TextSegment> textSegments = makeTextSegments(chunks);
+        Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
+        logResponse(response, textSegments);
+
+        if (response.content() == null) {
+            Util.EMBEDDER_LOGGER.warn("Sent {} chunks; no embeddings were returned; finish reason: {}",
+                textSegments.size(), response.finishReason());
+        } else {
+            List<Embedding> embeddings = response.content();
+            for (int i = 0; i < embeddings.size(); i++) {
+                chunks.get(i).addEmbedding(embeddings.get(i));
+            }
+        }
+    }
+
+    private List<TextSegment> makeTextSegments(List<Chunk> chunks) {
+        return chunks.stream()
             .map(chunk -> new TextSegment(chunk.getEmbeddingText(), TEXT_SEGMENT_METADATA))
             .collect(Collectors.toList());
+    }
 
-        Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
+    private void logResponse(Response<List<Embedding>> response, List<TextSegment> textSegments) {
         if (Util.EMBEDDER_LOGGER.isInfoEnabled()) {
-            Util.EMBEDDER_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
-        }
+            // Not every embedding model provides token usage.
+            if (response.tokenUsage() != null) {
+                Util.EMBEDDER_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
+            } else {
+                Util.EMBEDDER_LOGGER.info("Sent {} chunks", textSegments.size());
+            }
 
-        List<Embedding> embeddings = response.content();
-        for (int i = 0; i < embeddings.size(); i++) {
-            chunks.get(i).addEmbedding(embeddings.get(i));
+            if (Util.EMBEDDER_LOGGER.isDebugEnabled()) {
+                long totalRequests = requestCount.incrementAndGet();
+                if (response.tokenUsage() != null) {
+                    Util.EMBEDDER_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
+                        tokenCount.addAndGet(response.tokenUsage().inputTokenCount())
+                    );
+                } else {
+                    Util.EMBEDDER_LOGGER.debug("Requests: {}", totalRequests);
+                }
+            }
         }
     }
 }
