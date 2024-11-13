@@ -127,23 +127,131 @@ public abstract class Options {
     // Example - "spark.marklogic.write.json.ignoreNullFields=false.
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
-    // Add @since annotations before we release.
+    /**
+     * Enables the splitter feature by defining an XPath expression for selecting text to split in a document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_XPATH = "spark.marklogic.write.splitter.xpath";
-    public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
-    public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
-    public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
-    public static final String WRITE_SPLITTER_REGEX = "spark.marklogic.write.splitter.regex";
-    public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
+
+    /**
+     * Enables the splitter feature by defining one or more newline-delimited JSON Pointer expressions for selecting
+     * text to split in a document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_JSON_POINTERS = "spark.marklogic.write.splitter.jsonPointers";
+
+    /**
+     * Enables the splitter feature by declaring that all the text in a document should be split. This is typically for
+     * text documents, but could be used for JSON and XML as well.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
+
+    /**
+     * Defines the maximum chunk size in characters. Defaults to 1000.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
+
+    /**
+     * Defines the maximum overlap size in characters between two chunks. Defaults to 0.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
+
+    /**
+     * Defines a regex for splitting text into chunks. The default strategy is langchain4's "recursive" strategy that
+     * splits on paragraphs, sentences, lines, and words.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_SPLITTER_REGEX = "spark.marklogic.write.splitter.regex";
+
+    /**
+     * Defines a delimiter for usage with the splitter regex option. The delimiter joins together two or more chunks
+     * identified via the regex to produce a chunk that is as close as possible to the maximum chunk size.
+     *
+     * @since 2.5.0
+     */
+    public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
+
+    /**
+     * Defines the class name of an implementation of langchain4j's {@code dev.langchain4j.data.document.DocumentSplitter}
+     * interface to be used for splitting the selected text into chunks.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_CUSTOM_CLASS = "spark.marklogic.write.splitter.customClass";
+
+    /**
+     * Defines one or more options to pass in a {@code Map<String, String>} to the constructor of the custom splitter
+     * class.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX = "spark.marklogic.write.splitter.customClass.option.";
+
+    /**
+     * Configures the connector to write chunks to separate "sidecar" documents instead of to the source document (the
+     * default behavior). Defines the maximum number of chunks to write to a sidecar document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_MAX_CHUNKS = "spark.marklogic.write.splitter.sidecar.maxChunks";
+
+    /**
+     * Defines the type - either JSON or XML - of each chunk document. Defaults to the type of the source document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE = "spark.marklogic.write.splitter.sidecar.documentType";
+
+    /**
+     * Comma-delimited list of collections to assign to each chunk document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_COLLECTIONS = "spark.marklogic.write.splitter.sidecar.collections";
+
+    /**
+     * Comma-delimited list of roles and capabilities to assign to each chunk document. If not defined, chunk documents
+     * will inherit the permissions defined by {@code WRITE_PERMISSIONS}.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_PERMISSIONS = "spark.marklogic.write.splitter.sidecar.permissions";
+
+    /**
+     * Root name for a JSON or XML sidecar chunk document.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_ROOT_NAME = "spark.marklogic.write.splitter.sidecar.rootName";
+
+    /**
+     * URI prefix for each sidecar chunk document. If defined, will be followed by a UUID.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_URI_PREFIX = "spark.marklogic.write.splitter.sidecar.uriPrefix";
+
+    /**
+     * URI suffix for each sidecar chunk document. If defined, will be preceded by a UUID.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_URI_SUFFIX = "spark.marklogic.write.splitter.sidecar.uriSuffix";
+
+    /**
+     * Namespace for XML sidecar chunk documents.
+     *
+     * @since 2.5.0
+     */
     public static final String WRITE_SPLITTER_SIDECAR_XML_NAMESPACE = "spark.marklogic.write.splitter.sidecar.xmlNamespace";
 
     // For writing RDF
