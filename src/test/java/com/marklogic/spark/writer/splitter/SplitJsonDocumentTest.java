@@ -250,7 +250,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     @Test
     void customSplitter() {
         prepareToWriteChunkDocuments()
-            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.CustomSplitter")
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.CustomSplitter")
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX + "textToReturn", "this is a test")
             .mode(SaveMode.Append)
             .save();
@@ -264,7 +264,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     @Test
     void customSplitterNoClassOptions() {
         prepareToWriteChunkDocuments()
-            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.CustomSplitter")
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.CustomSplitter")
             .mode(SaveMode.Append)
             .save();
 
@@ -285,11 +285,11 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     @Test
     void customSplitterNotADocumentSplitter() {
         DataFrameWriter writer = prepareToWriteChunkDocuments()
-            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.BadCustomSplitter")
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.BadCustomSplitter")
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
-        assertEquals("Cannot create custom splitter with class name: com.marklogic.spark.writer.splitter.BadCustomSplitter; " +
+        assertEquals("Cannot create custom splitter with class name: com.marklogic.langchain4j.splitter.BadCustomSplitter; " +
                 "the class must have a public constructor that accepts a java.util.Map<String, String>.",
             ex.getMessage());
     }
