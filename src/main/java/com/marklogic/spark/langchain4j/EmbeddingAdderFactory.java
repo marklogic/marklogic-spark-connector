@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.langchain4j;
 
-import com.marklogic.langchain4j.dom.XPathNamespaceContext;
 import com.marklogic.langchain4j.embedding.*;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;
@@ -77,7 +76,7 @@ public abstract class EmbeddingAdderFactory {
             context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
             context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
             context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
-            new XPathNamespaceContext(context.getProperties())
+            NamespaceContextFactory.makeNamespaceContext(context.getProperties())
         );
         return new DOMChunkSelector(
             context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH),

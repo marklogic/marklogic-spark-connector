@@ -4,7 +4,6 @@
 package com.marklogic.spark.langchain4j;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.langchain4j.dom.XPathNamespaceContext;
 import com.marklogic.langchain4j.splitter.*;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
@@ -41,7 +40,7 @@ public abstract class DocumentTextSplitterFactory {
 
     private static TextSelector makeXmlTextSelector(ContextSupport context) {
         String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
-        return new DOMTextSelector(xpath, new XPathNamespaceContext(context.getProperties()));
+        return new DOMTextSelector(xpath, NamespaceContextFactory.makeNamespaceContext(context.getProperties()));
     }
 
     private static DocumentTextSplitter makeJsonSplitter(ContextSupport context) {

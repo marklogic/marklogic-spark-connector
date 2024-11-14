@@ -8,8 +8,8 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.langchain4j.dom.XPathNamespaceContext;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -61,7 +61,7 @@ class DOMChunkSelectorTest {
         Map<String, String> properties = new HashMap<>();
         properties.put(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example");
 
-        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, new XPathNamespaceContext(properties));
+        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, NamespaceContextFactory.makeNamespaceContext(properties));
         List<Chunk> chunks = new DOMChunkSelector("/ex:root/ex:chunk", xmlChunkConfig).selectChunks(makeDocument(NAMESPACED_XML)).getChunks();
         assertNotNull(chunks);
         assertEquals(1, chunks.size());

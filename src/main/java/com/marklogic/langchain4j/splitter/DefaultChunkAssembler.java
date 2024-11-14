@@ -10,7 +10,7 @@ import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.Util;
+import com.marklogic.langchain4j.Util;
 import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.Iterator;
@@ -29,7 +29,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments) {
         final Format sourceDocumentFormat = determineSourceDocumentFormat(sourceDocument);
         if (sourceDocumentFormat == null) {
-            Util.MAIN_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
+            Util.LANGCHAIN4J_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
             return Stream.of(sourceDocument).iterator();
         }
 

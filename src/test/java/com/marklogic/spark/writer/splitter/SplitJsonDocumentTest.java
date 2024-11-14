@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -134,7 +136,8 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "not-valid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException sparkException = assertThrows(SparkException.class, () -> writer.save());
+        MarkLogicLangchainException ex = (MarkLogicLangchainException) sparkException.getCause();
         assertEquals("Unable to use JSON pointer expression: not-valid; cause: Invalid input: " +
                 "JSON Pointer expression must start with '/': \"not-valid\"",
             ex.getMessage());

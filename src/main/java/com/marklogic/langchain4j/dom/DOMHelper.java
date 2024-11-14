@@ -7,7 +7,7 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.ConnectorException;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -50,7 +50,7 @@ public class DOMHelper {
         try {
             return getDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {
-            throw new ConnectorException(String.format("Unable to parse XML for document with URI: %s; cause: %s",
+            throw new MarkLogicLangchainException(String.format("Unable to parse XML for document with URI: %s; cause: %s",
                 sourceDocument.getUri(), e.getMessage()), e);
         }
     }
@@ -69,7 +69,7 @@ public class DOMHelper {
             return xpath.compile(xpathExpression);
         } catch (XPathExpressionException e) {
             String message = massageXPathCompilationError(e.getMessage());
-            throw new ConnectorException(String.format(
+            throw new MarkLogicLangchainException(String.format(
                 "Unable to compile XPath expression for %s: %s; cause: %s",
                 purposeForErrorMessage, xpathExpression, message), e
             );
@@ -89,7 +89,7 @@ public class DOMHelper {
             try {
                 this.documentBuilder = this.documentBuilderFactory.newDocumentBuilder();
             } catch (ParserConfigurationException e) {
-                throw new ConnectorException(String.format("Unable to create XML document; cause: %s", e.getMessage()), e);
+                throw new MarkLogicLangchainException(String.format("Unable to create XML document; cause: %s", e.getMessage()), e);
             }
         }
         return this.documentBuilder;

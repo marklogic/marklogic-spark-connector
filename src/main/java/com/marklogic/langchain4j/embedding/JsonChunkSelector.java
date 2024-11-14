@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.JacksonHandle;
-import com.marklogic.langchain4j.JsonUtil;
+import com.marklogic.langchain4j.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +60,7 @@ public class JsonChunkSelector implements ChunkSelector {
 
     @Override
     public DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument) {
-        JsonNode doc = JsonUtil.getJsonFromHandle(sourceDocument.getContent());
+        JsonNode doc = Util.getJsonFromHandle(sourceDocument.getContent());
 
         JsonNode chunksNode = doc.at(chunksPointer);
         if (chunksNode == null || (!(chunksNode instanceof ArrayNode) && !(chunksNode instanceof ObjectNode))) {
