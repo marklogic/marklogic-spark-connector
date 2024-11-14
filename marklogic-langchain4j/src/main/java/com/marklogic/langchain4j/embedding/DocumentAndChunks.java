@@ -6,7 +6,6 @@ package com.marklogic.langchain4j.embedding;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.client.io.marker.DocumentMetadataWriteHandle;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -64,7 +63,7 @@ public class DocumentAndChunks implements DocumentWriteOperation {
     }
 
     @Override
-    public int compareTo(@NotNull DocumentWriteOperation o) {
+    public int compareTo(DocumentWriteOperation o) {
         return documentToWrite.compareTo(o);
     }
 }

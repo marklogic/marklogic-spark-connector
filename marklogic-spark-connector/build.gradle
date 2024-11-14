@@ -34,7 +34,7 @@ dependencies {
     exclude module: "rocksdbjni"
   }
 
-  shadowDependencies ("com.marklogic:marklogic-client-api:7.0.0") {
+  shadowDependencies (project(":marklogic-langchain4j")) {
     // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
     // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
     // So the 4 Jackson modules are excluded to allow for Spark's to be used.
@@ -57,17 +57,11 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // Supports splitting documents.
-  shadowDependencies "dev.langchain4j:langchain4j:0.35.0"
-
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
-
-  // Needed for splitting XML documents via XPath.
-  shadowDependencies "jaxen:jaxen:2.0.0"
 
   testImplementation ('com.marklogic:ml-app-deployer:5.0.0') {
     exclude group: "com.fasterxml.jackson.core"
