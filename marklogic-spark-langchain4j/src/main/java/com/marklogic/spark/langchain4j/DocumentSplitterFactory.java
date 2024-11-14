@@ -4,7 +4,7 @@
 package com.marklogic.spark.langchain4j;
 
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
@@ -16,7 +16,7 @@ import java.util.Map;
 
 public abstract class DocumentSplitterFactory {
 
-    public static DocumentSplitter makeDocumentSplitter(ContextSupport context) {
+    public static DocumentSplitter makeDocumentSplitter(Context context) {
         if (context.hasOption(Options.WRITE_SPLITTER_CUSTOM_CLASS)) {
             return makeCustomSplitter(context);
         }
@@ -36,7 +36,7 @@ public abstract class DocumentSplitterFactory {
         }
     }
 
-    private static DocumentSplitter makeCustomSplitter(ContextSupport context) {
+    private static DocumentSplitter makeCustomSplitter(Context context) {
         String className = context.getStringOption(Options.WRITE_SPLITTER_CUSTOM_CLASS);
         Map<String, String> options = new HashMap<>();
         context.getProperties().keySet().stream()
@@ -55,14 +55,14 @@ public abstract class DocumentSplitterFactory {
         }
     }
 
-    private static DocumentSplitter makeDefaultSplitter(ContextSupport context) {
+    private static DocumentSplitter makeDefaultSplitter(Context context) {
         return DocumentSplitters.recursive(
             getMaxChunkSize(context),
             getMaxOverlapSize(context)
         );
     }
 
-    private static DocumentSplitter makeRegexSplitter(ContextSupport context) {
+    private static DocumentSplitter makeRegexSplitter(Context context) {
         String regex = context.getStringOption(Options.WRITE_SPLITTER_REGEX);
         String joinDelimiter = context.getStringOption(Options.WRITE_SPLITTER_JOIN_DELIMITER, " ");
         DocumentSplitter splitter = new DocumentByRegexSplitter(regex, joinDelimiter, getMaxChunkSize(context), getMaxOverlapSize(context));
@@ -76,11 +76,11 @@ public abstract class DocumentSplitterFactory {
         return splitter;
     }
 
-    private static int getMaxChunkSize(ContextSupport context) {
+    private static int getMaxChunkSize(Context context) {
         return context.getIntOption(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000, 0);
     }
 
-    private static int getMaxOverlapSize(ContextSupport context) {
+    private static int getMaxOverlapSize(Context context) {
         return context.getIntOption(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0, 0);
     }
 
@@ -88,7 +88,7 @@ public abstract class DocumentSplitterFactory {
      * langchain4j does a nice job with validating inputs, but we don't want langchain4j-specific argument names to
      * appear in our error messages.
      */
-    private static String massageLangchain4jError(ContextSupport context, String message) {
+    private static String massageLangchain4jError(Context context, String message) {
         if (message.contains("maxChunkSize")) {
             String optionName = context.getOptionNameForMessage(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE);
             message = message.replace("maxChunkSize", optionName);

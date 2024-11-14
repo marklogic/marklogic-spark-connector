@@ -5,7 +5,7 @@ package com.marklogic.spark.langchain4j;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.langchain4j.splitter.*;
-import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import dev.langchain4j.data.document.DocumentSplitter;
@@ -15,7 +15,7 @@ import java.util.Optional;
 
 public abstract class DocumentTextSplitterFactory {
 
-    public static Optional<DocumentTextSplitter> makeSplitter(ContextSupport context) {
+    public static Optional<DocumentTextSplitter> makeSplitter(Context context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
             return Optional.of(makeXmlSplitter(context));
         } else if (context.getProperties().containsKey(Options.WRITE_SPLITTER_JSON_POINTERS)) {
@@ -27,7 +27,7 @@ public abstract class DocumentTextSplitterFactory {
         return Optional.empty();
     }
 
-    private static DocumentTextSplitter makeXmlSplitter(ContextSupport context) {
+    private static DocumentTextSplitter makeXmlSplitter(Context context) {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split XML documents using XPath: {}",
                 context.getStringOption(Options.WRITE_SPLITTER_XPATH));
@@ -38,18 +38,18 @@ public abstract class DocumentTextSplitterFactory {
         return new DocumentTextSplitter(textSelector, splitter, chunkAssembler);
     }
 
-    private static TextSelector makeXmlTextSelector(ContextSupport context) {
+    private static TextSelector makeXmlTextSelector(Context context) {
         String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
         return new DOMTextSelector(xpath, NamespaceContextFactory.makeNamespaceContext(context.getProperties()));
     }
 
-    private static DocumentTextSplitter makeJsonSplitter(ContextSupport context) {
+    private static DocumentTextSplitter makeJsonSplitter(Context context) {
         TextSelector textSelector = makeJsonTextSelector(context);
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
         return new DocumentTextSplitter(textSelector, splitter, makeChunkAssembler(context));
     }
 
-    private static TextSelector makeJsonTextSelector(ContextSupport context) {
+    private static TextSelector makeJsonTextSelector(Context context) {
         String value = context.getProperties().get(Options.WRITE_SPLITTER_JSON_POINTERS);
         String[] pointers = value.split("\n");
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -59,7 +59,7 @@ public abstract class DocumentTextSplitterFactory {
         return new JsonPointerTextSelector(pointers, null);
     }
 
-    private static DocumentTextSplitter makeTextSplitter(ContextSupport context) {
+    private static DocumentTextSplitter makeTextSplitter(Context context) {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
         }
@@ -68,7 +68,7 @@ public abstract class DocumentTextSplitterFactory {
         );
     }
 
-    private static ChunkAssembler makeChunkAssembler(ContextSupport context) {
+    private static ChunkAssembler makeChunkAssembler(Context context) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {
             metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS).split(","));

@@ -4,38 +4,45 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.langchain4j.embedding.EmbeddingAdder;
-import com.marklogic.spark.langchain4j.EmbeddingAdderFactory;
-import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
-import com.marklogic.spark.langchain4j.DocumentTextSplitterFactory;
-import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Context;
+import com.marklogic.spark.Util;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * So we want the marklogic.spark code to refer to the OPtions class and the Spark-specific options.
- * It seems like we need builders here then.
+ * This class exists in preparation for two events. First, upgrading to langchain4j 0.36.x will involve requiring Java
+ * 17, and we don't yet want to force Flux users to use Java 17. Second, we may want to have marklogic-langchain4j be
+ * a separate module that is available as a dependency. This class acts as a bridge, trying to instantiate the
+ * langchain4j-specific class. If that's not on the classpath, that's fine - the splitter/embedder options simply won't
+ * work.
  * <p>
- * OR we really have 3 modules - the connector; the langchain4j module; and then a 3rd module that bridges the two.
+ * At least for the 2.5.0 connector release, everything is being packaged together as we're sticking with langchain4j
+ * 0.35.0 which only requires Java 11.
  */
 abstract class DocumentProcessorFactory {
 
-    static Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> buildDocumentProcessor(ContextSupport context) {
-        // Once we shift to langchain 0.36 or higher and thus need Java 17, this will instead check the classpath
-        // for an optional class for supporting splitting/embedding so that we don't have a tight coupling to
-        // langchain4j.
-        Optional<DocumentTextSplitter> splitter = DocumentTextSplitterFactory.makeSplitter(context);
+    private static final String FACTORY_CLASS_NAME = "com.marklogic.spark.langchain4j.Langchain4jDocumentProcessorFactory";
 
-        Optional<EmbeddingAdder> embedder = EmbeddingAdderFactory.makeEmbedder(
-            context, splitter.isPresent() ? splitter.get() : null
-        );
-
-        if (embedder.isPresent()) {
-            return embedder.get();
+    static Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> buildDocumentProcessor(Context context) {
+        try {
+            Object factory = Class.forName(FACTORY_CLASS_NAME).getDeclaredConstructor().newInstance();
+            Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>> processorFactory = (Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>>) factory;
+            return processorFactory.apply(context);
         }
-        return splitter.isPresent() ? splitter.get() : null;
+        // Catch every checked exception from trying to instantiate the class. Any exception from the factory class
+        // itself is expected to be a RuntimeException that should bubble up.
+        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
+               InvocationTargetException ex) {
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug(
+                    "Unable to instantiate factory class {}; this is expected when the marklogic-spark-langchain4j module is not on the classpath. Cause: {}",
+                    FACTORY_CLASS_NAME, ex.getMessage()
+                );
+            }
+            return null;
+        }
     }
 
     private DocumentProcessorFactory() {

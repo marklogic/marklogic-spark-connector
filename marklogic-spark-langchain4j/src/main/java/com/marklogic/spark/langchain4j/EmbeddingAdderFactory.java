@@ -6,7 +6,7 @@ package com.marklogic.spark.langchain4j;
 import com.marklogic.langchain4j.embedding.*;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.ContextSupport;
+import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
@@ -17,7 +17,7 @@ import java.util.function.Function;
 
 public abstract class EmbeddingAdderFactory {
 
-    public static Optional<EmbeddingAdder> makeEmbedder(ContextSupport context, DocumentTextSplitter splitter) {
+    public static Optional<EmbeddingAdder> makeEmbedder(Context context, DocumentTextSplitter splitter) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             ChunkSelector chunkSelector = makeChunkSelector(context);
@@ -27,7 +27,7 @@ public abstract class EmbeddingAdderFactory {
         return Optional.empty();
     }
 
-    public static EmbeddingGenerator makeEmbeddingGenerator(ContextSupport context) {
+    public static EmbeddingGenerator makeEmbeddingGenerator(Context context) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
@@ -45,7 +45,7 @@ public abstract class EmbeddingAdderFactory {
      * @param context
      * @return
      */
-    private static ChunkSelector makeChunkSelector(ContextSupport context) {
+    private static ChunkSelector makeChunkSelector(Context context) {
         if (context.hasOption(Options.WRITE_SPLITTER_JSON_POINTERS)) {
             return makeJsonChunkSelector(context);
         } else if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
@@ -63,7 +63,7 @@ public abstract class EmbeddingAdderFactory {
         ));
     }
 
-    private static ChunkSelector makeJsonChunkSelector(ContextSupport context) {
+    private static ChunkSelector makeJsonChunkSelector(Context context) {
         return new JsonChunkSelector.Builder()
             .withChunksPointer(context.getProperties().get(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
             .withTextPointer(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER))
@@ -71,7 +71,7 @@ public abstract class EmbeddingAdderFactory {
             .build();
     }
 
-    private static ChunkSelector makeXmlChunkSelector(ContextSupport context) {
+    private static ChunkSelector makeXmlChunkSelector(Context context) {
         XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(
             context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
             context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
@@ -84,7 +84,7 @@ public abstract class EmbeddingAdderFactory {
         );
     }
 
-    private static Optional<EmbeddingModel> makeEmbeddingModel(ContextSupport context) {
+    private static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {
         if (!context.hasOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME)) {
             return Optional.empty();
         }
@@ -105,7 +105,7 @@ public abstract class EmbeddingAdderFactory {
         }
     }
 
-    private static Map<String, String> makeEmbedderOptions(ContextSupport context) {
+    private static Map<String, String> makeEmbedderOptions(Context context) {
         Map<String, String> options = new HashMap<>();
         context.getProperties().keySet().stream()
             .filter(key -> key.startsWith(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX))

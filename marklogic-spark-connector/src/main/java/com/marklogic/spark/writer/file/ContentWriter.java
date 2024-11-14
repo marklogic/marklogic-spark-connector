@@ -59,7 +59,7 @@ class ContentWriter {
         if (this.isStreamingFiles) {
             this.documentManager = context.connectToMarkLogic().newDocumentManager();
             if (context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
-                this.documentManager.setMetadataCategories(Util.getRequestedMetadata(context));
+                this.documentManager.setMetadataCategories(ContextSupport.getRequestedMetadata(context));
             }
         } else {
             this.documentManager = null;

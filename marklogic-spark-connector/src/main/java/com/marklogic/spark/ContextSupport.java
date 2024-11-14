@@ -5,19 +5,22 @@ package com.marklogic.spark;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
+import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.extra.okhttpclient.OkHttpClientConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
-public class ContextSupport implements Serializable {
+public class ContextSupport extends Context implements Serializable {
 
     protected static final Logger logger = LoggerFactory.getLogger(ContextSupport.class);
-    private final Map<String, String> properties;
     private final boolean configuratorWasAdded;
 
     // Java Client 6.5.0 has a bug in it (to be fixed in 6.5.1 or 6.6.0) where multiple threads that use a configurator
@@ -26,7 +29,7 @@ public class ContextSupport implements Serializable {
     private static final Object CLIENT_LOCK = new Object();
 
     public ContextSupport(Map<String, String> properties) {
-        this.properties = properties;
+        super(properties);
         this.configuratorWasAdded = addOkHttpConfiguratorIfNecessary();
     }
 
@@ -92,10 +95,6 @@ public class ContextSupport implements Serializable {
         return value != null && value.trim().length() > 0;
     }
 
-    public final String getOptionNameForMessage(String option) {
-        return Util.getOptionNameForErrorMessage(option);
-    }
-
     private void parseConnectionString(String value, Map<String, String> connectionProps) {
         ConnectionString connectionString = new ConnectionString(value, getOptionNameForMessage("spark.marklogic.client.uri"));
         connectionProps.put(Options.CLIENT_USERNAME, connectionString.getUsername());
@@ -106,24 +105,6 @@ public class ContextSupport implements Serializable {
         String db = connectionString.getDatabase();
         if (db != null && db.trim().length() > 0) {
             connectionProps.put(Options.CLIENT_DATABASE, db);
-        }
-    }
-
-    public final int getIntOption(String optionName, int defaultValue, int minimumValue) {
-        return (int) getNumericOption(optionName, defaultValue, minimumValue);
-    }
-
-    public final long getNumericOption(String optionName, long defaultValue, long minimumValue) {
-        try {
-            long value = this.getProperties().containsKey(optionName) ?
-                Long.parseLong(this.getProperties().get(optionName)) :
-                defaultValue;
-            if (value != defaultValue && value < minimumValue) {
-                throw new ConnectorException(String.format("The value of '%s' must be %d or greater.", getOptionNameForMessage(optionName), minimumValue));
-            }
-            return value;
-        } catch (NumberFormatException ex) {
-            throw new ConnectorException(String.format("The value of '%s' must be numeric.", getOptionNameForMessage(optionName)), ex);
         }
     }
 
@@ -141,28 +122,8 @@ public class ContextSupport implements Serializable {
         return value != null && value.equalsIgnoreCase(DatabaseClient.ConnectionType.DIRECT.name());
     }
 
-    public final boolean hasOption(String... options) {
-        return Util.hasOption(this.properties, options);
-    }
-
-    public final String getStringOption(String option) {
-        return getStringOption(option, null);
-    }
-
-    public final String getStringOption(String option, String defaultValue) {
-        return hasOption(option) ? properties.get(option).trim() : defaultValue;
-    }
-
-    public final boolean getBooleanOption(String option, boolean defaultValue) {
-        return hasOption(option) ? Boolean.parseBoolean(getStringOption(option)) : defaultValue;
-    }
-
     public final boolean isStreamingFiles() {
         return "true".equalsIgnoreCase(getStringOption(Options.STREAM_FILES));
-    }
-
-    public Map<String, String> getProperties() {
-        return properties;
     }
 
     /**
@@ -196,5 +157,22 @@ public class ContextSupport implements Serializable {
             return true;
         }
         return false;
+    }
+
+    public static Set<DocumentManager.Metadata> getRequestedMetadata(ContextSupport context) {
+        Set<DocumentManager.Metadata> set = new HashSet<>();
+        if (context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
+            for (String category : context.getStringOption(Options.READ_DOCUMENTS_CATEGORIES).split(",")) {
+                if ("content".equalsIgnoreCase(category)) {
+                    continue;
+                }
+                if ("metadata".equalsIgnoreCase(category)) {
+                    set.add(DocumentManager.Metadata.ALL);
+                } else {
+                    set.add(DocumentManager.Metadata.valueOf(category.toUpperCase()));
+                }
+            }
+        }
+        return set;
     }
 }
