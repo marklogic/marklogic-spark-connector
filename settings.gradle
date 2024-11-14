@@ -1,1 +1,1 @@
-include "marklogic-spark-connector"
+include "marklogic-langchain4j", "marklogic-spark-connector"
