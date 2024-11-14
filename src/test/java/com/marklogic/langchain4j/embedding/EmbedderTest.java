@@ -13,7 +13,7 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.junit5.XmlNode;
-import com.marklogic.langchain4j.JsonUtil;
+import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.splitter.*;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.writer.XmlUtil;
@@ -44,7 +44,7 @@ class EmbedderTest extends AbstractIntegrationTest {
         docs.next();
 
         docs.forEachRemaining(doc -> {
-            JsonNode node = JsonUtil.getJsonFromHandle(doc.getContent());
+            JsonNode node = Util.getJsonFromHandle(doc.getContent());
             ArrayNode chunks = (ArrayNode) node.get("chunks");
             assertEquals(2, chunks.size());
             for (JsonNode chunk : chunks) {
@@ -71,7 +71,7 @@ class EmbedderTest extends AbstractIntegrationTest {
         );
 
         DocumentWriteOperation output = embedder.apply(new DocumentWriteOperationImpl("a.json", null, new JacksonHandle(doc))).next();
-        JsonNode outputDoc = JsonUtil.getJsonFromHandle(output.getContent());
+        JsonNode outputDoc = Util.getJsonFromHandle(output.getContent());
 
         assertEquals("Hello world", outputDoc.at("/custom/custom-chunks/0/wrapper/custom-text").asText());
         JsonNode chunk = outputDoc.get("custom").get("custom-chunks").get(0);

@@ -4,7 +4,7 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.spark.ConnectorException;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
@@ -41,7 +41,7 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
         try {
             textSegments = documentSplitter.split(new Document(text));
         } catch (Exception e) {
-            throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
+            throw new MarkLogicLangchainException(String.format("Unable to split document with URI: %s; cause: %s",
                 sourceDocument.getUri(), e.getMessage()), e);
         }
 

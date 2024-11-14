@@ -6,9 +6,11 @@ package com.marklogic.spark.writer.splitter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -16,8 +18,7 @@ import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
@@ -71,7 +72,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException sparkException = assertThrows(SparkException.class, () -> writer.save());
+        MarkLogicLangchainException ex = (MarkLogicLangchainException) sparkException.getCause();
         assertEquals(
             "Unable to compile XPath expression for selecting text: /ex:root/ex:text/text(); cause: Prefix must resolve to a namespace: ex",
             ex.getMessage()
@@ -91,8 +93,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementMissing("If a user specifies a JSON Pointer split expression and the connector encounters a " +
-            "non-JSON document, a warning should be logged and no chunks should be added. This scenario could happen " +
-            "when e.g. processing a zip file that contains mostly JSON documents, but also a few non-JSON documents.",
+                "non-JSON document, a warning should be logged and no chunks should be added. This scenario could happen " +
+                "when e.g. processing a zip file that contains mostly JSON documents, but also a few non-JSON documents.",
             "//chunks");
     }
 
@@ -182,7 +184,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException sparkException = assertThrows(SparkException.class, () -> writer.save());
+        MarkLogicLangchainException ex = (MarkLogicLangchainException) sparkException.getCause();
         assertTrue(ex.getMessage().contains("Unable to split document with URI: /marklogic-docs/java-client-intro.xml; cause: " +
                 "The text \"When working with the Java API...\" (886 characters long) doesn't fit into the " +
                 "maximum segment size (100 characters)"),

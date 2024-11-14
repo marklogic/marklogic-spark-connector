@@ -6,9 +6,8 @@ package com.marklogic.langchain4j.splitter;
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.langchain4j.JsonUtil;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Util;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.langchain4j.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +25,7 @@ public class JsonPointerTextSelector implements TextSelector {
                 jsonPointers.add(JsonPointer.compile(jsonPointer));
             } catch (Exception ex) {
                 // Not including the original exception as the message itself should suffice.
-                throw new ConnectorException(String.format(
+                throw new MarkLogicLangchainException(String.format(
                     "Unable to use JSON pointer expression: %s; cause: %s", jsonPointer, ex.getMessage()));
             }
         }
@@ -37,9 +36,9 @@ public class JsonPointerTextSelector implements TextSelector {
     public String selectTextToSplit(DocumentWriteOperation sourceDocument) {
         JsonNode doc;
         try {
-            doc = JsonUtil.getJsonFromHandle(sourceDocument.getContent());
+            doc = Util.getJsonFromHandle(sourceDocument.getContent());
         } catch (Exception ex) {
-            Util.MAIN_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
+            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
             return null;
         }
 

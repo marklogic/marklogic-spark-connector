@@ -11,7 +11,7 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.JsonUtil;
+import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.JsonChunk;
@@ -34,7 +34,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     @Override
     protected DocumentWriteOperation addChunksToSourceDocument() {
         AbstractWriteHandle content = sourceDocument.getContent();
-        ObjectNode doc = (ObjectNode) JsonUtil.getJsonFromHandle(content);
+        ObjectNode doc = (ObjectNode) Util.getJsonFromHandle(content);
 
         ArrayNode chunksArray = doc.putArray(determineChunksArrayName(doc));
         List<Chunk> chunks = new ArrayList<>();
