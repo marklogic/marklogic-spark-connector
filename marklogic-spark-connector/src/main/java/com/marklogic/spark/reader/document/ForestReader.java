@@ -14,9 +14,9 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
-import com.marklogic.spark.Util;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
@@ -75,7 +75,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         this.documentManager = client.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
         this.contentWasRequested = context.contentWasRequested();
-        this.requestedMetadata = Util.getRequestedMetadata(context);
+        this.requestedMetadata = ContextSupport.getRequestedMetadata(context);
         this.documentManager.setMetadataCategories(this.requestedMetadata);
         this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
     }

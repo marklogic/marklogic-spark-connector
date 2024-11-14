@@ -1,0 +1,4 @@
+dependencies {
+  implementation project(":marklogic-spark-api")
+  implementation project(":marklogic-langchain4j")
+}
