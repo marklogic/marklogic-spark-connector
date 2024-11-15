@@ -1,22 +1,13 @@
 plugins {
   id "java-library"
-  id "jacoco-report-aggregation"
   id "org.sonarqube" version "5.1.0.4882"
-}
-
-// See https://docs.gradle.org/current/samples/sample_jvm_multi_project_with_code_coverage_standalone.html .
-// This isn't picking up jacoco coverage of all the subprojects. Will figure that out soon.
-dependencies {
-  jacocoAggregation project(':marklogic-langchain4j')
-  jacocoAggregation project(':marklogic-spark-api')
-  jacocoAggregation project(':marklogic-spark-langchain4j')
-  jacocoAggregation project(':marklogic-spark-connector')
 }
 
 sonar {
   properties {
     property "sonar.projectKey", "marklogic-spark"
     property "sonar.host.url", "http://localhost:9000"
+    property "sonar.coverage.jacoco.xmlReportPaths", "marklogic-spark-connector/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml"
   }
 }
 
