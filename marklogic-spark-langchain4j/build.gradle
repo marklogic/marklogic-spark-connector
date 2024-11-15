@@ -1,4 +1,10 @@
 dependencies {
   implementation project(":marklogic-spark-api")
-  implementation project(":marklogic-langchain4j")
+
+  implementation (project(":marklogic-langchain4j")) {
+    // These need to be excluded here so they don't sneak in when this module is depended on by the
+    // marklogic-spark-connector module.
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
 }

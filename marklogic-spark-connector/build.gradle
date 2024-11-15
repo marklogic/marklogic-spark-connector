@@ -23,14 +23,6 @@ configurations {
   testImplementation.extendsFrom(compileOnly)
 }
 
-configurations.all {
-  // Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can lead to this
-  // issue - https://www.slf4j.org/codes.html#StaticLoggerBinder .
-  resolutionStrategy {
-    force "org.slf4j:slf4j-api:2.0.13"
-  }
-}
-
 dependencies {
   // Adding these forces code coverage data to be calculated for these subprojects.
   jacocoAggregation project(':marklogic-langchain4j')
@@ -68,9 +60,12 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // Allows us to test the langchain4j-specific features without including them in the connector by default.
-  testImplementation project(":marklogic-langchain4j")
-  testImplementation project(":marklogic-spark-langchain4j")
+  // Once we update langchain4j to 0.36.0 or higher, which requires Java 17, this will need to become a
+  // testImplementation dependency, and we'll figure out how to include them separately in Flux.
+  shadowDependencies (project(":marklogic-spark-langchain4j")) {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
 
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"

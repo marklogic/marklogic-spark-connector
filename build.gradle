@@ -32,6 +32,14 @@ subprojects {
     }
   }
 
+  configurations.all {
+    // Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can lead to this
+    // issue - https://www.slf4j.org/codes.html#StaticLoggerBinder .
+    resolutionStrategy {
+      force "org.slf4j:slf4j-api:2.0.13"
+    }
+  }
+  
   test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
