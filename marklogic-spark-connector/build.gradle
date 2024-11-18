@@ -67,6 +67,13 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
+  // Oddly need this specified here too, otherwise compileTestJava fails. Not sure why it's not coming via the
+  // "marklogic-spark-langchain4j" dependency.
+  testImplementation (project(":marklogic-langchain4j")) {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
 
