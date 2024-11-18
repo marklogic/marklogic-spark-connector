@@ -7,6 +7,7 @@ import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
 import com.marklogic.client.row.RowSet;
+import com.marklogic.junit5.RequiresMarkLogic12;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
@@ -17,6 +18,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,6 +26,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
     private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
 
+    @ExtendWith(RequiresMarkLogic12.class)
     @Test
     void embeddingsInChunkDocuments() {
         readDocument("/marklogic-docs/java-client-intro.xml")
@@ -44,6 +47,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         verifyEachChunkIsReturnedByAVectorQuery("xml_chunks");
     }
 
+    @ExtendWith(RequiresMarkLogic12.class)
     @Test
     void embeddingsInSourceDocument() {
         readDocument("/marklogic-docs/java-client-intro.xml")
@@ -62,6 +66,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         verifyEachChunkIsReturnedByAVectorQuery("xml_chunks");
     }
 
+    @ExtendWith(RequiresMarkLogic12.class)
     @Test
     void sidecarWithNamespace() {
         readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
