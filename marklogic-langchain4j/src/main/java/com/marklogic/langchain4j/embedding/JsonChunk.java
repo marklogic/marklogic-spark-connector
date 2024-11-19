@@ -40,7 +40,7 @@ public class JsonChunk implements Chunk {
     public void addEmbedding(Embedding embedding) {
         ArrayNode array = chunk.putArray(this.embeddingArrayName);
         for (float val : embedding.vector()) {
-            array.add(Float.toString(val));
+            array.add(val);
         }
     }
 }
