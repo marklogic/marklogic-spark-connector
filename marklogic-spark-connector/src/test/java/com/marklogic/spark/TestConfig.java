@@ -9,7 +9,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @PropertySource(
-    value = {"file:../gradle.properties", "file:../gradle-local.properties"},
+    value = {"file:../test-app/gradle.properties", "file:../test-app/gradle-local.properties"},
     ignoreResourceNotFound = true
 )
 public class TestConfig extends SimpleTestConfig {
