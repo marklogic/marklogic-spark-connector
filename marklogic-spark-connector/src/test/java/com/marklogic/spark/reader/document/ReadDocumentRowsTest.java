@@ -308,6 +308,21 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
         assertEquals("value2", params.get("param2").asText());
     }
 
+    @Test
+    void transformThrowsError() {
+        Dataset<Row> dataset = startRead()
+            .option(Options.READ_DOCUMENTS_STRING_QUERY, "Vivianne")
+            .option(Options.READ_DOCUMENTS_TRANSFORM, "throwError")
+            .load();
+
+        SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
+        assertTrue(ex.getMessage().contains("This is an intentional error for testing purposes."),
+            "When the transform throws an error, our connector throws a ConnectorException, but Spark seems to wrap " +
+                "its stacktrace into a SparkException, such that we can't access the original ConnectorException " +
+                "object. But the transform error should be in the error message. " +
+                "Actual message: " + ex.getMessage());
+    }
+
     private DataFrameReader startRead() {
         return newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
