@@ -77,10 +77,22 @@ class WriteRowsWithTransformTest extends AbstractWriteTest {
     }
 
     @Test
+    void transformThrowsError() {
+        ConnectorException ex = assertThrowsConnectorException(() -> newWriterForSingleRow()
+            .option(Options.WRITE_TRANSFORM_NAME, "throwError")
+            .save());
+
+        assertTrue(ex.getMessage().contains("This is an intentional error for testing purposes."),
+            "The transform is expected to throw an error which should be caught by " +
+                "WriteBatcherDataWriter and then thrown as a ConnectorException. " +
+                "Actual error: " + ex.getMessage());
+    }
+
+    @Test
     void invalidTransform() {
         ConnectorException ex = assertThrowsConnectorException(() -> newWriterForSingleRow()
-                .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
-                .save());
+            .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
+            .save());
 
         assertTrue(ex.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),
             "The connector can't easily validate that a REST transform is valid, but the expectation is that the " +

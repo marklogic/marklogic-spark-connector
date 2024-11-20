@@ -17,6 +17,7 @@ import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
@@ -160,7 +161,7 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     private void closeCurrentDocumentPage() {
         if (currentDocumentPage != null) {
-            currentDocumentPage.close();
+            IOUtils.closeQuietly(currentDocumentPage);
             currentDocumentPage = null;
         }
     }
