@@ -1,7 +1,6 @@
 plugins {
   id 'net.saliman.properties' version '1.5.2'
   id 'com.gradleup.shadow' version '8.3.3'
-  id "com.marklogic.ml-gradle" version "5.0.0"
   id 'maven-publish'
 
   // This is working in terms of nicely aggregating jacoco code coverage data from each subproject. It produces a very
@@ -101,18 +100,10 @@ dependencies {
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 }
 
-test {
-  // Allows mlHost to override the value in gradle.properties, which the test plumbing will default to.
-  environment "mlHost", mlHost
-}
-
-task reloadTestData(type: com.marklogic.gradle.task.MarkLogicTask) {
-  description = "Convenience task for clearing the test database and reloading the test data; only intended for a connector developer to use."
-  doLast {
-    new com.marklogic.mgmt.resource.databases.DatabaseManager(getManageClient()).clearDatabase("spark-test-test-content")
-  }
-}
-reloadTestData.finalizedBy mlLoadData
+//test {
+//  // Allows mlHost to override the value in gradle.properties, which the test plumbing will default to.
+//  environment "mlHost", mlHost
+//}
 
 if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
   test {
@@ -213,15 +204,3 @@ task gettingStartedZip(type: Zip) {
   archiveFileName = "marklogic-spark-getting-started-${version}.zip"
   destinationDirectory = file("build")
 }
-
-tasks.register("addMarkLogic12SchemasIfNecessary", com.marklogic.gradle.task.MarkLogicTask) {
-  description = "If testing against MarkLogic 12, include schemas that will not work on MarkLogic 11 or earlier."
-  doLast {
-    def version = new com.marklogic.mgmt.resource.clusters.ClusterManager(getManageClient()).getVersion()
-    if (version.startsWith("12.")) {
-      mlAppConfig.getSchemaPaths().add(new File(getProjectDir(), "src/test/ml-schemas-12").getAbsolutePath())
-    }
-  }
-}
-mlDeploy.dependsOn addMarkLogic12SchemasIfNecessary
-mlLoadSchemas.dependsOn addMarkLogic12SchemasIfNecessary

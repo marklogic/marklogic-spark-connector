@@ -1,14 +1,13 @@
 @Library('shared-libraries') _
 
 // Using testCodeCoverageReport from the jacoco-report-aggregation plugin to produce an aggregated code coverage
-// report, even though Sonar doesn't seem to be able to make sense of it yet. 
+// report, even though Sonar doesn't seem to be able to make sense of it yet.
 def runtests(String javaVersion){
   sh label:'test', script: '''#!/bin/bash
     export JAVA_HOME=$'''+javaVersion+'''
     export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
     export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
-    echo "mlPassword=admin" > gradle-local.properties
     echo "Waiting for MarkLogic server to initialize."
     sleep 30s
    ./gradlew -i mlDeploy
