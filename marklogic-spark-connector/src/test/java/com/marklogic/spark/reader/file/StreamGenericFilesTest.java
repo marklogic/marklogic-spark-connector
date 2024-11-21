@@ -4,8 +4,8 @@
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.AbstractIntegrationTest;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -73,7 +73,7 @@ class StreamGenericFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, "not-an-actual-role,read")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertTrue(ex.getMessage().contains("SEC-ROLEDNE: xdmp:role(\"not-an-actual-role\")"),
             "This verifies that when the connector uses GenericDocumentManager to PUT a single document, any error " +
                 "is still wrapped in a ConnectorException. Actual error message: " + ex.getMessage());

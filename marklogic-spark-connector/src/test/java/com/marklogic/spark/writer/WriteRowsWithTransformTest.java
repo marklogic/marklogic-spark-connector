@@ -9,10 +9,10 @@ import com.marklogic.junit5.NamespaceProvider;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WriteRowsWithTransformTest extends AbstractWriteTest {
 
@@ -78,7 +78,7 @@ class WriteRowsWithTransformTest extends AbstractWriteTest {
 
     @Test
     void transformThrowsError() {
-        ConnectorException ex = assertThrowsConnectorException(() -> newWriterForSingleRow()
+        SparkException ex = assertThrows(SparkException.class, () -> newWriterForSingleRow()
             .option(Options.WRITE_TRANSFORM_NAME, "throwError")
             .save());
 
@@ -90,7 +90,7 @@ class WriteRowsWithTransformTest extends AbstractWriteTest {
 
     @Test
     void invalidTransform() {
-        ConnectorException ex = assertThrowsConnectorException(() -> newWriterForSingleRow()
+        SparkException ex = assertThrows(SparkException.class, () -> newWriterForSingleRow()
             .option(Options.WRITE_TRANSFORM_NAME, "this-doesnt-exist")
             .save());
 

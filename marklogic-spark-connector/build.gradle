@@ -100,11 +100,6 @@ dependencies {
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 }
 
-//test {
-//  // Allows mlHost to override the value in gradle.properties, which the test plumbing will default to.
-//  environment "mlHost", mlHost
-//}
-
 if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
   test {
     // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl

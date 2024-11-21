@@ -151,7 +151,7 @@ class WriteRowsTest extends AbstractWriteTest {
      */
     @Test
     void userNotPermittedToWriteAndFailOnCommit() {
-        ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
+        SparkException ex = assertThrows(SparkException.class, () -> newWriter()
             .option(Options.CLIENT_USERNAME, "spark-no-write-user")
             .option(Options.WRITE_BATCH_SIZE, 500)
             .save()
@@ -181,7 +181,7 @@ class WriteRowsTest extends AbstractWriteTest {
      */
     @Test
     void userNotPermittedToWriteAndFailOnWrite() {
-        ConnectorException ex = assertThrowsConnectorException(() -> newWriter()
+        SparkException ex = assertThrows(SparkException.class, () -> newWriter()
             .option(Options.CLIENT_USERNAME, "spark-no-write-user")
             .option(Options.WRITE_BATCH_SIZE, 1)
             .option(Options.WRITE_THREAD_COUNT, 1)
@@ -224,7 +224,7 @@ class WriteRowsTest extends AbstractWriteTest {
         assertEquals(1, successCount.get());
     }
 
-    private void verifyFailureIsDueToLackOfPermission(ConnectorException ex) {
+    private void verifyFailureIsDueToLackOfPermission(SparkException ex) {
         assertTrue(ex.getMessage().contains("Server Message: You do not have permission to this method and URL"),
             "Unexpected cause message: " + ex.getMessage());
         verifyNoDocsWereWritten();

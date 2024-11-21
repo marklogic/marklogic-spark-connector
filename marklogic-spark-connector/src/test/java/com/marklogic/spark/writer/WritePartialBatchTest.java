@@ -3,12 +3,13 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WritePartialBatchTest extends AbstractWriteTest {
@@ -39,7 +40,7 @@ class WritePartialBatchTest extends AbstractWriteTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertTrue(ex.getMessage().contains("Document is not JSON"), "Verifying that trying to write non-JSON " +
             "documents with a .json extension should produce an error; unexpected error: " + ex.getMessage());
     }
