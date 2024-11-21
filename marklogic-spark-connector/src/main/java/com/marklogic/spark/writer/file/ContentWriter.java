@@ -11,7 +11,6 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;

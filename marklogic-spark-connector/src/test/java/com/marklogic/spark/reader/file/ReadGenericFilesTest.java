@@ -11,6 +11,7 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -72,7 +73,7 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
         assertTrue(ex.getMessage().contains("document is not UTF-8 encoded"), "Actual error: " + ex.getMessage());
     }
 

@@ -288,11 +288,11 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     @Test
     void customSplitterNotADocumentSplitter() {
         DataFrameWriter writer = prepareToWriteChunkDocuments()
-            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.BadCustomSplitter")
+            .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.BadCustomSplitter")
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
-        assertEquals("Cannot create custom splitter with class name: com.marklogic.langchain4j.splitter.BadCustomSplitter; " +
+        assertEquals("Cannot create custom splitter with class name: com.marklogic.spark.writer.splitter.BadCustomSplitter; " +
                 "the class must have a public constructor that accepts a java.util.Map<String, String>.",
             ex.getMessage());
     }

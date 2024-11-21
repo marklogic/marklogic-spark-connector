@@ -227,9 +227,12 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             if (failure instanceof ConnectorException) {
                 throw (ConnectorException) failure;
             }
-            // Only including the message seems sufficient here, as Spark is logging the stacktrace. And the user
-            // most likely only needs to know the message.
-            throw new ConnectorException(failure.getMessage());
+            // Originally, only the failure message was included under the impression that the Spark environment was
+            // logging the full stacktrace. That either was not the case or is no longer the case on Spark 3.5.x.
+            // So the original exception is retained. But oddly, this results in a SparkException with a null cause - ???.
+            // That doesn't really impact a user - it's a SparkException regardless - but caused some tests to no longer
+            // be able to catch a ConnectorException.
+            throw new ConnectorException(failure.getMessage(), failure);
         }
     }
 
