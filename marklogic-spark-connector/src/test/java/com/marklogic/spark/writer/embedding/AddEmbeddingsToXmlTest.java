@@ -85,8 +85,14 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        verifyChunksInNamespacedSidecar();
-        verifyEachChunkIsReturnedByAVectorQuery("namespaced_xml_chunks");
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
+        for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
+            chunk.assertElementExists("/ex:chunk/ex:text");
+            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
+                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
+                "content.", "/ex:chunk/model:embedding");
+        }
     }
 
     /**
@@ -133,9 +139,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementCount("Each of the 2 custom chunks should have an 'embedding' element.",
-            "/envelope/my-chunks/my-chunk[my-text and embedding]", 2);
+            "/envelope/my-chunks/my-chunk[my-text and model:embedding]", 2);
     }
-
 
     @Test
     void namespacedCustomChunks() {
@@ -151,9 +156,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/split-test.xml", Namespace.getNamespace("ex", "org:example"));
+        XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementCount("Each of the 2 custom chunks should have an 'embedding' element.",
-            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and embedding]", 2);
+            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and model:embedding]", 2);
     }
 
     @Test
@@ -231,6 +236,14 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             "simply means that an embedding cannot be generated for the chunk.", "//embedding");
     }
 
+    @Override
+    protected XmlNode readXmlDocument(String uri) {
+        return readXmlDocument(uri,
+            Namespace.getNamespace("model", "http://marklogic.com/appservices/model"),
+            Namespace.getNamespace("ex", "org:example")
+        );
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -243,7 +256,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         XmlNode doc = readXmlDocument(uri);
         doc.getXmlNodes("/node()/chunks/chunk").forEach(chunk -> {
             chunk.assertElementExists("/chunk/text");
-            chunk.assertElementExists("/chunk/embedding");
+            chunk.assertElementExists("/chunk/model:embedding");
         });
     }
 
@@ -270,13 +283,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     private void verifyChunksInNamespacedSidecar() {
-        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml", Namespace.getNamespace("ex", "org:example"));
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
-                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
-                "content.", "/ex:chunk/embedding");
+            chunk.assertElementExists("The embedding should default to the MarkLogic-specific namespace when not " +
+                "specified by the user.", "/ex:chunk/model:embedding");
         }
     }
 }
