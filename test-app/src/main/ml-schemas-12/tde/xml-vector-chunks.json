@@ -4,6 +4,12 @@
     "collections": [
       "xml-vector-chunks"
     ],
+    "pathNamespace": [
+      {
+        "prefix": "ml",
+        "namespaceUri": "http://marklogic.com/appservices"
+      }
+    ],
     "rows": [
       {
         "schemaName": "example",
@@ -17,7 +23,7 @@
           {
             "name": "embedding",
             "scalarType": "vector",
-            "val": "vec:vector(embedding)",
+            "val": "vec:vector(ml:embedding)",
             "dimension": "384",
             "invalidValues": "reject",
             "nullable": true

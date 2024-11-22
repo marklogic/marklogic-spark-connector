@@ -30,7 +30,7 @@ public class ChunkConfig {
         private int maxChunks;
         private String documentType;
         private String rootName;
-        private String xmlNamespace;
+        private String xmlNamespace = "http://marklogic.com/appservices";
         private String uriPrefix;
         private String uriSuffix;
 
@@ -59,7 +59,7 @@ public class ChunkConfig {
         }
 
         public Builder withXmlNamespace(String xmlNamespace) {
-            this.xmlNamespace = xmlNamespace;
+            this.xmlNamespace = xmlNamespace != null ? xmlNamespace : "";
             return this;
         }
 

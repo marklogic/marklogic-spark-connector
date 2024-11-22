@@ -24,7 +24,7 @@ public class XmlChunkConfig {
     public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext) {
         this.textExpression = textExpression != null ? textExpression : DEFAULT_TEXT_EXPRESSION;
         this.embeddingName = embeddingName != null ? embeddingName : "embedding";
-        this.embeddingNamespace = embeddingNamespace;
+        this.embeddingNamespace = embeddingNamespace != null ? embeddingNamespace : "http://marklogic.com/appservices";
         this.namespaceContext = namespaceContext;
     }
 

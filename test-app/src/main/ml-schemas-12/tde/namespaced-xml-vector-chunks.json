@@ -4,6 +4,10 @@
       {
         "prefix": "ex",
         "namespaceUri": "org:example"
+      },
+      {
+        "prefix": "ml",
+        "namespaceUri": "http://marklogic.com/appservices"
       }
     ],
     "context": "/ex:sidecar/ex:chunks/ex:chunk",
@@ -23,7 +27,7 @@
           {
             "name": "embedding",
             "scalarType": "vector",
-            "val": "vec:vector(embedding)",
+            "val": "vec:vector(ml:embedding)",
             "dimension": "384",
             "invalidValues": "reject",
             "nullable": true
