@@ -52,7 +52,7 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
         for (String uri : uris) {
             assertTrue(uri.endsWith(".xml"));
             XmlNode doc = readXmlDocument(uri);
-            doc.assertElementCount("/node()/chunks/chunk", 1);
+            doc.assertElementCount("/node()/model:chunks/model:chunk", 1);
         }
     }
 

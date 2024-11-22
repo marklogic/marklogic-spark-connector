@@ -36,9 +36,9 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementCount("Expecting 4 chunks based on a max chunk size of 500", "/root/chunks/chunk", 4);
+        doc.assertElementCount("Expecting 4 chunks based on a max chunk size of 500", "/root/model:chunks/model:chunk", 4);
 
-        String firstChunk = doc.getElementValue("/root/chunks/chunk[1]/text");
+        String firstChunk = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
         assertTrue(firstChunk.startsWith("When working with the Java API"), "The first chunk should begin with the " +
             "text in the original 'text' element. Actual chunk: " + firstChunk);
     }
@@ -56,12 +56,9 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/namespace-test.xml");
-        doc.setNamespaces(new Namespace[]{Namespace.getNamespace("ex", "org:example")});
-
-        doc.assertElementCount("Expecting 2 chunks based on the default max chunk size of 1000. And the " +
-                "chunks and chunk elements are expected to not be in a namespace. But the user's declaration of " +
+        doc.assertElementCount("Expecting 2 chunks based on the default max chunk size of 1000. The user's declaration of " +
                 "the 'ex' prefix should have allowed the XPath statement for selecting text to succeed.",
-            "/ex:root/chunks/chunk", 2);
+            "/ex:root/model:chunks/model:chunk", 2);
     }
 
     @Test
@@ -153,9 +150,9 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementCount("The pattern 'basic architecture' appears one time in the <text> element, and so " +
-            "2 chunks should be produced.", "/root/chunks/chunk", 2);
+            "2 chunks should be produced.", "/root/model:chunks/model:chunk", 2);
 
-        String firstChunk = doc.getElementValue("/root/chunks/chunk[1]/text");
+        String firstChunk = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
         assertTrue(firstChunk.endsWith("This chapter covers a number of"), "The first chunk should end with the " +
             "text that appears right before the one occurrence of 'basic architecture'. Actual chunk: " + firstChunk);
     }
@@ -211,12 +208,12 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             "the second having 1 chunk.", "chunks", 2);
 
         XmlNode firstChunkDoc = readXmlDocument("/split-test.xml-chunks-1.xml");
-        firstChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
-        firstChunkDoc.assertElementCount("/root/chunks/chunk", 3);
+        firstChunkDoc.assertElementValue("/model:root/model:source-uri", "/split-test.xml");
+        firstChunkDoc.assertElementCount("/model:root/model:chunks/model:chunk", 3);
 
         XmlNode secondChunkDoc = readXmlDocument("/split-test.xml-chunks-2.xml");
-        secondChunkDoc.assertElementValue("/root/source-uri", "/split-test.xml");
-        secondChunkDoc.assertElementCount("/root/chunks/chunk", 1);
+        secondChunkDoc.assertElementValue("/model:root/model:source-uri", "/split-test.xml");
+        secondChunkDoc.assertElementCount("/model:root/model:chunks/model:chunk", 1);
     }
 
     @Test
@@ -251,8 +248,8 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             assertTrue(uri.startsWith("/chunk/"), "Unexpected URI: " + uri);
             assertTrue(uri.endsWith(".xml"), "Unexpected URI: " + uri);
             XmlNode doc = readXmlDocument(uri);
-            doc.assertElementValue("/root/source-uri", "/split-test.xml");
-            doc.assertElementCount("/root/chunks/chunk", 2);
+            doc.assertElementValue("/model:root/model:source-uri", "/split-test.xml");
+            doc.assertElementCount("/model:root/model:chunks/model:chunk", 2);
         });
     }
 
@@ -268,7 +265,6 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
-        doc.setNamespaces(new Namespace[]{Namespace.getNamespace("ex", "org:example")});
         doc.assertElementExists("/ex:sidecar");
         doc.assertElementValue("/ex:sidecar/ex:source-uri", "/split-test.xml");
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
@@ -308,11 +304,10 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        System.out.println(doc.getPrettyXml());
-        doc.assertElementValue("/root/chunks", "Already exists.");
+        doc.assertElementValue("/root/model:chunks", "Already exists.");
         doc.assertElementCount("If a 'chunks' element exists already under the root element, the connector " +
             "should use 'splitter-chunks' as a name instead. This is expected to be unique enough, such that we do " +
-            "not yet need to offer a configuration option for the name.", "/root/splitter-chunks/chunk", 1);
+            "not yet need to offer a configuration option for the name.", "/root/model:splitter-chunks/model:chunk", 1);
     }
 
     private Dataset<Row> readDocument(String uri) {
