@@ -8,6 +8,7 @@ import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
@@ -31,7 +32,11 @@ public abstract class EmbeddingAdderFactory {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
-            return new EmbeddingGenerator(embeddingModel.get(), batchSize);
+            EmbeddingModel model = embeddingModel.get();
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
+            }
+            return new EmbeddingGenerator(model, batchSize);
         }
         return null;
     }
@@ -55,6 +60,10 @@ public abstract class EmbeddingAdderFactory {
             return makeJsonChunkSelector(context);
         } else if (context.hasOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH)) {
             return makeXmlChunkSelector(context);
+        } else if (context.hasOption(Options.WRITE_SPLITTER_TEXT)) {
+            return "xml".equalsIgnoreCase(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE)) ?
+                makeXmlChunkSelector(context) :
+                makeJsonChunkSelector(context);
         }
         throw new ConnectorException(String.format("To generate embeddings on documents, you must specify either " +
                 "%s or %s to define the location of chunks in documents.",
