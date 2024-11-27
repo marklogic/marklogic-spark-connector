@@ -79,18 +79,18 @@ public class ContextSupport extends Context implements Serializable {
         Map<String, String> connectionProps = new HashMap<>();
         connectionProps.put("spark.marklogic.client.authType", "digest");
         connectionProps.put("spark.marklogic.client.connectionType", "gateway");
-        connectionProps.putAll(this.properties);
+        connectionProps.putAll(getProperties());
         if (optionExists(Options.CLIENT_URI)) {
-            parseConnectionString(properties.get(Options.CLIENT_URI), connectionProps);
+            parseConnectionString(getProperties().get(Options.CLIENT_URI), connectionProps);
         }
-        if ("true".equalsIgnoreCase(properties.get(Options.CLIENT_SSL_ENABLED))) {
+        if ("true".equalsIgnoreCase(getProperties().get(Options.CLIENT_SSL_ENABLED))) {
             connectionProps.put("spark.marklogic.client.sslProtocol", "default");
         }
         return connectionProps;
     }
 
     public final boolean optionExists(String option) {
-        String value = properties.get(option);
+        String value = getProperties().get(option);
         return value != null && value.trim().length() > 0;
     }
 
