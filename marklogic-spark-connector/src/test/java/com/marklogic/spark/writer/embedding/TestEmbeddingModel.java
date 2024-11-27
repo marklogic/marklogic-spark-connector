@@ -33,6 +33,11 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
     }
 
     @Override
+    public int dimension() {
+        return 0;
+    }
+
+    @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         batchCounter++;
         chunkCounter += textSegments.size();
