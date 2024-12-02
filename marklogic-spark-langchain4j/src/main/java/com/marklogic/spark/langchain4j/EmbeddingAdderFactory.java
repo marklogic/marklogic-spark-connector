@@ -21,7 +21,7 @@ public abstract class EmbeddingAdderFactory {
     public static Optional<EmbeddingAdder> makeEmbedder(Context context, DocumentTextSplitter splitter) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
-            EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context);
+            EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context, embeddingModel.get());
             if (splitter != null) {
                 return Optional.of(new EmbeddingAdder(splitter, embeddingGenerator));
             }
@@ -31,17 +31,12 @@ public abstract class EmbeddingAdderFactory {
         return Optional.empty();
     }
 
-    public static EmbeddingGenerator makeEmbeddingGenerator(Context context) {
-        Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
-        if (embeddingModel.isPresent()) {
-            int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
-            EmbeddingModel model = embeddingModel.get();
-            if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
-            }
-            return new EmbeddingGenerator(model, batchSize);
+    private static EmbeddingGenerator makeEmbeddingGenerator(Context context, EmbeddingModel model) {
+        int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
+        if (Util.MAIN_LOGGER.isInfoEnabled()) {
+            Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
         }
-        return null;
+        return new EmbeddingGenerator(model, batchSize);
     }
 
     /**
