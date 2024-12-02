@@ -34,9 +34,7 @@ class EmbedderTest extends AbstractIntegrationTest {
     @Test
     void defaultPaths() {
         DocumentTextSplitter splitter = newJsonSplitter(500, 2, "/text");
-        EmbeddingAdder embedder = new EmbeddingAdder(
-            new JsonChunkSelector.Builder().build(), new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()), splitter
-        );
+        EmbeddingAdder embedder = new EmbeddingAdder(splitter, new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()));
 
         Iterator<DocumentWriteOperation> docs = embedder.apply(readJsonDocument());
 
@@ -66,8 +64,7 @@ class EmbedderTest extends AbstractIntegrationTest {
                 .withTextPointer("/wrapper/custom-text")
                 .withEmbeddingArrayName("custom-embedding")
                 .build(),
-            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()),
-            null
+            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel())
         );
 
         DocumentWriteOperation output = embedder.apply(new DocumentWriteOperationImpl("a.json", null, new JacksonHandle(doc))).next();
@@ -82,10 +79,7 @@ class EmbedderTest extends AbstractIntegrationTest {
     @Test
     void xml() {
         DocumentTextSplitter splitter = newXmlSplitter(500, 2, "/node()/text");
-        EmbeddingAdder embedder = new EmbeddingAdder(
-            new DOMChunkSelector(null, new XmlChunkConfig()),
-            new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()), splitter
-        );
+        EmbeddingAdder embedder = new EmbeddingAdder(splitter, new EmbeddingGenerator(new AllMiniLmL6V2EmbeddingModel()));
 
         Iterator<DocumentWriteOperation> docs = embedder.apply(readXmlDocument());
 

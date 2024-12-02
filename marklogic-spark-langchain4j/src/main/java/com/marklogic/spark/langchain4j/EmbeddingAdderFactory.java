@@ -21,9 +21,12 @@ public abstract class EmbeddingAdderFactory {
     public static Optional<EmbeddingAdder> makeEmbedder(Context context, DocumentTextSplitter splitter) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
-            ChunkSelector chunkSelector = makeChunkSelector(context);
             EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context);
-            return Optional.of(new EmbeddingAdder(chunkSelector, embeddingGenerator, splitter));
+            if (splitter != null) {
+                return Optional.of(new EmbeddingAdder(splitter, embeddingGenerator));
+            }
+            ChunkSelector chunkSelector = makeChunkSelector(context);
+            return Optional.of(new EmbeddingAdder(chunkSelector, embeddingGenerator));
         }
         return Optional.empty();
     }

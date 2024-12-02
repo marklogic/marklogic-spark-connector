@@ -85,15 +85,36 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml", Namespace.getNamespace("ex", "org:example"));
-        doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
-        for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
-            chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
-                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
-                "content.", "/ex:chunk/embedding");
-        }
+        verifyChunksInNamespacedSidecar();
+        verifyEachChunkIsReturnedByAVectorQuery("namespaced_xml_chunks");
+    }
 
+    /**
+     * This test verifies that when the source document does not have a namespace but the sidecar document does,
+     * the chunks still get embeddings because the connector doesn't need to use a ChunkSelector. That is due to the
+     * connector knowing that the splitter will return instances of DocumentAndChunks, which means the embedder can
+     * access the chunks without having to find them.
+     */
+    @ExtendWith(RequiresMarkLogic12.class)
+    @Test
+    void sidecarWithCustomNamespace() {
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 4)
+            .option(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME, "sidecar")
+            .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "org:example")
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "namespaced-xml-vector-chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyChunksInNamespacedSidecar();
         verifyEachChunkIsReturnedByAVectorQuery("namespaced_xml_chunks");
     }
 
@@ -246,5 +267,16 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         }
 
         assertEquals(4, counter, "Each test is expected to produce 4 chunks based on the max chunk size of 500.");
+    }
+
+    private void verifyChunksInNamespacedSidecar() {
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml", Namespace.getNamespace("ex", "org:example"));
+        doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
+        for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
+            chunk.assertElementExists("/ex:chunk/ex:text");
+            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
+                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
+                "content.", "/ex:chunk/embedding");
+        }
     }
 }

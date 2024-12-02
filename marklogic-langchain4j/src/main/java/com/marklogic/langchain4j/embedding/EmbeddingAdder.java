@@ -26,20 +26,36 @@ public class EmbeddingAdder implements Function<DocumentWriteOperation, Iterator
 
     private List<DocumentWriteOperation> pendingSourceDocuments = new ArrayList<>();
 
-    public EmbeddingAdder(ChunkSelector chunkSelector, EmbeddingGenerator embeddingGenerator, DocumentTextSplitter documentTextSplitter) {
-        this.chunkSelector = chunkSelector;
-        this.embeddingGenerator = embeddingGenerator;
+    /**
+     * Use this when a user has configured a splitter, as the splitter will return {@code DocumentAndChunks} instances
+     * that avoid the need for using a {@code ChunkSelector} to find chunks.
+     *
+     * @param documentTextSplitter
+     * @param embeddingGenerator
+     */
+    public EmbeddingAdder(DocumentTextSplitter documentTextSplitter, EmbeddingGenerator embeddingGenerator) {
         this.documentTextSplitter = documentTextSplitter;
+        this.embeddingGenerator = embeddingGenerator;
+        this.chunkSelector = null;
     }
 
     /**
-     * I think we can hold onto documents here? addEmbeddings could return true/false if it actually sends anything.
+     * Use this constructor when the user has not configured a splitter, as the {@code ChunkSelector} is needed to find
+     * chunks in each document.
      *
-     * @param sourceDocument the function argument
-     * @return
+     * @param chunkSelector
+     * @param embeddingGenerator
      */
+    public EmbeddingAdder(ChunkSelector chunkSelector, EmbeddingGenerator embeddingGenerator) {
+        this.chunkSelector = chunkSelector;
+        this.embeddingGenerator = embeddingGenerator;
+        this.documentTextSplitter = null;
+    }
+
     @Override
     public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
+        // If the user configured a splitter, then follow a path where the source document is split, which will produce
+        // DocumentAndChunks instances. Which means the ChunkSelector isn't needed.
         if (documentTextSplitter != null) {
             return splitAndAddEmbeddings(sourceDocument);
         }

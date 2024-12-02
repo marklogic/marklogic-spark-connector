@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 public abstract class Context implements Serializable {
 
-    protected final Map<String, String> properties;
+    private final Map<String, String> properties;
 
     protected Context(Map<String, String> properties) {
         this.properties = properties;
@@ -49,7 +49,7 @@ public abstract class Context implements Serializable {
     public final boolean getBooleanOption(String option, boolean defaultValue) {
         return hasOption(option) ? Boolean.parseBoolean(getStringOption(option)) : defaultValue;
     }
-    
+
     public final String getOptionNameForMessage(String option) {
         return Util.getOptionNameForErrorMessage(option);
     }
