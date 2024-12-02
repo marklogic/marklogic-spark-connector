@@ -29,9 +29,10 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
         this.textSegments = textSegments;
         this.chunkConfig = chunkConfig;
 
-        // Chunks cannot be written to a TEXT document. So if maxChunks is zero, and we have a text document, we will
-        // instead write all the chunks to a separate document.
-        this.maxChunksPerDocument = Format.TEXT.equals(sourceDocumentFormat) && chunkConfig.getMaxChunks() == 0 ?
+        // Chunks cannot be written to the source document unless its format is JSON or XML. So if maxChunks is zero and
+        // we don't have a JSON or XML document, all chunks will be written to a separate document.
+        boolean cannotAddChunksToSourceDocument = !Format.JSON.equals(sourceDocumentFormat) && !Format.XML.equals(sourceDocumentFormat);
+        this.maxChunksPerDocument = cannotAddChunksToSourceDocument && chunkConfig.getMaxChunks() == 0 ?
             textSegments.size() :
             chunkConfig.getMaxChunks();
     }
