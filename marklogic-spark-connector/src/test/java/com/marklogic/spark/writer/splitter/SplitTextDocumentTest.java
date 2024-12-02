@@ -9,6 +9,8 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameWriter;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
@@ -54,6 +56,29 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
         tester.assertUpdatePermissionExists("This is just a temporary permission until we allow the URI and " +
             "metadata for chunk documents to be configurable", "spark-user-role");
         tester.assertReadPermissionExists("spark-user-role");
+    }
+
+    @Test
+    void inputDocumentHasUnknownFormat() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/mixed-files/hello.txt");
+
+        assertTrue(dataset.collectAsList().get(0).isNullAt(2),
+            "The connector is not expected to determine document type when reading files.");
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_URI_TEMPLATE, "/test/hello.txt")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/test/hello.txt-chunks-1.json");
+        assertEquals("hello world", doc.get("chunks").get(0).get("text").asText(),
+            "When the input document format is UNKNOWN and max chunks is zero, the connector should realize it " +
+                "cannot add chunks to a document with format=UNKNOWN and thus it should create a separate chunks " +
+                "document containing all the chunks.");
     }
 
     @Test

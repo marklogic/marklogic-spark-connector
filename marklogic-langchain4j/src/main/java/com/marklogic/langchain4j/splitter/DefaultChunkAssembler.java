@@ -56,13 +56,12 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     }
 
     private Format determineChunkDocumentFormat(Format sourceDocumentFormat) {
-        final boolean addChunksToSourceDocument = !Format.TEXT.equals(sourceDocumentFormat) && chunkConfig.getMaxChunks() == 0;
-        if (addChunksToSourceDocument) {
+        final boolean canAddChunksToSourceDocument = Format.XML.equals(sourceDocumentFormat) || Format.JSON.equals(sourceDocumentFormat);
+        if (canAddChunksToSourceDocument && chunkConfig.getMaxChunks() == 0) {
             return sourceDocumentFormat;
         }
 
-        final String documentType = chunkConfig.getDocumentType();
-        if (documentType != null || Format.TEXT.equals(sourceDocumentFormat)) {
+        if (chunkConfig.getDocumentType() != null || !canAddChunksToSourceDocument) {
             return "xml".equalsIgnoreCase(chunkConfig.getDocumentType()) ? Format.XML : Format.JSON;
         }
 
