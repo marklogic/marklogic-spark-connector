@@ -7,6 +7,7 @@ import com.marklogic.langchain4j.embedding.Chunk;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
 import java.util.Arrays;
@@ -27,8 +28,13 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         chunkCounter = 0;
     }
 
+    private static AllMiniLmL6V2EmbeddingModel realEmbeddingModel = new AllMiniLmL6V2EmbeddingModel();
+
+    private boolean returnZeroesOnFirstCall;
+
     @Override
     public EmbeddingModel apply(Map<String, String> options) {
+        returnZeroesOnFirstCall = "true".equals(options.get("returnZeroesOnFirstCall"));
         return this;
     }
 
@@ -41,7 +47,11 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         batchCounter++;
         chunkCounter += textSegments.size();
-        return Response.from(Arrays.asList(new Embedding(new float[]{1})));
+        if (returnZeroesOnFirstCall) {
+            returnZeroesOnFirstCall = false;
+            return Response.from(Arrays.asList(new Embedding(new float[384])));
+        }
+        return realEmbeddingModel.embedAll(textSegments);
     }
 
     public static class TestChunk implements Chunk {

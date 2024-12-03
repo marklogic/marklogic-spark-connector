@@ -19,8 +19,8 @@
             "scalarType": "vector",
             "val": "vec:vector(embedding)",
             "dimension": "384",
-            "invalidValues": "reject",
-            "nullable": true
+            "invalidValues": "ignore",
+            "nullable": false
           }
         ]
       }
