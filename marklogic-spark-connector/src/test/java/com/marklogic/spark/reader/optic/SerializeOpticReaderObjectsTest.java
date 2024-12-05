@@ -26,7 +26,7 @@ class SerializeOpticReaderObjectsTest extends AbstractIntegrationTest {
         PlanAnalysis.Partition partition = new PlanAnalysis.Partition("id", bucket);
         ObjectNode plan = objectMapper.createObjectNode();
         plan.put("hello", "world");
-        PlanAnalysis planAnalysis = new PlanAnalysis(plan, Arrays.asList(partition));
+        PlanAnalysis planAnalysis = new PlanAnalysis("op.fromView('any', 'query')", plan, Arrays.asList(partition), 0);
 
         planAnalysis = (PlanAnalysis) SerializeUtil.serialize(planAnalysis);
         assertEquals("world", planAnalysis.getBoundedPlan().get("hello").asText());

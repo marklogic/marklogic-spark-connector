@@ -53,9 +53,9 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
     }
 
     private PlanAnalysis analyzePlan(long partitionCount, long batchSize) {
-        RawQueryDSLPlan userPlan = rowManager.newRawQueryDSLPlan(new StringHandle("op.fromView('Medical', 'Authors').select(['LastName', 'rowID'])"));
         PlanAnalyzer partitioner = new PlanAnalyzer((DatabaseClientImpl) getDatabaseClient());
-        PlanAnalysis planAnalysis = partitioner.analyzePlan(userPlan.getHandle(), partitionCount, batchSize);
+        String dslQuery = "op.fromView('Medical', 'Authors').select(['LastName', 'rowID'])";
+        PlanAnalysis planAnalysis = partitioner.analyzePlan(dslQuery, partitionCount, batchSize);
         assertEquals(partitionCount, planAnalysis.getPartitions().size());
         return planAnalysis;
     }

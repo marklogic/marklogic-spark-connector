@@ -4,8 +4,6 @@
 package com.marklogic.spark.reader.optic;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.FailedRequestException;
 import com.marklogic.client.expression.PlanBuilder;
@@ -51,43 +49,48 @@ public class OpticReadContext extends ContextSupport {
 
     private PlanAnalysis planAnalysis;
     private StructType schema;
-    private long serverTimestamp;
     private List<OpticFilter> opticFilters;
     private final long batchSize;
 
     public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
-        this.schema = schema;
-
-        final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
-        this.batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
 
         final String dslQuery = properties.get(Options.READ_OPTIC_QUERY);
         if (dslQuery == null || dslQuery.trim().length() < 1) {
             throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
 
-        DatabaseClient client = connectToMarkLogic();
-        RawQueryDSLPlan dslPlan = client.newRowManager().newRawQueryDSLPlan(new StringHandle(dslQuery));
+        this.schema = schema;
+        final long partitionCount = getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1);
+        this.batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
 
-        try {
-            this.planAnalysis = new PlanAnalyzer((DatabaseClientImpl) client).analyzePlan(
-                dslPlan.getHandle(), partitionCount, batchSize
-            );
-        } catch (FailedRequestException ex) {
-            handlePlanAnalysisError(dslQuery, ex);
-        }
+        final boolean requiresSingleCallToMarkLogic = !dslQuery.contains("op.fromView");
+        this.planAnalysis = requiresSingleCallToMarkLogic ?
+            new PlanAnalysis(dslQuery, null, Arrays.asList(PlanAnalysis.Partition.singleCallPartition()), 0) :
+            analyzePlan(dslQuery, partitionCount);
 
         if (this.planAnalysis != null) {
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Partition count: {}; number of requests that will be made to MarkLogic: {}",
                     this.planAnalysis.getPartitions().size(), this.planAnalysis.getAllBuckets().size());
             }
-            // Calling this to establish a server timestamp.
-            StringHandle columnInfoHandle = client.newRowManager().columnInfo(dslPlan, new StringHandle());
-            this.serverTimestamp = columnInfoHandle.getServerTimestamp();
-            if (logger.isDebugEnabled()) {
-                logger.debug("Will use server timestamp: {}", serverTimestamp);
+            if (Util.MAIN_LOGGER.isDebugEnabled() && planAnalysis.getServerTimestamp() > 0) {
+                Util.MAIN_LOGGER.debug("Will use server timestamp: {}", planAnalysis.getServerTimestamp());
+            }
+        }
+    }
+
+    private PlanAnalysis analyzePlan(final String dslQuery, final long partitionCount) {
+        DatabaseClient client = null;
+        try {
+            client = connectToMarkLogic();
+            return new PlanAnalyzer((DatabaseClientImpl) client).analyzePlan(dslQuery, partitionCount, batchSize);
+        } catch (FailedRequestException ex) {
+            handlePlanAnalysisError(dslQuery, ex);
+            return null;
+        } finally {
+            if (client != null) {
+                client.release();
             }
         }
     }
@@ -102,6 +105,17 @@ public class OpticReadContext extends ContextSupport {
     }
 
     Iterator<JsonNode> readRowsInBucket(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {
+        JsonNode result = bucket.isSingleCallToMarkLogic() ?
+            readRowsInSingleCallToMarkLogic(rowManager) :
+            readRowsAtServerTimestamp(rowManager, partition, bucket);
+
+        return result != null && result.has("rows") ?
+            result.get("rows").iterator() :
+            new ArrayList<JsonNode>().iterator();
+    }
+
+    private JsonNode readRowsAtServerTimestamp(RowManager rowManager, PlanAnalysis.Partition partition, PlanAnalysis.Bucket bucket) {
+        final long serverTimestamp = planAnalysis.getServerTimestamp();
         if (logger.isDebugEnabled()) {
             logger.debug("Getting rows for partition {} and bucket {} at server timestamp {}", partition, bucket, serverTimestamp);
         }
@@ -119,10 +133,14 @@ public class OpticReadContext extends ContextSupport {
         // Remarkably, the use of resultDoc has consistently proven to be a few percentage points faster than using
         // resultRows with a StringHandle, even though the latter avoids the need for converting to and from a JsonNode.
         // The overhead with resultRows may be due to the processing of a multipart response; it's not yet clear.
-        JsonNode result = rowManager.resultDoc(plan, jsonHandle).get();
-        return result != null && result.has("rows") ?
-            result.get("rows").iterator() :
-            new ArrayList<JsonNode>().iterator();
+        return rowManager.resultDoc(plan, jsonHandle).get();
+    }
+
+    private JsonNode readRowsInSingleCallToMarkLogic(RowManager rowManager) {
+        // Intended for when the user does not use the fromView accessor. Such an Optic query cannot be partitioned
+        // and thus must be executed in a single call to MarkLogic.
+        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(planAnalysis.getDslQuery()));
+        return rowManager.resultDoc(dslPlan, new JacksonHandle()).get();
     }
 
     private PlanBuilder.Plan buildPlanForBucket(RowManager rowManager, PlanAnalysis.Bucket bucket) {
@@ -143,15 +161,15 @@ public class OpticReadContext extends ContextSupport {
         this.opticFilters = opticFilters;
         // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
         // which Optic does not allow.
-        opticFilters.forEach(filter -> addOperatorToPlan(PlanUtil.buildWhere(filter)));
+        opticFilters.forEach(filter -> planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(filter)));
     }
 
     void pushDownLimit(int limit) {
-        addOperatorToPlan(PlanUtil.buildLimit(limit));
+        planAnalysis.pushOperatorIntoPlan(PlanUtil.buildLimit(limit));
     }
 
     void pushDownTopN(SortOrder[] orders, int limit) {
-        addOperatorToPlan(PlanUtil.buildOrderBy(orders));
+        planAnalysis.pushOperatorIntoPlan(PlanUtil.buildOrderBy(orders));
         pushDownLimit(limit);
     }
 
@@ -163,7 +181,7 @@ public class OpticReadContext extends ContextSupport {
         if (logger.isDebugEnabled()) {
             logger.debug("groupBy column names: {}", groupByColumnNames);
         }
-        addOperatorToPlan(PlanUtil.buildGroupByAggregation(new HashSet<>(groupByColumnNames), aggregation));
+        planAnalysis.pushOperatorIntoPlan(PlanUtil.buildGroupByAggregation(new HashSet<>(groupByColumnNames), aggregation));
 
         StructType newSchema = buildSchemaWithColumnNames(groupByColumnNames);
 
@@ -199,7 +217,7 @@ public class OpticReadContext extends ContextSupport {
             List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())
                 .collect(Collectors.toList());
-            this.planAnalysis = new PlanAnalysis(planAnalysis.getBoundedPlan(), mergedPartitions);
+            this.planAnalysis = new PlanAnalysis(planAnalysis.getDslQuery(), planAnalysis.getBoundedPlan(), mergedPartitions, planAnalysis.getServerTimestamp());
         }
 
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -237,28 +255,13 @@ public class OpticReadContext extends ContextSupport {
 
     void pushDownRequiredSchema(StructType requiredSchema) {
         this.schema = requiredSchema;
-        addOperatorToPlan(PlanUtil.buildSelect(requiredSchema));
+        planAnalysis.pushOperatorIntoPlan(PlanUtil.buildSelect(requiredSchema));
     }
 
     boolean planAnalysisFoundNoRows() {
         // The planAnalysis will be null if no rows were found, which internal/viewinfo unfortunately throws an error
         // on. None of the push down operations need to be applied in this scenario.
         return planAnalysis == null;
-    }
-
-    /**
-     * The internal/viewinfo endpoint is known to add an op:prepare operator at the end of the list of operator
-     * args. Each operator added by the connector based on pushdowns needs to be added before this op:prepare
-     * operator; otherwise, MarkLogic will throw an error.
-     *
-     * @param operator
-     */
-    private void addOperatorToPlan(ObjectNode operator) {
-        if (logger.isDebugEnabled()) {
-            logger.debug("Adding operator to plan: {}", operator);
-        }
-        ArrayNode operators = (ArrayNode) planAnalysis.getBoundedPlan().get("$optic").get("args");
-        operators.insert(operators.size() - 1, operator);
     }
 
     StructType getSchema() {

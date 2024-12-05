@@ -3,7 +3,9 @@
  */
 package com.marklogic.spark.reader.optic;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
@@ -22,19 +24,49 @@ class PlanAnalysis implements Serializable {
 
     static final long serialVersionUID = 1;
 
+    private final String dslQuery;
     private final ObjectNode boundedPlan;
     private final List<Partition> partitions;
+    private final long serverTimestamp;
 
-    PlanAnalysis(ObjectNode boundedPlan, List<Partition> partitions) {
+    PlanAnalysis(String dslQuery, ObjectNode boundedPlan, List<Partition> partitions, long serverTimestamp) {
+        this.dslQuery = dslQuery;
         this.boundedPlan = boundedPlan;
         this.partitions = partitions;
+        this.serverTimestamp = serverTimestamp;
     }
 
-    public ObjectNode getBoundedPlan() {
+    /**
+     * The internal/viewinfo endpoint is known to add an op:prepare operator at the end of the list of operator
+     * args. Each operator added by the connector based on pushdowns needs to be added before this op:prepare
+     * operator; otherwise, MarkLogic will throw an error.
+     *
+     * @param operator
+     */
+    void pushOperatorIntoPlan(ObjectNode operator) {
+        // Cannot pushdown filters when a non-fromView query is used.
+        if (boundedPlan != null) {
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Adding operator to plan: {}", operator);
+            }
+            ArrayNode operators = (ArrayNode) boundedPlan.get("$optic").get("args");
+            operators.insert(operators.size() - 1, operator);
+        }
+    }
+
+    String getDslQuery() {
+        return dslQuery;
+    }
+
+    long getServerTimestamp() {
+        return serverTimestamp;
+    }
+
+    ObjectNode getBoundedPlan() {
         return boundedPlan;
     }
 
-    public List<Partition> getPartitions() {
+    List<Partition> getPartitions() {
         return partitions;
     }
 
@@ -58,6 +90,10 @@ class PlanAnalysis implements Serializable {
 
         private final String identifier; // used solely for logging purposes
         private final List<Bucket> buckets;
+
+        static Partition singleCallPartition() {
+            return new Partition("[number: 1]", new Bucket("0", "0"));
+        }
 
         Partition(int number, long lowerBound, long upperBound, long bucketCount, long partitionSize) {
             this.identifier = String.format("[number: %d; lower bound: %s; upper bound: %s]",
@@ -127,6 +163,10 @@ class PlanAnalysis implements Serializable {
         Bucket(String lowerBound, String upperBound) {
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
+        }
+
+        boolean isSingleCallToMarkLogic() {
+            return "0".equals(lowerBound) && "0".equals(upperBound);
         }
 
         // Only intended to help with debug logging
