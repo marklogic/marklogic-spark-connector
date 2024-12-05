@@ -59,6 +59,15 @@ query expansion via [a thesaurus](https://docs.marklogic.com/guide/search-dev/th
 
 ## Optic query requirements
 
+Starting with the 2.5.0 release, an Optic query can use any 
+[data access function](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_66011) with one caveat - only Optic 
+queries that use `op.fromView` can be partitioned into multiple calls to MarkLogic. Optic queries that use any other 
+data access function have the following constraints:
+
+1. The connector will execute the query in a single call to MarkLogic. You will therefore need to ensure that the 
+call can complete without timing out. 
+2. The connector 
+
 As of the 2.0.0 release of the connector, the Optic query must use the
 [op.fromView](https://docs.marklogic.com/op.fromView) accessor function. Future releases of both the connector and
 MarkLogic will strive to relax this requirement.

@@ -260,8 +260,8 @@ public class WriteContext extends ContextSupport {
 
     public void logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
         WriteProgressLogger.logProgressIfNecessary(documentCount);
-        if (logger.isTraceEnabled() && optionalJobBatchNumber > 0) {
-            logger.trace("Wrote batch; length: {}; job batch number: {}", documentCount, optionalJobBatchNumber);
+        if (Util.MAIN_LOGGER.isTraceEnabled() && optionalJobBatchNumber > 0) {
+            Util.MAIN_LOGGER.trace("Wrote batch; length: {}; job batch number: {}", documentCount, optionalJobBatchNumber);
         }
     }
 

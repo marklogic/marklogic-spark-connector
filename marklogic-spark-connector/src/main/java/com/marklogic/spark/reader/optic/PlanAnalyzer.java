@@ -7,31 +7,41 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.io.JacksonHandle;
-import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.row.RawQueryDSLPlan;
+import com.marklogic.client.row.RowManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * "Analyze" = take a user's plan (from their Optic DSL query) and parameterize it with lower and upper bounds,
- * and also calculate partitions.
+ * and also calculate partitions. Can only be used when the user has an "op.fromView" query, as the
+ * internal/viewinfo endpoint can only partition that query.
  */
 class PlanAnalyzer {
 
-    private DatabaseClientImpl databaseClient;
+    private final DatabaseClientImpl databaseClient;
+    private final RowManager rowManager;
 
     PlanAnalyzer(DatabaseClientImpl databaseClient) {
         this.databaseClient = databaseClient;
+        this.rowManager = databaseClient.newRowManager();
     }
 
-    PlanAnalysis analyzePlan(AbstractWriteHandle userPlan, long userPartitionCount, long userBatchSize) {
+    PlanAnalysis analyzePlan(String dslQuery, long userPartitionCount, long userBatchSize) {
+        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(dslQuery));
+
         JsonNode viewInfo = databaseClient.getServices().postResource(
-            null, "internal/viewinfo", null, null, userPlan, new JacksonHandle()
+            null, "internal/viewinfo", null, null, dslPlan.getHandle(), new JacksonHandle()
         ).get();
 
         long rowCount = viewInfo.get("rowCount").asLong(0);
         List<PlanAnalysis.Partition> partitions = calculatePartitions(rowCount, userPartitionCount, userBatchSize);
-        return new PlanAnalysis((ObjectNode) viewInfo.get("modifiedPlan"), partitions);
+
+        // Establish a server timestamp so each call to get rows is at the same timestamp.
+        long serverTimestamp = databaseClient.newRowManager().columnInfo(dslPlan, new StringHandle()).getServerTimestamp();
+        return new PlanAnalysis(dslQuery, (ObjectNode) viewInfo.get("modifiedPlan"), partitions, serverTimestamp);
     }
 
     static List<PlanAnalysis.Partition> calculatePartitions(long rowCount, long userPartitionCount, long userBatchSize) {

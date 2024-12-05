@@ -7,8 +7,6 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.DatabaseClientFactory;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.extra.okhttpclient.OkHttpClientConfigurator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -19,7 +17,6 @@ import java.util.concurrent.TimeUnit;
 
 public class ContextSupport extends Context implements Serializable {
 
-    protected static final Logger logger = LoggerFactory.getLogger(ContextSupport.class);
     private final boolean configuratorWasAdded;
 
     // Java Client 6.5.0 has a bug in it (to be fixed in 6.5.1 or 6.6.0) where multiple threads that use a configurator
