@@ -3,7 +3,10 @@
  */
 package com.marklogic.spark.reader.optic;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.connector.read.InputPartition;
 
 import java.io.Serializable;
@@ -22,19 +25,50 @@ class PlanAnalysis implements Serializable {
 
     static final long serialVersionUID = 1;
 
-    private final ObjectNode boundedPlan;
+    private final ObjectNode serializedPlan;
     private final List<Partition> partitions;
+    private final long serverTimestamp;
 
-    PlanAnalysis(ObjectNode boundedPlan, List<Partition> partitions) {
-        this.boundedPlan = boundedPlan;
+    PlanAnalysis(ObjectNode serializedPlan, List<Partition> partitions, long serverTimestamp) {
+        this.serializedPlan = serializedPlan;
         this.partitions = partitions;
+        this.serverTimestamp = serverTimestamp;
     }
 
-    public ObjectNode getBoundedPlan() {
-        return boundedPlan;
+
+    void pushOperatorIntoPlan(ObjectNode operator) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Adding operator to plan: {}", operator);
+        }
+        ArrayNode operators = (ArrayNode) serializedPlan.get("$optic").get("args");
+        int index = isLastOperatorAPrepareCall(operators) ? operators.size() - 1 : operators.size();
+        operators.insert(index, operator);
     }
 
-    public List<Partition> getPartitions() {
+    /**
+     * The internal/viewinfo endpoint is known to add an op:prepare operator at the end of the list of operator
+     * args. Each operator added by the connector based on pushdowns needs to be added before this op:prepare
+     * operator; otherwise, MarkLogic will throw an error.
+     * <p>
+     * The op:prepare operator won't be present though for a non-fromView query, as internal/viewinfo won't be invoked
+     * for such a query.
+     *
+     * @param operators
+     */
+    private boolean isLastOperatorAPrepareCall(ArrayNode operators) {
+        JsonNode lastOperator = operators.get(operators.size() - 1);
+        return lastOperator.has("fn") && "prepare".equals(lastOperator.get("fn").asText());
+    }
+
+    long getServerTimestamp() {
+        return serverTimestamp;
+    }
+
+    ObjectNode getSerializedPlan() {
+        return serializedPlan;
+    }
+
+    List<Partition> getPartitions() {
         return partitions;
     }
 
@@ -58,6 +92,10 @@ class PlanAnalysis implements Serializable {
 
         private final String identifier; // used solely for logging purposes
         private final List<Bucket> buckets;
+
+        static Partition singleCallPartition() {
+            return new Partition("[number: 1]", new Bucket("0", "0"));
+        }
 
         Partition(int number, long lowerBound, long upperBound, long bucketCount, long partitionSize) {
             this.identifier = String.format("[number: %d; lower bound: %s; upper bound: %s]",
@@ -127,6 +165,10 @@ class PlanAnalysis implements Serializable {
         Bucket(String lowerBound, String upperBound) {
             this.lowerBound = lowerBound;
             this.upperBound = upperBound;
+        }
+
+        boolean isSingleCallToMarkLogic() {
+            return "0".equals(lowerBound) && "0".equals(upperBound);
         }
 
         // Only intended to help with debug logging

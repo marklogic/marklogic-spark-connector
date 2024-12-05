@@ -7,31 +7,68 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.io.JacksonHandle;
-import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.client.io.StringHandle;
+import com.marklogic.client.row.RawQueryDSLPlan;
+import com.marklogic.client.row.RowManager;
+import com.marklogic.spark.Util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * "Analyze" = take a user's plan (from their Optic DSL query) and parameterize it with lower and upper bounds,
- * and also calculate partitions.
+ * Produces one or more partitions for breaking a user's Optic DSL query up - unless it does not use "op.fromView", in
+ * which case a single call will be made to MarkLogic for the query. This is due to the "internal/view-info" endpoint
+ * only supporting partitioning on "op.fromView" queries as of MarkLogic 12 EA1.
  */
 class PlanAnalyzer {
 
-    private DatabaseClientImpl databaseClient;
+    // Used to convert a non-fromView DSL query into a serialized JSON plan.
+    // Uses an xdmp.invoke; ran into issues with passing the DSL query in as a variable when using 'import' on the
+    // optic-dsl-js.mjs module. See MLE-18460 for more information.
+    private static final String PLAN_EXPORT_QUERY = "var dslQuery; xdmp.invoke('/MarkLogic/optic/optic-dsl-js-export.mjs', {query:dslQuery})";
+
+    private final DatabaseClientImpl databaseClient;
+    private final RowManager rowManager;
 
     PlanAnalyzer(DatabaseClientImpl databaseClient) {
         this.databaseClient = databaseClient;
+        this.rowManager = databaseClient.newRowManager();
     }
 
-    PlanAnalysis analyzePlan(AbstractWriteHandle userPlan, long userPartitionCount, long userBatchSize) {
+    PlanAnalysis analyzePlan(String dslQuery, long userPartitionCount, long userBatchSize) {
+        final boolean queryCanBePartitioned = dslQuery.contains("op.fromView");
+        return queryCanBePartitioned ?
+            readRowsViaMultipleCallsToMarkLogic(dslQuery, userPartitionCount, userBatchSize) :
+            readRowsInSingleCallToMarkLogic(dslQuery);
+    }
+
+    private PlanAnalysis readRowsViaMultipleCallsToMarkLogic(String dslQuery, long userPartitionCount, long userBatchSize) {
+        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(dslQuery));
+
         JsonNode viewInfo = databaseClient.getServices().postResource(
-            null, "internal/viewinfo", null, null, userPlan, new JacksonHandle()
+            null, "internal/viewinfo", null, null, dslPlan.getHandle(), new JacksonHandle()
         ).get();
 
         long rowCount = viewInfo.get("rowCount").asLong(0);
         List<PlanAnalysis.Partition> partitions = calculatePartitions(rowCount, userPartitionCount, userBatchSize);
-        return new PlanAnalysis((ObjectNode) viewInfo.get("modifiedPlan"), partitions);
+
+        // Establish a server timestamp so each call to get rows is at the same timestamp.
+        long serverTimestamp = databaseClient.newRowManager().columnInfo(dslPlan, new StringHandle()).getServerTimestamp();
+        return new PlanAnalysis((ObjectNode) viewInfo.get("modifiedPlan"), partitions, serverTimestamp);
+    }
+
+    private PlanAnalysis readRowsInSingleCallToMarkLogic(String dslQuery) {
+        if (Util.MAIN_LOGGER.isInfoEnabled()) {
+            Util.MAIN_LOGGER.info("DSL query does not contain 'op.fromView', so will read rows in a single call to MarkLogic.");
+        }
+
+        ObjectNode plan = (ObjectNode) databaseClient.newServerEval()
+            .javascript(PLAN_EXPORT_QUERY)
+            .addVariable("dslQuery", dslQuery)
+            .evalAs(JsonNode.class);
+
+        return new PlanAnalysis(plan, Arrays.asList(PlanAnalysis.Partition.singleCallPartition()), 0);
     }
 
     static List<PlanAnalysis.Partition> calculatePartitions(long rowCount, long userPartitionCount, long userBatchSize) {
