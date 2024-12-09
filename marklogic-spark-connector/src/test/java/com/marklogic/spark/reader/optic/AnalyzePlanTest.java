@@ -6,8 +6,6 @@ package com.marklogic.spark.reader.optic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.impl.DatabaseClientImpl;
 import com.marklogic.client.io.JacksonHandle;
-import com.marklogic.client.io.StringHandle;
-import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.AbstractIntegrationTest;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,9 +51,9 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
     }
 
     private PlanAnalysis analyzePlan(long partitionCount, long batchSize) {
-        RawQueryDSLPlan userPlan = rowManager.newRawQueryDSLPlan(new StringHandle("op.fromView('Medical', 'Authors').select(['LastName', 'rowID'])"));
         PlanAnalyzer partitioner = new PlanAnalyzer((DatabaseClientImpl) getDatabaseClient());
-        PlanAnalysis planAnalysis = partitioner.analyzePlan(userPlan.getHandle(), partitionCount, batchSize);
+        String dslQuery = "op.fromView('Medical', 'Authors').select(['LastName', 'rowID'])";
+        PlanAnalysis planAnalysis = partitioner.analyzePlan(dslQuery, partitionCount, batchSize);
         assertEquals(partitionCount, planAnalysis.getPartitions().size());
         return planAnalysis;
     }
@@ -135,7 +133,7 @@ class AnalyzePlanTest extends AbstractIntegrationTest {
 
     private JsonNode runPlan(PlanAnalysis plan, PlanAnalysis.Bucket bucket, JacksonHandle resultHandle) {
         return rowManager.resultDoc(
-            rowManager.newRawPlanDefinition(new JacksonHandle(plan.getBoundedPlan()))
+            rowManager.newRawPlanDefinition(new JacksonHandle(plan.getSerializedPlan()))
                 .bindParam("ML_LOWER_BOUND", bucket.lowerBound)
                 .bindParam("ML_UPPER_BOUND", bucket.upperBound),
             resultHandle
