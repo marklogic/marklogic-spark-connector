@@ -97,32 +97,9 @@ public class EmbeddingGenerator {
         } else {
             List<Embedding> embeddings = response.content();
             for (int i = 0; i < embeddings.size(); i++) {
-                addEmbeddingToChunk(chunks.get(i), embeddings.get(i));
+                chunks.get(i).addEmbedding(embeddings.get(i));
             }
         }
-    }
-
-    private void addEmbeddingToChunk(Chunk chunk, Embedding embedding) {
-        if (vectorIsAllZeroes(embedding)) {
-            if (Util.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
-                Util.LANGCHAIN4J_LOGGER.debug("Not adding embedding to chunk as it only contains zeroes; source document URI: {}; text: {}",
-                    chunk.getDocumentUri(), chunk.getEmbeddingText());
-            } else {
-                Util.LANGCHAIN4J_LOGGER.warn("Not adding embedding to chunk as it only contains zeroes; source document URI: {}",
-                    chunk.getDocumentUri());
-            }
-        } else {
-            chunk.addEmbedding(embedding);
-        }
-    }
-
-    private boolean vectorIsAllZeroes(Embedding embedding) {
-        for (float f : embedding.vector()) {
-            if (f != 0.0f) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private List<TextSegment> makeTextSegments(List<Chunk> chunks) {

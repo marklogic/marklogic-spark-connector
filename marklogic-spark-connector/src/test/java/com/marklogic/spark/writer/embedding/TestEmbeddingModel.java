@@ -10,7 +10,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -30,11 +29,8 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
 
     private static AllMiniLmL6V2EmbeddingModel realEmbeddingModel = new AllMiniLmL6V2EmbeddingModel();
 
-    private boolean returnZeroesOnFirstCall;
-
     @Override
     public EmbeddingModel apply(Map<String, String> options) {
-        returnZeroesOnFirstCall = "true".equals(options.get("returnZeroesOnFirstCall"));
         return this;
     }
 
@@ -47,10 +43,6 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         batchCounter++;
         chunkCounter += textSegments.size();
-        if (returnZeroesOnFirstCall) {
-            returnZeroesOnFirstCall = false;
-            return Response.from(Arrays.asList(new Embedding(new float[384])));
-        }
         return realEmbeddingModel.embedAll(textSegments);
     }
 
