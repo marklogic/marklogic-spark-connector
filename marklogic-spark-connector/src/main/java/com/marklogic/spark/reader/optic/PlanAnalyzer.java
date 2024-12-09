@@ -60,7 +60,7 @@ class PlanAnalyzer {
 
     private PlanAnalysis readRowsInSingleCallToMarkLogic(String dslQuery) {
         if (Util.MAIN_LOGGER.isInfoEnabled()) {
-            Util.MAIN_LOGGER.info("DSL query does not contain 'op.fromView', so will read rows in a single call to MarkLogic.");
+            Util.MAIN_LOGGER.info("Optic query does not contain 'op.fromView', so will read rows in a single call to MarkLogic.");
         }
 
         ObjectNode plan = (ObjectNode) databaseClient.newServerEval()
