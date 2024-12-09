@@ -1,8 +1,14 @@
 {
   "template": {
-    "context": "/root/chunks/chunk",
+    "context": "/node()/model:chunks/model:chunk",
     "collections": [
       "xml-vector-chunks"
+    ],
+    "pathNamespace": [
+      {
+        "prefix": "model",
+        "namespaceUri": "http://marklogic.com/appservices/model"
+      }
     ],
     "rows": [
       {
@@ -17,7 +23,7 @@
           {
             "name": "embedding",
             "scalarType": "vector",
-            "val": "vec:vector(embedding)",
+            "val": "vec:vector(model:embedding)",
             "dimension": "384",
             "invalidValues": "reject",
             "nullable": true

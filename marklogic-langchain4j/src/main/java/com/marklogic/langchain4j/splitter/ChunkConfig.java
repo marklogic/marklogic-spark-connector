@@ -4,7 +4,12 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.langchain4j.Util;
 
+/**
+ * Captures configuration settings for producing chunks, either in a source document or in separate
+ * sidecar documents.
+ */
 public class ChunkConfig {
 
     private final DocumentMetadataHandle metadata;
@@ -30,7 +35,7 @@ public class ChunkConfig {
         private int maxChunks;
         private String documentType;
         private String rootName;
-        private String xmlNamespace;
+        private String xmlNamespace = Util.DEFAULT_XML_NAMESPACE;
         private String uriPrefix;
         private String uriSuffix;
 
@@ -59,7 +64,9 @@ public class ChunkConfig {
         }
 
         public Builder withXmlNamespace(String xmlNamespace) {
-            this.xmlNamespace = xmlNamespace;
+            if (xmlNamespace != null) {
+                this.xmlNamespace = xmlNamespace;
+            }
             return this;
         }
 
