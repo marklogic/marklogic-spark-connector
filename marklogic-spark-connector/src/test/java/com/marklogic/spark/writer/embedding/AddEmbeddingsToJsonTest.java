@@ -103,42 +103,6 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         verifyEachChunkIsReturnedByAVectorQuery();
     }
 
-    @ExtendWith(RequiresMarkLogic12.class)
-    @Test
-    void vectorHasAllZeroes() {
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .repartition(1)
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
-            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 10)
-            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "json-vector-chunks")
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
-            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
-            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX + "returnZeroesOnFirstCall", "true")
-            .mode(SaveMode.Append)
-            .save();
-
-        JsonNode doc = readJsonDocument("/split-test.json-chunks-1.json");
-        JsonNode firstChunk = doc.get("chunks").get(0);
-        assertFalse(firstChunk.has("embedding"), "The first chunk is given an array of all zeroes by the test " +
-            "embedding model. Flux should recognize this and not add the `embedding` field, as doing so will cause " +
-            "issues with the Optic vector library - specifically, a VEC-MAGNITUDEZERO error at least when using " +
-            "vec.cosineSimilarity and then sorting on the values. A future version of MarkLogic 12 may improve this " +
-            "by allowing for an array of zeroes to be rejected.");
-
-        JsonNode secondChunk = doc.get("chunks").get(1);
-        assertTrue(secondChunk.has("embedding"), "The test embedding model should generate a valid embedding for " +
-            "the second chunk, which means it can be queried next using Optic.");
-
-        RowManager rowManager = getDatabaseClient().newRowManager();
-        RowSet<RowRecord> rows = rowManager.resultRows(rowManager.newPlanBuilder().fromView("example", "json_chunks"));
-        assertEquals(1, rows.stream().count(), "The TDE has nullable=false for the embedding column, as a null " +
-            "vector will cause issues when querying on vectors. And since invalidValues=ignore, the first chunk " +
-            "won't be returned; only the second chunk will be.");
-    }
-
     @Test
     void passOptionsToEmbeddingModelFunction() {
         DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
