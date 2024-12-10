@@ -199,6 +199,52 @@ also specify a temporal collection for each document to be assigned to via the
 `spark.marklogic.write.temporalCollection`. Each document must define values for the axes associated with the 
 temporal collection. 
 
+### Splitting text and adding embeddings
+
+The 2.5.0 connector release includes support for splitting the text in a document into one or more chunks, either 
+written to the document or to separate sidecar documents. It also supports adding vector embeddings to chunks. 
+
+Please see the [Flux import guide](https://marklogic.github.io/flux/import/import.html) for information on both
+features. While the features are primarily intended for use in Flux, they can both be used with the connector as well
+via the options described below. 
+
+The options controlling the splitter feature are:
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.write.splitter.xpath | Enables the splitter feature by defining an XPath expression for selecting text to split in a document. | 
+| spark.marklogic.write.splitter.jsonPointers | Enables the splitter feature by defining one or more newline-delimited JSON Pointer expressions for selecting text to split in a document. |
+| spark.marklogic.writer.splitter.text | Enables the splitter feature by declaring that all the text in a document should be split. This is typically for text documents, but can be used for JSON and XML as well. |
+| spark.marklogic.write.splitter.maxChunkSize | Defines the maximum chunk size in characters. Defaults to 1000. |
+| spark.marklogic.write.splitter.maxOverlapSize | Defines the maximum overlap size in characters between two chunks. Defaults to 0. |
+| spark.marklogic.write.splitter.regex | Defines a regex for splitting text into chunks. The default strategy is LangChain4J's "recursive" strategy that splits on paragraphs, sentences, lines, and words. |
+| spark.marklogic.splitter.joinDelimiter | Defines a delimiter for usage with the splitter regex option. The delimiter joins together two or more chunks identified via the regex to produce a chunk that is as close as possible to the maximum chunk size. |
+| spark.marklogic.write.splitter.customClass | Defines the class name of an implementation of LangChain4j's `dev.langchain4j.data.document.DocumentSplitter` interface to be used for splitting the selected text into chunks. |
+| spark.marklogic.write.splitter.customClass.option. | Prefix for one or more options to pass in a `Map<String, String>` to the constructor of the custom splitter class. |
+| spark.marklogic.write.splitter.sidecar.maxChunks | Configures the connector to write chunks to separate "sidecar" documents instead of to the source document (the default behavior). Defines the maximum number of chunks to write to a sidecar document. |
+| spark.marklogic.write.splitter.sidecar.documentType | Defines the type - either JSON or XML - of each chunk document. Defaults to the type of the source document. | 
+| spark.marklogic.write.splitter.sidecar.collections | Comma-delimited list of collections to assign to each chunk document. | 
+| spark.marklogic.write.splitter.sidecar.permissions | Comma-delimited list of roles and capabilities to assign to each chunk document. If not defined, chunk documents will inherit the permissions defined by `spark.marklogic.write.permissions`.
+| spark.marklogic.write.splitter.sidecar.rootName | Root name for a JSON or XML sidecar chunk document. |
+| spark.marklogic.write.splitter.sidecar.uriPrefix | URI prefix for each sidecar chunk document. If defined, will be followed by a UUID. |
+| spark.marklogic.write.splitter.sidecar.uriSuffix | URI suffix for each sidecar chunk document. If defined, will be preceded by a UUID. |
+| spark.marklogic.write.splitter.sidecar.xmlNamespace | Namespace for XML sidecar chunk documents. |
+| spark.marklogic.xpath. | Prefix for registering XML namespace prefixes and URIs that can be reused in any connector feature that accepts an XPath expression. |
+
+The options controlling the embedder feature are: 
+
+| Option | Description | 
+| --- | --- |
+| spark.marklogic.write.embedder.modelFunction.className | Enables the embedder feature; name of a class on the classpath that implements the interface `Function<Map<String, String>, EmbeddingModel>`. | 
+| spark.marklogic.write.embedder.modelFunction.option. | Prefix for each option passed in a `Map<String, String>` to the `apply` method of the model function class. |
+| spark.marklogic.write.embedder.chunks.jsonPointer | Defines the location of JSON chunks when using the embedder separate from the splitter. | 
+| spark.marklogic.write.embedder.text.jsonPointer | Defines the location of text in JSON chunks when using the embedder separate from the splitter. |
+| spark.marklogic.write.embedder.chunks.xpath | Defines the location of XML chunks when using the embedder separate from the splitter. | 
+| spark.marklogic.write.embedder.text.xpath | Defines the location of text in XML chunks when using the embedder separate from the splitter. | 
+| spark.marklogic.write.embedder.embedding.name | Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk. | 
+| spark.marklogic.write.embedder.embedding.namespace | Allows for an optional namespace to be assigned to the embedding element in an XML chunk. | 
+| spark.marklogic.write.embedder.batchSize | Defines the number of chunks to send to the embedding model in a single call. Defaults to 1. | 
+
 ### Streaming support
 
 The connector supports 

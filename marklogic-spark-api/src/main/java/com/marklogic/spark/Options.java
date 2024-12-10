@@ -144,7 +144,7 @@ public abstract class Options {
 
     /**
      * Enables the splitter feature by declaring that all the text in a document should be split. This is typically for
-     * text documents, but could be used for JSON and XML as well.
+     * text documents, but can be used for JSON and XML as well.
      *
      * @since 2.5.0
      */
@@ -165,7 +165,7 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
 
     /**
-     * Defines a regex for splitting text into chunks. The default strategy is langchain4's "recursive" strategy that
+     * Defines a regex for splitting text into chunks. The default strategy is LangChain4J's "recursive" strategy that
      * splits on paragraphs, sentences, lines, and words.
      *
      * @since 2.5.0
@@ -181,7 +181,7 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
 
     /**
-     * Defines the class name of an implementation of langchain4j's {@code dev.langchain4j.data.document.DocumentSplitter}
+     * Defines the class name of an implementation of LangChain4J's {@code dev.langchain4j.data.document.DocumentSplitter}
      * interface to be used for splitting the selected text into chunks.
      *
      * @since 2.5.0
@@ -189,7 +189,7 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_CUSTOM_CLASS = "spark.marklogic.write.splitter.customClass";
 
     /**
-     * Defines one or more options to pass in a {@code Map<String, String>} to the constructor of the custom splitter
+     * Prefix for one or more options to pass in a {@code Map<String, String>} to the constructor of the custom splitter
      * class.
      *
      * @since 2.5.0
@@ -299,7 +299,7 @@ public abstract class Options {
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
 
     /**
-     * Provides a "global" option for registering XML namespace prefixes and URIs that can be reused in any connector
+     * Prefix for registering XML namespace prefixes and URIs that can be reused in any connector
      * feature that accepts an XPath expression.
      *
      * @since 2.5.0
@@ -307,11 +307,16 @@ public abstract class Options {
     public static final String XPATH_NAMESPACE_PREFIX = "spark.marklogic.xpath.";
 
     /**
+     * Enables the embedder feature; name of a class on the classpath that implements the interface
+     * {@code Function<Map<String, String>, EmbeddingModel>}.
+     *
      * @since 2.5.0
      */
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = "spark.marklogic.write.embedder.modelFunction.className";
 
     /**
+     * Prefix for each option passed in a {@code Map<String, String>} to the {@code apply} method of the model function class.
+     *
      * @since 2.5.0
      */
     public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = "spark.marklogic.write.embedder.modelFunction.option.";
