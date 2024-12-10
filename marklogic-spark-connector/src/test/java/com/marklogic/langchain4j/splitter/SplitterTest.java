@@ -15,6 +15,7 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -34,16 +35,16 @@ class SplitterTest extends AbstractIntegrationTest {
 
         doc.assertElementCount(
             "Expecting the default splitter to split the 'text' element into 4 chunks, each having its own 'text' element.",
-            "/root/chunks/chunk[text/text()]", 4);
+            "/root/model:chunks/model:chunk[model:text/text()]", 4);
     }
 
     @Test
     void elementPath() {
         XmlNode doc = splitTextDocument("/root/nested");
         doc.assertElementCount("Only expecting one chunk since the root/nested/text element has very little text",
-            "/root/chunks/chunk", 1);
+            "/root/model:chunks/model:chunk", 1);
 
-        String value = doc.getElementValue("/root/chunks/chunk/text");
+        String value = doc.getElementValue("/root/model:chunks/model:chunk/model:text");
         assertEquals("This is for testing.", value, "With our DOM-based implementation, we can easily return the " +
             "text content of any node selected by the user's path. We may eventually support an option to instead " +
             "serialize the selected node into a string.");
@@ -52,11 +53,11 @@ class SplitterTest extends AbstractIntegrationTest {
     @Test
     void attributePath() {
         XmlNode doc = splitTextDocument("/root/attribute-test/@text");
-        doc.assertElementCount("/root/chunks/chunk", 1);
+        doc.assertElementCount("/root/model:chunks/model:chunk", 1);
         doc.assertElementValue("It should be rare that a user wants to split the text in an attribute, but it should " +
                 "be feasible. We don't have a way though of preserving the attribute name in some sort of serialization " +
                 "with JDOM2; we can only get the attribute value.",
-            "/root/chunks/chunk/text",
+            "/root/model:chunks/model:chunk/model:text",
             "Some attribute text."
         );
     }
@@ -74,11 +75,11 @@ class SplitterTest extends AbstractIntegrationTest {
 
         doc.assertElementCount(
             "Should have text from 2 elements, but that's small enough for 1 chunk",
-            "/root/chunks/chunk", 1);
+            "/root/model:chunks/model:chunk", 1);
 
         doc.assertElementValue(
             "The single chunk should have the concatenation of the two selected elements, joined with a space.",
-            "/root/chunks/chunk/text", "https://docs.marklogic.com/guide/java/intro This is for testing.");
+            "/root/model:chunks/model:chunk/model:text", "https://docs.marklogic.com/guide/java/intro This is for testing.");
     }
 
     @Test
@@ -138,7 +139,7 @@ class SplitterTest extends AbstractIntegrationTest {
         DocumentWriteOperation sourceDocument = readXmlDocument();
         DocumentWriteOperation output = newXmlSplitter(xpath).apply(sourceDocument).next();
         String xml = HandleAccessor.contentAsString(output.getContent());
-        return new XmlNode(xml);
+        return new XmlNode(xml, Namespace.getNamespace("model", "http://marklogic.com/appservices/model"));
     }
 
     private DocumentTextSplitter newJsonSplitter(String... jsonPointers) {

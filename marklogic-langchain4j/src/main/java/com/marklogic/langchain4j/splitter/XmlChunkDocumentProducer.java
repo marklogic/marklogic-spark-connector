@@ -7,6 +7,7 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
+import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
@@ -92,7 +93,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     }
 
     private String determineChunksElementName(Document doc) {
-        return doc.getDocumentElement().getElementsByTagName(DEFAULT_CHUNKS_ELEMENT_NAME).getLength() == 0 ?
+        return doc.getDocumentElement().getElementsByTagNameNS(Util.DEFAULT_XML_NAMESPACE, DEFAULT_CHUNKS_ELEMENT_NAME).getLength() == 0 ?
             DEFAULT_CHUNKS_ELEMENT_NAME : "splitter-chunks";
     }
 }

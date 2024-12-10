@@ -19,6 +19,7 @@ import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.writer.XmlUtil;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
+import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
 
 import java.util.Iterator;
@@ -88,9 +89,10 @@ class EmbedderTest extends AbstractIntegrationTest {
 
         docs.forEachRemaining(doc -> {
             XmlNode node = new XmlNode(XmlUtil.extractDocument(doc.getContent()));
-            node.assertElementCount("/root/chunks/chunk", 2);
-            node.assertElementExists("/root/chunks/chunk[1]/embedding");
-            node.assertElementExists("/root/chunks/chunk[2]/embedding");
+            node.setNamespaces(new Namespace[]{Namespace.getNamespace("model", "http://marklogic.com/appservices/model")});
+            node.assertElementCount("/model:root/model:chunks/model:chunk", 2);
+            node.assertElementExists("/model:root/model:chunks/model:chunk[1]/model:embedding");
+            node.assertElementExists("/model:root/model:chunks/model:chunk[2]/model:embedding");
         });
     }
 

@@ -175,4 +175,15 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
         props.setNamespaces(new Namespace[]{PROPERTIES_NAMESPACE});
         return props;
     }
+
+    @Override
+    protected XmlNode readXmlDocument(String uri) {
+        // Registers two frequently used namespaces in tests.
+        return readXmlDocument(uri,
+            Namespace.getNamespace("model", "http://marklogic.com/appservices/model"),
+            Namespace.getNamespace("ex", "org:example")
+        );
+    }
+
+
 }

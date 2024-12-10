@@ -244,10 +244,10 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         assertCollectionSize("chunks", 2);
 
         XmlNode doc = readXmlDocument("/split-test.json-chunks-1.xml");
-        doc.assertElementCount("/root/chunks/chunk", 2);
+        doc.assertElementCount("/model:root/model:chunks/model:chunk", 2);
 
         doc = readXmlDocument("/split-test.json-chunks-2.xml");
-        doc.assertElementCount("/root/chunks/chunk", 2);
+        doc.assertElementCount("/model:root/model:chunks/model:chunk", 2);
     }
 
     @Test

@@ -48,9 +48,9 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
         final String chunksUri = "/test/marklogic-docs/java-client-intro.txt-chunks-1.xml";
 
         XmlNode doc = readXmlDocument(chunksUri);
-        doc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
+        doc.assertElementValue("/model:root/model:source-uri", "/test/marklogic-docs/java-client-intro.txt");
         doc.assertElementCount("Expecting 2 chunks based on the default max chunk size of 1000",
-            "/root/chunks/chunk", 2);
+            "/model:root/model:chunks/model:chunk", 2);
 
         PermissionsTester tester = readDocumentPermissions(chunksUri);
         tester.assertUpdatePermissionExists("This is just a temporary permission until we allow the URI and " +
@@ -95,12 +95,12 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             "the second having 1 chunk.", "chunks", 2);
 
         XmlNode firstChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-1.xml");
-        firstChunkDoc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
-        firstChunkDoc.assertElementCount("/root/chunks/chunk", 3);
+        firstChunkDoc.assertElementValue("/model:root/model:source-uri", "/test/marklogic-docs/java-client-intro.txt");
+        firstChunkDoc.assertElementCount("/model:root/model:chunks/model:chunk", 3);
 
         XmlNode secondChunkDoc = readXmlDocument("/test/marklogic-docs/java-client-intro.txt-chunks-2.xml");
-        secondChunkDoc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
-        secondChunkDoc.assertElementCount("/root/chunks/chunk", 1);
+        secondChunkDoc.assertElementValue("/model:root/model:source-uri", "/test/marklogic-docs/java-client-intro.txt");
+        secondChunkDoc.assertElementCount("/model:root/model:chunks/model:chunk", 1);
     }
 
     @Test
@@ -136,8 +136,8 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
             assertTrue(uri.startsWith("/chunk/"), "Unexpected URI: " + uri);
             assertTrue(uri.endsWith(".xml"), "Unexpected URI: " + uri);
             XmlNode doc = readXmlDocument(uri);
-            doc.assertElementValue("/root/source-uri", "/test/marklogic-docs/java-client-intro.txt");
-            doc.assertElementCount("/root/chunks/chunk", 2);
+            doc.assertElementValue("/model:root/model:source-uri", "/test/marklogic-docs/java-client-intro.txt");
+            doc.assertElementCount("/model:root/model:chunks/model:chunk", 2);
         });
     }
 

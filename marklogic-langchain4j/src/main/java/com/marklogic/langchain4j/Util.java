@@ -20,6 +20,8 @@ public interface Util {
      */
     Logger LANGCHAIN4J_LOGGER = LoggerFactory.getLogger("com.marklogic.langchain4j");
 
+    String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
+
     static JsonNode getJsonFromHandle(AbstractWriteHandle writeHandle) {
         if (writeHandle instanceof JacksonHandle) {
             return ((JacksonHandle) writeHandle).get();
