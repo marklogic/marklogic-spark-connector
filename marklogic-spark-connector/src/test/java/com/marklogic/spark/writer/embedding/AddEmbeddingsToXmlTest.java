@@ -66,7 +66,6 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         verifyEachChunkIsReturnedByAVectorQuery("xml_chunks");
     }
 
-    @ExtendWith(RequiresMarkLogic12.class)
     @Test
     void sidecarWithNamespace() {
         readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
@@ -89,9 +88,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("For now, the embedding still defaults to the empty namespace. We may change " +
-                "this soon to be a MarkLogic-specific namespace to better distinguish it from the users " +
-                "content.", "/ex:chunk/model:embedding");
+            chunk.assertElementExists("When a namespace is specified for the sidecar XML document, that should " +
+                "override the default namespace for the embedding element.", "/ex:chunk/ex:embedding");
         }
     }
 
@@ -107,7 +105,6 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
             .option(Options.WRITE_SPLITTER_XPATH, "/node()/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
@@ -117,11 +114,58 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "org:example")
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "namespaced-xml-vector-chunks")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE, "http://marklogic.com/appservices/model")
             .mode(SaveMode.Append)
             .save();
 
         verifyChunksInNamespacedSidecar();
         verifyEachChunkIsReturnedByAVectorQuery("namespaced_xml_chunks");
+    }
+
+    @Test
+    void sidecarWithCustomNamespaceAndCustomEmbeddingNamespace() {
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 100)
+            .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "org:example")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE, "org:acme")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        doc.assertElementValue("/ex:root/ex:source-uri", "/split-test.xml");
+        doc.assertElementExists("/ex:root/ex:chunks/ex:chunk[1]/ex:text");
+        doc.assertElementExists(
+            "When splitting and adding embeddings, the user can specify a namespace both for the sidecar document " +
+                "and a separate namespace for the embedding.",
+            "/ex:root/ex:chunks/ex:chunk[1]/acme:embedding"
+        );
+    }
+
+    @Test
+    void sidecarWithNoNamespace() {
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 100)
+            .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        doc.assertElementValue("/root/source-uri", "/split-test.xml");
+        doc.assertElementExists("/root/chunks/chunk[1]/text");
+        doc.assertElementExists("Since a namespace is specified for the document - no namespace - it should be " +
+            "applied to the embedding element too.", "/root/chunks/chunk[1]/embedding");
     }
 
     @Test

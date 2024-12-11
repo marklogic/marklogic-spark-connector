@@ -82,7 +82,7 @@ public abstract class EmbeddingAdderFactory {
         XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(
             context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
             context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
-            context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
+            context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
             NamespaceContextFactory.makeNamespaceContext(context.getProperties())
         );
         return new DOMChunkSelector(

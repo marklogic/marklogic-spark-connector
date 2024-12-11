@@ -181,7 +181,8 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
         // Registers two frequently used namespaces in tests.
         return readXmlDocument(uri,
             Namespace.getNamespace("model", "http://marklogic.com/appservices/model"),
-            Namespace.getNamespace("ex", "org:example")
+            Namespace.getNamespace("ex", "org:example"),
+            Namespace.getNamespace("acme", "org:acme")
         );
     }
 

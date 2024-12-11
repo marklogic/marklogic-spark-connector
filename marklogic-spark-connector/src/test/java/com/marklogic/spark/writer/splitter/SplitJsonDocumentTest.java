@@ -175,6 +175,17 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void invalidMaxChunksValue() {
+        DataFrameWriter writer = prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, -1)
+            .mode(SaveMode.Append);
+
+        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        assertTrue(ex.getMessage().contains("The value of 'spark.marklogic.write.splitter.sidecar.maxChunks' must be 0 or greater."),
+            "Unexpected error: " + ex.getMessage());
+    }
+
+    @Test
     void maxChunksWithCustomPermissions() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
