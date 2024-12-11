@@ -23,8 +23,8 @@ public class XmlChunkConfig {
     private final NamespaceContext namespaceContext;
 
     // Defaults to the config used by the connector's splitter feature.
-    public XmlChunkConfig() {
-        this(null, null, null, null);
+    public XmlChunkConfig(String embeddingNamespace) {
+        this(null, null, embeddingNamespace, null);
     }
 
     public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext) {
