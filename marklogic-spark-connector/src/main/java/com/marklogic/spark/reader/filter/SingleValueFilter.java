@@ -49,31 +49,41 @@ class SingleValueFilter implements OpticFilter {
 
     @Override
     public PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan) {
+        return bindFilterValue(plan, this.paramName);
+    }
+
+    @Override
+    public PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan, String paramColumnName) {
         if (value == null) {
             return plan;
         }
 
         if (value instanceof Long) {
-            return plan.bindParam(paramName, (Long) value);
+            return plan.bindParam(paramColumnName, (Long) value);
         } else if (value instanceof Integer) {
-            return plan.bindParam(paramName, (Integer) value);
+            return plan.bindParam(paramColumnName, (Integer) value);
         } else if (value instanceof Short) {
             // Have not found a way to test this yet, as MarkLogic returns "int" as the type in columnInfo for a TDE
             // column with a type of "short". Leaving this here in case the server reports "short" in the future.
-            return plan.bindParam(paramName, (Short) value);
+            return plan.bindParam(paramColumnName, (Short) value);
         } else if (value instanceof Double) {
-            return plan.bindParam(paramName, (Double) value);
+            return plan.bindParam(paramColumnName, (Double) value);
         } else if (value instanceof Float) {
-            return plan.bindParam(paramName, (Float) value);
+            return plan.bindParam(paramColumnName, (Float) value);
         } else if (value instanceof Boolean) {
-            return plan.bindParam(paramName, (Boolean) value);
+            return plan.bindParam(paramColumnName, (Boolean) value);
         } else if (value instanceof Byte) {
             // Have not found a way to test this, as MarkLogic returns "none" as the type in columnInfo for a TDE column
             // with a type of "byte". And so e.g. an IsNotNull is used instead of EqualTo. So it does not appear
             // possible to hit this line of code, but leaving it in case the server reports something besides "none"
             // in the future.
-            return plan.bindParam(paramName, (Byte) value);
+            return plan.bindParam(paramColumnName, (Byte) value);
         }
-        return plan.bindParam(paramName, value.toString());
+        return plan.bindParam(paramColumnName, value.toString());
+    }
+
+    @Override
+    public String getColumnName() {
+        return this.columnName;
     }
 }

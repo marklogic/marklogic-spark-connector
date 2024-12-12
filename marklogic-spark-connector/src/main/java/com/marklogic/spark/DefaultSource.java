@@ -27,6 +27,7 @@ import scala.collection.JavaConverters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
@@ -156,6 +157,27 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
                 logger.debug("Inferred schema from Optic columnInfo: {}", schema);
             }
+
+            // Hacking in columns for params.
+            List<String> paramNames = caseSensitiveOptions.keySet().stream()
+                .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+                .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+                .collect(Collectors.toList());
+            /**
+             * Here's our main problem - we need to add the op.param to the Spark schema so that a user can then
+             * filter on it without error. To do that, we need to know the Spark type to use. But we have no way of
+             * knowing how the op.param is going to be used unless we were to parse the query somehow to try to
+             * determine what column type is associated with the op.param.
+             *
+             * Alternatively, we could require that the user specify the type of the op.param in their Spark options,
+             * with string being the default. Example - spark.marklogic.read.opticParam.myValue.type=string. That
+             * would allow us to build the correct schema here.
+             */
+            for (String paramName : paramNames) {
+                schema = schema.add(paramName, DataTypes.StringType, true);
+            }
+            Util.MAIN_LOGGER.warn("SCHEMA: " + schema.prettyJson());
+
             return schema;
         } catch (Exception ex) {
             throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
