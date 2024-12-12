@@ -26,6 +26,7 @@ import scala.collection.JavaConverters;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
@@ -148,6 +149,17 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
                 logger.debug("Inferred schema from Optic columnInfo: {}", schema);
             }
+
+            // Hacking in columns for params.
+            List<String> paramNames = caseSensitiveOptions.keySet().stream()
+                .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+                .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+                .collect(Collectors.toList());
+            for (String paramName : paramNames) {
+                schema = schema.add(paramName, DataTypes.StringType, true);
+            }
+            System.out.println("SCHEMA: " + schema.prettyJson());
+
             return schema;
         } catch (Exception ex) {
             throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);

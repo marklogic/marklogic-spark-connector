@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -139,7 +140,16 @@ public class OpticReadContext extends ContextSupport {
             }
         }
 
-        return plan;
+        AtomicReference<PlanBuilder.Plan> planRef = new AtomicReference<>(plan);
+        getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .forEach(key -> {
+                String paramName = key.substring(Options.READ_OPTIC_PARAM_PREFIX.length());
+                String paramValue = getProperties().get(key);
+                planRef.set(planRef.get().bindParam(paramName, paramValue));
+            });
+
+        return planRef.get();
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {

@@ -39,4 +39,8 @@ public interface OpticFilter extends Serializable {
     default boolean isValid() {
         return true;
     }
+
+    default String getColumnName() {
+        return null;
+    }
 }

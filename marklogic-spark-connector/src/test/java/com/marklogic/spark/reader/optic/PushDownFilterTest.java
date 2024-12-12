@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * As of 2024-10-29, this is mysteriously failing with 8016 connection issues on Jenkins. Does not fail on MarkLogic
  * 11 though. Will investigate more soon.
  */
-@ExtendWith(RequiresMarkLogic11OrLower.class)
+//@ExtendWith(RequiresMarkLogic11OrLower.class)
 class PushDownFilterTest extends AbstractPushDownTest {
 
     /**
