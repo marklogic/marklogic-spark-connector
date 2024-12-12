@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.rdf;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.langchain4j.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,10 +23,10 @@ public class GraphWriter {
     private final DatabaseClient databaseClient;
     private final String permissions;
 
-    public GraphWriter(DatabaseClient databaseClient, String permissionsString) {
+    public GraphWriter(DatabaseClient databaseClient, String rolesAndCapabilities) {
         this.databaseClient = databaseClient;
-        this.permissions = permissionsString != null && permissionsString.trim().length() > 0 ?
-            parsePermissions(permissionsString) :
+        this.permissions = rolesAndCapabilities != null && rolesAndCapabilities.trim().length() > 0 ?
+            parsePermissions(rolesAndCapabilities) :
             "xdmp:default-permissions()";
     }
 
@@ -50,12 +51,12 @@ public class GraphWriter {
      * We know the permissions string is valid at this point, as if it weren't, the writing process would have failed
      * before the connector gets to here.
      *
-     * @param permissions
+     * @param rolesAndCapabilities
      * @return
      */
-    private String parsePermissions(final String permissions) {
+    private String parsePermissions(final String rolesAndCapabilities) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-        metadata.getPermissions().addFromDelimitedString(permissions);
+        Util.addPermissionsFromDelimitedString(metadata.getPermissions(), rolesAndCapabilities);
         StringBuilder permissionsString = new StringBuilder("(");
         boolean firstOne = true;
         for (String role : metadata.getPermissions().keySet()) {

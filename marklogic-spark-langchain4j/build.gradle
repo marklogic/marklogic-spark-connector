@@ -1,7 +1,9 @@
 dependencies {
   implementation project(":marklogic-spark-api")
 
-  implementation (project(":marklogic-langchain4j")) {
+  // API dependency so that public class in marklogic-langchain4j - specifically Util - can be accessed
+  // in the connector.
+  api (project(":marklogic-langchain4j")) {
     // These need to be excluded here so they don't sneak in when this module is depended on by the
     // marklogic-spark-connector module.
     exclude group: "com.fasterxml.jackson.core"
