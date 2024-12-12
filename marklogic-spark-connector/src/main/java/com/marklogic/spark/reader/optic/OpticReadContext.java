@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -133,20 +134,71 @@ public class OpticReadContext extends ContextSupport {
                 .bindParam("ML_UPPER_BOUND", bucket.upperBound);
         }
 
+        // Need to keep track of which Optic param names have values bound as a result of a user invoking a Spark
+        // filter operation. Any Optic param names that don't have values bound must then have their user-defined
+        // default values bound.
+        final Set<String> opticParamNames = getOpticParamNames();
+        final Set<String> boundOpticParamNames = new HashSet<>();
+
         if (opticFilters != null) {
             for (OpticFilter opticFilter : opticFilters) {
-                plan = opticFilter.bindFilterValue(plan);
+                final String columnName = opticFilter.getColumnName();
+                if (opticParamNames.contains(columnName)) {
+                    boundOpticParamNames.add(columnName);
+                    plan = opticFilter.bindFilterValue(plan, columnName);
+                } else {
+                    plan = opticFilter.bindFilterValue(plan);
+                }
             }
         }
 
-        return plan;
+        return bindDefaultOpticParamValues(plan, boundOpticParamNames);
+    }
+
+    private Set<String> getOpticParamNames() {
+        return getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+            .collect(Collectors.toSet());
+    }
+
+    /**
+     * For any column associated with an op.param call that doesn't have a value bound already, we need to use the
+     * default value provided by the user. Not binding a value at all would cause the server to throw an error.
+     *
+     * @param plan
+     * @param boundOpticParamNames the set of Optic param names that have already been bound and thus should not have
+     *                             default values bound
+     * @return
+     */
+    private PlanBuilder.Plan bindDefaultOpticParamValues(PlanBuilder.Plan plan, Set<String> boundOpticParamNames) {
+        AtomicReference<PlanBuilder.Plan> planRef = new AtomicReference<>(plan);
+        getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .forEach(key -> {
+                String paramName = key.substring(Options.READ_OPTIC_PARAM_PREFIX.length());
+                // Don't bind a param if it was already bound by an OpticFilter, as that would override the filter's value.
+                if (!boundOpticParamNames.contains(paramName)) {
+                    String paramValue = getProperties().get(key);
+                    planRef.set(planRef.get().bindParam(paramName, paramValue));
+                }
+            });
+        return planRef.get();
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
         this.opticFilters = opticFilters;
-        // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
-        // which Optic does not allow.
-        opticFilters.forEach(filter -> planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(filter)));
+
+        final Set<String> opticParamNames = getOpticParamNames();
+        // Any filter associated with an op.param call should not be pushed down as a new operator in the Optic
+        // plan. Such a filter just needs to have its value bound to the plan.
+        opticFilters.forEach(opticFilter -> {
+            if (!opticParamNames.contains(opticFilter.getColumnName())) {
+                // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
+                // which Optic does not allow.
+                planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(opticFilter));
+            }
+        });
     }
 
     void pushDownLimit(int limit) {

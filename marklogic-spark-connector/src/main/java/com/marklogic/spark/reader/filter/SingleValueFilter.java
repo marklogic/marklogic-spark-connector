@@ -49,6 +49,11 @@ class SingleValueFilter implements OpticFilter {
 
     @Override
     public PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan) {
+        return bindFilterValue(plan, this.paramName);
+    }
+
+    @Override
+    public PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan, String paramName) {
         if (value == null) {
             return plan;
         }
@@ -75,5 +80,10 @@ class SingleValueFilter implements OpticFilter {
             return plan.bindParam(paramName, (Byte) value);
         }
         return plan.bindParam(paramName, value.toString());
+    }
+
+    @Override
+    public String getColumnName() {
+        return this.columnName;
     }
 }
