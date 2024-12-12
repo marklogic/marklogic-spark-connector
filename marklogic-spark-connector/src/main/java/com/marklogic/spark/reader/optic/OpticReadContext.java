@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -133,20 +134,51 @@ public class OpticReadContext extends ContextSupport {
                 .bindParam("ML_UPPER_BOUND", bucket.upperBound);
         }
 
+        // We can build this once earlier on so we don't calculate it every time.
+        final Set<String> paramColumnNames = getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+            .collect(Collectors.toSet());
+
+        // Either pushdown a filter or bind its value against a user-defined op.param clause.
+        final Set<String> boundParamNames = new HashSet<>();
         if (opticFilters != null) {
             for (OpticFilter opticFilter : opticFilters) {
-                plan = opticFilter.bindFilterValue(plan);
+                // Hacking so that we bind against a known param name instead of against a random param name. Random
+                // param names are suitable for pushing down regular filters, but for populating an op.param that the
+                // user defines, we need to use that known param name.
+                String columnName = opticFilter.getColumnName();
+                if (columnName != null && paramColumnNames.contains(columnName)) {
+                    Util.MAIN_LOGGER.warn("FILTER BINDING {}", columnName);
+                    boundParamNames.add(columnName);
+                    plan = opticFilter.bindFilterValue(plan, columnName);
+                } else {
+                    plan = opticFilter.bindFilterValue(plan);
+                }
             }
         }
 
-        return plan;
+        AtomicReference<PlanBuilder.Plan> planRef = new AtomicReference<>(plan);
+        getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .forEach(key -> {
+                String paramName = key.substring(Options.READ_OPTIC_PARAM_PREFIX.length());
+                // Don't bind a param if it was already bound by an OpticFilter, as that would override the filter's value.
+                if (!boundParamNames.contains(paramName)) {
+                    String paramValue = getProperties().get(key);
+                    Util.MAIN_LOGGER.warn("OPTION BINDING {} {}", paramName, paramValue);
+                    planRef.set(planRef.get().bindParam(paramName, paramValue));
+                }
+            });
+
+        return planRef.get();
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
         this.opticFilters = opticFilters;
         // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
         // which Optic does not allow.
-        opticFilters.forEach(filter -> planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(filter)));
+//        opticFilters.forEach(filter -> planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(filter)));
     }
 
     void pushDownLimit(int limit) {

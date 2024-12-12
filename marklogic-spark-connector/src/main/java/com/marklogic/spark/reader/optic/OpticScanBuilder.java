@@ -67,6 +67,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             logger.debug("Filter count: {}", filters.length);
         }
         for (Filter filter : filters) {
+            // It looks like we need to NOT push down things here that are actually op.param values.
             OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
             if (opticFilter != null && opticFilter.isValid()) {
                 if (logger.isDebugEnabled()) {

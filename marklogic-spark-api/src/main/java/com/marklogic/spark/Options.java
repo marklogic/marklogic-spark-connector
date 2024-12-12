@@ -39,6 +39,7 @@ public abstract class Options {
     public static final String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     public static final String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
     public static final String READ_PUSH_DOWN_AGGREGATES = "spark.marklogic.read.pushDownAggregates";
+    public static final String READ_OPTIC_PARAM_PREFIX = "spark.marklogic.read.optic.param.";
 
     // "categories" as defined by https://docs.marklogic.com/REST/GET/v1/documents .
     public static final String READ_DOCUMENTS_CATEGORIES = "spark.marklogic.read.documents.categories";
