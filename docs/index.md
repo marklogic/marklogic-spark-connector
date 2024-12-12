@@ -16,6 +16,7 @@ The connector has the following system requirements:
 [a Spark distribution](https://spark.apache.org/downloads.html), you must select a distribution that uses Scala 2.12 and not Scala 2.13.
 * For writing data, MarkLogic 9.0-9 or higher.
 * For reading data, MarkLogic 10.0-9 or higher.
+* If using Java to run Spark, Java 11 or higher is required.
 
 In addition, if your MarkLogic cluster has multiple hosts in it, it is highly recommended to put a load balancer in front
 of your cluster and have the MarkLogic Spark connector connect through the load balancer. 
