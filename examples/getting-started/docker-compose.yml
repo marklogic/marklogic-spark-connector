@@ -1,5 +1,3 @@
-version: '3.8'
-
 name: marklogic_spark_getting_started
 
 services:
