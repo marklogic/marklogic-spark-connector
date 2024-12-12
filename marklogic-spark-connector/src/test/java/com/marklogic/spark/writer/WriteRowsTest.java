@@ -205,6 +205,21 @@ class WriteRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    void invalidPermissionsCapability() {
+        SparkException ex = assertThrows(SparkException.class, () -> newWriter()
+            .option(Options.WRITE_PERMISSIONS, "rest-reader,read,rest-writer,notvalid")
+            .save());
+
+        Throwable cause = getCauseFromWriterException(ex);
+        assertTrue(cause instanceof IllegalArgumentException);
+        assertEquals("Unable to parse permissions string: rest-reader,read,rest-writer,notvalid; cause: Not a valid capability: NOTVALID",
+            cause.getMessage(), "When a capability is invalid, the Java Client throws an error message that refers " +
+                "to the enum class. This likely won't make sense to a connector or Flux user. So the connector is " +
+                "expected to massage the error a bit by identifying the invalid capability without referencing " +
+                "Java classes.");
+    }
+
+    @Test
     void dontAbortOnFailure() {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();

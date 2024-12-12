@@ -70,15 +70,17 @@ public abstract class DocumentTextSplitterFactory {
 
     private static ChunkAssembler makeChunkAssembler(Context context) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
+
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {
             metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS).split(","));
         }
+
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS);
-            metadata.getPermissions().addFromDelimitedString(value);
+            com.marklogic.langchain4j.Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
         } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_PERMISSIONS);
-            metadata.getPermissions().addFromDelimitedString(value);
+            com.marklogic.langchain4j.Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
         }
 
         return new DefaultChunkAssembler(new ChunkConfig.Builder()

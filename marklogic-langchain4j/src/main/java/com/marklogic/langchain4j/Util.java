@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import org.slf4j.Logger;
@@ -35,4 +36,23 @@ public interface Util {
             }
         }
     }
+
+    static void addPermissionsFromDelimitedString(DocumentMetadataHandle.DocumentPermissions permissions,
+                                                  String rolesAndCapabilities) {
+        // This isn't likely the best home for this class, but it's needed by this module and by the connector to
+        // massage an error message that is meaningful for a Java Client user but not meaningful for a connector
+        // or Flux user.
+        try {
+            permissions.addFromDelimitedString(rolesAndCapabilities);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage();
+            final String confusingMessageForUser = "No enum constant com.marklogic.client.io.DocumentMetadataHandle.Capability.";
+            if (message != null && message.contains(confusingMessageForUser)) {
+                message = message.replace(confusingMessageForUser, "Not a valid capability: ");
+                throw new IllegalArgumentException(message, ex);
+            }
+            throw ex;
+        }
+    }
+
 }
