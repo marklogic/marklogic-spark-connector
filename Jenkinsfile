@@ -1,7 +1,5 @@
 @Library('shared-libraries') _
 
-// Using testCodeCoverageReport from the jacoco-report-aggregation plugin to produce an aggregated code coverage
-// report, even though Sonar doesn't seem to be able to make sense of it yet.
 def runtests(String javaVersion){
   sh label:'test', script: '''#!/bin/bash
     export JAVA_HOME=$'''+javaVersion+'''
@@ -13,7 +11,7 @@ def runtests(String javaVersion){
    ./gradlew -i mlDeploy
    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
    ./gradlew -i mlLoadData
-   ./gradlew testCodeCoverageReport || true
+   ./gradlew clean testCodeCoverageReport || true
   '''
   junit '**/build/**/*.xml'
 }

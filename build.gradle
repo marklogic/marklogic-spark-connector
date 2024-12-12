@@ -7,14 +7,13 @@ sonar {
   properties {
     property "sonar.projectKey", "marklogic-spark"
     property "sonar.host.url", "http://localhost:9000"
-    property "sonar.coverage.jacoco.xmlReportPaths", "marklogic-spark-connector/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml"
+    property "sonar.coverage.jacoco.xmlReportPaths", "code-coverage-report/build/reports/jacoco/testCodeCoverageReport/testCodeCoverageReport.xml"
   }
 }
 
 subprojects {
   apply plugin: "java-library"
   apply plugin: "jacoco"
-  apply plugin: "org.sonarqube"
 
   group = "com.marklogic"
   version "2.5-SNAPSHOT"
@@ -39,7 +38,7 @@ subprojects {
       force "org.slf4j:slf4j-api:2.0.13"
     }
   }
-  
+
   test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
