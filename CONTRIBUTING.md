@@ -56,7 +56,7 @@ To configure the SonarQube service, perform the following steps:
 7. Click on "Use the global setting" and then "Create project".
 8. On the "Analysis Method" page, click on "Locally".
 9. In the "Provide a token" panel, click on "Generate". Copy the token.
-10. Add `systemProp.sonar.token=your token pasted here` to `gradle-local.properties` in the root of your project, creating
+10. Add `systemProp.sonar.login=your token pasted here` to `gradle-local.properties` in the root of your project, creating
 that file if it does not exist yet.
 
 To run SonarQube, run the following Gradle tasks using Java 17, which will run all the tests with code coverage and 
@@ -64,10 +64,10 @@ then generate a quality report with SonarQube:
 
     ./gradlew test sonar
 
-If you do not add `systemProp.sonar.token` to your `gradle-local.properties` file, you can specify the token via the
+If you do not add `systemProp.sonar.login` to your `gradle-local.properties` file, you can specify the token via the
 following:
 
-    ./gradlew test sonar -Dsonar.token=paste your token here
+    ./gradlew test sonar -Dsonar.login=paste your token here
 
 When that completes, you will see a line like this near the end of the logging:
 
@@ -193,12 +193,16 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
-to `src/main/java`. Then run `./gradlew clean shadowJar` to rebuild the connector jar. Then run the following:
+to `src/main/java`. Then run the following:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+```
+./gradlew clean shadowJar
+cd marklogic-spark-connector
+spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+```
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 
 
