@@ -8,7 +8,7 @@ import com.marklogic.spark.Util;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-abstract class FileUtil {
+public interface FileUtil {
 
     static String makePathFromDocumentURI(String documentURI) {
         // Mostly copied from MLCP.
@@ -24,8 +24,5 @@ abstract class FileUtil {
             }
             return documentURI;
         }
-    }
-
-    private FileUtil() {
     }
 }

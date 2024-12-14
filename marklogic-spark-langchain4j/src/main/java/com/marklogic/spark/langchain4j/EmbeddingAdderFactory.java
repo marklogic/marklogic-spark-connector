@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-public abstract class EmbeddingAdderFactory {
+public interface EmbeddingAdderFactory {
 
-    public static Optional<EmbeddingAdder> makeEmbedder(Context context, DocumentTextSplitter splitter) {
+    static Optional<EmbeddingAdder> makeEmbedder(Context context, DocumentTextSplitter splitter) {
         Optional<EmbeddingModel> embeddingModel = makeEmbeddingModel(context);
         if (embeddingModel.isPresent()) {
             EmbeddingGenerator embeddingGenerator = makeEmbeddingGenerator(context, embeddingModel.get());
@@ -118,8 +118,5 @@ public abstract class EmbeddingAdderFactory {
             .filter(key -> key.startsWith(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX))
             .forEach(key -> options.put(key.substring(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX.length()), context.getProperties().get(key)));
         return options;
-    }
-
-    private EmbeddingAdderFactory() {
     }
 }

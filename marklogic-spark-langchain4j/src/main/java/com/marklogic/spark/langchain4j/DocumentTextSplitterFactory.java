@@ -13,9 +13,9 @@ import dev.langchain4j.data.document.DocumentSplitter;
 import java.util.Arrays;
 import java.util.Optional;
 
-public abstract class DocumentTextSplitterFactory {
+public interface DocumentTextSplitterFactory {
 
-    public static Optional<DocumentTextSplitter> makeSplitter(Context context) {
+    static Optional<DocumentTextSplitter> makeSplitter(Context context) {
         if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
             return Optional.of(makeXmlSplitter(context));
         } else if (context.getProperties().containsKey(Options.WRITE_SPLITTER_JSON_POINTERS)) {
@@ -94,8 +94,5 @@ public abstract class DocumentTextSplitterFactory {
             .withEmbeddingXmlNamespace(context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE))
             .build()
         );
-    }
-
-    private DocumentTextSplitterFactory() {
     }
 }

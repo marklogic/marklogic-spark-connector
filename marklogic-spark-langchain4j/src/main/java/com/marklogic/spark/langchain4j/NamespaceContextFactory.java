@@ -10,9 +10,9 @@ import javax.xml.namespace.NamespaceContext;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class NamespaceContextFactory {
+public interface NamespaceContextFactory {
 
-    public static NamespaceContext makeNamespaceContext(Map<String, String> properties) {
+    static NamespaceContext makeNamespaceContext(Map<String, String> properties) {
         Map<String, String> prefixesToNamespaces = new HashMap<>();
         properties.keySet().stream()
             .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
@@ -22,8 +22,5 @@ public abstract class NamespaceContextFactory {
                 prefixesToNamespaces.put(prefix, namespace);
             });
         return new XPathNamespaceContext(prefixesToNamespaces);
-    }
-
-    private NamespaceContextFactory() {
     }
 }

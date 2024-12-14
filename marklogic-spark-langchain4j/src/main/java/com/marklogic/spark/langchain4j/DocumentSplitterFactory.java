@@ -14,9 +14,9 @@ import dev.langchain4j.data.document.splitter.DocumentSplitters;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class DocumentSplitterFactory {
+public interface DocumentSplitterFactory {
 
-    public static DocumentSplitter makeDocumentSplitter(Context context) {
+    static DocumentSplitter makeDocumentSplitter(Context context) {
         if (context.hasOption(Options.WRITE_SPLITTER_CUSTOM_CLASS)) {
             return makeCustomSplitter(context);
         }
@@ -98,8 +98,5 @@ public abstract class DocumentSplitterFactory {
             message = message.replace("maxOverlapSize", optionName);
         }
         return message;
-    }
-
-    private DocumentSplitterFactory() {
     }
 }
