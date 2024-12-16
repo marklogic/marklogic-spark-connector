@@ -8,6 +8,7 @@ import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
+import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -220,6 +221,16 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("test/medline.iso-8859-1.xml", "collection1");
         doc.assertElementExists("/MedlineCitationSet");
+    }
+
+    @Test
+    void pathDoesntExist() {
+        AnalysisException ex = assertThrows(AnalysisException.class, () -> newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load("path-doesnt-exist"));
+
+        assertTrue(ex.getMessage().contains("Path does not exist"), "Unexpected error: " + ex.getMessage());
     }
 
     private void verifyAllMetadata(Path tempDir, int rowCount) {

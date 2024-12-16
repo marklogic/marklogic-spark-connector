@@ -16,6 +16,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.File;
@@ -25,8 +27,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WriteDocumentFilesTest extends AbstractIntegrationTest {
 
@@ -43,6 +44,25 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
             .save(tempDir.toFile().getAbsolutePath());
 
         verifyAuthorFilesWereCorrectlyWritten(tempDir);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"doesntexist", "has space", "has+plus"})
+    void pathDoesntExist(String directoryName, @TempDir Path tempDir) {
+        File dir = new File(tempDir.toFile(), directoryName);
+        assertFalse(dir.exists());
+
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/author/author1.json")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .mode(SaveMode.Append)
+            .save(dir.getAbsolutePath());
+
+        assertTrue(dir.exists(), "Directory was not created: " + dir.getAbsolutePath());
+        assertEquals(1, dir.listFiles().length);
+        assertTrue(new File(dir, "author").exists());
     }
 
     @Test

@@ -7,6 +7,7 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.AnalysisException;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.jdom2.Namespace;
@@ -214,6 +215,16 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
         ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.show());
         assertTrue(ex.getMessage().contains("Unsupported encoding value: Not-a-real-encoding"),
             "Actual error: " + ex.getMessage());
+    }
+
+    @Test
+    void pathDoesntExist() {
+        AnalysisException ex = assertThrows(AnalysisException.class, () -> newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_AGGREGATES_XML_ELEMENT, "MedlineCitation")
+            .load("path-doesnt-exist"));
+
+        assertTrue(ex.getMessage().contains("Path does not exist"), "Unexpected error: " + ex.getMessage());
     }
 
     private void verifyRow(Row row, String expectedUriSuffix, String rootPath, String name, int age) {

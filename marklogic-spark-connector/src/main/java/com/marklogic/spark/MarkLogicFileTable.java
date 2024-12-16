@@ -5,7 +5,9 @@ package com.marklogic.spark;
 
 import com.marklogic.spark.reader.file.FileScanBuilder;
 import com.marklogic.spark.writer.file.DocumentFileWriteBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.read.ScanBuilder;
 import org.apache.spark.sql.connector.write.LogicalWriteInfo;
@@ -16,6 +18,8 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import scala.Option;
 import scala.collection.Seq;
+
+import java.io.IOException;
 
 /**
  * Extends Spark's FileTable class so that it can make use of that class's file index capabilities, which includes
@@ -36,6 +40,9 @@ class MarkLogicFileTable extends FileTable {
 
     MarkLogicFileTable(SparkSession sparkSession, CaseInsensitiveStringMap options, Seq<String> paths, StructType schema) {
         super(sparkSession, options, paths, Option.apply(schema));
+        if (isWriteFilesOperation(options, paths)) {
+            makeWritePath(paths.head(), sparkSession);
+        }
         this.options = options;
         this.schema = schema;
     }
@@ -76,5 +83,36 @@ class MarkLogicFileTable extends FileTable {
         // Per the docs in FileTable, this allows for returning a Spark V1 FileFormat. We don't have support for that,
         // so null is returned.
         return null;
+    }
+
+    private boolean isWriteFilesOperation(CaseInsensitiveStringMap options, Seq<String> paths) {
+        // When writing files, a user is limited to a single path. So if the user provides multiple paths when
+        // reading files, we immediately know it's not a write operation.
+        if (paths.size() != 1) {
+            return false;
+        }
+        // Unfortunately not all "read files" options have a common base. The worst case though of
+        // mis-identifying this as a "read" operation and making a directory automatically though is that
+        // the user doesn't get an expected error for trying to read a path that doesn't exist.
+        return options.keySet()
+            .stream()
+            .noneMatch(key -> key.startsWith("spark.marklogic.read.files")
+                || key.startsWith("spark.marklogic.read.aggregates.xml")
+            );
+    }
+
+    private void makeWritePath(String path, SparkSession sparkSession) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Calling mkdirs on path: {}", path);
+        }
+        Configuration config = sparkSession.sparkContext().hadoopConfiguration();
+        Path hadoopPath = new Path(path);
+        try {
+            hadoopPath.getFileSystem(config).mkdirs(hadoopPath);
+        } catch (Exception ex) {
+            // The user is likely to get an AnalysisException from Spark due to the path not existing, which is the
+            // better error to be propagated.
+            Util.MAIN_LOGGER.error("Unable to call mkdirs on path: {}; cause: {}", path, ex.getMessage());
+        }
     }
 }
