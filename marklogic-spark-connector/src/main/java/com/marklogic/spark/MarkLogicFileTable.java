@@ -7,6 +7,7 @@ import com.marklogic.spark.reader.file.FileScanBuilder;
 import com.marklogic.spark.writer.file.DocumentFileWriteBuilder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.read.ScanBuilder;
@@ -18,8 +19,6 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import scala.Option;
 import scala.collection.Seq;
-
-import java.io.IOException;
 
 /**
  * Extends Spark's FileTable class so that it can make use of that class's file index capabilities, which includes
@@ -91,28 +90,37 @@ class MarkLogicFileTable extends FileTable {
         if (paths.size() != 1) {
             return false;
         }
-        // Unfortunately not all "read files" options have a common base. The worst case though of
-        // mis-identifying this as a "read" operation and making a directory automatically though is that
-        // the user doesn't get an expected error for trying to read a path that doesn't exist.
-        return options.keySet()
-            .stream()
+        return options.keySet().stream()
+            // There are no required options to indicate whether this is a read or write. So we at least check for some
+            // options that would indicate that the user is reading files, in which case we don't need to call mkdirs.
             .noneMatch(key -> key.startsWith("spark.marklogic.read.files")
                 || key.startsWith("spark.marklogic.read.aggregates.xml")
             );
     }
 
     private void makeWritePath(String path, SparkSession sparkSession) {
-        if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Calling mkdirs on path: {}", path);
-        }
         Configuration config = sparkSession.sparkContext().hadoopConfiguration();
-        Path hadoopPath = new Path(path);
         try {
-            hadoopPath.getFileSystem(config).mkdirs(hadoopPath);
+            Path hadoopPath = new Path(path);
+            FileSystem fileSystem = hadoopPath.getFileSystem(config);
+            if (!fileSystem.exists(hadoopPath)) {
+                if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                    Util.MAIN_LOGGER.debug("Calling mkdirs on path: {}", path);
+                }
+                fileSystem.mkdirs(hadoopPath);
+            }
         } catch (Exception ex) {
-            // The user is likely to get an AnalysisException from Spark due to the path not existing, which is the
-            // better error to be propagated.
-            Util.MAIN_LOGGER.error("Unable to call mkdirs on path: {}; cause: {}", path, ex.getMessage());
+            // We'll get an exception in 1 of 2 scenarios. First, this is a write operation and the mkdirs call
+            // fails. In that scenario, the user will still get an AnalysisException from Spark noting that the path
+            // does not exist. The user likely won't be able to make the path themselves - perhaps a permissions issue -
+            // and thus has the info they need to proceed. In the other scenario, this is a read operation and the
+            // mkdirs call didn't need to happen. In that scenario, the user will still get an AnalysisException because
+            // the directory could not be found. So the user has enough information to proceed there as well. So this
+            // is only being logged at the debug level as the AnalysisException should be sufficient for helping the
+            // user to fix their problem.
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Unable to call mkdirs on path: {}; cause: {}", path, ex.getMessage());
+            }
         }
     }
 }
