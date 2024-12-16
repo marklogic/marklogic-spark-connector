@@ -48,6 +48,20 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
+  // Without tika - 30mb shadow jar for connector
+
+  // Adds just 0.6mb .
+  shadowDependencies("org.apache.tika:tika-core:3.0.0")
+
+  // Adds 42mb to a 30mb shadow jar for the connector.
+//  shadowDependencies("org.apache.tika:tika-parsers-standard-package:3.0.0")
+
+  // Adds 14mb
+//  shadowDependencies("org.apache.tika:tika-parser-pdf-module:3.0.0")
+
+  // Adds 7mb
+  shadowDependencies("org.apache.tika:tika-parser-miscoffice-module:3.0.0")
+
   // Once we update langchain4j to 0.36.0 or higher, which requires Java 17, this will need to become a
   // testImplementation dependency, and we'll figure out how to include them separately in Flux.
   shadowDependencies (project(":marklogic-spark-langchain4j")) {

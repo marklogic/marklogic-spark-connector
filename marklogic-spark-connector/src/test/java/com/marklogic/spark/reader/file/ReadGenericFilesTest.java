@@ -32,6 +32,27 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
 
     private static final String ISO_8859_1_ENCODED_FILE = "src/test/resources/encoding/medline.iso-8859-1.txt";
 
+    /**
+     * So if a user gets multiple rows from the same file - how do they only do some processing on the non-binary file?
+     * TBD later.
+     */
+    @Test
+    void pdf() {
+        Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/pdf");
+
+        List<Row> rows = dataset.collectAsList();
+        System.out.println(rows);
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+//            .option(Options.WRITE_URI_REPLACE, ".*pdf,''")
+//            .option(Options.WRITE_URI_TEMPLATE, "/a.txt")
+            .mode(SaveMode.Append)
+            .save();
+    }
+
     @Test
     void readAndWriteMixedFiles() {
         Dataset<Row> dataset = newSparkSession().read().format(CONNECTOR_IDENTIFIER)

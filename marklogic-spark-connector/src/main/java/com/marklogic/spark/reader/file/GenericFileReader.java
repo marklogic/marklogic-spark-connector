@@ -10,7 +10,9 @@ import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.unsafe.types.UTF8String;
+import org.apache.tika.Tika;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -42,13 +44,25 @@ class GenericFileReader implements PartitionReader<InternalRow> {
         filePathIndex++;
 
         try {
+            // Hmm - this is an argument for extracting during the writer.
+            // I wonder if we can support extraction when streaming? We'd have to process the stream twice, or just
+            // process it while extracting, which means the original file can't be saved.
+            // Starting to think the original file just won't be saved. If the user doesn't like that, they should
+            // make a REST transform, possibly.
             byte[] content = this.isStreaming ?
                 FileUtil.serializeFileContext(fileContext, path) :
                 readFileIntoByteArray(path);
 
+//            nextRowToReturn = new GenericInternalRow(new Object[]{
+//                UTF8String.fromString(path),
+//                ByteArray.concat(content),
+//                null, null, null, null, null, null
+//            });
+
+            String extractedContent = new Tika().parseToString(new ByteArrayInputStream(content));
             nextRowToReturn = new GenericInternalRow(new Object[]{
-                UTF8String.fromString(path),
-                ByteArray.concat(content),
+                UTF8String.fromString(path + "-extracted.txt"),
+                ByteArray.concat(extractedContent.getBytes()),
                 null, null, null, null, null, null
             });
         } catch (Exception ex) {
