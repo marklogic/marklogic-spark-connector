@@ -1,0 +1,10 @@
+<envelope>
+  <my-chunks>
+    <my-chunk>
+      <my-text>First chunk.</my-text>
+    </my-chunk>
+    <my-chunk>
+      <my-text>Second chunk.</my-text>
+    </my-chunk>
+  </my-chunks>
+</envelope>

@@ -59,27 +59,32 @@ query expansion via [a thesaurus](https://docs.marklogic.com/guide/search-dev/th
 
 ## Optic query requirements
 
-As of the 2.0.0 release of the connector, the Optic query must use the
-[op.fromView](https://docs.marklogic.com/op.fromView) accessor function. Future releases of both the connector and
-MarkLogic will strive to relax this requirement.
+**Starting with the 2.5.0 release**, an Optic query can use any 
+[data access function](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_66011) with one caveat - only Optic 
+queries that use `op.fromView` can be partitioned into multiple calls to MarkLogic. Optic queries that use any other 
+data access function have the following constraints:
 
-In addition, calls to `groupBy`, `orderBy`, `limit`, and `offset` should be performed via Spark instead of within
-the initial Optic query. A key benefit of Spark and the MarkLogic connector is the ability to execute the query in
-parallel via multiple Spark partitions. The aforementioned calls, if made in the Optic query, may not produce the
-expected results if more than one Spark partition is used or if more than one request is made to MarkLogic. The
-equivalent Spark operations should be called instead, or the connector should be configured to make a single request
-to MarkLogic. See the "Pushing down operations" and "Tuning performance" sections below for more information.
+1. The connector will execute the query in a single call to MarkLogic. You will therefore need to ensure that the 
+call can complete without timing out. 
+2. The connector requires that the MarkLogic user have the necessary privileges to invoke the 
+[MarkLogic eval endpoint](https://docs.marklogic.com/REST/POST/v1/eval) along with the `xdmp-invoke` privilege.
 
-Finally, the query must adhere to the handful of limitations imposed by the  
+**Prior to the 2.5.0 release**, the Optic query must use the
+[op.fromView](https://docs.marklogic.com/op.fromView) accessor function. In addition, calls to `groupBy`, `orderBy`, `limit`, and `offset` should be 
+performed via Spark instead of within the initial Optic query. As the connector will partition `op.fromView` queries
+into multiple calls to MarkLogic, the aforementioned calls will likely not produce the expected results when more 
+than one request is made to MarkLogic. See the "Pushing down operations" and "Tuning performance" sections below for 
+more information.
+
+Finally, regardless of the Optic data access function you use, the query must adhere to the handful of limitations imposed by the  
 [Optic Query DSL](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_46710). A good practice in validating a
 query is to run it in your [MarkLogic server's qconsole tool](https://docs.marklogic.com/guide/qconsole) in a buffer
 with a query type of "Optic DSL".
 
 ## Schema inference
 
-The connector will infer a Spark schema automatically based on the view identified by `op.fromView` in
-the Optic query. Each column returned by your Optic query will be mapped to a Spark schema column with the
-same name and an appropriate type.
+The connector will infer a Spark schema automatically based your Optic query. Each column returned by your Optic query 
+will be mapped to a Spark schema column with the same name and an appropriate type.
 
 You may override this feature and provide your own schema instead. The example below shows how a custom schema can
 be provided within PySpark; this assumes that you have deployed the application in the
@@ -97,8 +102,9 @@ df.show()
 
 ## Accessing documents
 
-While the connector requires that an Optic query use `op.fromView` as its accessor function, documents can still be
-retrieved via the [Optic functions for joining documents](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_78437).
+If your Optic query uses the `op.fromView` access function, documents can still be
+retrieved via the [Optic functions for joining documents](https://docs.marklogic.com/guide/app-dev/OpticAPI#id_78437). Starting with the 2.5.0 release, you can simply use
+`op.fromSearchDocs` instead, but only if your query can be executed in a single call to MarkLogic without timing out. 
 
 For example, the following query will find all matching rows and then retrieve the documents and URIs associated with
 those rows:
@@ -215,6 +221,10 @@ If you run into any issues with aggregates being pushed down to MarkLogic, you c
 correct result, please [file an issue with this project](https://github.com/marklogic/marklogic-spark-connector/issues).
 
 ## Tuning performance
+
+If you are using the 2.5.0 connector or later along with an Optic query that does not use the `op.fromView` data 
+access function, you can ignore this section. The performance of your query will be strictly based on the Optic query
+itself, which the connector does not impact. 
 
 The primary factor affecting connector performance when reading rows is how many requests are made to MarkLogic. In
 general, performance will be best when minimizing the number of requests to MarkLogic while ensuring that no single

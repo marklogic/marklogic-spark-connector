@@ -1,0 +1,16 @@
+{
+  "envelope": {
+    "my-chunks": [
+      {
+        "wrapper": {
+          "my-text": "First chunk."
+        }
+      },
+      {
+        "wrapper": {
+          "my-text": "Second chunk."
+        }
+      }
+    ]
+  }
+}

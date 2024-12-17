@@ -6,13 +6,12 @@ def runtests(String javaVersion){
     export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
     export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
-    echo "mlPassword=admin" > gradle-local.properties
     echo "Waiting for MarkLogic server to initialize."
     sleep 30s
    ./gradlew -i mlDeploy
    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
    ./gradlew -i mlLoadData
-   ./gradlew test || true
+   ./gradlew clean testCodeCoverageReport || true
   '''
   junit '**/build/**/*.xml'
 }
@@ -55,10 +54,10 @@ pipeline{
         sh label:'mlsetup', script: '''#!/bin/bash
             echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
             sudo /usr/local/sbin/mladmin remove
+            docker-compose down -v || true
             sudo /usr/local/sbin/mladmin cleandata
             cd marklogic-spark-connector
             mkdir -p docker/marklogic/logs
-            docker-compose down -v || true
             docker-compose up -d --build
           '''
         runtests('JAVA17_HOME_DIR')
@@ -108,7 +107,7 @@ pipeline{
                 cd marklogic-spark-connector
                 mkdir -p docker/marklogic/logs
                 docker-compose down -v || true
-                MARKLOGIC_TAG=latest-10.0 docker-compose up -d --build
+                MARKLOGIC_TAG=progressofficial/marklogic-db:latest-11 docker-compose up -d --build
             '''
             runtests('JAVA17_HOME_DIR')
       }
@@ -117,6 +116,7 @@ pipeline{
           sh label:'mlcleanup', script: '''#!/bin/bash
             cd marklogic-spark-connector
             docker-compose down -v || true
+            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/caddy/
             sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
           '''
         }

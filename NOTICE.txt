@@ -13,6 +13,7 @@ Third Party Notices
 jackson-dataformat-xml 2.15.2 (Apache-2.0)
 jdom2 2.0.6.1 (Apache-2.0)
 jena-arq 4.10.0 (Apache-2.0)
+langchain4j 0.35.0 (Apache-2.0)
 marklogic-client-api 7.0.0 (Apache-2.0)
 okhttp 4.12.0 (Apache-2.0)
 
@@ -22,7 +23,7 @@ Apache License 2.0 (Apache-2.0)
 
 Third-Party Components
 
-The following is a list of the third-party components used by the MarkLogic® Spark connector 2.4.2 (last updated October 17, 2024):
+The following is a list of the third-party components used by the MarkLogic® Spark connector 2.5.0 (last updated December 17, 2024):
 
 jackson-dataformat-xml 2.15.2 (Apache-2.0)
 https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/
@@ -34,6 +35,10 @@ For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
 jena-arq 4.10.0 (Apache-2.0)
 https://repo1.maven.org/maven2/org/apache/jena/jena-arq/
+For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
+
+langchain4j 0.35.0 (Apache-2.0)
+https://repo1.maven.org/maven2/dev/langchain4j/langchain4j/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
 marklogic-client-api 7.0.0 (Apache-2.0)

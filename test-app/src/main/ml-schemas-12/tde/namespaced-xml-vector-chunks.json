@@ -1,0 +1,39 @@
+{
+  "template": {
+    "pathNamespace": [
+      {
+        "prefix": "ex",
+        "namespaceUri": "org:example"
+      },
+      {
+        "prefix": "model",
+        "namespaceUri": "http://marklogic.com/appservices/model"
+      }
+    ],
+    "context": "/ex:sidecar/ex:chunks/ex:chunk",
+    "collections": [
+      "namespaced-xml-vector-chunks"
+    ],
+    "rows": [
+      {
+        "schemaName": "example",
+        "viewName": "namespaced_xml_chunks",
+        "columns": [
+          {
+            "name": "uri",
+            "scalarType": "string",
+            "val": "xdmp:node-uri(.)"
+          },
+          {
+            "name": "embedding",
+            "scalarType": "vector",
+            "val": "vec:vector(model:embedding)",
+            "dimension": "384",
+            "invalidValues": "reject",
+            "nullable": true
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -21,9 +21,6 @@ If you wish to use `docker compose`, perform the following steps before deployin
 
 The above will result in a new MarkLogic instance with a single node. 
 
-Alternatively, if you would like to test against a 3-node MarkLogic cluster with a load balancer in front of it, 
-run `docker compose -f docker-compose-3nodes.yaml up -d --build`.
-
 ## Deploying the test application
 
 To deploy the test application, first create `./gradle-local.properties` and add the following to it:
@@ -59,7 +56,7 @@ To configure the SonarQube service, perform the following steps:
 7. Click on "Use the global setting" and then "Create project".
 8. On the "Analysis Method" page, click on "Locally".
 9. In the "Provide a token" panel, click on "Generate". Copy the token.
-10. Add `systemProp.sonar.token=your token pasted here` to `gradle-local.properties` in the root of your project, creating
+10. Add `systemProp.sonar.login=your token pasted here` to `gradle-local.properties` in the root of your project, creating
 that file if it does not exist yet.
 
 To run SonarQube, run the following Gradle tasks using Java 17, which will run all the tests with code coverage and 
@@ -67,10 +64,10 @@ then generate a quality report with SonarQube:
 
     ./gradlew test sonar
 
-If you do not add `systemProp.sonar.token` to your `gradle-local.properties` file, you can specify the token via the
+If you do not add `systemProp.sonar.login` to your `gradle-local.properties` file, you can specify the token via the
 following:
 
-    ./gradlew test sonar -Dsonar.token=paste your token here
+    ./gradlew test sonar -Dsonar.login=paste your token here
 
 When that completes, you will see a line like this near the end of the logging:
 
@@ -87,25 +84,6 @@ You can also force Gradle to run `sonar` if any tests fail:
 
     ./gradlew clean test sonar --continue
 
-## Accessing MarkLogic logs in Grafana
-
-This project's `docker-compose-3nodes.yaml` file includes
-[Grafana, Loki, and promtail services](https://grafana.com/docs/loki/latest/clients/promtail/) for the primary reason of
-collecting MarkLogic log files and allowing them to be viewed and searched via Grafana.
-
-Once you have run `docker compose`, you can access Grafana at http://localhost:3000 . Follow these instructions to
-access MarkLogic logging data:
-
-1. Click on the hamburger in the upper left hand corner and select "Explore", or simply go to
-   http://localhost:3000/explore .
-2. Verify that "Loki" is the default data source - you should see it selected in the upper left hand corner below
-   the "Home" link.
-3. Click on the "Select label" dropdown and choose `job`. Click on the "Select value" label for this filter and
-   select `marklogic` as the value.
-4. Click on the blue "Run query" button in the upper right hand corner.
-
-You should now see logs from all 3 nodes in the MarkLogic cluster.
-
 # Testing with PySpark
 
 The documentation for this project 
@@ -120,7 +98,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
+    pyspark --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -164,7 +142,7 @@ For a quick test of writing documents, use the following:
 
 ```
 
-spark.read.option("header", True).csv("src/test/resources/data.csv")\
+spark.read.option("header", True).csv("marklogic-spark-connector/src/test/resources/data.csv")\
     .repartition(2)\
     .write.format("marklogic")\
     .option("spark.marklogic.client.uri", "spark-test-user:spark@localhost:8000")\
@@ -196,7 +174,7 @@ The Spark master GUI is at <http://localhost:8080>. You can use this to view det
 
 Now that you have a Spark cluster running, you just need to tell PySpark to connect to it:
 
-    pyspark --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
+    pyspark --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
 
 You can then run the same commands as shown in the PySpark section above. The Spark master GUI will allow you to 
 examine details of each of the commands that you run.
@@ -215,12 +193,16 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
-to `src/main/java`. Then run `./gradlew clean shadowJar` to rebuild the connector jar. Then run the following:
+to `src/main/java`. Then run the following:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.4-SNAPSHOT.jar
+```
+./gradlew clean shadowJar
+cd marklogic-spark-connector
+spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+```
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 
 

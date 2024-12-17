@@ -1,0 +1,1 @@
+include "marklogic-langchain4j", "marklogic-spark-api", "marklogic-spark-langchain4j", "marklogic-spark-connector", "test-app", "code-coverage-report"
