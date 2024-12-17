@@ -16,7 +16,7 @@ subprojects {
   apply plugin: "jacoco"
 
   group = "com.marklogic"
-  version "2.5.0"
+  version "2.5-SNAPSHOT"
 
   java {
     sourceCompatibility = 11
