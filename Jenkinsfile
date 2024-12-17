@@ -61,12 +61,9 @@ pipeline{
             docker-compose up -d --build
           '''
         runtests('JAVA17_HOME_DIR')
-        // Disabling Sonar scans until we can figure out how to aggregate code coverage data across
-        // multiple Gradle subprojects. Until then, the Sonar 80% check always fails because it's only picking up
-        // coverage data from one subproject.
-//         withSonarQubeEnv('SONAR_Progress') {
-//           runSonarScan('JAVA17_HOME_DIR')
-//         }
+        withSonarQubeEnv('SONAR_Progress') {
+          runSonarScan('JAVA17_HOME_DIR')
+        }
       }
       post{
         always{
