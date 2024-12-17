@@ -182,7 +182,7 @@ publishing {
 task gettingStartedZip(type: Zip) {
   description = "Creates a zip of the getting-started project that is intended to be included as a downloadable file " +
     "on the GitHub release page."
-  from "examples/getting-started"
+  from "../examples/getting-started"
   exclude "build", ".gradle", "gradle-*.properties", ".venv", "venv", "docker"
   into "marklogic-spark-getting-started-${version}"
   archiveFileName = "marklogic-spark-getting-started-${version}.zip"
