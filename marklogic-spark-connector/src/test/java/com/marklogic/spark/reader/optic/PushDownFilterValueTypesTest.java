@@ -5,12 +5,10 @@ package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.RequiresMarkLogic11OrLower;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -24,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * As of 2024-10-29, this is mysteriously failing with 8016 connection issues on Jenkins. Does not fail on MarkLogic
  * 11 though. Will investigate more soon.
  */
-@ExtendWith(RequiresMarkLogic11OrLower.class)
 class PushDownFilterValueTypesTest extends AbstractIntegrationTest {
 
     @Test
