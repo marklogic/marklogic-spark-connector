@@ -21,8 +21,12 @@ class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void validPartitionCountAndBatchSize() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_NUM_PARTITIONS, "3")
-            .option(Options.READ_BATCH_SIZE, "10000")
+            .option(Options.READ_NUM_PARTITIONS, 3)
+            .option(Options.READ_BATCH_SIZE, 5)
+
+            // Including this only to ensure it doesn't cause errors.
+            .option(Options.READ_LOG_PROGRESS, 5)
+
             .load()
             .collectAsList();
 
