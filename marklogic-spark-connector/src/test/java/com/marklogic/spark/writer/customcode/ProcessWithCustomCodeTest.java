@@ -27,7 +27,7 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
             .load()
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            // With "uneven" numbers like this, the user will still see 5 progress entries, but the counts won't even -
+            // With "uneven" numbers like this, the user will still see 5 progress entries, but the counts won't be even -
             // they'll be 24, 40, 64, 80, and 100.
             .option(Options.WRITE_BATCH_SIZE, 8)
             .option(Options.WRITE_LOG_PROGRESS, 20)

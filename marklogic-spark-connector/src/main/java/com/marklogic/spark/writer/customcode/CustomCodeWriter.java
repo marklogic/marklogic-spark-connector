@@ -38,12 +38,18 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private final String externalVariableDelimiter;
     private ObjectMapper objectMapper;
 
+    // Only used for logging.
+    private final int partitionId;
+    private final long taskId;
+
     // Updated after each call to MarkLogic.
     private int successItemCount;
     private int failedItemCount;
 
-    CustomCodeWriter(CustomCodeContext customCodeContext) {
+    CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId) {
         this.customCodeContext = customCodeContext;
+        this.partitionId = partitionId;
+        this.taskId = taskId;
         this.databaseClient = customCodeContext.connectToMarkLogic();
         this.jsonRowSerializer = new JsonRowSerializer(customCodeContext.getSchema(), customCodeContext.getProperties());
 
@@ -103,9 +109,6 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             return;
         }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("Calling custom code in MarkLogic");
-        }
         final int itemCount = currentBatch.size();
         ServerEvaluationCall call = customCodeContext.buildCall(
             this.databaseClient,
@@ -148,6 +151,10 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     }
 
     private void executeCall(ServerEvaluationCall call, int itemCount) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            // Helps ensure that the proper number of partitions and tasks/threads are being used by Spark.
+            Util.MAIN_LOGGER.debug("Processing items, count: {}; partition: {}; task: {}", itemCount, partitionId, taskId);
+        }
         try {
             call.evalAs(String.class);
             this.successItemCount += itemCount;
