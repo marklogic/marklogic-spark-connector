@@ -9,6 +9,7 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.document.DocumentTable;
 import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.reader.optic.OpticReadContext;
 import com.marklogic.spark.reader.optic.SchemaInferrer;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.SparkSession;
@@ -86,7 +87,14 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
             ReadProgressLogger.initialize(readProgressInterval, "Triples read: {}");
             return new DocumentTable(TripleRowSchema.SCHEMA);
         } else if (properties.get(Options.READ_OPTIC_QUERY) != null) {
-            ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
+            final long batchSize = tempContext.getNumericOption(Options.READ_BATCH_SIZE, OpticReadContext.DEFAULT_BATCH_SIZE, 0);
+            if (readProgressInterval > 0 && batchSize > readProgressInterval) {
+                Util.MAIN_LOGGER.info("Batch size is greater than interval for reading progress, so will use batch size of {} to log progress instead.",
+                    batchSize);
+                ReadProgressLogger.initialize(batchSize, "Rows read: {}");
+            } else {
+                ReadProgressLogger.initialize(readProgressInterval, "Rows read: {}");
+            }
             return new MarkLogicTable(schema, properties);
         } else if (Util.isReadWithCustomCodeOperation(properties)) {
             ReadProgressLogger.initialize(readProgressInterval, "Items read: {}");
