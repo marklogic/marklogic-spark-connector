@@ -10,6 +10,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -93,41 +95,28 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
             "Unexpected error: " + ex.getMessage());
     }
 
-    @Test
-    void missingAtSymbol() {
-        verifyClientUriIsInvalid("has no 'at' symbol");
-    }
-
-    @Test
-    void twoAtSymbols() {
-        verifyClientUriIsInvalid("user@host@port");
-    }
-
-    @Test
-    void onlyOneTokenBeforeAtSymbol() {
-        verifyClientUriIsInvalid("user@host:port");
-    }
-
-    @Test
-    void onlyOneTokenAfterAtSymbol() {
-        verifyClientUriIsInvalid("user:password@host");
-    }
-
-    @Test
-    void threeTokensBeforeAtSymbol() {
-        verifyClientUriIsInvalid("user:password:something@host:port");
-    }
-
-    @Test
-    void threeTokensAfterAtSymbol() {
-        verifyClientUriIsInvalid("user:password@host:port:something");
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "has no 'at' symbol",
+        "user@host@port",
+        "user@host:port",
+        "user:password@host",
+        "user:password:something@host:port",
+        "user:password@host:port:something"
+    })
+    void invalidConnectionString(String connectionString) {
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> readRowsWithClientUri(connectionString));
+        assertEquals(
+            "Unable to connect to MarkLogic; cause: Invalid value for connection string; must be username:password@host:port/optionalDatabaseName",
+            ex.getMessage()
+        );
     }
 
     @Test
     void nonNumericPort() {
         ConnectorException ex = assertThrows(ConnectorException.class,
             () -> readRowsWithClientUri("user:password@host:nonNumericPort"));
-        assertEquals("Invalid value for spark.marklogic.client.uri; port must be numeric, but was 'nonNumericPort'",
+        assertEquals("Unable to connect to MarkLogic; cause: Invalid value for connection string; port must be numeric, but was 'nonNumericPort'",
             ex.getMessage());
     }
 
@@ -135,7 +124,7 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
     void nonNumericPortWithDatabase() {
         ConnectorException ex = assertThrows(ConnectorException.class,
             () -> readRowsWithClientUri("user:password@host:nonNumericPort/database"));
-        assertEquals("Invalid value for spark.marklogic.client.uri; port must be numeric, but was 'nonNumericPort'",
+        assertEquals("Unable to connect to MarkLogic; cause: Invalid value for connection string; port must be numeric, but was 'nonNumericPort'",
             ex.getMessage());
     }
 
@@ -147,14 +136,5 @@ class ReadWithClientUriTest extends AbstractIntegrationTest {
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors')")
             .load()
             .collectAsList();
-    }
-
-    private void verifyClientUriIsInvalid(String clientUri) {
-        ConnectorException ex = assertThrows(ConnectorException.class,
-            () -> readRowsWithClientUri(clientUri));
-        assertEquals(
-            "Invalid value for spark.marklogic.client.uri; must be username:password@host:port/optionalDatabaseName",
-            ex.getMessage()
-        );
     }
 }
