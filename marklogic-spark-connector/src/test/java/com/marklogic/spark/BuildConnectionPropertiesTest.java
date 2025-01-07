@@ -38,10 +38,9 @@ class BuildConnectionPropertiesTest {
             "database in the connection string, then the database value specified separately should still be used. " +
             "This avoids a potential issue where the user is not aware that the connection string accepts a database " +
             "and thus specifies it via the database option.");
-        assertEquals("user", connectionProps.get(Options.CLIENT_USERNAME));
-        assertEquals("password", connectionProps.get(Options.CLIENT_PASSWORD));
-        assertEquals("host", connectionProps.get(Options.CLIENT_HOST));
-        assertEquals("8016", connectionProps.get(Options.CLIENT_PORT));
+        assertEquals("user:password@host:8016", connectionProps.get(Options.CLIENT_CONNECTION_STRING),
+            "The new connection string option in 2.5.1 is intended to be used going forward as the better name. " +
+                "For now, the client.uri option is simply aliased to the new option.");
     }
 
     @Test

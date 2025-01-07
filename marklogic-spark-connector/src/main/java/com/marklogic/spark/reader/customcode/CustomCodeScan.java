@@ -4,6 +4,8 @@
 package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.eval.EvalResultIterator;
+import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.connector.read.Batch;
@@ -26,14 +28,13 @@ class CustomCodeScan implements Scan {
 
         if (this.customCodeContext.hasPartitionCode()) {
             DatabaseClient client = this.customCodeContext.connectToMarkLogic();
-            try {
-                this.customCodeContext
-                    .buildCall(client, new CustomCodeContext.CallOptions(
-                        Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY,
-                        Options.READ_PARTITIONS_JAVASCRIPT_FILE, Options.READ_PARTITIONS_XQUERY_FILE
-                    ))
-                    .eval()
-                    .forEach(result -> this.partitions.add(result.getString()));
+            ServerEvaluationCall call = this.customCodeContext
+                .buildCall(client, new CustomCodeContext.CallOptions(
+                    Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY,
+                    Options.READ_PARTITIONS_JAVASCRIPT_FILE, Options.READ_PARTITIONS_XQUERY_FILE
+                ));
+            try (EvalResultIterator iter = call.eval()) {
+                iter.forEach(result -> this.partitions.add(result.getString()));
             } catch (Exception ex) {
                 throw new ConnectorException(String.format("Unable to retrieve partitions; cause: %s", ex.getMessage()), ex);
             } finally {

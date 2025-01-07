@@ -39,7 +39,7 @@ public class OpticReadContext extends ContextSupport {
     // choose to perform multiple operations on the dataset, each of which may benefit from a fairly different batch
     // size. 100k has been chosen as the default batch size to strike a reasonable balance for operations that do need
     // to collect all the rows, such as writing the dataset to another data source.
-    private static final long DEFAULT_BATCH_SIZE = 100000;
+    public static final long DEFAULT_BATCH_SIZE = 100000;
 
     private PlanAnalysis planAnalysis;
     private StructType schema;

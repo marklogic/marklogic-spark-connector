@@ -15,6 +15,12 @@ public abstract class Options {
     public static final String CLIENT_URI = "spark.marklogic.client.uri";
     public static final String CLIENT_USERNAME = "spark.marklogic.client.username";
 
+    /**
+     * Alias for "spark.marklogic.client.uri", which will be deprecated soon in favor of this better name.
+     * @since 2.5.1
+     */
+    public static final String CLIENT_CONNECTION_STRING = "spark.marklogic.client.connectionString";
+
     public static final String READ_INVOKE = "spark.marklogic.read.invoke";
     public static final String READ_JAVASCRIPT = "spark.marklogic.read.javascript";
     public static final String READ_JAVASCRIPT_FILE = "spark.marklogic.read.javascriptFile";

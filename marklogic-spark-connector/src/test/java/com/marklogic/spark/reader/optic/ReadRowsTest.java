@@ -21,8 +21,12 @@ class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void validPartitionCountAndBatchSize() {
         List<Row> rows = newDefaultReader()
-            .option(Options.READ_NUM_PARTITIONS, "3")
-            .option(Options.READ_BATCH_SIZE, "10000")
+            .option(Options.READ_NUM_PARTITIONS, 3)
+            .option(Options.READ_BATCH_SIZE, 5)
+
+            // Including this only to ensure it doesn't cause errors.
+            .option(Options.READ_LOG_PROGRESS, 5)
+
             .load()
             .collectAsList();
 
@@ -112,20 +116,15 @@ class ReadRowsTest extends AbstractIntegrationTest {
 
     @Test
     void nonNumericBatchSize() {
-        Dataset<Row> reader = newDefaultReader()
-            .option(Options.READ_BATCH_SIZE, "abc")
-            .load();
-
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        DataFrameReader reader = newDefaultReader().option(Options.READ_BATCH_SIZE, "abc");
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
         assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
     @Test
     void batchSizeLessThanZero() {
-        Dataset<Row> reader = newDefaultReader()
-            .option(Options.READ_BATCH_SIZE, "-1")
-            .load();
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        DataFrameReader reader = newDefaultReader().option(Options.READ_BATCH_SIZE, "-1");
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
         assertEquals("The value of 'spark.marklogic.read.batchSize' must be 0 or greater.", ex.getMessage());
     }
 }

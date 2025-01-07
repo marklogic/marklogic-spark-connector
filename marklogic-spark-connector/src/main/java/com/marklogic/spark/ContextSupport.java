@@ -77,8 +77,8 @@ public class ContextSupport extends Context implements Serializable {
         connectionProps.put("spark.marklogic.client.authType", "digest");
         connectionProps.put("spark.marklogic.client.connectionType", "gateway");
         connectionProps.putAll(getProperties());
-        if (optionExists(Options.CLIENT_URI)) {
-            parseConnectionString(getProperties().get(Options.CLIENT_URI), connectionProps);
+        if (connectionProps.containsKey(Options.CLIENT_URI)) {
+            connectionProps.put(Options.CLIENT_CONNECTION_STRING, connectionProps.get(Options.CLIENT_URI));
         }
         if ("true".equalsIgnoreCase(getProperties().get(Options.CLIENT_SSL_ENABLED))) {
             connectionProps.put("spark.marklogic.client.sslProtocol", "default");
@@ -89,19 +89,6 @@ public class ContextSupport extends Context implements Serializable {
     public final boolean optionExists(String option) {
         String value = getProperties().get(option);
         return value != null && value.trim().length() > 0;
-    }
-
-    private void parseConnectionString(String value, Map<String, String> connectionProps) {
-        ConnectionString connectionString = new ConnectionString(value, getOptionNameForMessage("spark.marklogic.client.uri"));
-        connectionProps.put(Options.CLIENT_USERNAME, connectionString.getUsername());
-        connectionProps.put(Options.CLIENT_PASSWORD, connectionString.getPassword());
-        connectionProps.put(Options.CLIENT_HOST, connectionString.getHost());
-        connectionProps.put(Options.CLIENT_PORT, connectionString.getPort() + "");
-
-        String db = connectionString.getDatabase();
-        if (db != null && db.trim().length() > 0) {
-            connectionProps.put(Options.CLIENT_DATABASE, db);
-        }
     }
 
     /**
