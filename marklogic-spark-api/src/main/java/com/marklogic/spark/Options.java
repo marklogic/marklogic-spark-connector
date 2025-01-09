@@ -376,6 +376,48 @@ public abstract class Options {
      */
     public static final String WRITE_EMBEDDER_BATCH_SIZE = "spark.marklogic.write.embedder.batchSize";
 
+    /**
+     * Defines the host for classification requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_HOST = "spark.marklogic.write.classifier.host";
+
+    /**
+     * Defines the protocol (http/https) for classification requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_PROTOCOL = "spark.marklogic.write.classifier.protocol";
+
+    /**
+     * Defines the port for classification requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_PORT = "spark.marklogic.write.classifier.port";
+
+    /**
+     * Defines the endpoint for classification requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_ENDPOINT = "spark.marklogic.write.classifier.endpoint";
+
+    /**
+     * Defines the endpoint for generating tokens for classification requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_TOKEN_ENDPOINT = "spark.marklogic.write.classifier.token.endpoint";
+
+    /**
+     * Defines the apikey for classification API token requests
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_APIKEY = "spark.marklogic.write.classifier.apikey";
+
     private Options() {
     }
 }

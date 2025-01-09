@@ -5,6 +5,7 @@ package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.langchain4j.Util;
+import com.marklogic.langchain4j.classifier.TextClassifier;
 
 /**
  * Captures configuration settings for producing chunks, either in a source document or in separate
@@ -20,11 +21,13 @@ public class ChunkConfig {
     private final String embeddingXmlNamespace;
     private final String uriPrefix;
     private final String uriSuffix;
+    private final TextClassifier classifier;
 
     // Ignoring Sonar warning about too many constructor args, as that's mitigated via the builder.
     @SuppressWarnings("java:S107")
     private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String documentType, String rootName,
-                        String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix) {
+                        String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix,
+                        TextClassifier classifier) {
         this.metadata = metadata;
         this.maxChunks = maxChunks;
         this.documentType = documentType;
@@ -33,6 +36,8 @@ public class ChunkConfig {
         this.embeddingXmlNamespace = embeddingXmlNamespace;
         this.uriPrefix = uriPrefix;
         this.uriSuffix = uriSuffix;
+        this.classifier = classifier;
+
     }
 
     public static class Builder {
@@ -44,6 +49,7 @@ public class ChunkConfig {
         private String embeddingXmlNamespace;
         private String uriPrefix;
         private String uriSuffix;
+        private TextClassifier classifier;
 
         public ChunkConfig build() {
             String tempNamespace = embeddingXmlNamespace;
@@ -51,7 +57,7 @@ public class ChunkConfig {
                 // If no embedding XML namespace is specified, default to the chunk namespace is defined.
                 tempNamespace = xmlNamespace != null ? xmlNamespace : Util.DEFAULT_XML_NAMESPACE;
             }
-            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, tempNamespace, uriPrefix, uriSuffix);
+            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, tempNamespace, uriPrefix, uriSuffix, classifier);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {
@@ -97,6 +103,11 @@ public class ChunkConfig {
             this.uriSuffix = uriSuffix;
             return this;
         }
+
+        public Builder withClassifier(TextClassifier classifier) {
+            this.classifier = classifier;
+            return this;
+        }
     }
 
     public DocumentMetadataHandle getMetadata() {
@@ -130,4 +141,6 @@ public class ChunkConfig {
     public String getEmbeddingXmlNamespace() {
         return embeddingXmlNamespace;
     }
+
+    public TextClassifier getClassifier() { return classifier; }
 }
