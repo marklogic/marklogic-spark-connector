@@ -1,6 +1,9 @@
 dependencies {
   implementation project(":marklogic-spark-api")
 
+  // Supports using Semaphore to classify documents
+  implementation 'com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1'
+
   // API dependency so that public class in marklogic-langchain4j - specifically Util - can be accessed
   // in the connector.
   api (project(":marklogic-langchain4j")) {

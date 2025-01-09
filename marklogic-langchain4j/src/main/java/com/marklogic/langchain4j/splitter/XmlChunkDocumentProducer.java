@@ -13,13 +13,13 @@ import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.XmlChunkConfig;
+import com.smartlogic.classificationserver.client.ClassificationScore;
 import dev.langchain4j.data.segment.TextSegment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.xml.xpath.XPathFactory;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -89,11 +89,30 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
         text.setTextContent(textSegment.text());
         chunk.appendChild(text);
+        if (chunkConfig.getClassifier() != null) {
+            chunk.appendChild(generateConceptsForChunk(doc, textSegment));
+        }
         chunks.add(new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory));
     }
 
     private String determineChunksElementName(Document doc) {
         return doc.getDocumentElement().getElementsByTagNameNS(Util.DEFAULT_XML_NAMESPACE, DEFAULT_CHUNKS_ELEMENT_NAME).getLength() == 0 ?
             DEFAULT_CHUNKS_ELEMENT_NAME : "splitter-chunks";
+    }
+
+    private Element generateConceptsForChunk(Document doc, TextSegment textSegment) {
+        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(textSegment.text());
+        Element conceptsElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concepts");
+        for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
+            for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {
+                Element conceptElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concept");
+                conceptElement.setAttribute("id", classificationScore.getId());
+                conceptElement.setAttribute("name", entry.getKey());
+                conceptElement.setAttribute("value", classificationScore.getName());
+                conceptElement.setAttribute("score", Float.toString(classificationScore.getScore()));
+                conceptsElement.appendChild(conceptElement);
+            }
+        }
+        return conceptsElement;
     }
 }

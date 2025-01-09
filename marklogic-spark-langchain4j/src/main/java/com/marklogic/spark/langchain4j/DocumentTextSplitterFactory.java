@@ -92,6 +92,9 @@ public interface DocumentTextSplitterFactory {
             .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
             .withXmlNamespace(context.getProperties().get(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
             .withEmbeddingXmlNamespace(context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE))
+            .withClassifier(
+                TextClassifierFactory.makeClassifier(context)
+            )
             .build()
         );
     }

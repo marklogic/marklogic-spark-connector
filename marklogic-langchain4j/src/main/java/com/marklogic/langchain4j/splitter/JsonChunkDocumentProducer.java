@@ -15,10 +15,10 @@ import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.JsonChunk;
+import com.smartlogic.classificationserver.client.ClassificationScore;
 import dev.langchain4j.data.segment.TextSegment;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -67,6 +67,9 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             String text = textSegments.get(listIndex++).text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
+            if (chunkConfig.getClassifier() != null) {
+                chunk.set("concepts", generateConceptsForChunk(text));
+            }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         }
 
@@ -79,5 +82,20 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
     private String determineChunksArrayName(ObjectNode doc) {
         return doc.has(DEFAULT_CHUNKS_ARRAY_NAME) ? "splitter-chunks" : DEFAULT_CHUNKS_ARRAY_NAME;
+    }
+
+    private ArrayNode generateConceptsForChunk(String text) {
+        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(text);
+        ArrayNode conceptsArray = objectMapper.createArrayNode();
+        for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
+            for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {
+                ObjectNode concept = conceptsArray.addObject();
+                concept.put("id", classificationScore.getId());
+                concept.put("name", entry.getKey());
+                concept.put("value", classificationScore.getName());
+                concept.put("score", classificationScore.getScore());
+            }
+        }
+        return conceptsArray;
     }
 }

@@ -7,4 +7,8 @@ dependencies {
 
   // Needed for splitting XML documents via XPath.
   implementation "jaxen:jaxen:2.0.0"
+
+  // Supports using Semaphore to classify documents
+  implementation 'com.smartlogic.csclient:Semaphore-CS-Client:5.6.1'
+  implementation 'com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1'
 }
