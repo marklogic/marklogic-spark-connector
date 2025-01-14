@@ -9,14 +9,19 @@ import com.marklogic.spark.Options;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class AddConceptsToXmlTest extends AbstractIntegrationTest {
 
     @Test
-    @Disabled("This requires a good PDC API KEY")
+    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void splitToSeparateDocumentsAndAddConcepts() {
+        final String apiKey = System.getenv("SEMAPHORE_API_KEY");
+        assertNotNull(apiKey);
+
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -29,7 +34,7 @@ class AddConceptsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_CLASSIFIER_PROTOCOL, "https")
             .option(Options.WRITE_CLASSIFIER_PORT, "443")
             .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
-            .option(Options.WRITE_CLASSIFIER_APIKEY, "NEED A REAL KEY HERE")
+            .option(Options.WRITE_CLASSIFIER_APIKEY, apiKey)
             .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
             .mode(SaveMode.Append)
             .save();

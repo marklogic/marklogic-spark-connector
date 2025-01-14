@@ -21,6 +21,9 @@ public interface Util {
      */
     Logger LANGCHAIN4J_LOGGER = LoggerFactory.getLogger("com.marklogic.langchain4j");
 
+    // Very temporary, will likely end up somewhere else soon.
+    Logger CLASSIFIER_LOGGER = LoggerFactory.getLogger("com.marklogic.classifier");
+
     String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 
     static JsonNode getJsonFromHandle(AbstractWriteHandle writeHandle) {
