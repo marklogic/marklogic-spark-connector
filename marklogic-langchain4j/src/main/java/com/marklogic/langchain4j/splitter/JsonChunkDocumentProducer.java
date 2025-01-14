@@ -85,7 +85,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     }
 
     private ArrayNode generateConceptsForChunk(String text) {
-        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(text);
+        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(super.sourceDocument.getUri(), text);
         ArrayNode conceptsArray = objectMapper.createArrayNode();
         for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
             for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {

@@ -25,8 +25,8 @@ public interface TextClassifierFactory {
                     context.getStringOption(Options.WRITE_CLASSIFIER_PORT), context.getStringOption(Options.WRITE_CLASSIFIER_ENDPOINT),
                     context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY), context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT)
                 );
-            } catch (CloudException e) {
-                throw new ConnectorException(String.format("Unable to create a TextClassifier; cause: {}", e.getMessage()));
+            } catch (Exception e) {
+                throw new ConnectorException(String.format("Unable to create a TextClassifier; cause: %s", e.getMessage()));
             }
         } else {
             return null;

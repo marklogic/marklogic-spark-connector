@@ -4,6 +4,7 @@
 package com.marklogic.langchain4j.classifier;
 
 import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.langchain4j.Util;
 import com.smartlogic.classificationserver.client.*;
 import com.smartlogic.cloud.CloudException;
 import com.smartlogic.cloud.Token;
@@ -40,14 +41,20 @@ public class TextClassifier {
 
         Map<String, String> additionalParameters = new HashMap<>();
         additionalParameters.put("threshold", THRESHOLD);
-        additionalParameters.put("language","en1");
+        additionalParameters.put("language", "en1");
         classificationConfiguration.setAdditionalParameters(additionalParameters);
         classificationClient.setClassificationConfiguration(classificationConfiguration);
     }
 
-    public Map<String, Collection<ClassificationScore>> classifyText(String text) {
+    public Map<String, Collection<ClassificationScore>> classifyText(String sourceUri, String text) {
         try {
-            return classificationClient.getClassifiedDocument(new Body(text), new Title("")).getAllClassifications();
+            long start = System.currentTimeMillis();
+            Map<String, Collection<ClassificationScore>> results = classificationClient.getClassifiedDocument(new Body(text), new Title("")).getAllClassifications();
+            if (Util.CLASSIFIER_LOGGER.isDebugEnabled()) {
+                Util.CLASSIFIER_LOGGER.debug("Source URI: {}; count of results: {}; time: {}", sourceUri, results.size(),
+                    (System.currentTimeMillis() - start));
+            }
+            return results;
         } catch (ClassificationException e) {
             throw new MarkLogicLangchainException(String.format("Unable to generate concepts for: %s; cause: %s", text, e.getMessage()), e);
         }

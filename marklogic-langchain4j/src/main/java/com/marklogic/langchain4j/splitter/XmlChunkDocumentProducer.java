@@ -101,7 +101,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     }
 
     private Element generateConceptsForChunk(Document doc, TextSegment textSegment) {
-        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(textSegment.text());
+        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(super.sourceDocument.getUri(), textSegment.text());
         Element conceptsElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concepts");
         for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
             for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {
