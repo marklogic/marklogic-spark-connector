@@ -8,7 +8,6 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
-import com.smartlogic.cloud.CloudException;
 
 
 public interface TextClassifierFactory {
@@ -21,7 +20,8 @@ public interface TextClassifierFactory {
             }
             try {
                 return new TextClassifier(
-                    context.getStringOption(Options.WRITE_CLASSIFIER_HOST), context.getStringOption(Options.WRITE_CLASSIFIER_PROTOCOL),
+                    context.getStringOption(Options.WRITE_CLASSIFIER_HOST),
+                    context.hasOption(Options.WRITE_CLASSIFIER_HTTPS) ? context.getStringOption(Options.WRITE_CLASSIFIER_HTTPS) : "false",
                     context.getStringOption(Options.WRITE_CLASSIFIER_PORT), context.getStringOption(Options.WRITE_CLASSIFIER_ENDPOINT),
                     context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY), context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT)
                 );

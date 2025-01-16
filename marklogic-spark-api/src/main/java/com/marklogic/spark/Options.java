@@ -384,11 +384,11 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_HOST = "spark.marklogic.write.classifier.host";
 
     /**
-     * Defines the protocol (http/https) for classification requests
+     * Specifies if the protocol should be https for classification requests
      *
      * @since 2.5-SNAPSHOT
      */
-    public static final String WRITE_CLASSIFIER_PROTOCOL = "spark.marklogic.write.classifier.protocol";
+    public static final String WRITE_CLASSIFIER_HTTPS = "spark.marklogic.write.classifier.https";
 
     /**
      * Defines the port for classification requests

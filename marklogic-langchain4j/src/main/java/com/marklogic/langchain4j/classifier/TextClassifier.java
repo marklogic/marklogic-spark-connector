@@ -20,13 +20,18 @@ public class TextClassifier {
 
     private final ClassificationClient classificationClient;
 
-    public TextClassifier(String host, String protocol, String port, String endpoint, String apikey, String tokenEndpoint) throws CloudException {
+    public TextClassifier(String host, String https, String port, String endpoint, String apikey, String tokenEndpoint) throws CloudException {
+        String protocol = "true".equalsIgnoreCase(https) ? "https" : "http";
         String tokenUrl = protocol + "://" + host + ":" + port + "/" + tokenEndpoint;
 
         TokenFetcher tokenFetcher = new TokenFetcher(tokenUrl, apikey);
         classificationClient = new ClassificationClient();
         Token token;
-        token = tokenFetcher.getAccessToken();
+        try {
+            token = tokenFetcher.getAccessToken();
+        } catch (CloudException e) {
+            throw new CloudException("Error retrieving token");
+        }
 
         ClassificationConfiguration classificationConfiguration = new ClassificationConfiguration();
         classificationConfiguration.setSingleArticle(false);

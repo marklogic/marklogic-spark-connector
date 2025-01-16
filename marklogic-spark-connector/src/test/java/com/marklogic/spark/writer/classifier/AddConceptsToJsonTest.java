@@ -25,7 +25,7 @@ class AddConceptsToJsonTest extends AbstractIntegrationTest {
     void splitToSeparateDocumentsAndAddConcepts() {
         final String apiKey = System.getenv("SEMAPHORE_API_KEY");
         assertNotNull(apiKey);
-        
+
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -36,7 +36,7 @@ class AddConceptsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "json-vector-chunks")
             .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_PROTOCOL, "https")
+            .option(Options.WRITE_CLASSIFIER_HTTPS, true)
             .option(Options.WRITE_CLASSIFIER_PORT, "443")
             .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
             .option(Options.WRITE_CLASSIFIER_APIKEY, apiKey)
