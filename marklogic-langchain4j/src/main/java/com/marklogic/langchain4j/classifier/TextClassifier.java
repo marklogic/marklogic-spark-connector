@@ -19,8 +19,12 @@ public class TextClassifier {
     private static final String THRESHOLD = "20";
 
     private final ClassificationClient classificationClient;
+    private final String conceptsArrayName;
 
-    public TextClassifier(String host, String https, String port, String endpoint, String apikey, String tokenEndpoint) throws CloudException {
+    public TextClassifier(
+        String host, String https, String port, String endpoint,
+        String apikey, String tokenEndpoint, String conceptsArrayName
+    ) throws CloudException {
         String protocol = "true".equalsIgnoreCase(https) ? "https" : "http";
         String tokenUrl = protocol + "://" + host + ":" + port + "/" + tokenEndpoint;
 
@@ -49,6 +53,8 @@ public class TextClassifier {
         additionalParameters.put("language", "en1");
         classificationConfiguration.setAdditionalParameters(additionalParameters);
         classificationClient.setClassificationConfiguration(classificationConfiguration);
+
+        this.conceptsArrayName = conceptsArrayName != null ? conceptsArrayName : "concepts";
     }
 
     public Map<String, Collection<ClassificationScore>> classifyText(String sourceUri, String text) {
@@ -63,5 +69,9 @@ public class TextClassifier {
         } catch (ClassificationException e) {
             throw new MarkLogicLangchainException(String.format("Unable to generate concepts for: %s; cause: %s", text, e.getMessage()), e);
         }
+    }
+
+    public String getConceptsArrayName() {
+        return conceptsArrayName;
     }
 }

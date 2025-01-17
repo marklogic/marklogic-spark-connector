@@ -86,6 +86,34 @@ class AddConceptsToXmlTest extends AbstractIntegrationTest {
         assertTrue(exception.getMessage().contains("Error retrieving token"), "Unexpected error: " + exception.getMessage());
     }
 
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
+    void specifyAlternateNameForConceptsArray() {
+        final String apiKey = System.getenv("SEMAPHORE_API_KEY");
+        assertNotNull(apiKey);
+
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
+            .option(Options.WRITE_CLASSIFIER_HTTPS, true)
+            .option(Options.WRITE_CLASSIFIER_PORT, "443")
+            .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
+            .option(Options.WRITE_CLASSIFIER_APIKEY, apiKey)
+            .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
+            .option(Options.WRITE_CLASSIFIER_CONCEPTS_ARRAY, "differentName")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementExists("Expecting each chunk to have a 'model:concepts' child element", "/root/model:chunks/model:chunk[1]/model:differentName");
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())

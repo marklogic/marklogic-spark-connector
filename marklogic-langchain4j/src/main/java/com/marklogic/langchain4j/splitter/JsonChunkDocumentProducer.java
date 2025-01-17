@@ -12,6 +12,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.Util;
+import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.JsonChunk;
@@ -67,8 +68,9 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             String text = textSegments.get(listIndex++).text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            if (chunkConfig.getClassifier() != null) {
-                chunk.set("concepts", generateConceptsForChunk(text));
+            TextClassifier classifier = chunkConfig.getClassifier();
+            if (classifier != null) {
+                chunk.set(classifier.getConceptsArrayName(), generateConceptsForChunk(text));
             }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         }

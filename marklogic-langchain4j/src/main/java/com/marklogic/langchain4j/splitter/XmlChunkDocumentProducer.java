@@ -8,6 +8,7 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.langchain4j.Util;
+import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
@@ -101,8 +102,9 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     }
 
     private Element generateConceptsForChunk(Document doc, TextSegment textSegment) {
-        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(super.sourceDocument.getUri(), textSegment.text());
-        Element conceptsElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concepts");
+        TextClassifier classifier = chunkConfig.getClassifier();
+        Map<String, Collection<ClassificationScore>> classificationScores = classifier.classifyText(super.sourceDocument.getUri(), textSegment.text());
+        Element conceptsElement = doc.createElementNS(chunkConfig.getXmlNamespace(), classifier.getConceptsArrayName());
         for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
             for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {
                 Element conceptElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concept");

@@ -23,7 +23,8 @@ public interface TextClassifierFactory {
                     context.getStringOption(Options.WRITE_CLASSIFIER_HOST),
                     context.hasOption(Options.WRITE_CLASSIFIER_HTTPS) ? context.getStringOption(Options.WRITE_CLASSIFIER_HTTPS) : "false",
                     context.getStringOption(Options.WRITE_CLASSIFIER_PORT), context.getStringOption(Options.WRITE_CLASSIFIER_ENDPOINT),
-                    context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY), context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT)
+                    context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY), context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT),
+                    context.getStringOption(Options.WRITE_CLASSIFIER_CONCEPTS_ARRAY)
                 );
             } catch (Exception e) {
                 throw new ConnectorException(String.format("Unable to create a TextClassifier; cause: %s", e.getMessage()));

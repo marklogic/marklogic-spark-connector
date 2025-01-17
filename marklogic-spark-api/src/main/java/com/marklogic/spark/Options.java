@@ -418,6 +418,13 @@ public abstract class Options {
      */
     public static final String WRITE_CLASSIFIER_APIKEY = "spark.marklogic.write.classifier.apikey";
 
+    /**
+     * Defines the localname for the element/property that will hold the concepts from the classifier
+     *
+     * @since 2.5-SNAPSHOT
+     */
+    public static final String WRITE_CLASSIFIER_CONCEPTS_ARRAY = "spark.marklogic.write.classifier.concepts.array";
+
     private Options() {
     }
 }
