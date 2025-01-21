@@ -156,7 +156,10 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         ArrayNode chunks = (ArrayNode) doc.get("envelope").get("my-chunks");
         assertEquals(2, chunks.size());
         chunks.forEach(chunk -> {
-            assertTrue(chunk.has("my-embedding"));
+            assertTrue(chunk.has("my-embedding"), "In the 2.5.0 release, both chunks and embeddings were added, " +
+                "but only embeddings can have their element name changed. It's not clear why this support was " +
+                "added instead of using the chunks approach, which is to use a name of e.g. 'embedder-embedding' " +
+                "instead. This option may be deprecated and removed in the future.");
             assertEquals(JsonNodeType.ARRAY, chunk.get("my-embedding").getNodeType());
         });
     }

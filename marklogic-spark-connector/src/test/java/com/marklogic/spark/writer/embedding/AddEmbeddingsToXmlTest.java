@@ -224,7 +224,13 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         XmlNode doc = readXmlDocument("/split-test.xml",
             Namespace.getNamespace("ex", "org:example"), Namespace.getNamespace("ml", "org:marklogic"));
 
-        doc.assertElementCount("Each of the 2 custom chunks should have a custom embedding element.",
+        doc.assertElementCount("Each of the 2 custom chunks should have a custom embedding element. " +
+                "In the 2.5.0 release, both chunks and embeddings were added, " +
+                "but only embeddings can have their element name / namespace changed. It's not clear why this " +
+                "support was added, as a user can always use a REST transform to adjust the data structure. And if " +
+                "an embedding element already exists, that won't cause a conflict as the connector embedding element " +
+                "is not appended and thus will not overwrite the existing element. These " +
+                "options may be deprecated and removed in the future.",
             "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and ml:my-embedding]", 2);
     }
 

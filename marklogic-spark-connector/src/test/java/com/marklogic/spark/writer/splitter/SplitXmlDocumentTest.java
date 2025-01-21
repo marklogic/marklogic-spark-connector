@@ -253,6 +253,23 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void maxChunksWithCustomRootNameAndDefaultNamespace() {
+        prepareToWriteChunkDocuments()
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 4)
+            .option(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME, "sidecar")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        doc.assertElementExists("When a custom root name is set, but no custom namespace is set, the entire document " +
+            "should be in the default namespace.", "/model:sidecar");
+        doc.assertElementValue("/model:sidecar/model:source-uri", "/split-test.xml");
+        doc.assertElementCount("/model:sidecar/model:chunks/model:chunk", 4);
+    }
+
+    @Test
     void maxChunksWithCustomRootNameAndNamespace() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
