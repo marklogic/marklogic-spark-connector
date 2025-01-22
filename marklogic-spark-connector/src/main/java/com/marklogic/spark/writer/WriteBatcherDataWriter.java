@@ -25,6 +25,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
@@ -213,9 +214,11 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private RowConverter determineRowConverter() {
         if (writeContext.isUsingFileSchema()) {
             return new FileRowConverter(writeContext);
-        } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+        }
+        final StructType schema = writeContext.getSchema();
+        if (DocumentRowSchema.SCHEMA.equals(schema) || DocumentRowSchema.IMPORT_SCHEMA.equals(schema)) {
             return new DocumentRowConverter(writeContext);
-        } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+        } else if (TripleRowSchema.SCHEMA.equals(schema)) {
             return new RdfRowConverter(writeContext);
         }
         return new ArbitraryRowConverter(writeContext);
