@@ -1,4 +1,0 @@
-dependencies {
-  compileOnly "org.apache.spark:spark-sql_2.12:" + sparkVersion
-  implementation "org.apache.tika:tika-core:3.0.0"
-}

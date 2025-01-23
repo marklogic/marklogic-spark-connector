@@ -216,7 +216,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             return new FileRowConverter(writeContext);
         }
         final StructType schema = writeContext.getSchema();
-        if (DocumentRowSchema.SCHEMA.equals(schema) || DocumentRowSchema.IMPORT_SCHEMA.equals(schema)) {
+        if (DocumentRowSchema.isSimilarTo(schema)) {
             return new DocumentRowConverter(writeContext);
         } else if (TripleRowSchema.SCHEMA.equals(schema)) {
             return new RdfRowConverter(writeContext);

@@ -1,4 +1,3 @@
-include "marklogic-tika-udf"
 include "marklogic-langchain4j"
 include "marklogic-spark-api"
 include "marklogic-spark-langchain4j"

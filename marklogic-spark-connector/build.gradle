@@ -55,6 +55,10 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
+  // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
+  // include the necessary parsers.
+  shadowDependencies "org.apache.tika:tika-core:3.0.0"
+
   // Oddly need this specified here too, otherwise compileTestJava fails. Not sure why it's not coming via the
   // "marklogic-spark-langchain4j" dependency.
   testImplementation (project(":marklogic-langchain4j")) {
@@ -88,9 +92,7 @@ dependencies {
   testImplementation "org.slf4j:jcl-over-slf4j:2.0.13"
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 
-  // As Tika support is being implemented via a UDF, we only need this as a test dependency. Flux is then expected
-  // to include this on its classpath.
-  testImplementation project(":marklogic-tika-udf")
+  // Adding these to test the Tika UDF. Flux will include these as well in its distribution.
   testImplementation "org.apache.tika:tika-parser-microsoft-module:3.0.0"
   testImplementation "org.apache.tika:tika-parser-pdf-module:3.0.0"
 }
