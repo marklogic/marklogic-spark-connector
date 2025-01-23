@@ -4,13 +4,20 @@
 package com.marklogic.langchain4j.classifier;
 
 import com.marklogic.langchain4j.MarkLogicLangchainException;
-import com.marklogic.langchain4j.Util;
 import com.smartlogic.classificationserver.client.*;
 import com.smartlogic.cloud.CloudException;
 import com.smartlogic.cloud.Token;
 import com.smartlogic.cloud.TokenFetcher;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import java.util.Collection;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,6 +26,7 @@ public class TextClassifier {
     private static final String THRESHOLD = "20";
 
     private final ClassificationClient classificationClient;
+    private final DocumentBuilderFactory documentBuilderFactory;
 
     public TextClassifier(String host, String https, String port, String endpoint, String apikey, String tokenEndpoint) throws CloudException {
         String protocol = "true".equalsIgnoreCase(https) ? "https" : "http";
@@ -26,12 +34,8 @@ public class TextClassifier {
 
         TokenFetcher tokenFetcher = new TokenFetcher(tokenUrl, apikey);
         classificationClient = new ClassificationClient();
-        Token token;
-        try {
-            token = tokenFetcher.getAccessToken();
-        } catch (CloudException e) {
-            throw new CloudException("Error retrieving token");
-        }
+        documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        Token token = tokenFetcher.getAccessToken();
 
         ClassificationConfiguration classificationConfiguration = new ClassificationConfiguration();
         classificationConfiguration.setSingleArticle(false);
@@ -51,17 +55,22 @@ public class TextClassifier {
         classificationClient.setClassificationConfiguration(classificationConfiguration);
     }
 
-    public Map<String, Collection<ClassificationScore>> classifyText(String sourceUri, String text) {
+    public Document classifyTextToXml(String sourceUri, String text) {
         try {
-            long start = System.currentTimeMillis();
-            Map<String, Collection<ClassificationScore>> results = classificationClient.getClassifiedDocument(new Body(text), new Title("")).getAllClassifications();
-            if (Util.CLASSIFIER_LOGGER.isDebugEnabled()) {
-                Util.CLASSIFIER_LOGGER.debug("Source URI: {}; count of results: {}; time: {}", sourceUri, results.size(),
-                    (System.currentTimeMillis() - start));
-            }
-            return results;
+            byte[] rawResponse = classificationClient.getClassificationServerResponse(new Body(text), new Title(sourceUri));
+            InputSource response = new InputSource(new StringReader(new String(rawResponse, StandardCharsets.UTF_8)));
+            DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+            return builder.parse(response);
+        } catch (ClassificationException | IOException | SAXException | ParserConfigurationException e) {
+            throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
+        }
+    }
+
+    public byte[] classifyTextToBytes(String sourceUri, String text) {
+        try {
+            return classificationClient.getClassificationServerResponse(new Body(text), new Title(sourceUri));
         } catch (ClassificationException e) {
-            throw new MarkLogicLangchainException(String.format("Unable to generate concepts for: %s; cause: %s", text, e.getMessage()), e);
+            throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
         }
     }
 }
