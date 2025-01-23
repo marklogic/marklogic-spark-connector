@@ -6,10 +6,7 @@ package com.marklogic.spark.writer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.io.BytesHandle;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.InputStreamHandle;
+import com.marklogic.client.io.*;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -54,6 +51,8 @@ class DocumentRowConverter implements RowConverter {
             return Stream.of(new DocBuilder.DocumentInputs(uri, null, null, metadata)).iterator();
         }
 
+        // I think it'll be fine to not support text extraction when streaming. Streaming is typically for very large
+        // files and ironically is usually slower because documents have to be written one at a time.
         return this.isStreamingFromFiles ? streamContentFromFile(uri, row) : readContentFromRow(uri, row);
     }
 
@@ -73,7 +72,15 @@ class DocumentRowConverter implements RowConverter {
         }
 
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        return Stream.of(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata)).iterator();
+        DocBuilder.DocumentInputs mainInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata);
+        final boolean extractedTextExists = row.numFields() == 9;
+        if (extractedTextExists) {
+            // Very primitive for now.
+            final String extractedText = row.getString(8);
+            String textUri = uri + "-extracted-text.txt";
+            return Stream.of(mainInputs, new DocBuilder.DocumentInputs(textUri, new StringHandle(extractedText), uriTemplateValues, metadata)).iterator();
+        }
+        return Stream.of(mainInputs).iterator();
     }
 
     /**
