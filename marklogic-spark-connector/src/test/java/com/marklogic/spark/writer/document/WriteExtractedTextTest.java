@@ -3,8 +3,8 @@
  */
 package com.marklogic.spark.writer.document;
 
-import com.marklogic.client.document.TextDocumentManager;
-import com.marklogic.client.io.StringHandle;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.udf.TextExtractor;
@@ -23,7 +23,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     private static final UserDefinedFunction TEXT_EXTRACTOR = TextExtractor.build();
 
     @Test
-    void test() {
+    void defaultToJson() {
         Dataset<Row> dataset = newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
@@ -40,12 +40,34 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        TextDocumentManager mgr = getDatabaseClient().newTextDocumentManager();
-        String text = mgr.read("/extract-test/hello-world.docx-extracted-text.txt", new StringHandle()).get();
-        assertTrue(text.startsWith("Hello world"), "Unexpected text: " + text);
+        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
+        assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", doc.get("content").asText());
 
-        text = mgr.read("/extract-test/marklogic-getting-started.pdf-extracted-text.txt", new StringHandle()).get();
-        assertTrue(text.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + text);
+        doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        String content = doc.get("content").asText();
+        assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+    }
+
+    @Test
+    void extractToXml() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files")
+            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT_FORMAT, "xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/extract-test/hello-world.docx-extracted-text.xml");
+        doc.assertElementValue("/model:root/model:content", "Hello world.\n\nThis file is used for testing text extraction.\n");
+
+        doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
+        String content = doc.getElementValue("/model:root/model:content");
+        assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
     }
 
     @Test

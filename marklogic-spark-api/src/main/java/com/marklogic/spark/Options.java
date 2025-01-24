@@ -134,6 +134,11 @@ public abstract class Options {
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
     /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_EXTRACTED_TEXT_FORMAT = "spark.marklogic.write.extractedText.format";
+
+    /**
      * Enables the splitter feature by defining an XPath expression for selecting text to split in a document.
      *
      * @since 2.5.0

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.langchain4j;
 
@@ -20,9 +20,6 @@ public interface Util {
      * at the info/debug level without enabling any other log messages.
      */
     Logger LANGCHAIN4J_LOGGER = LoggerFactory.getLogger("com.marklogic.langchain4j");
-
-    // Very temporary, will likely end up somewhere else soon.
-    Logger CLASSIFIER_LOGGER = LoggerFactory.getLogger("com.marklogic.classifier");
 
     String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 

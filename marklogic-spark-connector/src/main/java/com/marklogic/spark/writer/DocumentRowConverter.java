@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -7,9 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.*;
+import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
@@ -17,6 +19,8 @@ import com.marklogic.spark.writer.file.FileIterator;
 import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,15 +34,20 @@ import java.util.stream.Stream;
 class DocumentRowConverter implements RowConverter {
 
     private final ObjectMapper objectMapper;
+    private final DOMHelper domHelper;
     private final String uriTemplate;
     private final Format documentFormat;
+    private final Format extractedTextFormat;
     private final boolean isStreamingFromFiles;
 
     DocumentRowConverter(WriteContext writeContext) {
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
+        this.domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
+        this.extractedTextFormat = "xml".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT)) ?
+            Format.XML : Format.JSON;
     }
 
     @Override
@@ -75,12 +84,31 @@ class DocumentRowConverter implements RowConverter {
         DocBuilder.DocumentInputs mainInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata);
         final boolean extractedTextExists = row.numFields() == 9;
         if (extractedTextExists) {
-            // Very primitive for now.
-            final String extractedText = row.getString(8);
-            String textUri = uri + "-extracted-text.txt";
-            return Stream.of(mainInputs, new DocBuilder.DocumentInputs(textUri, new StringHandle(extractedText), uriTemplateValues, metadata)).iterator();
+            String extractedText = row.getString(8);
+            DocBuilder.DocumentInputs extractedTextDocument = Format.XML.equals(this.extractedTextFormat) ?
+                buildExtractedXmlDocument(uri, extractedText, metadata) :
+                buildExtractedJsonDocument(uri, extractedText, metadata);
+            return Stream.of(mainInputs, extractedTextDocument).iterator();
         }
         return Stream.of(mainInputs).iterator();
+    }
+
+    private DocBuilder.DocumentInputs buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {
+        ObjectNode doc = objectMapper.createObjectNode();
+        doc.put("content", extractedText);
+        // No uriTemplateValues as there's nothing to pull out of the binary document.
+        // For metadata - we'll reuse the binary document metadata for now.
+        return new DocBuilder.DocumentInputs(sourceUri + "-extracted-text.json", new JacksonHandle(doc), null, metadata);
+    }
+
+    private DocBuilder.DocumentInputs buildExtractedXmlDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {
+        Document doc = domHelper.newDocument();
+        Element root = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "root");
+        doc.appendChild(root);
+        Element content = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "content");
+        content.appendChild(doc.createTextNode(extractedText));
+        root.appendChild(content);
+        return new DocBuilder.DocumentInputs(sourceUri + "-extracted-text.xml", new DOMHandle(doc), null, metadata);
     }
 
     /**

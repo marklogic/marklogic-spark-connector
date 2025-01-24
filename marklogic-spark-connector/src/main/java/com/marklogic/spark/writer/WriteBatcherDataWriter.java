@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -216,7 +216,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             return new FileRowConverter(writeContext);
         }
         final StructType schema = writeContext.getSchema();
-        if (DocumentRowSchema.isSimilarTo(schema)) {
+        if (DocumentRowSchema.hasDocumentFields(schema)) {
             return new DocumentRowConverter(writeContext);
         } else if (TripleRowSchema.SCHEMA.equals(schema)) {
             return new RdfRowConverter(writeContext);
