@@ -8,6 +8,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 public abstract class DocumentRowSchema {
@@ -32,6 +33,26 @@ public abstract class DocumentRowSchema {
         .add("extractedText", DataTypes.StringType);
 
     private DocumentRowSchema() {
+    }
+
+    /**
+     * @param schema
+     * @return true if the given schema has the same set of fields as this class's schema, while allowing for the
+     * given schema to have additional fields as well, such as in the case of extracted text being added to the row.
+     */
+    public static boolean isSimilarTo(StructType schema) {
+        StructField[] otherFields = schema.fields();
+        final int thisSchemaLength = SCHEMA.length();
+        if (otherFields.length < thisSchemaLength) {
+            return false;
+        }
+        StructField[] myFields = SCHEMA.fields();
+        for (int i = 0; i < thisSchemaLength; i++) {
+            if (!myFields[i].name().equals(otherFields[i].name())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

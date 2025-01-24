@@ -203,7 +203,7 @@ public class WriteContext extends ContextSupport {
         String uriSuffix = null;
         if (hasOption(Options.WRITE_URI_SUFFIX)) {
             uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
-        } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema) && !DocumentRowSchema.IMPORT_SCHEMA.equals(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
+        } else if (!isUsingFileSchema() && !DocumentRowSchema.isSimilarTo(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
             String xmlRootName = getStringOption(Options.WRITE_XML_ROOT_NAME);
             if (xmlRootName != null && getStringOption(Options.WRITE_JSON_ROOT_NAME) != null) {
                 throw new ConnectorException(String.format("Cannot specify both %s and %s",
