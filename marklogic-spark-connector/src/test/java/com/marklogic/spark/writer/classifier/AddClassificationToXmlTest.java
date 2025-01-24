@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.classifier;
 
@@ -16,11 +16,11 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AddConceptsToXmlTest extends AbstractIntegrationTest {
+class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
-    void splitToSeparateDocumentsAndAddConcepts() {
+    void splitToSeparateDocumentsAndAddClassificationToXml() {
         final String apiKey = System.getenv("SEMAPHORE_API_KEY");
         assertNotNull(apiKey);
 
@@ -42,14 +42,14 @@ class AddConceptsToXmlTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementExists("Expecting each chunk to have a 'model:concepts' child element", "/root/model:chunks/model:chunk[1]/model:concepts");
+        doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element", "/root/model:chunks/model:chunk[1]/model:classification/model:URL");
     }
 
     /**
-     * Verifies that when a semaphore server is not specified, concepts are not added to chunks.
+     * Verifies that when a semaphore server is not specified, classification is not added to chunks.
      */
     @Test
-    void noConceptsAddedWhenNoSemaphoreServerSpecified() {
+    void noClassificationAddedWhenNoSemaphoreServerSpecified() {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -62,7 +62,7 @@ class AddConceptsToXmlTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementMissing("Expecting the chunk to not include a 'model:concepts' child element", "/root/model:chunks/model:chunk[1]/model:concepts");
+        doc.assertElementMissing("Expecting the chunk to not include a 'model:classification' child element", "/root/model:chunks/model:chunk[1]/model:classification");
     }
 
     @Test
@@ -83,7 +83,7 @@ class AddConceptsToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append);
 
         ConnectorException exception = assertThrowsConnectorException(dfw::save);
-        assertTrue(exception.getMessage().contains("Error retrieving token"), "Unexpected error: " + exception.getMessage());
+        assertTrue(exception.getMessage().contains("CloudException thrown fetching token"), "Unexpected error: " + exception.getMessage());
     }
 
     private Dataset<Row> readDocument(String uri) {

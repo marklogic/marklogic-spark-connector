@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.langchain4j.splitter;
 
@@ -13,10 +13,11 @@ import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.XmlChunkConfig;
-import com.smartlogic.classificationserver.client.ClassificationScore;
 import dev.langchain4j.data.segment.TextSegment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathFactory;
 import java.util.*;
@@ -90,7 +91,15 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         text.setTextContent(textSegment.text());
         chunk.appendChild(text);
         if (chunkConfig.getClassifier() != null) {
-            chunk.appendChild(generateConceptsForChunk(doc, textSegment));
+            Node classificationNode = doc.createElement("classification");
+
+            Document responseDoc = chunkConfig.getClassifier().classifyTextToXml(super.sourceDocument.getUri(), textSegment.text());
+            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName("STRUCTUREDDOCUMENT").item(0).getChildNodes();
+            for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
+                Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i),true);
+                classificationNode.appendChild(importedChildNode);
+            }
+            chunk.appendChild(classificationNode);
         }
         chunks.add(new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory));
     }
@@ -98,21 +107,5 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private String determineChunksElementName(Document doc) {
         return doc.getDocumentElement().getElementsByTagNameNS(Util.DEFAULT_XML_NAMESPACE, DEFAULT_CHUNKS_ELEMENT_NAME).getLength() == 0 ?
             DEFAULT_CHUNKS_ELEMENT_NAME : "splitter-chunks";
-    }
-
-    private Element generateConceptsForChunk(Document doc, TextSegment textSegment) {
-        Map<String, Collection<ClassificationScore>> classificationScores = chunkConfig.getClassifier().classifyText(super.sourceDocument.getUri(), textSegment.text());
-        Element conceptsElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concepts");
-        for (Map.Entry<String, Collection<ClassificationScore>> entry : classificationScores.entrySet()) {
-            for (ClassificationScore classificationScore : classificationScores.get(entry.getKey())) {
-                Element conceptElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "concept");
-                conceptElement.setAttribute("id", classificationScore.getId());
-                conceptElement.setAttribute("name", entry.getKey());
-                conceptElement.setAttribute("value", classificationScore.getName());
-                conceptElement.setAttribute("score", Float.toString(classificationScore.getScore()));
-                conceptsElement.appendChild(conceptElement);
-            }
-        }
-        return conceptsElement;
     }
 }

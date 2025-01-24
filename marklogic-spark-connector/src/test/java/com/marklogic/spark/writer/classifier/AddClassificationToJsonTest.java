@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.classifier;
 
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AddConceptsToJsonTest extends AbstractIntegrationTest {
+class AddClassificationToJsonTest extends AbstractIntegrationTest {
 
     /**
      * Tests the use case where a user wants to split the text into chunks and classify each chunk, all
@@ -22,7 +22,7 @@ class AddConceptsToJsonTest extends AbstractIntegrationTest {
      */
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
-    void splitToSeparateDocumentsAndAddConcepts() {
+    void splitToSeparateDocumentsAndAddClassificationToJson() {
         final String apiKey = System.getenv("SEMAPHORE_API_KEY");
         assertNotNull(apiKey);
 
@@ -45,15 +45,15 @@ class AddConceptsToJsonTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json-chunks-1.json");
-        assertTrue(doc.get("chunks").get(0).has("concepts"));
-        assertTrue(doc.get("chunks").get(1).has("concepts"));
+        assertTrue(doc.get("chunks").get(0).get("classification").has("URL"));
+        assertTrue(doc.get("chunks").get(1).get("classification").has("URL"));
     }
 
     /**
-     * Verifies that when a semaphore server is not specified, concepts are not added to chunks.
+     * Verifies that when a semaphore server is not specified, classification is not added to chunks.
      */
     @Test
-    void noConceptsAddedWhenNoSemaphoreServerSpecified() {
+    void noClassificationAddedWhenNoSemaphoreServerSpecified() {
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -67,8 +67,8 @@ class AddConceptsToJsonTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json-chunks-1.json");
-        assertFalse(doc.get("chunks").get(0).has("concepts"));
-        assertFalse(doc.get("chunks").get(1).has("concepts"));
+        assertFalse(doc.get("chunks").get(0).has("classification"));
+        assertFalse(doc.get("chunks").get(1).has("classification"));
     }
 
     private Dataset<Row> readDocument(String uri) {
