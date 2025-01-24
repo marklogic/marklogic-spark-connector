@@ -1,8 +1,9 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.langchain4j;
 
+import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.dom.XPathNamespaceContext;
 import com.marklogic.spark.Options;
 
@@ -12,6 +13,12 @@ import java.util.Map;
 
 public interface NamespaceContextFactory {
 
+    static NamespaceContext makeDefaultNamespaceContext() {
+        Map<String, String> prefixesToNamespaces = new HashMap<>();
+        prefixesToNamespaces.put("model", Util.DEFAULT_XML_NAMESPACE);
+        return new XPathNamespaceContext(prefixesToNamespaces);
+    }
+    
     static NamespaceContext makeNamespaceContext(Map<String, String> properties) {
         Map<String, String> prefixesToNamespaces = new HashMap<>();
         properties.keySet().stream()

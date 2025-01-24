@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -40,7 +40,7 @@ public abstract class DocumentRowSchema {
      * @return true if the given schema has the same set of fields as this class's schema, while allowing for the
      * given schema to have additional fields as well, such as in the case of extracted text being added to the row.
      */
-    public static boolean isSimilarTo(StructType schema) {
+    public static boolean hasDocumentFields(StructType schema) {
         StructField[] otherFields = schema.fields();
         final int thisSchemaLength = SCHEMA.length();
         if (otherFields.length < thisSchemaLength) {
