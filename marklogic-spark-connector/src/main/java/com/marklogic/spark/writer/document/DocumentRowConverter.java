@@ -1,7 +1,7 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.writer;
+package com.marklogic.spark.writer.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,29 +10,36 @@ import com.marklogic.client.io.*;
 import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
+import com.marklogic.spark.writer.DocBuilder;
+import com.marklogic.spark.writer.RowConverter;
+import com.marklogic.spark.writer.WriteContext;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
 import com.marklogic.spark.writer.file.FileIterator;
 import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.types.StructType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code DocumentRowSchema}.
  */
-class DocumentRowConverter implements RowConverter {
+public class DocumentRowConverter implements RowConverter {
 
+    private final StructType schema;
     private final ObjectMapper objectMapper;
     private final DOMHelper domHelper;
     private final String uriTemplate;
@@ -40,14 +47,15 @@ class DocumentRowConverter implements RowConverter {
     private final Format extractedTextFormat;
     private final boolean isStreamingFromFiles;
 
-    DocumentRowConverter(WriteContext writeContext) {
+    public DocumentRowConverter(WriteContext writeContext) {
+        this.schema = writeContext.getSchema();
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
         this.domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
         this.extractedTextFormat = "xml".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT)) ?
-            Format.XML : Format.JSON;
+                Format.XML : Format.JSON;
     }
 
     @Override
@@ -71,26 +79,28 @@ class DocumentRowConverter implements RowConverter {
     }
 
     private Iterator<DocBuilder.DocumentInputs> readContentFromRow(String uri, InternalRow row) {
-        BytesHandle bytesHandle = new BytesHandle(row.getBinary(1));
-        setHandleFormat(bytesHandle, row);
+        DocumentRow documentRow = new DocumentRow(row, this.schema);
+        BytesHandle bytesHandle = documentRow.getContent(this.documentFormat);
 
         JsonNode uriTemplateValues = null;
         if (this.uriTemplate != null && this.uriTemplate.trim().length() > 0) {
-            String format = row.isNullAt(2) ? null : row.getString(2);
+            String format = documentRow.getFormat();
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }
+        DocumentMetadataHandle metadata = documentRow.getMetadata();
 
-        DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        DocBuilder.DocumentInputs mainInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata);
-        final boolean extractedTextExists = row.numFields() == 9;
-        if (extractedTextExists) {
-            String extractedText = row.getString(8);
+        List<DocBuilder.DocumentInputs> documentsToReturn = new ArrayList<>();
+        documentsToReturn.add(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata));
+
+        Optional<String> extractedText = documentRow.getExtractedText();
+        if (extractedText.isPresent()) {
             DocBuilder.DocumentInputs extractedTextDocument = Format.XML.equals(this.extractedTextFormat) ?
-                buildExtractedXmlDocument(uri, extractedText, metadata) :
-                buildExtractedJsonDocument(uri, extractedText, metadata);
-            return Stream.of(mainInputs, extractedTextDocument).iterator();
+                    buildExtractedXmlDocument(uri, extractedText.get(), metadata) :
+                    buildExtractedJsonDocument(uri, extractedText.get(), metadata);
+            documentsToReturn.add(extractedTextDocument);
         }
-        return Stream.of(mainInputs).iterator();
+
+        return documentsToReturn.iterator();
     }
 
     private DocBuilder.DocumentInputs buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {
@@ -109,27 +119,6 @@ class DocumentRowConverter implements RowConverter {
         content.appendChild(doc.createTextNode(extractedText));
         root.appendChild(content);
         return new DocBuilder.DocumentInputs(sourceUri + "-extracted-text.xml", new DOMHandle(doc), null, metadata);
-    }
-
-    /**
-     * Setting the format now to assist with operations that occur before the document is written to MarkLogic.
-     */
-    private void setHandleFormat(BytesHandle bytesHandle, InternalRow row) {
-        if (this.documentFormat != null) {
-            bytesHandle.withFormat(this.documentFormat);
-        } else if (!row.isNullAt(2)) {
-            String format = row.getString(2);
-            try {
-                bytesHandle.withFormat(Format.valueOf(format.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                // We don't ever expect this to happen, but in case it does - we'll proceed with a null format
-                // on the handle, as it's not essential that it be set.
-                if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                    Util.MAIN_LOGGER.debug("Unable to set format on row with URI: {}; format: {}; error: {}",
-                        row.getString(0), format, e.getMessage());
-                }
-            }
-        }
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
@@ -181,7 +170,7 @@ class DocumentRowConverter implements RowConverter {
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
         FilePartition filePartition = new FilePartition(filePath);
         ArchiveFileReader archiveFileReader = new ArchiveFileReader(
-            filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
+                filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
         );
         return new ArchiveFileIterator(archiveFileReader, this.documentFormat);
     }

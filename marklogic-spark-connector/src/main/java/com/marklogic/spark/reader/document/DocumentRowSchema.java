@@ -26,12 +26,6 @@ public abstract class DocumentRowSchema {
         .add("properties", DataTypes.StringType)
         .add("metadataValues", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
 
-    // Defines optional fields that are used when processing documents. Will need a better name.
-    public static final StructType IMPORT_SCHEMA = SCHEMA
-        // We may want for this to be a map with specific keys. Makes managing the schema a lot easier.
-        // Could be a "context" map.
-        .add("extractedText", DataTypes.StringType);
-
     private DocumentRowSchema() {
     }
 

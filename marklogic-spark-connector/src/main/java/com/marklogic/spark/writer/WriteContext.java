@@ -140,7 +140,7 @@ public class WriteContext extends ContextSupport {
         return factory.newDocBuilder();
     }
 
-    Format getDocumentFormat() {
+    public Format getDocumentFormat() {
         if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
             String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
             try {
