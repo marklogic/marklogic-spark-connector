@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -149,11 +150,12 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void buildAndWriteDocuments(Iterator<DocBuilder.DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
-                DocumentWriteOperation sourceDocument = this.docBuilder.build(documentInputs);
+                List<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(documentInputs);
                 if (this.documentProcessor != null) {
-                    this.documentProcessor.apply(sourceDocument).forEachRemaining(this::writeDocument);
+                    // This will go away soon.
+                    documents.forEach(document -> this.documentProcessor.apply(document).forEachRemaining(this::writeDocument));
                 } else {
-                    writeDocument(sourceDocument);
+                    documents.forEach(this::writeDocument);
                 }
             });
         } finally {

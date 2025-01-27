@@ -14,7 +14,8 @@ import org.apache.spark.sql.types.StructType;
 import java.util.Optional;
 
 /**
- * Encapsulates a row that confirms to {@code DocumentRowSchema} and may have additional columns as well.
+ * Encapsulates a row that confirms to {@code DocumentRowSchema} and may have additional columns as well. Intended to
+ * handle converting from row-specific types into data structures preferred by {@code DocBuilder.DocumentInputs}.
  */
 class DocumentRow {
 
@@ -38,9 +39,9 @@ class DocumentRow {
         return row.isNullAt(2) ? null : row.getString(2);
     }
 
-    Optional<String> getExtractedText() {
+    String getExtractedText() {
         int index = getOptionalFieldIndex(schema, "extractedText");
-        return index > -1 ? Optional.of(row.getString(index)) : Optional.empty();
+        return index > -1 ? row.getString(index) : null;
     }
 
     DocumentMetadataHandle getMetadata() {
