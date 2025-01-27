@@ -18,6 +18,7 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.writer.document.DocumentRowConverter;
 import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
 import org.apache.commons.io.IOUtils;
