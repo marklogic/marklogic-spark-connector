@@ -18,6 +18,7 @@ import java.util.Optional;
  */
 class DocumentRow {
 
+    public final static String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
     private final InternalRow row;
     private final StructType schema;
 
@@ -41,6 +42,11 @@ class DocumentRow {
     Optional<String> getExtractedText() {
         int index = getOptionalFieldIndex(schema, "extractedText");
         return index > -1 ? Optional.of(row.getString(index)) : Optional.empty();
+    }
+
+    Optional<byte[]> getClassificationResponse() {
+        int index = getOptionalFieldIndex(schema, CLASSIFED_TEXT_COLUMN_NAME);
+        return index > -1 ? Optional.of(row.getBinary(index)) : Optional.empty();
     }
 
     DocumentMetadataHandle getMetadata() {

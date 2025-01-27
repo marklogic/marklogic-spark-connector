@@ -7,16 +7,28 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import org.apache.spark.sql.DataFrameWriter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
+import com.marklogic.spark.udf.TextClassifierUdf;
+import org.apache.spark.sql.*;
+import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AddClassificationToXmlTest extends AbstractIntegrationTest {
+
+    private static final String API_KEY = System.getenv("SEMAPHORE_API_KEY");
+    private static final UserDefinedFunction TEXT_CLASSIFIER;
+    private static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
+
+    static {
+        try {
+            TEXT_CLASSIFIER = TextClassifierUdf.build(
+                "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
@@ -68,9 +80,6 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void noHttpsSpecifiedShouldDefaultToHttpAndFail() {
-        final String apiKey = System.getenv("SEMAPHORE_API_KEY");
-        assertNotNull(apiKey);
-
         final DataFrameWriter<Row> dfw = readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -78,12 +87,32 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
             .option(Options.WRITE_CLASSIFIER_PORT, "443")
             .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
-            .option(Options.WRITE_CLASSIFIER_APIKEY, apiKey)
+            .option(Options.WRITE_CLASSIFIER_APIKEY, API_KEY)
             .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
             .mode(SaveMode.Append);
 
         ConnectorException exception = assertThrowsConnectorException(dfw::save);
         assertTrue(exception.getMessage().contains("CloudException thrown fetching token"), "Unexpected error: " + exception.getMessage());
+    }
+
+    @Test
+    void classifyContentsWithUdf() {
+        Dataset<Row> dataset = readDocument("/marklogic-docs/java-client-intro.xml")
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, TEXT_CLASSIFIER.apply(new Column("content")));
+
+        assertEquals(1, dataset.count(), "Expecting 1 file");
+        assertEquals(9, dataset.collectAsList().get(0).size(),
+            "Expecting the 8 standard columns for representing a column, plus the 'textClassification' column.");
+
+        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element", "/root/model:classification/model:URL");
     }
 
     private Dataset<Row> readDocument(String uri) {

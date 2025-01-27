@@ -24,20 +24,22 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
  * Knows how to build a document from a row corresponding to our {@code DocumentRowSchema}.
  */
 public class DocumentRowConverter implements RowConverter {
+
+    private static final String CLASSIFICATION_MAIN_ELEMENT = "STRUCTUREDDOCUMENT";
+    private static final String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 
     private final StructType schema;
     private final ObjectMapper objectMapper;
@@ -46,6 +48,7 @@ public class DocumentRowConverter implements RowConverter {
     private final Format documentFormat;
     private final Format extractedTextFormat;
     private final boolean isStreamingFromFiles;
+    private DocumentBuilderFactory documentBuilderFactory = null;
 
     public DocumentRowConverter(WriteContext writeContext) {
         this.schema = writeContext.getSchema();
@@ -55,7 +58,7 @@ public class DocumentRowConverter implements RowConverter {
         this.domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
         this.extractedTextFormat = "xml".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT)) ?
-                Format.XML : Format.JSON;
+            Format.XML : Format.JSON;
     }
 
     @Override
@@ -90,9 +93,20 @@ public class DocumentRowConverter implements RowConverter {
         DocumentMetadataHandle metadata = documentRow.getMetadata();
 
         List<DocBuilder.DocumentInputs> documentsToReturn = new ArrayList<>();
-        documentsToReturn.add(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata));
 
         Optional<String> extractedText = documentRow.getExtractedText();
+        Optional<byte[]> classificationResponse = documentRow.getClassificationResponse();
+        if (classificationResponse.isPresent() && extractedText.isEmpty()) {
+            String format = row.getString(2);
+            if ("XML".equals(format)) {
+                documentsToReturn.add(
+                    appendDocumentClassificationToXmlContent(row.getBinary(1), uri, classificationResponse.get(), uriTemplateValues, metadata)
+                );
+            }
+        } else {
+            documentsToReturn.add(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata));
+        }
+
         if (extractedText.isPresent()) {
             DocBuilder.DocumentInputs extractedTextDocument = Format.XML.equals(this.extractedTextFormat) ?
                     buildExtractedXmlDocument(uri, extractedText.get(), metadata) :
@@ -101,6 +115,31 @@ public class DocumentRowConverter implements RowConverter {
         }
 
         return documentsToReturn.iterator();
+    }
+
+    public DocBuilder.DocumentInputs appendDocumentClassificationToXmlContent(
+        byte[] originalContent, String uri, byte[] classificationResponse, JsonNode uriTemplateValues, DocumentMetadataHandle metadata
+    ) {
+        if (documentBuilderFactory == null) {
+            documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        }
+        try {
+            DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+            Document originalDoc = builder.parse(new ByteArrayInputStream(originalContent));
+
+            Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
+            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
+            Node classificationNode = originalDoc.createElementNS(DEFAULT_XML_NAMESPACE,"classification");
+            for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
+                Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i),true);
+                classificationNode.appendChild(importedChildNode);
+            }
+            originalDoc.getFirstChild().appendChild(classificationNode);
+
+            return new DocBuilder.DocumentInputs(uri, new DOMHandle(originalDoc), uriTemplateValues, metadata);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+        }
     }
 
     private DocBuilder.DocumentInputs buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {

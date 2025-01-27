@@ -32,6 +32,7 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
+  implementation 'com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1'
 
   // Required for converting JSON to XML. Using 2.15.2 to align with Spark 3.5.3.
   shadowDependencies("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2") {
