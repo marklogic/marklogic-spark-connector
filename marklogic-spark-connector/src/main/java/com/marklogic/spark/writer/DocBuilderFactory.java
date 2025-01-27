@@ -6,6 +6,7 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.langchain4j.Util;
+import com.marklogic.langchain4j.splitter.ChunkAssembler;
 
 /**
  * This is intended to migrate to java-client-api and likely just be a Builder class on DocumentWriteOperation.
@@ -15,13 +16,14 @@ class DocBuilderFactory {
     private DocumentMetadataHandle metadataFromOptions;
     private DocBuilder.UriMaker uriMaker;
     private Format extractedTextFormat;
+    private ChunkAssembler chunkAssembler;
 
     DocBuilderFactory() {
         this.metadataFromOptions = new DocumentMetadataHandle();
     }
 
     DocBuilder newDocBuilder() {
-        return new DocBuilder(uriMaker, metadataFromOptions, extractedTextFormat);
+        return new DocBuilder(uriMaker, metadataFromOptions, extractedTextFormat, chunkAssembler);
     }
 
     DocBuilderFactory withCollections(String collections) {
@@ -45,6 +47,11 @@ class DocBuilderFactory {
         if (extractedTextFormat != null && extractedTextFormat.trim().length() > 0) {
             this.extractedTextFormat = "xml".equalsIgnoreCase(extractedTextFormat) ? Format.XML : Format.JSON;
         }
+        return this;
+    }
+
+    DocBuilderFactory withChunkAssembler(ChunkAssembler chunkAssembler) {
+        this.chunkAssembler = chunkAssembler;
         return this;
     }
 }

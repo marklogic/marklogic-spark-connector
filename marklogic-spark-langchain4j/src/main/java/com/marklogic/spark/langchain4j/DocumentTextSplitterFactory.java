@@ -44,14 +44,13 @@ public interface DocumentTextSplitterFactory {
     }
 
     private static DocumentTextSplitter makeJsonSplitter(Context context) {
-        TextSelector textSelector = makeJsonTextSelector(context);
+        TextSelector textSelector = makeJsonTextSelector(context.getProperties().get(Options.WRITE_SPLITTER_JSON_POINTERS));
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
         return new DocumentTextSplitter(textSelector, splitter, makeChunkAssembler(context));
     }
 
-    private static TextSelector makeJsonTextSelector(Context context) {
-        String value = context.getProperties().get(Options.WRITE_SPLITTER_JSON_POINTERS);
-        String[] pointers = value.split("\n");
+    static TextSelector makeJsonTextSelector(String jsonPointers) {
+        String[] pointers = jsonPointers.split("\n");
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will split JSON documents using JSON Pointers: {}", Arrays.asList(pointers));
         }
@@ -68,7 +67,7 @@ public interface DocumentTextSplitterFactory {
         );
     }
 
-    private static ChunkAssembler makeChunkAssembler(Context context) {
+    static ChunkAssembler makeChunkAssembler(Context context) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
 
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {

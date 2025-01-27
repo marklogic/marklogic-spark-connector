@@ -11,10 +11,12 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.Util;
+import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class DefaultChunkAssembler implements ChunkAssembler {
@@ -23,6 +25,13 @@ public class DefaultChunkAssembler implements ChunkAssembler {
 
     public DefaultChunkAssembler(ChunkConfig chunkConfig) {
         this.chunkConfig = chunkConfig;
+    }
+
+    @Override
+    public Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks) {
+        Metadata metadata = new Metadata();
+        List<TextSegment> textSegments = chunks.stream().map(chunk -> new TextSegment(chunk, metadata)).collect(Collectors.toList());
+        return assembleChunks(sourceDocument, textSegments);
     }
 
     @Override

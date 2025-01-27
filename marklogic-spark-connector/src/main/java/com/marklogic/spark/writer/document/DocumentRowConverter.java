@@ -81,6 +81,7 @@ public class DocumentRowConverter implements RowConverter {
 
         DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
         documentInputs.setExtractedText(documentRow.getExtractedText());
+        documentInputs.setChunks(documentRow.getChunks());
         return Stream.of(documentInputs).iterator();
     }
 

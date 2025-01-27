@@ -6,6 +6,7 @@ package com.marklogic.langchain4j.splitter;
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.langchain4j.Util;
 
@@ -34,11 +35,21 @@ public class JsonPointerTextSelector implements TextSelector {
 
     @Override
     public String selectTextToSplit(DocumentWriteOperation sourceDocument) {
+        return selectTextToSplit(sourceDocument.getContent(), sourceDocument.getUri());
+
+    }
+
+    @Override
+    public String selectTextToSplit(AbstractWriteHandle contentHandle) {
+        return selectTextToSplit(contentHandle, null);
+    }
+
+    private String selectTextToSplit(AbstractWriteHandle contentHandle, String uriForLogMessage) {
         JsonNode doc;
         try {
-            doc = Util.getJsonFromHandle(sourceDocument.getContent());
+            doc = Util.getJsonFromHandle(contentHandle);
         } catch (Exception ex) {
-            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
+            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", uriForLogMessage, ex.getMessage());
             return null;
         }
 

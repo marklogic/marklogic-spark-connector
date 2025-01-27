@@ -13,6 +13,7 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
+import com.marklogic.spark.langchain4j.DocumentTextSplitterFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
@@ -130,7 +131,8 @@ public class WriteContext extends ContextSupport {
         DocBuilderFactory factory = new DocBuilderFactory()
             .withCollections(getStringOption(Options.WRITE_COLLECTIONS))
             .withPermissions(getStringOption(Options.WRITE_PERMISSIONS))
-            .withExtractedTextFormat(getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT, "json"));
+            .withExtractedTextFormat(getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT, "json"))
+            .withChunkAssembler(DocumentTextSplitterFactory.makeChunkAssembler(this));
 
         if (hasOption(Options.WRITE_URI_TEMPLATE)) {
             configureTemplateUriMaker(factory);
