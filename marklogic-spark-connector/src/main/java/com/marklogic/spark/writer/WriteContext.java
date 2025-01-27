@@ -128,8 +128,9 @@ public class WriteContext extends ContextSupport {
 
     DocBuilder newDocBuilder() {
         DocBuilderFactory factory = new DocBuilderFactory()
-            .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
-            .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS));
+            .withCollections(getStringOption(Options.WRITE_COLLECTIONS))
+            .withPermissions(getStringOption(Options.WRITE_PERMISSIONS))
+            .withExtractedTextFormat(getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT, "json"));
 
         if (hasOption(Options.WRITE_URI_TEMPLATE)) {
             configureTemplateUriMaker(factory);

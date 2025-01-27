@@ -4,11 +4,28 @@
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
+import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.langchain4j.dom.DOMHelper;
+import com.marklogic.spark.langchain4j.NamespaceContextFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Knows how to build instances of {@code DocumentWriteOperation} based on the data in {@code DocBuilder.DocumentInputs}.
+ * The latter is expected to contain data read from a Spark row, normalized into a standard set of inputs regardless
+ * of the schema of the Spark row.
+ */
 public class DocBuilder {
 
     public interface UriMaker {
@@ -26,6 +43,9 @@ public class DocBuilder {
         private final JsonNode columnValuesForUriTemplate;
         private final DocumentMetadataHandle initialMetadata;
         private final String graph;
+
+        // Using hacky getter/setter for now until this is proven to work well.
+        private String extractedText;
 
         public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                               DocumentMetadataHandle initialMetadata) {
@@ -60,66 +80,87 @@ public class DocBuilder {
         String getGraph() {
             return graph;
         }
+
+        public String getExtractedText() {
+            return extractedText;
+        }
+
+        public void setExtractedText(String extractedText) {
+            this.extractedText = extractedText;
+        }
     }
 
     private final UriMaker uriMaker;
-    private final DocumentMetadataHandle metadata;
+    private final DocumentMetadataHandle metadataFromOptions;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final DOMHelper domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
+    private final Format extractedTextFormat;
 
-    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata) {
+    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadataFromOptions, Format extractedTextFormat) {
         this.uriMaker = uriMaker;
-        this.metadata = metadata;
-    }
-
-    DocumentWriteOperation build(DocumentInputs inputs) {
-        final String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
-        final String graph = inputs.getGraph();
-        final DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
-
-        final boolean isNakedProperties = inputs.getContent() == null;
-        if (isNakedProperties) {
-            if (initialMetadata != null) {
-                overrideInitialMetadata(initialMetadata);
-            }
-            return new DocumentWriteOperationImpl(uri, initialMetadata, null);
-        }
-
-        if (initialMetadata != null) {
-            overrideInitialMetadata(initialMetadata);
-            if (graph != null) {
-                initialMetadata.getCollections().add(graph);
-            }
-            return new DocumentWriteOperationImpl(uri, initialMetadata, inputs.getContent());
-        }
-
-        if (graph != null && !metadata.getCollections().contains(graph)) {
-            DocumentMetadataHandle newMetadata = newMetadataWithGraph(graph);
-            return new DocumentWriteOperationImpl(uri, newMetadata, inputs.getContent());
-        }
-
-        return new DocumentWriteOperationImpl(uri, metadata, inputs.getContent());
+        this.metadataFromOptions = metadataFromOptions;
+        this.extractedTextFormat = extractedTextFormat;
     }
 
     /**
-     * If an instance of {@code DocumentInputs} has metadata specified, override it with anything in the metadata
-     * instance that was used to construct this class. We could later support an additive approach as well here.
-     *
-     * @param initialMetadata
+     * @param inputs set of inputs constructed from a single Spark row.
+     * @return one or more documents to write to MarkLogic, based on the inputs object.
      */
-    private void overrideInitialMetadata(DocumentMetadataHandle initialMetadata) {
-        if (!metadata.getCollections().isEmpty()) {
-            initialMetadata.setCollections(metadata.getCollections());
+    List<DocumentWriteOperation> buildDocuments(DocumentInputs inputs) {
+        final List<DocumentWriteOperation> documents = new ArrayList<>();
+        final String sourceUri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
+        final String graph = inputs.getGraph();
+        final DocumentMetadataHandle metadataFromRow = inputs.getInitialMetadata();
+
+        DocumentMetadataHandle mainDocumentMetadata = metadataFromRow;
+        if (mainDocumentMetadata != null) {
+            // If the row contains metadata, use it, but first override it based on the metadata specified by user options.
+            overrideMetadataFromRowWithMetadataFromOptions(mainDocumentMetadata);
+            if (graph != null) {
+                mainDocumentMetadata.getCollections().add(graph);
+            }
+            documents.add(new DocumentWriteOperationImpl(sourceUri, mainDocumentMetadata, inputs.getContent()));
+        } else {
+            // If the row doesn't contain metadata, use the metadata specified by user options. We need to be careful
+            // not to modify that object though, as it will be reused on subsequent calls.
+            mainDocumentMetadata = metadataFromOptions;
+            if (graph != null && !mainDocumentMetadata.getCollections().contains(graph)) {
+                mainDocumentMetadata = newMetadataWithGraph(graph);
+            }
+            documents.add(new DocumentWriteOperationImpl(sourceUri, mainDocumentMetadata, inputs.getContent()));
         }
-        if (!metadata.getPermissions().isEmpty()) {
-            initialMetadata.setPermissions(metadata.getPermissions());
+
+        if (inputs.getExtractedText() != null) {
+            // For now, just reuse the main metadata. We'll make this configurable soon.
+            DocumentWriteOperation extractedTextDoc = Format.XML.equals(this.extractedTextFormat) ?
+                buildExtractedXmlDocument(sourceUri, inputs.getExtractedText(), mainDocumentMetadata) :
+                buildExtractedJsonDocument(sourceUri, inputs.getExtractedText(), mainDocumentMetadata);
+            documents.add(extractedTextDoc);
         }
-        if (metadata.getQuality() != 0) {
-            initialMetadata.setQuality(metadata.getQuality());
+        return documents;
+    }
+
+    /**
+     * If an instance of {@code DocumentInputs} has metadata specified (i.e. metadata from the Spark row), override it
+     * with any metadata specified by the user via options.
+     *
+     * @param metadataFromRow
+     */
+    private void overrideMetadataFromRowWithMetadataFromOptions(DocumentMetadataHandle metadataFromRow) {
+        if (!metadataFromOptions.getCollections().isEmpty()) {
+            metadataFromRow.setCollections(metadataFromOptions.getCollections());
         }
-        if (!metadata.getProperties().isEmpty()) {
-            initialMetadata.setProperties(metadata.getProperties());
+        if (!metadataFromOptions.getPermissions().isEmpty()) {
+            metadataFromRow.setPermissions(metadataFromOptions.getPermissions());
         }
-        if (!metadata.getMetadataValues().isEmpty()) {
-            initialMetadata.setMetadataValues(metadata.getMetadataValues());
+        if (metadataFromOptions.getQuality() != 0) {
+            metadataFromRow.setQuality(metadataFromOptions.getQuality());
+        }
+        if (!metadataFromOptions.getProperties().isEmpty()) {
+            metadataFromRow.setProperties(metadataFromOptions.getProperties());
+        }
+        if (!metadataFromOptions.getMetadataValues().isEmpty()) {
+            metadataFromRow.setMetadataValues(metadataFromOptions.getMetadataValues());
         }
     }
 
@@ -134,12 +175,30 @@ public class DocBuilder {
      */
     private DocumentMetadataHandle newMetadataWithGraph(String graph) {
         DocumentMetadataHandle newMetadata = new DocumentMetadataHandle();
-        newMetadata.getCollections().addAll(metadata.getCollections());
-        newMetadata.getPermissions().putAll(metadata.getPermissions());
-        newMetadata.setQuality(metadata.getQuality());
-        newMetadata.setProperties(metadata.getProperties());
-        newMetadata.setMetadataValues(metadata.getMetadataValues());
+        newMetadata.getCollections().addAll(metadataFromOptions.getCollections());
+        newMetadata.getPermissions().putAll(metadataFromOptions.getPermissions());
+        newMetadata.setQuality(metadataFromOptions.getQuality());
+        newMetadata.setProperties(metadataFromOptions.getProperties());
+        newMetadata.setMetadataValues(metadataFromOptions.getMetadataValues());
         newMetadata.getCollections().add(graph);
         return newMetadata;
+    }
+
+    private DocumentWriteOperation buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle mainDocumentMetadata) {
+        ObjectNode doc = objectMapper.createObjectNode();
+        doc.put("content", extractedText);
+        String uri = sourceUri + "-extracted-text.json";
+        return new DocumentWriteOperationImpl(uri, mainDocumentMetadata, new JacksonHandle(doc));
+    }
+
+    private DocumentWriteOperation buildExtractedXmlDocument(String sourceUri, String extractedText, DocumentMetadataHandle mainDocumentMetadata) {
+        Document doc = domHelper.newDocument();
+        Element root = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "root");
+        doc.appendChild(root);
+        Element content = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "content");
+        content.appendChild(doc.createTextNode(extractedText));
+        root.appendChild(content);
+        String uri = sourceUri + "-extracted-text.xml";
+        return new DocumentWriteOperationImpl(uri, mainDocumentMetadata, new DOMHandle(doc));
     }
 }

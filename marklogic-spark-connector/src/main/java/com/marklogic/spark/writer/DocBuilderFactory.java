@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import com.marklogic.langchain4j.Util;
 
 /**
@@ -11,31 +12,39 @@ import com.marklogic.langchain4j.Util;
  */
 class DocBuilderFactory {
 
-    private DocumentMetadataHandle metadata;
+    private DocumentMetadataHandle metadataFromOptions;
     private DocBuilder.UriMaker uriMaker;
+    private Format extractedTextFormat;
 
     DocBuilderFactory() {
-        this.metadata = new DocumentMetadataHandle();
+        this.metadataFromOptions = new DocumentMetadataHandle();
     }
 
     DocBuilder newDocBuilder() {
-        return new DocBuilder(uriMaker, metadata);
+        return new DocBuilder(uriMaker, metadataFromOptions, extractedTextFormat);
     }
 
     DocBuilderFactory withCollections(String collections) {
         if (collections != null && collections.trim().length() > 0) {
-            metadata.withCollections(collections.split(","));
+            metadataFromOptions.withCollections(collections.split(","));
         }
         return this;
     }
 
     DocBuilderFactory withPermissions(String permissionsString) {
-        Util.addPermissionsFromDelimitedString(metadata.getPermissions(), permissionsString);
+        Util.addPermissionsFromDelimitedString(metadataFromOptions.getPermissions(), permissionsString);
         return this;
     }
 
     DocBuilderFactory withUriMaker(DocBuilder.UriMaker uriMaker) {
         this.uriMaker = uriMaker;
+        return this;
+    }
+
+    DocBuilderFactory withExtractedTextFormat(String extractedTextFormat) {
+        if (extractedTextFormat != null && extractedTextFormat.trim().length() > 0) {
+            this.extractedTextFormat = "xml".equalsIgnoreCase(extractedTextFormat) ? Format.XML : Format.JSON;
+        }
         return this;
     }
 }

@@ -6,11 +6,12 @@ package com.marklogic.spark.writer.document;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.io.*;
-import com.marklogic.langchain4j.dom.DOMHelper;
+import com.marklogic.client.io.BytesHandle;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
 import com.marklogic.spark.writer.DocBuilder;
@@ -22,16 +23,11 @@ import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -41,10 +37,8 @@ public class DocumentRowConverter implements RowConverter {
 
     private final StructType schema;
     private final ObjectMapper objectMapper;
-    private final DOMHelper domHelper;
     private final String uriTemplate;
     private final Format documentFormat;
-    private final Format extractedTextFormat;
     private final boolean isStreamingFromFiles;
 
     public DocumentRowConverter(WriteContext writeContext) {
@@ -52,10 +46,7 @@ public class DocumentRowConverter implements RowConverter {
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
-        this.domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
-        this.extractedTextFormat = "xml".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT)) ?
-                Format.XML : Format.JSON;
     }
 
     @Override
@@ -87,38 +78,10 @@ public class DocumentRowConverter implements RowConverter {
             String format = documentRow.getFormat();
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }
-        DocumentMetadataHandle metadata = documentRow.getMetadata();
 
-        List<DocBuilder.DocumentInputs> documentsToReturn = new ArrayList<>();
-        documentsToReturn.add(new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, metadata));
-
-        Optional<String> extractedText = documentRow.getExtractedText();
-        if (extractedText.isPresent()) {
-            DocBuilder.DocumentInputs extractedTextDocument = Format.XML.equals(this.extractedTextFormat) ?
-                    buildExtractedXmlDocument(uri, extractedText.get(), metadata) :
-                    buildExtractedJsonDocument(uri, extractedText.get(), metadata);
-            documentsToReturn.add(extractedTextDocument);
-        }
-
-        return documentsToReturn.iterator();
-    }
-
-    private DocBuilder.DocumentInputs buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {
-        ObjectNode doc = objectMapper.createObjectNode();
-        doc.put("content", extractedText);
-        // No uriTemplateValues as there's nothing to pull out of the binary document.
-        // For metadata - we'll reuse the binary document metadata for now.
-        return new DocBuilder.DocumentInputs(sourceUri + "-extracted-text.json", new JacksonHandle(doc), null, metadata);
-    }
-
-    private DocBuilder.DocumentInputs buildExtractedXmlDocument(String sourceUri, String extractedText, DocumentMetadataHandle metadata) {
-        Document doc = domHelper.newDocument();
-        Element root = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "root");
-        doc.appendChild(root);
-        Element content = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "content");
-        content.appendChild(doc.createTextNode(extractedText));
-        root.appendChild(content);
-        return new DocBuilder.DocumentInputs(sourceUri + "-extracted-text.xml", new DOMHandle(doc), null, metadata);
+        DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
+        documentInputs.setExtractedText(documentRow.getExtractedText());
+        return Stream.of(documentInputs).iterator();
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
@@ -170,7 +133,7 @@ public class DocumentRowConverter implements RowConverter {
     private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
         FilePartition filePartition = new FilePartition(filePath);
         ArchiveFileReader archiveFileReader = new ArchiveFileReader(
-                filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
+            filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
         );
         return new ArchiveFileIterator(archiveFileReader, this.documentFormat);
     }
