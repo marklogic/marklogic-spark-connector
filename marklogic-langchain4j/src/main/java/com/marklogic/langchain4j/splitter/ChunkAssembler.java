@@ -23,4 +23,7 @@ public interface ChunkAssembler {
         DocumentWriteOperation sourceDocument,
         List<TextSegment> chunks
     );
+
+    // This will eventually be the preferred method, we'll get rid of the one that exposes the LangChain4j type.
+    Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks);
 }

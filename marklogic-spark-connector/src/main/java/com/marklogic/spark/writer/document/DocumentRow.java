@@ -9,9 +9,12 @@ import com.marklogic.client.io.Format;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
+import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.types.StructType;
+import org.apache.spark.unsafe.types.UTF8String;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Encapsulates a row that confirms to {@code DocumentRowSchema} and may have additional columns as well. Intended to
@@ -42,6 +45,21 @@ class DocumentRow {
     String getExtractedText() {
         int index = getOptionalFieldIndex(schema, "extractedText");
         return index > -1 ? row.getString(index) : null;
+    }
+
+    List<String> getChunks() {
+        int index = getOptionalFieldIndex(schema, "chunks");
+        List<String> chunks = new ArrayList<>();
+        if (index > -1) {
+            ArrayData array = row.getArray(index);
+            for (int i = 0; i < array.numElements(); i++) {
+                UTF8String val = array.getUTF8String(i);
+                if (val != null) {
+                    chunks.add(val.toString());
+                }
+            }
+        }
+        return chunks;
     }
 
     DocumentMetadataHandle getMetadata() {
