@@ -38,7 +38,7 @@ public interface DocumentTextSplitterFactory {
         return new DocumentTextSplitter(textSelector, splitter, chunkAssembler);
     }
 
-    private static TextSelector makeXmlTextSelector(Context context) {
+    static TextSelector makeXmlTextSelector(Context context) {
         String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
         return new DOMTextSelector(xpath, NamespaceContextFactory.makeNamespaceContext(context.getProperties()));
     }

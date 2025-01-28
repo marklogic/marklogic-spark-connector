@@ -11,9 +11,10 @@ import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.udf.TextSplitter;
+import com.marklogic.spark.udf.TextSplitterConfig;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -59,8 +60,14 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
 
     @Test
     void twoJsonPointersSplitWithUDF() {
+        TextSplitterConfig splitterConfig = new TextSplitterConfig();
+        splitterConfig.setMaxChunkSize(500);
+        splitterConfig.setMaxOverlapSize(10);
+        splitterConfig.setJsonPointers("/text\n/more-text");
+        UserDefinedFunction splitter = splitterConfig.buildUDF();
+
         readDocument("/marklogic-docs/java-client-intro.json")
-            .withColumn("chunks", TextSplitter.build(500, 0, "/text\n/more-text").apply(new Column("content")))
+            .withColumn("chunks", splitter.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -85,7 +92,6 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        System.out.println(doc.toPrettyString());
 
         ArrayNode chunks = (ArrayNode) doc.get("chunks");
         assertEquals(3, chunks.size(), "Expecting 3 chunks based on the entire serialized doc and a size of 1000.");

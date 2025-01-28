@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.NotSerializableException;
 
 public class IOExceptionTestExecutionListener implements TestExecutionExceptionHandler {
 
@@ -29,7 +30,7 @@ public class IOExceptionTestExecutionListener implements TestExecutionExceptionH
     // Telling Sonar not to complain about the intentional sleep.
     @SuppressWarnings("java:S2925")
     private boolean logIfIOException(Throwable throwable) {
-        if (throwable instanceof IOException) {
+        if (throwable instanceof IOException && !(throwable instanceof NotSerializableException)) {
             logger.error("Cause is IOException: {}; assuming this is due to a temporary and intermittent connection " +
                 "issue due to MarkLogic running on Docker, so will not fail test.", throwable.getMessage());
 
