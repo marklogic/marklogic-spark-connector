@@ -28,6 +28,17 @@ public class TextClassifier {
     private final ClassificationClient classificationClient;
     private final DocumentBuilderFactory documentBuilderFactory;
 
+    public TextClassifier(ClassificationConfiguration classificationConfiguration) {
+        documentBuilderFactory = DocumentBuilderFactory.newInstance();
+
+        this.classificationClient = new ClassificationClient();
+        Map<String, String> additionalParameters = new HashMap<>();
+        additionalParameters.put("threshold", THRESHOLD);
+        additionalParameters.put("language", "en1");
+        classificationConfiguration.setAdditionalParameters(additionalParameters);
+        classificationClient.setClassificationConfiguration(classificationConfiguration);
+    }
+
     public TextClassifier(String host, String https, String port, String endpoint, String apikey, String tokenEndpoint) throws CloudException {
         String protocol = "true".equalsIgnoreCase(https) ? "https" : "http";
         String tokenUrl = protocol + "://" + host + ":" + port + "/" + tokenEndpoint;

@@ -22,6 +22,7 @@ import java.util.List;
  */
 class DocumentRow {
 
+    public static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
     private final InternalRow row;
     private final StructType schema;
 
@@ -45,6 +46,11 @@ class DocumentRow {
     String getExtractedText() {
         int index = getOptionalFieldIndex(schema, "extractedText");
         return index > -1 ? row.getString(index) : null;
+    }
+
+    byte[] getClassificationResponse() {
+        int index = getOptionalFieldIndex(schema, CLASSIFED_TEXT_COLUMN_NAME);
+        return index > -1 ? row.getBinary(index) : null;
     }
 
     List<String> getChunks() {

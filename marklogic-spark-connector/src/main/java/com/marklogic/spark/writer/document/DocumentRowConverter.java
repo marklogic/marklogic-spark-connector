@@ -6,10 +6,7 @@ package com.marklogic.spark.writer.document;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.io.BytesHandle;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.InputStreamHandle;
+import com.marklogic.client.io.*;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -81,6 +78,8 @@ public class DocumentRowConverter implements RowConverter {
 
         DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
         documentInputs.setExtractedText(documentRow.getExtractedText());
+        documentInputs.setClassificationResponse(documentRow.getClassificationResponse());
+
         documentInputs.setChunks(documentRow.getChunks());
         return Stream.of(documentInputs).iterator();
     }

@@ -8,17 +8,20 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
-import com.marklogic.client.io.DOMHandle;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.Format;
-import com.marklogic.client.io.JacksonHandle;
+import com.marklogic.client.io.*;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.splitter.ChunkAssembler;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
 import java.util.*;
 
 /**
@@ -27,6 +30,9 @@ import java.util.*;
  * of the schema of the Spark row.
  */
 public class DocBuilder {
+
+    private static final String CLASSIFICATION_MAIN_ELEMENT = "STRUCTUREDDOCUMENT";
+    private static final String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 
     public interface UriMaker {
         String makeURI(String initialUri, JsonNode uriTemplateValues);
@@ -47,6 +53,7 @@ public class DocBuilder {
         // Using hacky getter/setter for now until this is proven to work well.
         private String extractedText;
         private List<String> chunks;
+        private byte[] classificationResponse;
 
         public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                               DocumentMetadataHandle initialMetadata) {
@@ -97,6 +104,14 @@ public class DocBuilder {
         public void setChunks(List<String> chunks) {
             this.chunks = chunks;
         }
+
+        public byte[] getClassificationResponse() {
+            return classificationResponse;
+        }
+
+        public void setClassificationResponse(byte[] classificationResponse) {
+            this.classificationResponse = classificationResponse;
+        }
     }
 
     private final UriMaker uriMaker;
@@ -105,6 +120,7 @@ public class DocBuilder {
     private final DOMHelper domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
     private final Format extractedTextFormat;
     private final ChunkAssembler chunkAssembler;
+    private DocumentBuilderFactory documentBuilderFactory = null;
 
     DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadataFromOptions, Format extractedTextFormat, ChunkAssembler chunkAssembler) {
         this.uriMaker = uriMaker;
@@ -138,6 +154,12 @@ public class DocBuilder {
         final String graph = inputs.getGraph();
         final DocumentMetadataHandle metadataFromRow = inputs.getInitialMetadata();
 
+        AbstractWriteHandle content = inputs.getContent();
+        byte[] classificationResponse = inputs.getClassificationResponse();
+        if (classificationResponse != null && inputs.getExtractedText() == null && Format.XML.equals(((BytesHandle) content).getFormat())) {
+            content = appendDocumentClassificationToXmlContent(((BytesHandle) content).get(), inputs.getInitialUri(), classificationResponse);
+        }
+
         DocumentMetadataHandle sourceMetadata = metadataFromRow;
         if (sourceMetadata != null) {
             // If the row contains metadata, use it, but first override it based on the metadata specified by user options.
@@ -145,7 +167,7 @@ public class DocBuilder {
             if (graph != null) {
                 sourceMetadata.getCollections().add(graph);
             }
-            return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, inputs.getContent());
+            return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, content);
         }
         // If the row doesn't contain metadata, use the metadata specified by user options. We need to be careful
         // not to modify that object though, as it will be reused on subsequent calls.
@@ -153,7 +175,30 @@ public class DocBuilder {
         if (graph != null && !sourceMetadata.getCollections().contains(graph)) {
             sourceMetadata = newMetadataWithGraph(graph);
         }
-        return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, inputs.getContent());
+        return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, content);
+    }
+
+    public DOMHandle appendDocumentClassificationToXmlContent(byte[] originalContent, String uri, byte[] classificationResponse) {
+        if (documentBuilderFactory == null) {
+            documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        }
+        try {
+            DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+            Document originalDoc = builder.parse(new ByteArrayInputStream(originalContent));
+
+            Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
+            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
+            Node classificationNode = originalDoc.createElementNS(DEFAULT_XML_NAMESPACE,"classification");
+            for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
+                Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i),true);
+                classificationNode.appendChild(importedChildNode);
+            }
+            originalDoc.getFirstChild().appendChild(classificationNode);
+
+            return new DOMHandle(originalDoc);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+        }
     }
 
     private DocumentWriteOperation buildExtractedTextDocument(DocumentInputs inputs, DocumentWriteOperation mainDocument) {
