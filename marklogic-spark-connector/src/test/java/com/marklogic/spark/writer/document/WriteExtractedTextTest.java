@@ -8,7 +8,7 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.udf.TextExtractor;
-import com.marklogic.spark.udf.TextSplitter;
+import com.marklogic.spark.udf.TextSplitterConfig;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -83,7 +83,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
             .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
-            .withColumn("chunks", TextSplitter.build().apply(new Column("extractedText")))
+            .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -117,7 +117,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
             .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
-            .withColumn("chunks", TextSplitter.build().apply(new Column("extractedText")))
+            .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)

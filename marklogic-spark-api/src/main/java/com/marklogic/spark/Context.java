@@ -7,11 +7,11 @@ import java.io.Serializable;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public abstract class Context implements Serializable {
+public class Context implements Serializable {
 
     private final Map<String, String> properties;
 
-    protected Context(Map<String, String> properties) {
+    public Context(Map<String, String> properties) {
         this.properties = properties;
     }
 
