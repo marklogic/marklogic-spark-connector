@@ -122,8 +122,4 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .option(Options.READ_DOCUMENTS_URIS, uri)
             .load();
     }
-
-    private UserDefinedFunction buildTextClassifier() {
-        return TextClassifierUdf.build("demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
-    }
 }
