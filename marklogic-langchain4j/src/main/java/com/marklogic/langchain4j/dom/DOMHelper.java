@@ -40,7 +40,10 @@ public class DOMHelper {
     }
 
     public Document extractDocument(DocumentWriteOperation sourceDocument) {
-        AbstractWriteHandle handle = sourceDocument.getContent();
+        return extractDocument(sourceDocument.getContent(), sourceDocument.getUri());
+    }
+
+    public Document extractDocument(AbstractWriteHandle handle, String sourceUri) {
         if (handle instanceof DOMHandle) {
             return ((DOMHandle) handle).get();
         }
@@ -51,7 +54,7 @@ public class DOMHelper {
             return getDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {
             throw new MarkLogicLangchainException(String.format("Unable to parse XML for document with URI: %s; cause: %s",
-                sourceDocument.getUri(), e.getMessage()), e);
+                sourceUri, e.getMessage()), e);
         }
     }
 

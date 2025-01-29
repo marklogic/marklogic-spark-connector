@@ -88,9 +88,11 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
-    void classifyContentsWithUdf() {
+    void classifyXmlContentsWithUdf() {
+        final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
+            "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
         Dataset<Row> dataset = readDocument("/marklogic-docs/java-client-intro.xml")
-            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, buildTextClassifier().apply(new Column("content")));
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column("content")));
 
         assertEquals(1, dataset.count(), "Expecting 1 file");
         assertNotNull(dataset.col(CLASSIFED_TEXT_COLUMN_NAME));
@@ -110,7 +112,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     @Test
     @Disabled("Placeholder for a future test for data that is not UTF-8")
-    void classifyNonUtf8Data() {
+    void classifyNonUtf8XmlData() {
         assertTrue(true);
     }
 

@@ -6,10 +6,12 @@ package com.marklogic.spark.writer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.*;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.splitter.ChunkAssembler;
 import com.marklogic.spark.ConnectorException;
@@ -22,6 +24,7 @@ import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -32,7 +35,6 @@ import java.util.*;
 public class DocBuilder {
 
     private static final String CLASSIFICATION_MAIN_ELEMENT = "STRUCTUREDDOCUMENT";
-    private static final String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 
     public interface UriMaker {
         String makeURI(String initialUri, JsonNode uriTemplateValues);
@@ -121,12 +123,14 @@ public class DocBuilder {
     private final Format extractedTextFormat;
     private final ChunkAssembler chunkAssembler;
     private DocumentBuilderFactory documentBuilderFactory = null;
+    private final XmlMapper xmlMapper;
 
     DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadataFromOptions, Format extractedTextFormat, ChunkAssembler chunkAssembler) {
         this.uriMaker = uriMaker;
         this.metadataFromOptions = metadataFromOptions;
         this.extractedTextFormat = extractedTextFormat;
         this.chunkAssembler = chunkAssembler;
+        xmlMapper = new XmlMapper();
     }
 
     /**
@@ -155,9 +159,20 @@ public class DocBuilder {
         final DocumentMetadataHandle metadataFromRow = inputs.getInitialMetadata();
 
         AbstractWriteHandle content = inputs.getContent();
+        Format sourceDocumentFormat = Util.determineSourceDocumentFormat(content, sourceUri);
+
         byte[] classificationResponse = inputs.getClassificationResponse();
-        if (classificationResponse != null && inputs.getExtractedText() == null && Format.XML.equals(((BytesHandle) content).getFormat())) {
-            content = appendDocumentClassificationToXmlContent(((BytesHandle) content).get(), inputs.getInitialUri(), classificationResponse);
+        if (classificationResponse != null && inputs.getExtractedText() == null) {
+            if (Format.XML.equals(sourceDocumentFormat)) {
+                Document originalDoc = domHelper.extractDocument(content, inputs.getInitialUri());
+                content = appendDocumentClassificationToXmlContent(originalDoc, inputs.getInitialUri(), classificationResponse);
+            } else if (Format.JSON.equals(sourceDocumentFormat)) {
+                content = appendDocumentClassificationToJsonContent(Util.getJsonFromHandle(content), inputs.getInitialUri(), classificationResponse);
+            } else {
+                if (sourceDocumentFormat == null) {
+                    Util.LANGCHAIN4J_LOGGER.warn("Cannot add classification to document with URI {}; document is neither JSON nor XML.", sourceUri);
+                }
+            }
         }
 
         DocumentMetadataHandle sourceMetadata = metadataFromRow;
@@ -178,17 +193,28 @@ public class DocBuilder {
         return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, content);
     }
 
-    public DOMHandle appendDocumentClassificationToXmlContent(byte[] originalContent, String uri, byte[] classificationResponse) {
+    private JacksonHandle appendDocumentClassificationToJsonContent(
+        JsonNode originalJsonContent, String uri, byte[] classificationResponse
+    ) {
+        try {
+            JsonNode structuredDocumentNode = xmlMapper.readTree(classificationResponse).get(CLASSIFICATION_MAIN_ELEMENT);
+            ((ObjectNode) originalJsonContent).set("classification", structuredDocumentNode);
+            return new JacksonHandle(originalJsonContent);
+        } catch (IOException e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+        }
+    }
+
+    public DOMHandle appendDocumentClassificationToXmlContent(Document originalDoc, String uri, byte[] classificationResponse) {
         if (documentBuilderFactory == null) {
             documentBuilderFactory = DocumentBuilderFactory.newInstance();
         }
         try {
             DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
-            Document originalDoc = builder.parse(new ByteArrayInputStream(originalContent));
-
             Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
+
             NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
-            Node classificationNode = originalDoc.createElementNS(DEFAULT_XML_NAMESPACE,"classification");
+            Node classificationNode = originalDoc.createElementNS(Util.DEFAULT_XML_NAMESPACE,"classification");
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
                 Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i),true);
                 classificationNode.appendChild(importedChildNode);
