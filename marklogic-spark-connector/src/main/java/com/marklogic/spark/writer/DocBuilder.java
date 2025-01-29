@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -116,19 +116,31 @@ public class DocBuilder {
         }
     }
 
+    public static class ExtractedTextConfig {
+        private final Format format;
+        private final DocumentMetadataHandle metadata;
+        private final boolean dropSource;
+
+        public ExtractedTextConfig(Format format, DocumentMetadataHandle metadata, boolean dropSource) {
+            this.format = format;
+            this.metadata = metadata;
+            this.dropSource = dropSource;
+        }
+    }
+
     private final UriMaker uriMaker;
     private final DocumentMetadataHandle metadataFromOptions;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final DOMHelper domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
-    private final Format extractedTextFormat;
+    private final ExtractedTextConfig extractedTextConfig;
     private final ChunkAssembler chunkAssembler;
     private DocumentBuilderFactory documentBuilderFactory = null;
     private final XmlMapper xmlMapper;
 
-    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadataFromOptions, Format extractedTextFormat, ChunkAssembler chunkAssembler) {
+    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata, ExtractedTextConfig extractedTextConfig, ChunkAssembler chunkAssembler) {
         this.uriMaker = uriMaker;
-        this.metadataFromOptions = metadataFromOptions;
-        this.extractedTextFormat = extractedTextFormat;
+        this.metadataFromOptions = metadata;
+        this.extractedTextConfig = extractedTextConfig;
         this.chunkAssembler = chunkAssembler;
         xmlMapper = new XmlMapper();
     }
@@ -150,6 +162,10 @@ public class DocBuilder {
         }
 
         buildChunkDocuments(inputs, mainDocument, extractedTextDoc).forEach(doc -> documents.put(doc.getUri(), doc));
+
+        if (extractedTextDoc != null && extractedTextConfig.dropSource) {
+            documents.remove(mainDocument.getUri());
+        }
         return documents.values();
     }
 
@@ -216,7 +232,7 @@ public class DocBuilder {
             NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
             Node classificationNode = originalDoc.createElementNS(Util.DEFAULT_XML_NAMESPACE,"classification");
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
-                Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i),true);
+                Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);
             }
             originalDoc.getFirstChild().appendChild(classificationNode);
@@ -230,11 +246,14 @@ public class DocBuilder {
     private DocumentWriteOperation buildExtractedTextDocument(DocumentInputs inputs, DocumentWriteOperation mainDocument) {
         if (inputs.getExtractedText() != null) {
             String sourceUri = mainDocument.getUri();
-            // For now, just reuse the main document metadata. We'll make this configurable soon.
-            DocumentMetadataHandle sourceMetadata = (DocumentMetadataHandle) mainDocument.getMetadata();
-            return Format.XML.equals(this.extractedTextFormat) ?
-                buildExtractedXmlDocument(sourceUri, inputs.getExtractedText(), sourceMetadata) :
-                buildExtractedJsonDocument(sourceUri, inputs.getExtractedText(), sourceMetadata);
+
+            DocumentMetadataHandle metadataToUse = this.extractedTextConfig.metadata != null ?
+                this.extractedTextConfig.metadata :
+                (DocumentMetadataHandle) mainDocument.getMetadata();
+
+            return Format.XML.equals(this.extractedTextConfig.format) ?
+                buildExtractedXmlDocument(sourceUri, inputs.getExtractedText(), metadataToUse) :
+                buildExtractedJsonDocument(sourceUri, inputs.getExtractedText(), metadataToUse);
         }
         return null;
     }
@@ -285,7 +304,9 @@ public class DocBuilder {
 
     private DocumentWriteOperation buildExtractedJsonDocument(String sourceUri, String extractedText, DocumentMetadataHandle sourceMetadata) {
         ObjectNode doc = objectMapper.createObjectNode();
-        doc.put("source-uri", sourceUri);
+        if (!extractedTextConfig.dropSource) {
+            doc.put("source-uri", sourceUri);
+        }
         doc.put("content", extractedText);
         String uri = sourceUri + "-extracted-text.json";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new JacksonHandle(doc));
@@ -297,9 +318,11 @@ public class DocBuilder {
         Element root = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "root");
         doc.appendChild(root);
 
-        Element sourceElement = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "source-uri");
-        sourceElement.appendChild(doc.createTextNode(sourceUri));
-        root.appendChild(sourceElement);
+        if (!extractedTextConfig.dropSource) {
+            Element sourceElement = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "source-uri");
+            sourceElement.appendChild(doc.createTextNode(sourceUri));
+            root.appendChild(sourceElement);
+        }
 
         Element content = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "content");
         content.appendChild(doc.createTextNode(extractedText));

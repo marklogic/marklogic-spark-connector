@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
@@ -63,7 +64,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
-            .option(Options.WRITE_EXTRACTED_TEXT_FORMAT, "xml")
+            .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
 
@@ -75,6 +76,84 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         doc.assertElementValue("/model:root/model:source-uri", "/extract-test/marklogic-getting-started.pdf");
         String content = doc.getElementValue("/model:root/model:content");
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+    }
+
+    @Test
+    void customCollectionsAndPermissions() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files")
+            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "original-doc")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extracted-doc")
+            .option(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS, DEFAULT_PERMISSIONS + ",qconsole-user,read")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("original-doc", 2);
+        assertCollectionSize("extracted-doc", 2);
+
+        PermissionsTester perms = readDocumentPermissions("/extract-test/hello-world.docx-extracted-text.json");
+        assertEquals(2, perms.getDocumentPermissions().size(), "Expecting 2 roles - spark-user-role and qconsole-user");
+        perms.assertReadPermissionExists("spark-user-role");
+        perms.assertReadPermissionExists("qconsole-user");
+
+        perms = readDocumentPermissions("/extract-test/hello-world.docx");
+        assertEquals(1, perms.getDocumentPermissions().size(), "Expecting only spark-user-role");
+        perms.assertReadPermissionExists("spark-user-role");
+    }
+
+    @Test
+    void dropSourceJson() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files")
+            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "extraction-test")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
+            "have been dropped", "extraction-test", 2);
+
+        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
+        assertTrue(doc.has("content"));
+        assertFalse(doc.has("source-uri"), "source-uri should be omitted since the source was dropped");
+        assertEquals(1, doc.size());
+    }
+
+    @Test
+    void dropSourceXml() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files")
+            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_COLLECTIONS, "extraction-test")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
+            "have been dropped", "extraction-test", 2);
+
+        XmlNode doc = readXmlDocument("/extract-test/hello-world.docx-extracted-text.xml");
+        doc.assertElementExists("/model:root/model:content");
+        doc.assertElementMissing("source-uri should be omitted since the source was dropped", "/model:root/model:source-uri");
+        doc.assertElementCount("/model:root/node()", 1);
     }
 
     @Test

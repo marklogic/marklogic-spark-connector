@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -13,28 +13,32 @@ import com.marklogic.langchain4j.splitter.ChunkAssembler;
  */
 class DocBuilderFactory {
 
-    private DocumentMetadataHandle metadataFromOptions;
+    private DocumentMetadataHandle metadata;
+    private DocumentMetadataHandle extractedTextMetadata;
     private DocBuilder.UriMaker uriMaker;
     private Format extractedTextFormat;
+    private boolean extractedTextDropSource;
     private ChunkAssembler chunkAssembler;
 
     DocBuilderFactory() {
-        this.metadataFromOptions = new DocumentMetadataHandle();
+        this.metadata = new DocumentMetadataHandle();
     }
 
     DocBuilder newDocBuilder() {
-        return new DocBuilder(uriMaker, metadataFromOptions, extractedTextFormat, chunkAssembler);
+        DocBuilder.ExtractedTextConfig extractedTextConfig = new DocBuilder.ExtractedTextConfig(extractedTextFormat,
+            extractedTextMetadata, extractedTextDropSource);
+        return new DocBuilder(uriMaker, metadata, extractedTextConfig, chunkAssembler);
     }
 
     DocBuilderFactory withCollections(String collections) {
         if (collections != null && collections.trim().length() > 0) {
-            metadataFromOptions.withCollections(collections.split(","));
+            metadata.withCollections(collections.split(","));
         }
         return this;
     }
 
     DocBuilderFactory withPermissions(String permissionsString) {
-        Util.addPermissionsFromDelimitedString(metadataFromOptions.getPermissions(), permissionsString);
+        Util.addPermissionsFromDelimitedString(metadata.getPermissions(), permissionsString);
         return this;
     }
 
@@ -43,10 +47,35 @@ class DocBuilderFactory {
         return this;
     }
 
-    DocBuilderFactory withExtractedTextFormat(String extractedTextFormat) {
-        if (extractedTextFormat != null && extractedTextFormat.trim().length() > 0) {
-            this.extractedTextFormat = "xml".equalsIgnoreCase(extractedTextFormat) ? Format.XML : Format.JSON;
+    DocBuilderFactory withExtractedTextDocumentType(String extractedTextDocumentType) {
+        if (extractedTextDocumentType != null && extractedTextDocumentType.trim().length() > 0) {
+            this.extractedTextFormat = "xml".equalsIgnoreCase(extractedTextDocumentType) ? Format.XML : Format.JSON;
         }
+        return this;
+    }
+
+    DocBuilderFactory withExtractedTextCollections(String collections) {
+        if (collections != null && collections.trim().length() > 0) {
+            if (extractedTextMetadata == null) {
+                extractedTextMetadata = new DocumentMetadataHandle();
+            }
+            extractedTextMetadata.withCollections(collections.split(","));
+        }
+        return this;
+    }
+
+    DocBuilderFactory withExtractedTextPermissions(String permissionsString) {
+        if (permissionsString != null && permissionsString.trim().length() > 0) {
+            if (extractedTextMetadata == null) {
+                extractedTextMetadata = new DocumentMetadataHandle();
+            }
+            Util.addPermissionsFromDelimitedString(extractedTextMetadata.getPermissions(), permissionsString);
+        }
+        return this;
+    }
+
+    DocBuilderFactory withExtractedTextDropSource(boolean extractedTextDropSource) {
+        this.extractedTextDropSource = extractedTextDropSource;
         return this;
     }
 
