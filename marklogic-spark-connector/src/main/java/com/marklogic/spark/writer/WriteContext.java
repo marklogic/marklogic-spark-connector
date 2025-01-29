@@ -131,7 +131,10 @@ public class WriteContext extends ContextSupport {
         DocBuilderFactory factory = new DocBuilderFactory()
             .withCollections(getStringOption(Options.WRITE_COLLECTIONS))
             .withPermissions(getStringOption(Options.WRITE_PERMISSIONS))
-            .withExtractedTextFormat(getStringOption(Options.WRITE_EXTRACTED_TEXT_FORMAT, "json"))
+            .withExtractedTextDocumentType(getStringOption(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "json"))
+            .withExtractedTextCollections(getStringOption(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS))
+            .withExtractedTextPermissions(getStringOption(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS))
+            .withExtractedTextDropSource(getBooleanOption(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, false))
             .withChunkAssembler(DocumentTextSplitterFactory.makeChunkAssembler(this));
 
         if (hasOption(Options.WRITE_URI_TEMPLATE)) {

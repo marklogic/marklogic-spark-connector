@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -17,6 +17,7 @@ public abstract class Options {
 
     /**
      * Alias for "spark.marklogic.client.uri", which will be deprecated soon in favor of this better name.
+     *
      * @since 2.5.1
      */
     public static final String CLIENT_CONNECTION_STRING = "spark.marklogic.client.connectionString";
@@ -136,7 +137,22 @@ public abstract class Options {
     /**
      * @since 2.6.0
      */
-    public static final String WRITE_EXTRACTED_TEXT_FORMAT = "spark.marklogic.write.extractedText.format";
+    public static final String WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE = "spark.marklogic.write.extractedText.documentType";
+
+    /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_EXTRACTED_TEXT_COLLECTIONS = "spark.marklogic.write.extractedText.collections";
+
+    /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_EXTRACTED_TEXT_PERMISSIONS = "spark.marklogic.write.extractedText.permissions";
+
+    /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_EXTRACTED_TEXT_DROP_SOURCE = "spark.marklogic.write.extractedText.dropSource";
 
     /**
      * Enables the splitter feature by defining an XPath expression for selecting text to split in a document.
