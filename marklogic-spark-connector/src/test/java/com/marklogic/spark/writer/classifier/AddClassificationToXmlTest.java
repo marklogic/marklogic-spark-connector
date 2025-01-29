@@ -19,17 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     private static final String API_KEY = System.getenv("SEMAPHORE_API_KEY");
-    private static final UserDefinedFunction TEXT_CLASSIFIER;
     private static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
-
-    static {
-        try {
-            TEXT_CLASSIFIER = TextClassifierUdf.build(
-                "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
@@ -100,7 +90,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void classifyContentsWithUdf() {
         Dataset<Row> dataset = readDocument("/marklogic-docs/java-client-intro.xml")
-            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, TEXT_CLASSIFIER.apply(new Column("content")));
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, buildTextClassifier().apply(new Column("content")));
 
         assertEquals(1, dataset.count(), "Expecting 1 file");
         assertNotNull(dataset.col(CLASSIFED_TEXT_COLUMN_NAME));
@@ -129,5 +119,9 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_URIS, uri)
             .load();
+    }
+
+    private UserDefinedFunction buildTextClassifier() {
+        return TextClassifierUdf.build("demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
     }
 }
