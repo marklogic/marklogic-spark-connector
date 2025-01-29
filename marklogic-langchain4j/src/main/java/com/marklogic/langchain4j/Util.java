@@ -6,9 +6,9 @@ package com.marklogic.langchain4j;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.client.extra.jdom.JDOMHandle;
 import com.marklogic.client.impl.HandleAccessor;
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.JacksonHandle;
+import com.marklogic.client.io.*;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +53,20 @@ public interface Util {
             }
             throw ex;
         }
+    }
+
+    static Format determineSourceDocumentFormat(AbstractWriteHandle content, String sourceUri) {
+        final String uri = sourceUri != null ? sourceUri : "";
+        if (content instanceof JacksonHandle || uri.endsWith(".json")) {
+            return Format.JSON;
+        }
+        if (content instanceof DOMHandle || content instanceof JDOMHandle || uri.endsWith(".xml")) {
+            return Format.XML;
+        }
+        if (content instanceof BaseHandle) {
+            return ((BaseHandle) content).getFormat();
+        }
+        return null;
     }
 
 }
