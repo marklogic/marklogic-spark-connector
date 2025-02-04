@@ -3,18 +3,19 @@
  */
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ReadRdfFilesTest extends AbstractIntegrationTest {
 
@@ -56,6 +57,38 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
         verifyRow(rows.get(1), subject, "http://example.org/data#professor", "BLANK");
         verifyRow(rows.get(2), "BLANK", "http://example.org/data#fullName", "Alice Carol", "http://www.w3.org/2001/XMLSchema#string", null);
         verifyRow(rows.get(3), "BLANK", "http://example.org/data#homePage", "http://example.net/alice-carol");
+    }
+
+    @Test
+    void multipleBlankNodes() {
+        startRead().load("src/test/resources/rdf/multiple-blank-nodes.ttl")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_GRAPH_OVERRIDE, "my-graph")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        String triplesUri = getUrisInCollection("my-graph", 2).stream()
+            .filter(uri -> uri.startsWith("/triplestore"))
+            .findFirst().get();
+        XmlNode doc = readXmlDocument(triplesUri);
+
+        // Verify the first blank node. Jena is expected to generate consist blank node IDs for us.
+        final String firstBlankId = doc.getElementValue("//sem:triple[sem:predicate = 'http://www.w3.org/2000/01/rdf-schema#subClassOf']/sem:object");
+        doc.assertElementValue("//sem:triple[sem:object = 'http://www.w3.org/2002/07/owl#Restriction']/sem:subject", firstBlankId);
+        doc.assertElementValue("//sem:triple[sem:object = 'Division Superclass']/sem:subject", firstBlankId);
+        assertTrue(firstBlankId.startsWith("http://marklogic.com/semantics/blank/"), "Blank node IDs are " +
+            "expected to start with http://marklogic.com/semantics/blank/ and end in a UUID; actual value: " + firstBlankId);
+
+        // Verify the second blank node.
+        final String secondBlankId = doc.getElementValue("//sem:triple[sem:predicate = 'http://www.w3.org/2000/01/rdf-schema#classOf']/sem:object");
+        doc.assertElementValue("//sem:triple[sem:object = 'http://www.w3.org/2002/07/owl#Restriction2']/sem:subject", secondBlankId);
+        doc.assertElementValue("//sem:triple[sem:object = 'Division Class']/sem:subject", secondBlankId);
+        assertTrue(secondBlankId.startsWith("http://marklogic.com/semantics/blank/"), "Actual value: " + secondBlankId);
+
+        assertNotEquals(firstBlankId, secondBlankId, "Jena is expected to generate a unique blank ID based on a UUID " +
+            "for each distinct blank node in the imported file.");
     }
 
     @Test
