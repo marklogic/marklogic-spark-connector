@@ -39,7 +39,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     @Override
     protected DocumentWriteOperation addChunksToSourceDocument() {
         AbstractWriteHandle content = sourceDocument.getContent();
-        ObjectNode doc = (ObjectNode) Util.getJsonFromHandle(content);
+        ObjectNode doc = (ObjectNode) com.marklogic.spark.Util.getJsonFromHandle(content);
 
         ArrayNode chunksArray = doc.putArray(determineChunksArrayName(doc));
         List<Chunk> chunks = new ArrayList<>();

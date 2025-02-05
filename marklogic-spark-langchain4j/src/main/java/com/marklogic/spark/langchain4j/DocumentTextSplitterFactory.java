@@ -79,10 +79,10 @@ public interface DocumentTextSplitterFactory {
 
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS);
-            com.marklogic.langchain4j.Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
+            Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
         } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_PERMISSIONS);
-            com.marklogic.langchain4j.Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
+            Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
         }
 
         return new DefaultChunkAssembler(new ChunkConfig.Builder()

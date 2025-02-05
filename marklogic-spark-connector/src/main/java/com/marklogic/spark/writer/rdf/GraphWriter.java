@@ -6,7 +6,7 @@ package com.marklogic.spark.writer.rdf;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.langchain4j.Util;
+import com.marklogic.spark.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

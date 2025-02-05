@@ -1,7 +1,7 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.dom;
+package com.marklogic.spark.dom;
 
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
