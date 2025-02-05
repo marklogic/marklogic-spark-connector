@@ -4,8 +4,8 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.classifier.TextClassifier;
+import com.marklogic.spark.Util;
 
 /**
  * Captures configuration settings for producing chunks, either in a source document or in separate
@@ -142,5 +142,7 @@ public class ChunkConfig {
         return embeddingXmlNamespace;
     }
 
-    public TextClassifier getClassifier() { return classifier; }
+    public TextClassifier getClassifier() {
+        return classifier;
+    }
 }

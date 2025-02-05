@@ -7,7 +7,7 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.langchain4j.Util;
-import com.marklogic.langchain4j.dom.DOMHelper;
+import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 

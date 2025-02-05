@@ -5,8 +5,8 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.splitter.ChunkAssembler;
+import com.marklogic.spark.Util;
 
 /**
  * This is intended to migrate to java-client-api and likely just be a Builder class on DocumentWriteOperation.
@@ -38,7 +38,7 @@ class DocBuilderFactory {
     }
 
     DocBuilderFactory withPermissions(String permissionsString) {
-        Util.addPermissionsFromDelimitedString(metadata.getPermissions(), permissionsString);
+        com.marklogic.spark.Util.addPermissionsFromDelimitedString(metadata.getPermissions(), permissionsString);
         return this;
     }
 

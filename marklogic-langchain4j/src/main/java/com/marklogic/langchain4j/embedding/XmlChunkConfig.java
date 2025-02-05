@@ -3,7 +3,7 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import com.marklogic.langchain4j.Util;
+import com.marklogic.spark.Util;
 
 import javax.xml.namespace.NamespaceContext;
 

@@ -47,7 +47,7 @@ public class JsonPointerTextSelector implements TextSelector {
     private String selectTextToSplit(AbstractWriteHandle contentHandle, String uriForLogMessage) {
         JsonNode doc;
         try {
-            doc = Util.getJsonFromHandle(contentHandle);
+            doc = com.marklogic.spark.Util.getJsonFromHandle(contentHandle);
         } catch (Exception ex) {
             Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", uriForLogMessage, ex.getMessage());
             return null;

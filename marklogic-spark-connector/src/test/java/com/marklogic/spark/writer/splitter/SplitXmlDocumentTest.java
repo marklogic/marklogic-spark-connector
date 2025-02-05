@@ -89,8 +89,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .mode(SaveMode.Append);
 
-        SparkException sparkException = assertThrows(SparkException.class, () -> writer.save());
-        MarkLogicLangchainException ex = (MarkLogicLangchainException) sparkException.getCause();
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
         assertEquals(
             "Unable to compile XPath expression for selecting text: /ex:root/ex:text/text(); cause: Prefix must resolve to a namespace: ex",
             ex.getMessage()

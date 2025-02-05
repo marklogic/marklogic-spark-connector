@@ -9,12 +9,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
-import com.marklogic.client.io.*;
+import com.marklogic.client.io.DOMHandle;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.Util;
-import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.splitter.ChunkAssembler;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.dom.DOMHelper;
 import com.marklogic.spark.langchain4j.NamespaceContextFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -175,7 +178,7 @@ public class DocBuilder {
         final DocumentMetadataHandle metadataFromRow = inputs.getInitialMetadata();
 
         AbstractWriteHandle content = inputs.getContent();
-        Format sourceDocumentFormat = Util.determineSourceDocumentFormat(content, sourceUri);
+        Format sourceDocumentFormat = com.marklogic.spark.Util.determineSourceDocumentFormat(content, sourceUri);
 
         byte[] classificationResponse = inputs.getClassificationResponse();
         if (classificationResponse != null && inputs.getExtractedText() == null) {
@@ -183,10 +186,10 @@ public class DocBuilder {
                 Document originalDoc = domHelper.extractDocument(content, inputs.getInitialUri());
                 content = appendDocumentClassificationToXmlContent(originalDoc, inputs.getInitialUri(), classificationResponse);
             } else if (Format.JSON.equals(sourceDocumentFormat)) {
-                content = appendDocumentClassificationToJsonContent(Util.getJsonFromHandle(content), inputs.getInitialUri(), classificationResponse);
+                content = appendDocumentClassificationToJsonContent(com.marklogic.spark.Util.getJsonFromHandle(content), inputs.getInitialUri(), classificationResponse);
             } else {
                 if (sourceDocumentFormat == null) {
-                    Util.LANGCHAIN4J_LOGGER.warn("Cannot add classification to document with URI {}; document is neither JSON nor XML.", sourceUri);
+                    Util.MAIN_LOGGER.warn("Cannot add classification to document with URI {}; document is neither JSON nor XML.", sourceUri);
                 }
             }
         }
@@ -230,7 +233,7 @@ public class DocBuilder {
             Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
 
             NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
-            Node classificationNode = originalDoc.createElementNS(Util.DEFAULT_XML_NAMESPACE,"classification");
+            Node classificationNode = originalDoc.createElementNS(com.marklogic.spark.Util.DEFAULT_XML_NAMESPACE, "classification");
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
                 Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);
@@ -315,16 +318,16 @@ public class DocBuilder {
     private DocumentWriteOperation buildExtractedXmlDocument(String sourceUri, String extractedText, DocumentMetadataHandle sourceMetadata) {
         Document doc = domHelper.newDocument();
 
-        Element root = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "root");
+        Element root = doc.createElementNS(com.marklogic.spark.Util.DEFAULT_XML_NAMESPACE, "root");
         doc.appendChild(root);
 
         if (!extractedTextConfig.dropSource) {
-            Element sourceElement = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "source-uri");
+            Element sourceElement = doc.createElementNS(com.marklogic.spark.Util.DEFAULT_XML_NAMESPACE, "source-uri");
             sourceElement.appendChild(doc.createTextNode(sourceUri));
             root.appendChild(sourceElement);
         }
 
-        Element content = doc.createElementNS(com.marklogic.langchain4j.Util.DEFAULT_XML_NAMESPACE, "content");
+        Element content = doc.createElementNS(com.marklogic.spark.Util.DEFAULT_XML_NAMESPACE, "content");
         content.appendChild(doc.createTextNode(extractedText));
         root.appendChild(content);
 

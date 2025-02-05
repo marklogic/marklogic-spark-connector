@@ -7,12 +7,12 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.Util;
-import com.marklogic.langchain4j.dom.DOMHelper;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.XmlChunkConfig;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.dom.DOMHelper;
 import dev.langchain4j.data.segment.TextSegment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -20,7 +20,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathFactory;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -96,7 +97,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             Document responseDoc = chunkConfig.getClassifier().classifyTextToXml(super.sourceDocument.getUri(), textSegment.text());
             NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName("STRUCTUREDDOCUMENT").item(0).getChildNodes();
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
-                Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i),true);
+                Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);
             }
             chunk.appendChild(classificationNode);
