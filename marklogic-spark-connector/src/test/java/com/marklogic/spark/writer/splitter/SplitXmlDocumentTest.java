@@ -10,12 +10,12 @@ import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.udf.TextSplitterConfig;
 import org.apache.spark.SparkException;
-import org.apache.spark.sql.DataFrameWriter;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
+import org.apache.spark.sql.*;
 import org.junit.jupiter.api.Test;
+
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -49,6 +49,27 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/namespace-test.xml");
+        doc.assertElementCount("Expecting 2 chunks based on the default max chunk size of 1000. The user's declaration of " +
+                "the 'ex' prefix should have allowed the XPath statement for selecting text to succeed.",
+            "/ex:root/model:chunks/model:chunk", 2);
+    }
+
+    @Test
+    void udfWithNamespace() {
+        TextSplitterConfig splitterConfig = new TextSplitterConfig();
+        splitterConfig.setXpathExpression("/ex:root/ex:text/text()");
+        splitterConfig.setNamespaces(Map.of("ex", "org:example"));
+
+        readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
+            .withColumn("chunks", splitterConfig.buildUDF().apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
             .mode(SaveMode.Append)

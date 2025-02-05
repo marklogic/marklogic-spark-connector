@@ -39,7 +39,10 @@ public interface DocumentTextSplitterFactory {
     }
 
     static TextSelector makeXmlTextSelector(Context context) {
-        String xpath = context.getStringOption(Options.WRITE_SPLITTER_XPATH);
+        return makeXmlTextSelector(context.getStringOption(Options.WRITE_SPLITTER_XPATH), context);
+    }
+
+    static TextSelector makeXmlTextSelector(String xpath, Context context) {
         return new DOMTextSelector(xpath, NamespaceContextFactory.makeNamespaceContext(context.getProperties()));
     }
 

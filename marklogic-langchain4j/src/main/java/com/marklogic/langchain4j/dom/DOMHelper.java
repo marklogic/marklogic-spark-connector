@@ -53,8 +53,10 @@ public class DOMHelper {
         try {
             return getDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {
-            throw new MarkLogicLangchainException(String.format("Unable to parse XML for document with URI: %s; cause: %s",
-                sourceUri, e.getMessage()), e);
+            String message = sourceUri != null ?
+                String.format("Unable to parse XML for document with URI: %s; cause: %s", sourceUri, e.getMessage()) :
+                String.format("Unable to parse XML; cause: %s", e.getMessage());
+            throw new MarkLogicLangchainException(message, e);
         }
     }
 

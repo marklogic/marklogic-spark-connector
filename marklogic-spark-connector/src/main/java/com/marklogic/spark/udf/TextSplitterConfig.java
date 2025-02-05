@@ -51,7 +51,7 @@ public class TextSplitterConfig implements Serializable {
                 namespaces.entrySet().forEach(entry ->
                     properties.put(Options.XPATH_NAMESPACE_PREFIX + entry.getKey(), entry.getValue()));
             }
-            return DocumentTextSplitterFactory.makeXmlTextSelector(new Context(properties));
+            return DocumentTextSplitterFactory.makeXmlTextSelector(this.xpathExpression, new Context(properties));
         } else {
             return new AllTextSelector();
         }
