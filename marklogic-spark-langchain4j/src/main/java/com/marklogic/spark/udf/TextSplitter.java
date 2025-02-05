@@ -56,6 +56,9 @@ public class TextSplitter implements UDF1<Object, List<String>>, Serializable {
             this.textSelector = textSplitterConfig.buildTextSelector();
         }
         String text = textSelector.selectTextToSplit(new BytesHandle(columnValue));
+        if (text == null) {
+            return new ArrayList<>();
+        }
         return documentSplitter.split(new Document(text))
             .stream().map(TextSegment::text)
             .collect(Collectors.toList());

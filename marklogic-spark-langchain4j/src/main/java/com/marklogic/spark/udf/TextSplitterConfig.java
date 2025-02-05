@@ -42,10 +42,10 @@ public class TextSplitterConfig implements Serializable {
     }
 
     TextSelector buildTextSelector() {
-        if (this.jsonPointers != null) {
+        if (this.jsonPointers != null && !this.jsonPointers.isEmpty()) {
             String newlineDelimitedPointers = this.jsonPointers.stream().collect(Collectors.joining("\n"));
             return DocumentTextSplitterFactory.makeJsonTextSelector(newlineDelimitedPointers);
-        } else if (this.xpathExpression != null) {
+        } else if (this.xpathExpression != null && this.xpathExpression.trim().length() > 0) {
             Map<String, String> properties = new HashMap<>();
             if (namespaces != null) {
                 namespaces.entrySet().forEach(entry ->

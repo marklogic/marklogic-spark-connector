@@ -1,3 +1,7 @@
+/**
+ * This project defines a non-Spark-specific API for the marklogic-spark-langchain4j module to depend on so that
+ * it doesn't have a circular dependency with the connector subproject.
+ */
 dependencies {
   implementation "org.slf4j:jcl-over-slf4j:2.0.13"
 }

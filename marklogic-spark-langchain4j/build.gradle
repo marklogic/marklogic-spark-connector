@@ -1,4 +1,10 @@
+/**
+ * This module acts as a bridge between the Spark connector and the marklogic-langchain4j module, which we may
+ * eventually make available separately from the connector.
+ */
 dependencies {
+  compileOnly "org.apache.spark:spark-sql_2.12:" + sparkVersion
+
   implementation project(":marklogic-spark-api")
 
   // Supports using Semaphore to classify documents
