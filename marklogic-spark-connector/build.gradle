@@ -69,7 +69,7 @@ dependencies {
   }
 
   // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.0.0-alpha1"
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   shadowDependencies "org.jdom:jdom2:2.0.6.1"
@@ -124,6 +124,10 @@ shadowJar {
   // for more information on why these are relocated.
   relocate "okhttp3", "com.marklogic.okhttp3"
   relocate "okio", "com.marklogic.okio"
+
+  manifest {
+    attributes 'Main-Class': 'com.marklogic.spark.OtherMain'
+  }
 }
 
 // Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .

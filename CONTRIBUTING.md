@@ -1,8 +1,9 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-You must use Java 11 or higher for developing, testing, and building this project. If you wish to use Sonar as 
-described below, you must use Java 17 or higher.
+**You must use Java 17 for developing, testing, and building this project**, even though the connector supports
+running on Java 11. For users, Java 17 is only required if using the splitting and embedding features, as those 
+depend on a thirdparty module that requires Java 17.
 
 # Setup
 
