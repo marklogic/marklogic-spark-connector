@@ -4,6 +4,7 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.dom.DOMHelper;
@@ -36,7 +37,23 @@ public class DOMTextSelector implements TextSelector {
             Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
             return null;
         }
+        return selectTextInDocument(doc);
+    }
 
+    @Override
+    public String selectTextToSplit(AbstractWriteHandle contentHandle) {
+        Document doc;
+        try {
+            doc = domHelper.extractDocument(contentHandle, null);
+        } catch (Exception ex) {
+            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split; cause: {}", ex.getMessage());
+            return null;
+        }
+
+        return selectTextInDocument(doc);
+    }
+
+    private String selectTextInDocument(Document doc) {
         NodeList items;
         try {
             items = (NodeList) this.textExpression.evaluate(doc, XPathConstants.NODESET);
