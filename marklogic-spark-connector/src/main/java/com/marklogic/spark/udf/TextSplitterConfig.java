@@ -16,14 +16,16 @@ import org.apache.spark.sql.types.DataTypes;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class TextSplitterConfig implements Serializable {
 
     private int maxChunkSize = 1000;
     private int maxOverlapSize;
     private String xpathExpression;
-    private String jsonPointers;
+    private List<String> jsonPointers;
     private String regex;
     private String joinDelimiter;
     private String customClass;
@@ -41,7 +43,8 @@ public class TextSplitterConfig implements Serializable {
 
     TextSelector buildTextSelector() {
         if (this.jsonPointers != null) {
-            return DocumentTextSplitterFactory.makeJsonTextSelector(this.jsonPointers);
+            String newlineDelimitedPointers = this.jsonPointers.stream().collect(Collectors.joining("\n"));
+            return DocumentTextSplitterFactory.makeJsonTextSelector(newlineDelimitedPointers);
         } else if (this.xpathExpression != null) {
             Map<String, String> properties = new HashMap<>();
             if (namespaces != null) {
@@ -76,10 +79,6 @@ public class TextSplitterConfig implements Serializable {
         this.maxOverlapSize = maxOverlapSize;
     }
 
-    public void setJsonPointers(String newlineDelimitedJsonPointers) {
-        this.jsonPointers = newlineDelimitedJsonPointers;
-    }
-
     public void setXpathExpression(String xpathExpression) {
         this.xpathExpression = xpathExpression;
     }
@@ -102,5 +101,9 @@ public class TextSplitterConfig implements Serializable {
 
     public void setNamespaces(Map<String, String> namespaces) {
         this.namespaces = namespaces;
+    }
+
+    public void setJsonPointers(List<String> jsonPointers) {
+        this.jsonPointers = jsonPointers;
     }
 }

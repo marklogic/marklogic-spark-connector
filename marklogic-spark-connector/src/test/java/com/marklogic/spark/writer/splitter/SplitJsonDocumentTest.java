@@ -17,6 +17,8 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class SplitJsonDocumentTest extends AbstractIntegrationTest {
@@ -63,7 +65,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         TextSplitterConfig splitterConfig = new TextSplitterConfig();
         splitterConfig.setMaxChunkSize(500);
         splitterConfig.setMaxOverlapSize(10);
-        splitterConfig.setJsonPointers("/text\n/more-text");
+        splitterConfig.setJsonPointers(Arrays.asList("/text", "/more-text"));
         UserDefinedFunction splitter = splitterConfig.buildUDF();
 
         readDocument("/marklogic-docs/java-client-intro.json")
