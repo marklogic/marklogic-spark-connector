@@ -1,7 +1,4 @@
 /**
- * This project defines a non-Spark-specific API for the marklogic-spark-langchain4j module to depend on so that
- * it doesn't have a circular dependency with the connector subproject.
- *
  * This will soon be renamed to "marklogic-spark-core" to capture non-Spark, non-langchain4j specific processing that
  * only depends on Java 11.
  */

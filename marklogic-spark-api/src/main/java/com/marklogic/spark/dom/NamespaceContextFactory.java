@@ -1,9 +1,8 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.langchain4j;
+package com.marklogic.spark.dom;
 
-import com.marklogic.spark.dom.XPathNamespaceContext;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 

@@ -37,7 +37,7 @@ abstract class DocumentProcessorFactory {
                InvocationTargetException ex) {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
                 Util.MAIN_LOGGER.debug(
-                    "Unable to instantiate factory class {}; this is expected when the marklogic-spark-langchain4j module is not on the classpath. Cause: {}",
+                    "Unable to instantiate factory class {}; this is expected when the marklogic-langchain4j module is not on the classpath. Cause: {}",
                     FACTORY_CLASS_NAME, ex.getMessage()
                 );
             }

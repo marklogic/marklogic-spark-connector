@@ -12,7 +12,7 @@ import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunkSelector;
 import com.marklogic.spark.core.embedding.XmlChunkConfig;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.langchain4j.NamespaceContextFactory;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
