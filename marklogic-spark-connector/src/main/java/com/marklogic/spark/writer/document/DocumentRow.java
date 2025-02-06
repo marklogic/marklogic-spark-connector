@@ -13,6 +13,7 @@ import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.UTF8String;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +23,8 @@ import java.util.List;
  */
 class DocumentRow {
 
-    public static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
+    private static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
+
     private final InternalRow row;
     private final StructType schema;
 
@@ -50,7 +52,7 @@ class DocumentRow {
 
     byte[] getClassificationResponse() {
         int index = getOptionalFieldIndex(schema, CLASSIFED_TEXT_COLUMN_NAME);
-        return index > -1 ? row.getBinary(index) : null;
+        return index > -1 ? getClassifications(CLASSIFED_TEXT_COLUMN_NAME).get(0) : null;
     }
 
     List<String> getChunks() {
@@ -66,6 +68,20 @@ class DocumentRow {
             }
         }
         return chunks;
+    }
+
+    List<byte[]> getClassifications(String columnName) {
+        int index = getOptionalFieldIndex(schema, columnName);
+        List<byte[]> classifications = null;
+        if (index > -1) {
+            classifications = new ArrayList<>();
+            ArrayData array = row.getArray(index);
+            for (int i = 0; i < array.numElements(); i++) {
+                String val = array.getUTF8String(i).toString();
+                classifications.add(val.getBytes(StandardCharsets.UTF_8));
+            }
+        }
+        return classifications;
     }
 
     DocumentMetadataHandle getMetadata() {

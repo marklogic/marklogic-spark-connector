@@ -23,14 +23,14 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks) {
+    public Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks, List<byte[]> classifications) {
         Metadata metadata = new Metadata();
         List<TextSegment> textSegments = chunks.stream().map(chunk -> new TextSegment(chunk, metadata)).collect(Collectors.toList());
-        return assembleChunks(sourceDocument, textSegments);
+        return assembleChunks(sourceDocument, textSegments, classifications);
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments) {
+    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<TextSegment> textSegments, List<byte[]> classifications) {
         final Format sourceDocumentFormat = com.marklogic.spark.Util.determineSourceDocumentFormat(sourceDocument.getContent(), sourceDocument.getUri());
         if (sourceDocumentFormat == null) {
             Util.LANGCHAIN4J_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
@@ -40,8 +40,8 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
 
         return Format.XML.equals(chunkDocumentFormat) ?
-            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig) :
-            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
+            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications) :
+            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
     }
 
     private Format determineChunkDocumentFormat(Format sourceDocumentFormat) {

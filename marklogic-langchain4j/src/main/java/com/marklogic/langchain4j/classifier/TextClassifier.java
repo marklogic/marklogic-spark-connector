@@ -23,6 +23,8 @@ import java.util.Map;
 
 public class TextClassifier {
 
+    public static final String CLASSIFICATION_MAIN_ELEMENT = "STRUCTUREDDOCUMENT";
+
     private static final String THRESHOLD = "20";
 
     private final ClassificationClient classificationClient;

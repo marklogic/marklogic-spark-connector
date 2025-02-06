@@ -58,6 +58,7 @@ public class DocBuilder {
         // Using hacky getter/setter for now until this is proven to work well.
         private String extractedText;
         private List<String> chunks;
+        private List<byte[]> classifications;
         private byte[] classificationResponse;
 
         public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
@@ -108,6 +109,14 @@ public class DocBuilder {
 
         public void setChunks(List<String> chunks) {
             this.chunks = chunks;
+        }
+
+        public List<byte[]> getClassifications() {
+            return classifications;
+        }
+
+        public void setClassifications(List<byte[]> classifications) {
+            this.classifications = classifications;
         }
 
         public byte[] getClassificationResponse() {
@@ -341,7 +350,7 @@ public class DocBuilder {
             // If there's an extracted doc, we want to use that as the source document so that the user has the option
             // of adding chunks to it.
             DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
-            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleStringChunks(sourceDocument, inputs.getChunks());
+            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleStringChunks(sourceDocument, inputs.getChunks(), inputs.getClassifications());
             while (iterator.hasNext()) {
                 chunkDocuments.add(iterator.next());
             }

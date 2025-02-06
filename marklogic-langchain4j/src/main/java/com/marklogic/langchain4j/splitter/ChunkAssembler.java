@@ -21,9 +21,10 @@ public interface ChunkAssembler {
      */
     Iterator<DocumentWriteOperation> assembleChunks(
         DocumentWriteOperation sourceDocument,
-        List<TextSegment> chunks
+        List<TextSegment> chunks,
+        List<byte[]> classifications
     );
 
     // This will eventually be the preferred method, we'll get rid of the one that exposes the LangChain4j type.
-    Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks);
+    Iterator<DocumentWriteOperation> assembleStringChunks(DocumentWriteOperation sourceDocument, List<String> chunks, List<byte[]> classifications);
 }

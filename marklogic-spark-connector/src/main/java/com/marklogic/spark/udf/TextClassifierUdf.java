@@ -11,9 +11,12 @@ import com.smartlogic.cloud.TokenFetcher;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.DataTypes;
+import scala.collection.mutable.WrappedArray;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public abstract class TextClassifierUdf {
@@ -41,16 +44,37 @@ public abstract class TextClassifierUdf {
         additionalParameters.put("apiKey", apiKey);
         additionalParameters.put("tokenEndpoint", tokenEndpoint);
         classificationConfiguration.setAdditionalParameters(additionalParameters);
-        return functions.udf(TextClassifierUdf::classifyText, DataTypes.BinaryType);
+        return functions.udf(TextClassifierUdf::classifyText, DataTypes.createArrayType(DataTypes.StringType));
     }
 
-    private static byte[] classifyText(Object binaryContent) {
-        if (!(binaryContent instanceof byte[])) {
+    private static List<String> classifyText(Object binaryContent) {
+        // Need to add handler for when a token expires midstream.
+        if (binaryContent instanceof byte[]) {
+            fetchTokenIfNecessary();
+            List<String> classifications = new ArrayList<>();
+            String content = new String((byte[]) binaryContent, StandardCharsets.UTF_8);
+            TextClassifier textClassifier = new TextClassifier(classificationConfiguration);
+            classifications.add(new String(textClassifier.classifyTextToBytes("sourceUri", content)));
+            return classifications;
+        } else if (binaryContent instanceof WrappedArray) {
+            fetchTokenIfNecessary();
+            List<String> classifications = new ArrayList<>();
+            WrappedArray<String> chunks = (WrappedArray<String>) binaryContent;
+            chunks.foreach((String content) -> {
+                TextClassifier textClassifier = new TextClassifier(classificationConfiguration);
+                byte[] response = textClassifier.classifyTextToBytes("sourceUri", content);
+                classifications.add(new String(response));
+                return null;
+            });
+            return classifications;
+        } else {
             throw new IllegalArgumentException(
-                    "Text classification UDF must be run against a column containing non-null byte arrays."
+                "Text classification UDF must be run against a column containing non-null byte arrays."
             );
         }
+    }
 
+    private static void fetchTokenIfNecessary() {
         if (classificationConfiguration.getApiToken() == null) {
             try {
                 String tokenUrl = classificationConfiguration.getProtocol() + "://" + classificationConfiguration.getHostName() + ":" + classificationConfiguration.getHostPort() + "/" + classificationConfiguration.getAdditionalParameters().get("tokenEndpoint");
@@ -60,11 +84,6 @@ public abstract class TextClassifierUdf {
                 throw new ConnectorException(String.format("Unable to initialize Classifier UDF; cause: %s", e.getMessage()), e);
             }
         }
-
-        // Need to add handler for when a token expires midstream.
-        String content = new String((byte[]) binaryContent, StandardCharsets.UTF_8);
-        TextClassifier textClassifier = new TextClassifier(classificationConfiguration);
-        return textClassifier.classifyTextToBytes("sourceUri", content);
     }
 
     private TextClassifierUdf() {
