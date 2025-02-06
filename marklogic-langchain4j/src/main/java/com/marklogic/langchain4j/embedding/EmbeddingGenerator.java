@@ -3,7 +3,6 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import com.marklogic.langchain4j.Util;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -68,8 +67,8 @@ public class EmbeddingGenerator {
 
     void generateEmbeddingsForPendingChunks() {
         if (!pendingChunks.isEmpty()) {
-            if (Util.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
-                Util.LANGCHAIN4J_LOGGER.debug("Generating embeddings for pending chunks; count: {}.", pendingChunks.size());
+            if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
+                EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Generating embeddings for pending chunks; count: {}.", pendingChunks.size());
             }
             addEmbeddingsToChunks(pendingChunks);
             pendingChunks.clear();
@@ -80,8 +79,8 @@ public class EmbeddingGenerator {
         String text = chunk.getEmbeddingText();
         if (text != null && text.trim().length() > 0) {
             pendingChunks.add(chunk);
-        } else if (Util.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
-            Util.LANGCHAIN4J_LOGGER.debug("Not generating embedding for chunk in URI {}; could not find text to use for generating an embedding.",
+        } else if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
+            EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Not generating embedding for chunk in URI {}; could not find text to use for generating an embedding.",
                 chunk.getDocumentUri());
         }
     }
@@ -92,7 +91,7 @@ public class EmbeddingGenerator {
         logResponse(response, textSegments);
 
         if (response.content() == null) {
-            Util.LANGCHAIN4J_LOGGER.warn("Sent {} chunks; no embeddings were returned; finish reason: {}",
+            EmbeddingUtil.LANGCHAIN4J_LOGGER.warn("Sent {} chunks; no embeddings were returned; finish reason: {}",
                 textSegments.size(), response.finishReason());
         } else {
             List<Embedding> embeddings = response.content();
@@ -109,22 +108,22 @@ public class EmbeddingGenerator {
     }
 
     private void logResponse(Response<List<Embedding>> response, List<TextSegment> textSegments) {
-        if (Util.LANGCHAIN4J_LOGGER.isInfoEnabled()) {
+        if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isInfoEnabled()) {
             // Not every embedding model provides token usage.
             if (response.tokenUsage() != null) {
-                Util.LANGCHAIN4J_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
+                EmbeddingUtil.LANGCHAIN4J_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
             } else {
-                Util.LANGCHAIN4J_LOGGER.info("Sent {} chunks", textSegments.size());
+                EmbeddingUtil.LANGCHAIN4J_LOGGER.info("Sent {} chunks", textSegments.size());
             }
 
-            if (Util.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
+            if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
                 long totalRequests = requestCount.incrementAndGet();
                 if (response.tokenUsage() != null) {
-                    Util.LANGCHAIN4J_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
+                    EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
                         tokenCount.addAndGet(response.tokenUsage().inputTokenCount())
                     );
                 } else {
-                    Util.LANGCHAIN4J_LOGGER.debug("Requests: {}", totalRequests);
+                    EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Requests: {}", totalRequests);
                 }
             }
         }

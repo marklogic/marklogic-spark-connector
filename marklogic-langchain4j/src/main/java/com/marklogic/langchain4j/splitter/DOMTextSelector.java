@@ -5,8 +5,8 @@ package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
-import com.marklogic.langchain4j.Util;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -34,7 +34,7 @@ public class DOMTextSelector implements TextSelector {
         try {
             doc = domHelper.extractDocument(sourceDocument);
         } catch (Exception ex) {
-            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
+            Util.MAIN_LOGGER.warn("Unable to select text to split in document: {}; cause: {}", sourceDocument.getUri(), ex.getMessage());
             return null;
         }
         return selectTextInDocument(doc);
@@ -46,7 +46,7 @@ public class DOMTextSelector implements TextSelector {
         try {
             doc = domHelper.extractDocument(contentHandle, null);
         } catch (Exception ex) {
-            Util.LANGCHAIN4J_LOGGER.warn("Unable to select text to split; cause: {}", ex.getMessage());
+            Util.MAIN_LOGGER.warn("Unable to select text to split; cause: {}", ex.getMessage());
             return null;
         }
 
@@ -58,7 +58,7 @@ public class DOMTextSelector implements TextSelector {
         try {
             items = (NodeList) this.textExpression.evaluate(doc, XPathConstants.NODESET);
         } catch (XPathExpressionException e) {
-            throw new MarkLogicLangchainException(String.format(
+            throw new ConnectorException(String.format(
                 "Unable to evaluate XPath expression for selecting text to split: %s; cause: %s", textExpression, e.getMessage()), e);
         }
 

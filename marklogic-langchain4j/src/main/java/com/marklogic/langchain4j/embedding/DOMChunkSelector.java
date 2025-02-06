@@ -6,7 +6,7 @@ package com.marklogic.langchain4j.embedding;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -55,7 +55,7 @@ public class DOMChunkSelector implements ChunkSelector {
         try {
             return (NodeList) chunksExpression.evaluate(doc, XPathConstants.NODESET);
         } catch (XPathExpressionException e) {
-            throw new MarkLogicLangchainException(String.format(
+            throw new ConnectorException(String.format(
                 "Unable to evaluate XPath expression for selecting chunks: %s; cause: %s", chunksExpression, e.getMessage()), e);
         }
     }
@@ -65,7 +65,7 @@ public class DOMChunkSelector implements ChunkSelector {
         for (int i = 0; i < chunkNodes.getLength(); i++) {
             Node node = chunkNodes.item(i);
             if (node.getNodeType() != Node.ELEMENT_NODE) {
-                throw new MarkLogicLangchainException(String.format("XPath expression for selecting chunks must only " +
+                throw new ConnectorException(String.format("XPath expression for selecting chunks must only " +
                     "select elements; XPath: %s; document URI: %s", chunksExpression, sourceDocument.getUri()));
             }
             chunks.add(new DOMChunk(sourceDocument.getUri(), document, (Element) node, xmlChunkConfig, xpathFactory));

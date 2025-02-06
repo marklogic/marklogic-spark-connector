@@ -3,7 +3,7 @@
  */
 package com.marklogic.langchain4j.classifier;
 
-import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.spark.ConnectorException;
 import com.smartlogic.classificationserver.client.*;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ public class TextClassifier {
         try {
             return classificationClient.getClassificationServerResponse(new Body(text), new Title(sourceUri));
         } catch (ClassificationException e) {
-            throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
         }
     }
 }

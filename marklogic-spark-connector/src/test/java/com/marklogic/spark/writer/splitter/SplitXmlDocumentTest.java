@@ -6,18 +6,17 @@ package com.marklogic.spark.writer.splitter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.udf.TextSplitterConfig;
-import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
@@ -200,8 +199,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
             .mode(SaveMode.Append);
 
-        SparkException sparkException = assertThrows(SparkException.class, () -> writer.save());
-        MarkLogicLangchainException ex = (MarkLogicLangchainException) sparkException.getCause();
+        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
         assertTrue(ex.getMessage().contains("Unable to split document with URI: /marklogic-docs/java-client-intro.xml; cause: " +
                 "The text \"When working with the Java API...\" (886 characters long) doesn't fit into the " +
                 "maximum segment size (100 characters)"),

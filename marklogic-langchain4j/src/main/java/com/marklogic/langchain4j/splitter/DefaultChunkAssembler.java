@@ -5,7 +5,7 @@ package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.Util;
+import com.marklogic.spark.Util;
 
 import java.util.Iterator;
 import java.util.List;
@@ -23,7 +23,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> textSegments, List<byte[]> classifications) {
         final Format sourceDocumentFormat = com.marklogic.spark.Util.determineSourceDocumentFormat(sourceDocument.getContent(), sourceDocument.getUri());
         if (sourceDocumentFormat == null) {
-            Util.LANGCHAIN4J_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
+            Util.MAIN_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
             return Stream.of(sourceDocument).iterator();
         }
 
