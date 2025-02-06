@@ -4,7 +4,6 @@
 package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.langchain4j.MarkLogicLangchainException;
-import dev.langchain4j.data.embedding.Embedding;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -13,6 +12,8 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DOMChunk implements Chunk {
 
@@ -56,10 +57,14 @@ public class DOMChunk implements Chunk {
     }
 
     @Override
-    public void addEmbedding(Embedding embedding) {
+    public void addEmbedding(float[] embedding) {
         // DOM is fine with null as a value for the namespace.
         Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
-        embeddingElement.setTextContent(embedding.vectorAsList().toString());
+        List<Float> values = new ArrayList<>(embedding.length);
+        for (float val : embedding) {
+            values.add(val);
+        }
+        embeddingElement.setTextContent(values.toString());
         chunkElement.appendChild(embeddingElement);
     }
 

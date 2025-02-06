@@ -65,7 +65,7 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         }
 
         @Override
-        public void addEmbedding(Embedding embedding) {
+        public void addEmbedding(float[] embedding) {
             // Don't need to do this for the purposes of our test.
         }
     }
