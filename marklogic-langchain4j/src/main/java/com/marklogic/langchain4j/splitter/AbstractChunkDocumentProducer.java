@@ -19,15 +19,17 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
     protected final DocumentWriteOperation sourceDocument;
     protected final List<TextSegment> textSegments;
     protected final ChunkConfig chunkConfig;
+    protected final List<byte[]> classifications;
     protected final int maxChunksPerDocument;
 
     protected int listIndex = -1;
     private int chunkDocumentCounter = 1;
 
-    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<TextSegment> textSegments, ChunkConfig chunkConfig) {
+    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
         this.sourceDocument = sourceDocument;
         this.textSegments = textSegments;
         this.chunkConfig = chunkConfig;
+        this.classifications = classifications;
 
         // Chunks cannot be written to the source document unless its format is JSON or XML. So if maxChunks is zero and
         // we don't have a JSON or XML document, all chunks will be written to a separate document.

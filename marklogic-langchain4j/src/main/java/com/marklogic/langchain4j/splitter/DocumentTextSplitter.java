@@ -45,6 +45,6 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
                 sourceDocument.getUri(), e.getMessage()), e);
         }
 
-        return chunkAssembler.assembleChunks(sourceDocument, textSegments);
+        return chunkAssembler.assembleChunks(sourceDocument, textSegments, null);
     }
 }

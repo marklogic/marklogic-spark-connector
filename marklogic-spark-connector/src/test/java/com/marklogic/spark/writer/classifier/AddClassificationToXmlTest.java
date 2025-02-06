@@ -8,6 +8,7 @@ import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.udf.TextClassifierUdf;
+import com.marklogic.spark.udf.TextSplitterConfig;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.UserDefinedFunction;
 import org.junit.jupiter.api.Disabled;
@@ -20,46 +21,83 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     private static final String API_KEY = System.getenv("SEMAPHORE_API_KEY");
     private static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
+    private static final String CHUNKS_CLASSIFED_TEXT_COLUMN_NAME = "chunkClassifications";
+    private static final String CHUNKS_COLUMN_NAME = "chunks";
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
-    void splitToSeparateDocumentsAndAddClassificationToXml() {
-        final String apiKey = System.getenv("SEMAPHORE_API_KEY");
-        assertNotNull(apiKey);
+    void chunkAndAddClassificationToXmlInOriginalJsonDoc() {
+        assertNotNull(API_KEY);
+
+        final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
+            "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
+
+        TextSplitterConfig splitterConfig = new TextSplitterConfig();
+        splitterConfig.setXpathExpression("/root/text");
+        splitterConfig.setMaxChunkSize(500);
+        splitterConfig.setMaxOverlapSize(10);
+        UserDefinedFunction splitter = splitterConfig.buildUDF();
 
         readDocument("/marklogic-docs/java-client-intro.xml")
+            .withColumn(CHUNKS_COLUMN_NAME, splitter.apply(new Column("content")))
+            .withColumn(CHUNKS_CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column(CHUNKS_COLUMN_NAME)))
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_HTTPS, true)
-            .option(Options.WRITE_CLASSIFIER_PORT, "443")
-            .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
-            .option(Options.WRITE_CLASSIFIER_APIKEY, apiKey)
-            .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
             .mode(SaveMode.Append)
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element", "/root/model:chunks/model:chunk[1]/model:classification/model:URL");
+        doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element", "/root/model:classification/model:URL");
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
+    void sidecarChunksAddClassificationToXml() {
+        assertNotNull(API_KEY);
+
+        final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
+            "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
+
+        TextSplitterConfig splitterConfig = new TextSplitterConfig();
+        splitterConfig.setXpathExpression("/root/text");
+        splitterConfig.setMaxChunkSize(500);
+        splitterConfig.setMaxOverlapSize(10);
+        UserDefinedFunction splitter = splitterConfig.buildUDF();
+
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .withColumn(CHUNKS_COLUMN_NAME, splitter.apply(new Column("content")))
+            .withColumn(CHUNKS_CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column(CHUNKS_COLUMN_NAME)))
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column("content")))
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 3)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element", "/root/model:classification/model:URL");
+
+        doc = readXmlDocument("/split-test.xml-chunks-1.xml");
+        doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element", "/model:root/model:chunks/model:chunk[1]/model:classification/model:URL");
     }
 
     /**
      * Verifies that when a semaphore server is not specified, classification is not added to chunks.
      */
     @Test
-    void noClassificationAddedWhenNoSemaphoreServerSpecified() {
+    void noClassificationAddedToXmlWhenNoSemaphoreServerSpecified() {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
-            .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .mode(SaveMode.Append)
             .save();
@@ -71,15 +109,12 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void noHttpsSpecifiedShouldDefaultToHttpAndFail() {
-        final DataFrameWriter<Row> dfw = readDocument("/marklogic-docs/java-client-intro.xml")
+        final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
+            "demo.data.progress.cloud", false, "443", "/cls/dev/cs1/", API_KEY, "token/");
+        DataFrameWriter<Row> dfw = readDocument("/marklogic-docs/java-client-intro.xml")
+            .withColumn(CLASSIFED_TEXT_COLUMN_NAME, textClassifierUdf.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_PORT, "443")
-            .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
-            .option(Options.WRITE_CLASSIFIER_APIKEY, API_KEY)
-            .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
             .mode(SaveMode.Append);
 
         ConnectorException exception = assertThrowsConnectorException(dfw::save);
@@ -88,7 +123,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
     @Test
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
-    void classifyXmlContentsWithUdf() {
+    void classifyXmlContentsWithoutChunking() {
         final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
             "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");
         Dataset<Row> dataset = readDocument("/marklogic-docs/java-client-intro.xml")

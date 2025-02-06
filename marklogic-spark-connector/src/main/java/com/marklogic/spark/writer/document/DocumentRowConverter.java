@@ -32,6 +32,8 @@ import java.util.stream.Stream;
  */
 public class DocumentRowConverter implements RowConverter {
 
+    private static final String CHUNKS_CLASSIFED_TEXT_COLUMN_NAME = "chunkClassifications";
+
     private final StructType schema;
     private final ObjectMapper objectMapper;
     private final String uriTemplate;
@@ -81,6 +83,7 @@ public class DocumentRowConverter implements RowConverter {
         documentInputs.setClassificationResponse(documentRow.getClassificationResponse());
 
         documentInputs.setChunks(documentRow.getChunks());
+        documentInputs.setClassifications(documentRow.getClassifications(CHUNKS_CLASSIFED_TEXT_COLUMN_NAME));
         return Stream.of(documentInputs).iterator();
     }
 

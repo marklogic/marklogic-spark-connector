@@ -7,6 +7,8 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
+import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
@@ -18,10 +20,17 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -30,14 +39,16 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final DOMHelper domHelper;
     private final XmlChunkConfig xmlChunkConfig;
     private final XPathFactory xPathFactory = XPathFactory.newInstance();
+    private final DocumentBuilderFactory documentBuilderFactory;
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<TextSegment> textSegments, ChunkConfig chunkConfig) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
+                             List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
+        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
         this.xmlChunkConfig = new XmlChunkConfig(chunkConfig.getEmbeddingXmlNamespace());
+        documentBuilderFactory = DocumentBuilderFactory.newInstance();
     }
 
     @Override
@@ -57,8 +68,10 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         root.appendChild(chunksElement);
 
         List<Chunk> chunks = new ArrayList<>();
+        AtomicInteger ct = new AtomicInteger(0);
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks);
+            Element classificationReponseNode = getNthClassificationResponseElement(ct.getAndIncrement());
+            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode);
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
@@ -75,8 +88,10 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         doc.getDocumentElement().appendChild(chunksElement);
 
         List<Chunk> chunks = new ArrayList<>();
+        AtomicInteger ct = new AtomicInteger(0);
         for (TextSegment textSegment : textSegments) {
-            addChunk(doc, textSegment, chunksElement, chunks);
+            Element classificationReponseNode = getNthClassificationResponseElement(ct.getAndIncrement());
+            addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode);
         }
 
         return new DocumentAndChunks(
@@ -85,17 +100,30 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         );
     }
 
-    private void addChunk(Document doc, TextSegment textSegment, Element chunksElement, List<Chunk> chunks) {
+    private Element getNthClassificationResponseElement(int n) {
+        if (classifications != null && !classifications.isEmpty()) {
+            byte[] classificationBytes = classifications.get(n);
+            try {
+                DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+                Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
+                return classificationResponse.getDocumentElement();
+            } catch (Exception e) {
+                throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private void addChunk(Document doc, TextSegment textSegment, Element chunksElement, List<Chunk> chunks, Element classificationReponseNode) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
         text.setTextContent(textSegment.text());
         chunk.appendChild(text);
-        if (chunkConfig.getClassifier() != null) {
+        if (classificationReponseNode != null) {
             Node classificationNode = doc.createElement("classification");
-
-            Document responseDoc = chunkConfig.getClassifier().classifyTextToXml(super.sourceDocument.getUri(), textSegment.text());
-            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName("STRUCTUREDDOCUMENT").item(0).getChildNodes();
+            NodeList structuredDocumentNodeChildNodes = classificationReponseNode.getElementsByTagName(TextClassifier.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
                 Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);

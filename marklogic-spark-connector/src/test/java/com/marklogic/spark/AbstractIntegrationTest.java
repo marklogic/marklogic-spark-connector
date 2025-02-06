@@ -156,6 +156,9 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
 
     protected final ConnectorException assertThrowsConnectorException(Runnable r) {
         SparkException ex = assertThrows(SparkException.class, () -> r.run());
+        if (ex.getCause() instanceof SparkException) {
+            ex = (SparkException) ex.getCause();
+        }
         assertTrue(ex.getCause() instanceof ConnectorException,
             "Expect the Spark-thrown SparkException to wrap our ConnectorException, which is an exception that we " +
                 "intentionally throw when an error condition is detected. " +

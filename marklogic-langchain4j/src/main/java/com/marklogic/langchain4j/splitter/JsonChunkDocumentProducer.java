@@ -14,7 +14,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.langchain4j.MarkLogicLangchainException;
-import com.marklogic.langchain4j.Util;
+import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.JsonChunk;
@@ -22,6 +22,7 @@ import dev.langchain4j.data.segment.TextSegment;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -31,8 +32,8 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final XmlMapper xmlMapper;
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                              List<TextSegment> textSegments, ChunkConfig chunkConfig) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig);
+                              List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
+        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
         xmlMapper = new XmlMapper();
     }
 
@@ -43,10 +44,19 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = doc.putArray(determineChunksArrayName(doc));
         List<Chunk> chunks = new ArrayList<>();
+        AtomicInteger ct = new AtomicInteger(0);
         textSegments.forEach(textSegment -> {
             String text = textSegment.text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
+            if (classifications != null && !classifications.isEmpty()) {
+                try {
+                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
+                    chunk.set("classification", classificationNode);
+                } catch (IOException e) {
+                    throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
+                }
+            }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         });
 
@@ -68,13 +78,18 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = rootField.putArray(DEFAULT_CHUNKS_ARRAY_NAME);
         List<Chunk> chunks = new ArrayList<>();
+        AtomicInteger ct = new AtomicInteger(0);
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             String text = textSegments.get(listIndex++).text();
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            if (chunkConfig.getClassifier() != null) {
-                JsonNode structuredDocument = generateClassificationForChunk(uri, text).get("STRUCTUREDDOCUMENT");
-                chunk.set("classification", structuredDocument);
+            if (classifications != null) {
+                try {
+                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
+                    chunk.set("classification", classificationNode);
+                } catch (IOException e) {
+                    throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+                }
             }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
         }
@@ -88,14 +103,5 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
     private String determineChunksArrayName(ObjectNode doc) {
         return doc.has(DEFAULT_CHUNKS_ARRAY_NAME) ? "splitter-chunks" : DEFAULT_CHUNKS_ARRAY_NAME;
-    }
-
-    private JsonNode generateClassificationForChunk(String sourceUri, String text) {
-        byte[] result = chunkConfig.getClassifier().classifyTextToBytes(super.sourceDocument.getUri(), text);
-        try {
-            return xmlMapper.readTree(result);
-        } catch (IOException e) {
-            throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
-        }
     }
 }
