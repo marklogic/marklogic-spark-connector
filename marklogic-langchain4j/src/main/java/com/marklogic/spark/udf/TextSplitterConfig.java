@@ -7,7 +7,7 @@ import com.marklogic.spark.core.splitter.AllTextSelector;
 import com.marklogic.spark.core.splitter.TextSelector;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.langchain4j.DocumentSplitterFactory;
+import com.marklogic.langchain4j.splitter.DocumentSplitterFactory;
 import com.marklogic.spark.langchain4j.DocumentTextSplitterFactory;
 import dev.langchain4j.data.document.DocumentSplitter;
 import org.apache.spark.sql.expressions.UserDefinedFunction;

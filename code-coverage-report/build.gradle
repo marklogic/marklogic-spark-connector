@@ -6,9 +6,8 @@ plugins {
 }
 
 dependencies {
-  jacocoAggregation project(':marklogic-langchain4j')
   jacocoAggregation project(':marklogic-spark-api')
-  jacocoAggregation project(':marklogic-spark-langchain4j')
+  jacocoAggregation project(':marklogic-langchain4j')
   jacocoAggregation project(':marklogic-spark-connector')
 }
 

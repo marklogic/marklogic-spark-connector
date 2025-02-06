@@ -3,12 +3,13 @@
  */
 package com.marklogic.spark.langchain4j;
 
-import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.langchain4j.splitter.*;
+import com.marklogic.langchain4j.splitter.DocumentSplitterFactory;
+import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.splitter.*;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import dev.langchain4j.data.document.DocumentSplitter;
 
 import java.util.Arrays;
@@ -35,7 +36,7 @@ public interface DocumentTextSplitterFactory {
         }
         TextSelector textSelector = makeXmlTextSelector(context);
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
-        ChunkAssembler chunkAssembler = makeChunkAssembler(context);
+        ChunkAssembler chunkAssembler = ChunkAssemblerFactory.makeChunkAssembler(context);
         return new DocumentTextSplitter(textSelector, splitter, chunkAssembler);
     }
 
@@ -50,7 +51,7 @@ public interface DocumentTextSplitterFactory {
     private static DocumentTextSplitter makeJsonSplitter(Context context) {
         TextSelector textSelector = makeJsonTextSelector(context.getProperties().get(Options.WRITE_SPLITTER_JSON_POINTERS));
         DocumentSplitter splitter = DocumentSplitterFactory.makeDocumentSplitter(context);
-        return new DocumentTextSplitter(textSelector, splitter, makeChunkAssembler(context));
+        return new DocumentTextSplitter(textSelector, splitter, ChunkAssemblerFactory.makeChunkAssembler(context));
     }
 
     static TextSelector makeJsonTextSelector(String jsonPointers) {
@@ -67,35 +68,7 @@ public interface DocumentTextSplitterFactory {
             Util.MAIN_LOGGER.debug("Will split text documents using all text in each document.");
         }
         return new DocumentTextSplitter(new AllTextSelector(),
-            DocumentSplitterFactory.makeDocumentSplitter(context), makeChunkAssembler(context)
-        );
-    }
-
-    static ChunkAssembler makeChunkAssembler(Context context) {
-        DocumentMetadataHandle metadata = new DocumentMetadataHandle();
-
-        if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {
-            metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS).split(","));
-        }
-
-        if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS)) {
-            String value = context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS);
-            Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
-        } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
-            String value = context.getStringOption(Options.WRITE_PERMISSIONS);
-            Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
-        }
-
-        return new DefaultChunkAssembler(new ChunkConfig.Builder()
-            .withMetadata(metadata)
-            .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0, 0))
-            .withDocumentType(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE))
-            .withRootName(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME))
-            .withUriPrefix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_PREFIX))
-            .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
-            .withXmlNamespace(context.getProperties().get(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
-            .withEmbeddingXmlNamespace(context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE))
-            .build()
+            DocumentSplitterFactory.makeDocumentSplitter(context), ChunkAssemblerFactory.makeChunkAssembler(context)
         );
     }
 }

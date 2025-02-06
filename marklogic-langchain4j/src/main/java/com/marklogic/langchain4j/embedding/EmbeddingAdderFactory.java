@@ -1,18 +1,18 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.langchain4j;
+package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DOMChunkSelector;
 import com.marklogic.spark.core.embedding.JsonChunkSelector;
 import com.marklogic.spark.core.embedding.XmlChunkConfig;
-import com.marklogic.langchain4j.embedding.*;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
