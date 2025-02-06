@@ -8,6 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.metadata.Metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -30,7 +31,12 @@ public abstract class TextExtractor {
         }
 
         try (ByteArrayInputStream stream = new ByteArrayInputStream((byte[]) binaryContent)) {
-            return tika.parseToString(stream);
+            // Once we move this out of a UDF, we can retuern the text and a Map<String, String>
+            // Can add that to DocumentInputs.
+            Metadata metadata = new Metadata();
+            String result = tika.parseToString(stream, metadata);
+            System.out.println("MD: " + metadata);
+            return result;
         }
     }
 
