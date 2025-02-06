@@ -4,7 +4,6 @@
 package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.langchain4j.Util;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 
 import java.util.ArrayList;
@@ -72,8 +71,8 @@ public class EmbeddingAdder implements Function<DocumentWriteOperation, Iterator
         // Return any pending source documents - i.e. those with chunks that didn't add up to the embedding generator's
         // batch size, and thus embeddings haven't been added.
         if (pendingSourceDocuments != null && !pendingSourceDocuments.isEmpty()) {
-            if (Util.LANGCHAIN4J_LOGGER.isInfoEnabled()) {
-                Util.LANGCHAIN4J_LOGGER.info("Pending source document count: {}; generating embeddings for each document.",
+            if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isInfoEnabled()) {
+                EmbeddingUtil.LANGCHAIN4J_LOGGER.info("Pending source document count: {}; generating embeddings for each document.",
                     pendingSourceDocuments.size());
             }
             embeddingGenerator.generateEmbeddingsForPendingChunks();

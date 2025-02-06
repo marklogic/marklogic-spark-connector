@@ -13,15 +13,15 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.JsonChunk;
-import dev.langchain4j.data.segment.TextSegment;
+import com.marklogic.spark.ConnectorException;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
@@ -54,7 +54,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                     JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
                     chunk.set("classification", classificationNode);
                 } catch (IOException e) {
-                    throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
+                    throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
                 }
             }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
@@ -88,7 +88,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                     JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
                     chunk.set("classification", classificationNode);
                 } catch (IOException e) {
-                    throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+                    throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
                 }
             }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));

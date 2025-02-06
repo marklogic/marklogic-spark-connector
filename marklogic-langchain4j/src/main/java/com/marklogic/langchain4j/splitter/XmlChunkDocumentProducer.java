@@ -7,15 +7,14 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
 import com.marklogic.langchain4j.classifier.TextClassifier;
 import com.marklogic.langchain4j.embedding.Chunk;
 import com.marklogic.langchain4j.embedding.DOMChunk;
 import com.marklogic.langchain4j.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.embedding.XmlChunkConfig;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;
-import dev.langchain4j.data.segment.TextSegment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -105,7 +104,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
                 return classificationResponse.getDocumentElement();
             } catch (Exception e) {
-                throw new MarkLogicLangchainException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
+                throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
             }
         } else {
             return null;

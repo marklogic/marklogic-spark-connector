@@ -3,7 +3,7 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import com.marklogic.langchain4j.MarkLogicLangchainException;
+import com.marklogic.spark.ConnectorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -49,7 +49,7 @@ public class DOMChunk implements Chunk {
         try {
             embeddingTextNodes = (NodeList) xpath.evaluate(textExpression, chunkElement, XPathConstants.NODESET);
         } catch (XPathExpressionException e) {
-            throw new MarkLogicLangchainException(String.format("Unable to evaluate XPath expression: %s; cause: %s",
+            throw new ConnectorException(String.format("Unable to evaluate XPath expression: %s; cause: %s",
                 textExpression, e.getMessage()), e);
         }
 
