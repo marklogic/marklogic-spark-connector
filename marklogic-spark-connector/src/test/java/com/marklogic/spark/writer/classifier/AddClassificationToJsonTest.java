@@ -174,6 +174,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void chunkAndAddClassificationOnlyToChunksInJsonOriginalJsonDoc() {
         final UserDefinedFunction textClassifierUdf = TextClassifierUdf.build(
             "demo.data.progress.cloud", true, "443", "/cls/dev/cs1/", API_KEY, "token/");

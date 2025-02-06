@@ -5,7 +5,6 @@ package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.Format;
-import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.Iterator;
 import java.util.List;
@@ -17,7 +16,7 @@ import java.util.UUID;
 abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOperation> {
 
     protected final DocumentWriteOperation sourceDocument;
-    protected final List<TextSegment> textSegments;
+    protected final List<String> textSegments;
     protected final ChunkConfig chunkConfig;
     protected final List<byte[]> classifications;
     protected final int maxChunksPerDocument;
@@ -25,7 +24,7 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
     protected int listIndex = -1;
     private int chunkDocumentCounter = 1;
 
-    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
+    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
         this.sourceDocument = sourceDocument;
         this.textSegments = textSegments;
         this.chunkConfig = chunkConfig;

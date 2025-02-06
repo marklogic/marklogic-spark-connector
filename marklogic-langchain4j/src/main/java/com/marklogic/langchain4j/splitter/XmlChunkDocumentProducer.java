@@ -20,16 +20,13 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
@@ -42,7 +39,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final DocumentBuilderFactory documentBuilderFactory;
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
+                             List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
         super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
 
         // Namespaces aren't needed for producing chunks.
@@ -89,7 +86,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         List<Chunk> chunks = new ArrayList<>();
         AtomicInteger ct = new AtomicInteger(0);
-        for (TextSegment textSegment : textSegments) {
+        for (String textSegment : textSegments) {
             Element classificationReponseNode = getNthClassificationResponseElement(ct.getAndIncrement());
             addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode);
         }
@@ -115,11 +112,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
     }
 
-    private void addChunk(Document doc, TextSegment textSegment, Element chunksElement, List<Chunk> chunks, Element classificationReponseNode) {
+    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationReponseNode) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
-        text.setTextContent(textSegment.text());
+        text.setTextContent(textSegment);
         chunk.appendChild(text);
         if (classificationReponseNode != null) {
             Node classificationNode = doc.createElement("classification");
