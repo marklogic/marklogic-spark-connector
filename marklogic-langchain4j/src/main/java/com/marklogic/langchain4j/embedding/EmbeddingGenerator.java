@@ -97,7 +97,7 @@ public class EmbeddingGenerator {
         } else {
             List<Embedding> embeddings = response.content();
             for (int i = 0; i < embeddings.size(); i++) {
-                chunks.get(i).addEmbedding(embeddings.get(i));
+                chunks.get(i).addEmbedding(embeddings.get(i).vector());
             }
         }
     }

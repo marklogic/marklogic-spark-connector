@@ -6,7 +6,6 @@ package com.marklogic.langchain4j.embedding;
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import dev.langchain4j.data.embedding.Embedding;
 
 public class JsonChunk implements Chunk {
 
@@ -37,10 +36,10 @@ public class JsonChunk implements Chunk {
     }
 
     @Override
-    public void addEmbedding(Embedding embedding) {
+    public void addEmbedding(float[] embedding) {
         ArrayNode array = chunk.putArray(this.embeddingArrayName);
-        for (float val : embedding.vector()) {
-            array.add(val);
+        for (int i = 0; i < embedding.length; i++) {
+            array.add(embedding[i]);
         }
     }
 }

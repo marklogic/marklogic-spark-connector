@@ -3,8 +3,6 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import dev.langchain4j.data.embedding.Embedding;
-
 /**
  * Represents a chunk in either a JSON or XML document.
  */
@@ -25,5 +23,5 @@ public interface Chunk {
      *
      * @param embedding
      */
-    void addEmbedding(Embedding embedding);
+    void addEmbedding(float[] embedding);
 }
