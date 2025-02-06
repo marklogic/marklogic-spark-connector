@@ -3,7 +3,7 @@
  */
 package com.marklogic.spark.writer.embedding;
 
-import com.marklogic.langchain4j.embedding.Chunk;
+import com.marklogic.spark.core.embedding.Chunk;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;

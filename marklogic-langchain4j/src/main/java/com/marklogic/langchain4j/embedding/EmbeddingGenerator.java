@@ -3,6 +3,8 @@
  */
 package com.marklogic.langchain4j.embedding;
 
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;

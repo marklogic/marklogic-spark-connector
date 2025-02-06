@@ -1,7 +1,7 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.splitter;
+package com.marklogic.spark.core.splitter;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.Util;

@@ -5,7 +5,7 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.splitter.ChunkAssembler;
+import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.Util;
 
 /**

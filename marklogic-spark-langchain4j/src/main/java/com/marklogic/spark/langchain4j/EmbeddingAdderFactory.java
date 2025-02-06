@@ -3,6 +3,10 @@
  */
 package com.marklogic.spark.langchain4j;
 
+import com.marklogic.spark.core.embedding.ChunkSelector;
+import com.marklogic.spark.core.embedding.DOMChunkSelector;
+import com.marklogic.spark.core.embedding.JsonChunkSelector;
+import com.marklogic.spark.core.embedding.XmlChunkConfig;
 import com.marklogic.langchain4j.embedding.*;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;

@@ -1,7 +1,7 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.splitter;
+package com.marklogic.spark.core.splitter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,10 +13,10 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.classifier.TextClassifier;
-import com.marklogic.langchain4j.embedding.Chunk;
-import com.marklogic.langchain4j.embedding.DocumentAndChunks;
-import com.marklogic.langchain4j.embedding.JsonChunk;
+import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.core.embedding.JsonChunk;
 import com.marklogic.spark.ConnectorException;
 
 import java.io.IOException;

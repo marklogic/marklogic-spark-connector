@@ -4,6 +4,7 @@
  */
 dependencies {
   compileOnly "org.apache.spark:spark-sql_2.12:" + sparkVersion
+  compileOnly "com.marklogic:marklogic-client-api:7.1.0"
 
   implementation project(":marklogic-spark-api")
 

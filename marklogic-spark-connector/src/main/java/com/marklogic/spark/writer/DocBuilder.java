@@ -14,7 +14,7 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.langchain4j.splitter.ChunkAssembler;
+import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;

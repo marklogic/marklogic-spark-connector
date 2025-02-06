@@ -8,6 +8,7 @@ import com.marklogic.langchain4j.splitter.*;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.splitter.*;
 import dev.langchain4j.data.document.DocumentSplitter;
 
 import java.util.Arrays;

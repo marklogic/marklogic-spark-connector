@@ -3,7 +3,7 @@
  */
 package com.marklogic.spark.udf;
 
-import com.marklogic.langchain4j.classifier.TextClassifier;
+import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.ConnectorException;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
 import com.smartlogic.cloud.CloudException;

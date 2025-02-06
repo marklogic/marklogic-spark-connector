@@ -1,7 +1,7 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.classifier;
+package com.marklogic.spark.core.classifier;
 
 import com.marklogic.spark.ConnectorException;
 import com.smartlogic.classificationserver.client.*;

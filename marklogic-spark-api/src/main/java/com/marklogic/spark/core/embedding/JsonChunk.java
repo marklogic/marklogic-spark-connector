@@ -1,7 +1,7 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.embedding;
+package com.marklogic.spark.core.embedding;
 
 import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.node.ArrayNode;
