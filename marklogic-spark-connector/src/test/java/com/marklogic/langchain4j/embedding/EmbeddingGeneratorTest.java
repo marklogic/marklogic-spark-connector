@@ -3,6 +3,8 @@
  */
 package com.marklogic.langchain4j.embedding;
 
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.writer.embedding.TestEmbeddingModel;
 import org.junit.jupiter.api.Test;
 

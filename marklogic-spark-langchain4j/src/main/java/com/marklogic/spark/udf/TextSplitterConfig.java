@@ -3,8 +3,8 @@
  */
 package com.marklogic.spark.udf;
 
-import com.marklogic.langchain4j.splitter.AllTextSelector;
-import com.marklogic.langchain4j.splitter.TextSelector;
+import com.marklogic.spark.core.splitter.AllTextSelector;
+import com.marklogic.spark.core.splitter.TextSelector;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.langchain4j.DocumentSplitterFactory;

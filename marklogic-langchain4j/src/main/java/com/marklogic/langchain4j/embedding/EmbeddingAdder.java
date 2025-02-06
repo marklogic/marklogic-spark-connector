@@ -4,6 +4,8 @@
 package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.core.embedding.ChunkSelector;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 
 import java.util.ArrayList;

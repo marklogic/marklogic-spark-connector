@@ -1,17 +1,17 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.splitter;
+package com.marklogic.spark.core.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.langchain4j.classifier.TextClassifier;
-import com.marklogic.langchain4j.embedding.Chunk;
-import com.marklogic.langchain4j.embedding.DOMChunk;
-import com.marklogic.langchain4j.embedding.DocumentAndChunks;
-import com.marklogic.langchain4j.embedding.XmlChunkConfig;
+import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DOMChunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.core.embedding.XmlChunkConfig;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;

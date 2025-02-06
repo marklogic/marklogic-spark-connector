@@ -4,7 +4,7 @@
 package com.marklogic.spark.udf;
 
 import com.marklogic.client.io.BytesHandle;
-import com.marklogic.langchain4j.splitter.TextSelector;
+import com.marklogic.spark.core.splitter.TextSelector;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;

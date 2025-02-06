@@ -4,6 +4,8 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.core.splitter.ChunkAssembler;
+import com.marklogic.spark.core.splitter.TextSelector;
 import com.marklogic.spark.ConnectorException;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
