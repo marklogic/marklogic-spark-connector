@@ -32,7 +32,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final XmlMapper xmlMapper;
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                              List<TextSegment> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
+                              List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
         super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
         xmlMapper = new XmlMapper();
     }
@@ -46,7 +46,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         List<Chunk> chunks = new ArrayList<>();
         AtomicInteger ct = new AtomicInteger(0);
         textSegments.forEach(textSegment -> {
-            String text = textSegment.text();
+            String text = textSegment;
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
             if (classifications != null && !classifications.isEmpty()) {
@@ -80,7 +80,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         List<Chunk> chunks = new ArrayList<>();
         AtomicInteger ct = new AtomicInteger(0);
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            String text = textSegments.get(listIndex++).text();
+            String text = textSegments.get(listIndex++);
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
             if (classifications != null) {

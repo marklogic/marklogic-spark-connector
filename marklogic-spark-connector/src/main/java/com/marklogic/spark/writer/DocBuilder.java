@@ -350,7 +350,7 @@ public class DocBuilder {
             // If there's an extracted doc, we want to use that as the source document so that the user has the option
             // of adding chunks to it.
             DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
-            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleStringChunks(sourceDocument, inputs.getChunks(), inputs.getClassifications());
+            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(sourceDocument, inputs.getChunks(), inputs.getClassifications());
             while (iterator.hasNext()) {
                 chunkDocuments.add(iterator.next());
             }

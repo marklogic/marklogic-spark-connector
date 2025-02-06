@@ -12,6 +12,7 @@ import dev.langchain4j.data.segment.TextSegment;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -45,6 +46,7 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
                 sourceDocument.getUri(), e.getMessage()), e);
         }
 
-        return chunkAssembler.assembleChunks(sourceDocument, textSegments, null);
+        List<String> strings = textSegments.stream().map(TextSegment::text).collect(Collectors.toList());
+        return chunkAssembler.assembleChunks(sourceDocument, strings, null);
     }
 }
