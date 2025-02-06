@@ -54,7 +54,7 @@ public abstract class TextClassifierUdf {
             List<String> classifications = new ArrayList<>();
             String content = new String((byte[]) binaryContent, StandardCharsets.UTF_8);
             TextClassifier textClassifier = new TextClassifier(classificationConfiguration);
-            classifications.add(new String(textClassifier.classifyTextToBytes("sourceUri", content)));
+            classifications.add(new String(textClassifier.classifyTextToBytes("sourceUri", content), StandardCharsets.UTF_8));
             return classifications;
         } else if (binaryContent instanceof WrappedArray) {
             fetchTokenIfNecessary();
