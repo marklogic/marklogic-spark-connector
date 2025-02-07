@@ -1,12 +1,10 @@
 /**
- * This project defines processing that depends on langchain4j
- * and thus will require Java 17.
+ * This project defines processing that depends on langchain4j and thus will require Java 17.
  */
 dependencies {
-  implementation project(":marklogic-spark-api")
+  api project(":marklogic-spark-api")
 
   compileOnly "org.apache.spark:spark-sql_2.12:" + sparkVersion
-  compileOnly "com.marklogic:marklogic-client-api:7.1.0"
 
   // For splitting text and creating embeddings.
   api "dev.langchain4j:langchain4j:0.35.0"
