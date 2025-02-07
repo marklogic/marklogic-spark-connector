@@ -1,23 +1,26 @@
+java {
+  // Must use Java 17 as langchain4j depends on 17+.
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
 dependencies {
   testImplementation('org.apache.spark:spark-sql_2.12:' + sparkVersion) {
     exclude module: "rocksdbjni"
   }
 
-  // These are all duplicated from the connector build file; haven't found a way to depend on
-  // just that project and pick up all the "shadow" dependencies.
-  testImplementation (project(":marklogic-langchain4j")) {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
-  testImplementation("org.apache.jena:jena-arq:4.10.0") {
+
+  // This forces this subproject onto Java 17.
+  testImplementation (project(":marklogic-langchain4j")) {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
   // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.0.0-alpha1"
 
   testImplementation('com.marklogic:ml-app-deployer:5.0.0') {
     exclude group: "com.fasterxml.jackson.core"
@@ -44,14 +47,12 @@ dependencies {
   testImplementation "org.apache.tika:tika-parser-pdf-module:3.0.0"
 }
 
-if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-  test {
-    // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
-    // for an explanation of why these are needed when running the tests on Java 17.
-    jvmArgs = [
-      '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
-      '--add-opens=java.base/sun.util.calendar=ALL-UNNAMED',
-      '--add-opens=java.base/sun.security.action=ALL-UNNAMED'
-    ]
-  }
+test {
+  // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
+  // for an explanation of why these are needed when running the tests on Java 17.
+  jvmArgs = [
+    '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-opens=java.base/sun.util.calendar=ALL-UNNAMED',
+    '--add-opens=java.base/sun.security.action=ALL-UNNAMED'
+  ]
 }

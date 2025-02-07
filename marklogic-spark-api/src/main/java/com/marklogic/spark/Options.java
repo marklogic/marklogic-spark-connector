@@ -154,12 +154,14 @@ public abstract class Options {
      */
     public static final String WRITE_EXTRACTED_TEXT_DROP_SOURCE = "spark.marklogic.write.extractedText.dropSource";
 
+    public static final String WRITE_SPLITTER_PREFIX = "spark.marklogic.write.splitter.";
+
     /**
      * Enables the splitter feature by defining an XPath expression for selecting text to split in a document.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_XPATH = "spark.marklogic.write.splitter.xpath";
+    public static final String WRITE_SPLITTER_XPATH = WRITE_SPLITTER_PREFIX + "xpath";
 
     /**
      * Enables the splitter feature by defining one or more newline-delimited JSON Pointer expressions for selecting
@@ -167,7 +169,7 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_JSON_POINTERS = "spark.marklogic.write.splitter.jsonPointers";
+    public static final String WRITE_SPLITTER_JSON_POINTERS = WRITE_SPLITTER_PREFIX + "jsonPointers";
 
     /**
      * Enables the splitter feature by declaring that all the text in a document should be split. This is typically for
@@ -175,21 +177,21 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_TEXT = "spark.marklogic.writer.splitter.text";
+    public static final String WRITE_SPLITTER_TEXT = WRITE_SPLITTER_PREFIX + "text";
 
     /**
      * Defines the maximum chunk size in characters. Defaults to 1000.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = "spark.marklogic.write.splitter.maxChunkSize";
+    public static final String WRITE_SPLITTER_MAX_CHUNK_SIZE = WRITE_SPLITTER_PREFIX + "maxChunkSize";
 
     /**
      * Defines the maximum overlap size in characters between two chunks. Defaults to 0.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = "spark.marklogic.write.splitter.maxOverlapSize";
+    public static final String WRITE_SPLITTER_MAX_OVERLAP_SIZE = WRITE_SPLITTER_PREFIX + "maxOverlapSize";
 
     /**
      * Defines a regex for splitting text into chunks. The default strategy is LangChain4J's "recursive" strategy that
@@ -197,7 +199,7 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_REGEX = "spark.marklogic.write.splitter.regex";
+    public static final String WRITE_SPLITTER_REGEX = WRITE_SPLITTER_PREFIX + "regex";
 
     /**
      * Defines a delimiter for usage with the splitter regex option. The delimiter joins together two or more chunks
@@ -205,7 +207,7 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
+    public static final String WRITE_SPLITTER_JOIN_DELIMITER = WRITE_SPLITTER_PREFIX  + "joinDelimiter";
 
     /**
      * Defines the class name of an implementation of LangChain4J's {@code dev.langchain4j.data.document.DocumentSplitter}
@@ -213,7 +215,7 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_CUSTOM_CLASS = "spark.marklogic.write.splitter.customClass";
+    public static final String WRITE_SPLITTER_CUSTOM_CLASS = WRITE_SPLITTER_PREFIX + "customClass";
 
     /**
      * Prefix for one or more options to pass in a {@code Map<String, String>} to the constructor of the custom splitter
@@ -221,7 +223,7 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX = "spark.marklogic.write.splitter.customClass.option.";
+    public static final String WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX = WRITE_SPLITTER_PREFIX + "customClass.option.";
 
     /**
      * Configures the connector to write chunks to separate "sidecar" documents instead of to the source document (the
@@ -229,21 +231,21 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_MAX_CHUNKS = "spark.marklogic.write.splitter.sidecar.maxChunks";
+    public static final String WRITE_SPLITTER_SIDECAR_MAX_CHUNKS = WRITE_SPLITTER_PREFIX + "sidecar.maxChunks";
 
     /**
      * Defines the type - either JSON or XML - of each chunk document. Defaults to the type of the source document.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE = "spark.marklogic.write.splitter.sidecar.documentType";
+    public static final String WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE = WRITE_SPLITTER_PREFIX + "sidecar.documentType";
 
     /**
      * Comma-delimited list of collections to assign to each chunk document.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_COLLECTIONS = "spark.marklogic.write.splitter.sidecar.collections";
+    public static final String WRITE_SPLITTER_SIDECAR_COLLECTIONS = WRITE_SPLITTER_PREFIX + "sidecar.collections";
 
     /**
      * Comma-delimited list of roles and capabilities to assign to each chunk document. If not defined, chunk documents
@@ -251,35 +253,35 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_PERMISSIONS = "spark.marklogic.write.splitter.sidecar.permissions";
+    public static final String WRITE_SPLITTER_SIDECAR_PERMISSIONS = WRITE_SPLITTER_PREFIX + "sidecar.permissions";
 
     /**
      * Root name for a JSON or XML sidecar chunk document.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_ROOT_NAME = "spark.marklogic.write.splitter.sidecar.rootName";
+    public static final String WRITE_SPLITTER_SIDECAR_ROOT_NAME = WRITE_SPLITTER_PREFIX + "sidecar.rootName";
 
     /**
      * URI prefix for each sidecar chunk document. If defined, will be followed by a UUID.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_URI_PREFIX = "spark.marklogic.write.splitter.sidecar.uriPrefix";
+    public static final String WRITE_SPLITTER_SIDECAR_URI_PREFIX = WRITE_SPLITTER_PREFIX + "sidecar.uriPrefix";
 
     /**
      * URI suffix for each sidecar chunk document. If defined, will be preceded by a UUID.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_URI_SUFFIX = "spark.marklogic.write.splitter.sidecar.uriSuffix";
+    public static final String WRITE_SPLITTER_SIDECAR_URI_SUFFIX = WRITE_SPLITTER_PREFIX + "sidecar.uriSuffix";
 
     /**
      * Namespace for XML sidecar chunk documents.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_SIDECAR_XML_NAMESPACE = "spark.marklogic.write.splitter.sidecar.xmlNamespace";
+    public static final String WRITE_SPLITTER_SIDECAR_XML_NAMESPACE = WRITE_SPLITTER_PREFIX + "sidecar.xmlNamespace";
 
     // For writing RDF
     public static final String WRITE_GRAPH = "spark.marklogic.write.graph";
@@ -333,69 +335,71 @@ public abstract class Options {
      */
     public static final String XPATH_NAMESPACE_PREFIX = "spark.marklogic.xpath.";
 
+    public static final String WRITE_EMBEDDER_PREFIX = "spark.marklogic.write.embedder.";
+
     /**
      * Enables the embedder feature; name of a class on the classpath that implements the interface
      * {@code Function<Map<String, String>, EmbeddingModel>}.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = "spark.marklogic.write.embedder.modelFunction.className";
+    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME = WRITE_EMBEDDER_PREFIX + "modelFunction.className";
 
     /**
      * Prefix for each option passed in a {@code Map<String, String>} to the {@code apply} method of the model function class.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = "spark.marklogic.write.embedder.modelFunction.option.";
+    public static final String WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX = WRITE_EMBEDDER_PREFIX + "modelFunction.option.";
 
     /**
      * Defines the location of JSON chunks when using the embedder separate from the splitter.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_CHUNKS_JSON_POINTER = "spark.marklogic.write.embedder.chunks.jsonPointer";
+    public static final String WRITE_EMBEDDER_CHUNKS_JSON_POINTER = WRITE_EMBEDDER_PREFIX + "chunks.jsonPointer";
 
     /**
      * Defines the location of text in JSON chunks when using the embedder separate from the splitter.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_TEXT_JSON_POINTER = "spark.marklogic.write.embedder.text.jsonPointer";
+    public static final String WRITE_EMBEDDER_TEXT_JSON_POINTER = WRITE_EMBEDDER_PREFIX + "text.jsonPointer";
 
     /**
      * Defines the location of XML chunks when using the embedder separate from the splitter.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_CHUNKS_XPATH = "spark.marklogic.write.embedder.chunks.xpath";
+    public static final String WRITE_EMBEDDER_CHUNKS_XPATH = WRITE_EMBEDDER_PREFIX + "chunks.xpath";
 
     /**
      * Defines the location of text in XML chunks when using the embedder separate from the splitter.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_TEXT_XPATH = "spark.marklogic.write.embedder.text.xpath";
+    public static final String WRITE_EMBEDDER_TEXT_XPATH = WRITE_EMBEDDER_PREFIX + "text.xpath";
 
     /**
      * Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_EMBEDDING_NAME = "spark.marklogic.write.embedder.embedding.name";
+    public static final String WRITE_EMBEDDER_EMBEDDING_NAME = WRITE_EMBEDDER_PREFIX + "embedding.name";
 
     /**
      * Allows for an optional namespace to be assigned to the embedding element in an XML chunk.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_EMBEDDING_NAMESPACE = "spark.marklogic.write.embedder.embedding.namespace";
+    public static final String WRITE_EMBEDDER_EMBEDDING_NAMESPACE = WRITE_EMBEDDER_PREFIX + "embedding.namespace";
 
     /**
      * Defines the number of chunks to send to the embedding model in a single call. Defaults to 1.
      *
      * @since 2.5.0
      */
-    public static final String WRITE_EMBEDDER_BATCH_SIZE = "spark.marklogic.write.embedder.batchSize";
+    public static final String WRITE_EMBEDDER_BATCH_SIZE = WRITE_EMBEDDER_PREFIX + "batchSize";
 
     /**
      * Defines the host for classification requests
