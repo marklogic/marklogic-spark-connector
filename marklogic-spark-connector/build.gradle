@@ -13,7 +13,6 @@ configurations {
 
   // This approach allows for all of the dependencies to be available for compilation and for running tests.
   compileOnly.extendsFrom(shadowDependencies)
-  testImplementation.extendsFrom(compileOnly)
 }
 
 dependencies {
@@ -25,24 +24,9 @@ dependencies {
 
   shadowDependencies project(":marklogic-spark-api")
 
-  shadowDependencies("com.marklogic:marklogic-client-api:7.1.0") {
-    // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
-    // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
-    // So the 4 Jackson modules are excluded to allow for Spark's to be used.
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
-  implementation 'com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1'
-  implementation 'com.smartlogic.csclient:Semaphore-CS-Client:5.6.1'
-
-  // Required for converting JSON to XML. Using 2.15.2 to align with Spark 3.5.3.
-  shadowDependencies("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2") {
-    // Not needed, as the modules in this group that this dependency depends on are all provided by Spark.
-    exclude group: "com.fasterxml.jackson.core"
-  }
-
   // Need this so that an OkHttpClientConfigurator can be created.
-  shadowDependencies 'com.squareup.okhttp3:okhttp:4.12.0'
+  // I think this is just compileOnly, since the classes are present via the Java Client?
+  compileOnly 'com.squareup.okhttp3:okhttp:4.12.0'
 
   // Supports reading and writing RDF data.
   shadowDependencies("org.apache.jena:jena-arq:4.10.0") {
@@ -50,63 +34,8 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // Once we update langchain4j to 0.36.0 or higher, which requires Java 17, this will need to become a
-  // testImplementation dependency, and we'll figure out how to include them separately in Flux.
-  shadowDependencies (project(":marklogic-langchain4j")) {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
-
-  // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
-  // include the necessary parsers.
-  shadowDependencies "org.apache.tika:tika-core:3.0.0"
-
-//  testImplementation (project(":marklogic-langchain4j")) {
-//    exclude group: "com.fasterxml.jackson.core"
-//    exclude group: "com.fasterxml.jackson.dataformat"
-//  }
-
-  // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:0.35.0"
-
-  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
-  shadowDependencies "org.jdom:jdom2:2.0.6.1"
-
-  testImplementation('com.marklogic:ml-app-deployer:5.0.0') {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-
-    // Use the Java Client declared above.
-    exclude module: "marklogic-client-api"
-  }
-
-  testImplementation('com.marklogic:marklogic-junit5:1.5.0') {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-
-    // Use the Java Client declared above.
-    exclude module: "marklogic-client-api"
-  }
-
-  testImplementation "ch.qos.logback:logback-classic:1.3.14"
-  testImplementation "org.slf4j:jcl-over-slf4j:2.0.13"
-  testImplementation "org.skyscreamer:jsonassert:1.5.1"
-
-  // Adding these to test the Tika UDF. Flux will include these as well in its distribution.
-  testImplementation "org.apache.tika:tika-parser-microsoft-module:3.0.0"
-  testImplementation "org.apache.tika:tika-parser-pdf-module:3.0.0"
-}
-
-if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
-  test {
-    // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
-    // for an explanation of why these are needed when running the tests on Java 17.
-    jvmArgs = [
-      '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
-      '--add-opens=java.base/sun.util.calendar=ALL-UNNAMED',
-      '--add-opens=java.base/sun.security.action=ALL-UNNAMED'
-    ]
-  }
+  // This will become a test-only dependency once we upgrade LangChain4j since that it requires Java 17.
+  shadowDependencies project(":marklogic-langchain4j")
 }
 
 shadowJar {

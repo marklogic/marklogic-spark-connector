@@ -9,6 +9,10 @@ dependencies {
   jacocoAggregation project(':marklogic-spark-api')
   jacocoAggregation project(':marklogic-langchain4j')
   jacocoAggregation project(':marklogic-spark-connector')
+
+  // With the separation of tests into this project, we aren't getting any jacoco code coverage data.
+  // A problem to be fixed later.
+  jacocoAggregation project(':tests')
 }
 
 reporting {
