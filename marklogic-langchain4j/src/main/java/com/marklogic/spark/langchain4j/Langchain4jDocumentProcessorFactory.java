@@ -5,6 +5,7 @@ package com.marklogic.spark.langchain4j;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.langchain4j.embedding.EmbeddingAdder;
+import com.marklogic.langchain4j.embedding.EmbeddingAdderFactory;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.Context;
 

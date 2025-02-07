@@ -1,7 +1,7 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.langchain4j;
+package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;

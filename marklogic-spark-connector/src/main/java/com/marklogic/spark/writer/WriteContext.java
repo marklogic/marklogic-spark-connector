@@ -13,7 +13,7 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
-import com.marklogic.spark.langchain4j.DocumentTextSplitterFactory;
+import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
@@ -135,7 +135,7 @@ public class WriteContext extends ContextSupport {
             .withExtractedTextCollections(getStringOption(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS))
             .withExtractedTextPermissions(getStringOption(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS))
             .withExtractedTextDropSource(getBooleanOption(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, false))
-            .withChunkAssembler(DocumentTextSplitterFactory.makeChunkAssembler(this));
+            .withChunkAssembler(ChunkAssemblerFactory.makeChunkAssembler(this));
 
         if (hasOption(Options.WRITE_URI_TEMPLATE)) {
             configureTemplateUriMaker(factory);

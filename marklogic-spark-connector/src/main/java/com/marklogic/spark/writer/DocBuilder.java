@@ -18,7 +18,7 @@ import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;
-import com.marklogic.spark.langchain4j.NamespaceContextFactory;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
