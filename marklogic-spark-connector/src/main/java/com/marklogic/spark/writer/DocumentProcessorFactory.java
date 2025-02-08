@@ -5,6 +5,7 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.spark.Context;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 
 import java.lang.reflect.InvocationTargetException;
@@ -26,6 +27,14 @@ abstract class DocumentProcessorFactory {
     private static final String FACTORY_CLASS_NAME = "com.marklogic.spark.langchain4j.Langchain4jDocumentProcessorFactory";
 
     static Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> buildDocumentProcessor(Context context) {
+        // We'll need to remove some of the abstraction here, as we need to determine if the user has configured either
+        // the splitter or embedder, both of which depend on langchain4j and thus Java 17.
+        boolean shouldSplitOrEmbed = context.getProperties().keySet().stream()
+            .anyMatch(key -> key.startsWith(Options.WRITE_SPLITTER_PREFIX) || key.startsWith(Options.WRITE_EMBEDDER_PREFIX));
+        if (!shouldSplitOrEmbed) {
+            return null;
+        }
+
         try {
             Object factory = Class.forName(FACTORY_CLASS_NAME).getDeclaredConstructor().newInstance();
             Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>> processorFactory = (Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>>) factory;

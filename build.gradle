@@ -18,9 +18,16 @@ subprojects {
   group = "com.marklogic"
   version "2.5-SNAPSHOT"
 
+  // Defaults to the Java 11 toolchain. Overridden by subprojects that require Java 17.
+  // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    toolchain {
+      // Using 17 for now, as 11 isn't resolving on Jenkins. Will get 11 to work.
+      // In the meantime, hoping the compatibility below ensures everything can run on 11 by default.
+      languageVersion = JavaLanguageVersion.of(17)
+    }
+    sourceCompatibility = "11"
+    targetCompatibility = "11"
   }
 
   repositories {

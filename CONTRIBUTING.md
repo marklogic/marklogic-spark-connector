@@ -1,8 +1,12 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-You must use Java 11 or higher for developing, testing, and building this project. If you wish to use Sonar as 
-described below, you must use Java 17 or higher.
+**You must use Java 17 for developing, testing, and building this project**, even though the connector supports
+running on Java 11. For users, Java 17 is only required if using the splitting and embedding features, as those
+depend on a third party module that requires Java 17.
+
+**You also need Java 11 installed** so that the subprojects in this repository that require Java 11 have access to a 
+Java 11 SDK. [sdkman](https://sdkman.io/) is highly recommend for installing multiple JDKs.
 
 # Setup
 
@@ -39,6 +43,23 @@ index page for the test application server.
 To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
+
+**To run the tests in Intellij**, you must configure your JUnit template to include a few JVM args:
+
+1. Go to Run -> Edit Configurations.
+2. Delete any JUnit configurations you already have.
+3. Click on "Edit configuration templates" and click on "JUnit".
+4. Click on "Modify options" and select "Add VM options" if it's not already selected. 
+5. In the VM options text input, add the following:
+   --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED
+6. Click "Apply".
+7. In the dropdown that has "Class" selected, change that to "Method" and hit "Apply" again.
+
+You may need to repeat steps 6 and 7. I've found Intellij to be a little finicky with actually applying these changes.
+
+The net effect should be that when you run a JUnit class or method or suite of tests, those VM options are automatically
+added to the run configuration that Intellij creates for the class/method/suite. Those VM options are required to give
+Spark access to certain JVM modules. They are applied automatically when running the tests via Gradle.
 
 ## Generating code quality reports with SonarQube
 
