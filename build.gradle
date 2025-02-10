@@ -22,12 +22,8 @@ subprojects {
   // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
     toolchain {
-      // Using 17 for now, as 11 isn't resolving on Jenkins. Will get 11 to work.
-      // In the meantime, hoping the compatibility below ensures everything can run on 11 by default.
-      languageVersion = JavaLanguageVersion.of(17)
+      languageVersion = JavaLanguageVersion.of(11)
     }
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
   }
 
   repositories {
