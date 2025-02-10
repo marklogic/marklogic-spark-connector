@@ -46,8 +46,7 @@ class FileRowConverter implements RowConverter {
         return Stream.<DocBuilder.DocumentInputs>empty().iterator();
     }
 
-    // Telling Sonar to not tell us to remove this code, since we can't until 3.0.
-    @SuppressWarnings("java:S1874")
+    @SuppressWarnings({"deprecation", "removal"})
     private void forceFormatIfNecessary(BytesHandle content) {
         Format format = writeContext.getDocumentFormat();
         if (format != null) {

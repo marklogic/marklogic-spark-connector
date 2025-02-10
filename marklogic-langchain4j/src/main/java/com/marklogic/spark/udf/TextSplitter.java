@@ -13,7 +13,6 @@ import org.apache.spark.sql.api.java.UDF1;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class TextSplitter implements UDF1<Object, List<String>>, Serializable {
 
@@ -36,10 +35,10 @@ public class TextSplitter implements UDF1<Object, List<String>>, Serializable {
             this.documentSplitter = textSplitterConfig.buildDocumentSplitter();
         }
 
-        if (columnValue instanceof String) {
-            return splitExtractedText((String) columnValue);
-        } else if (columnValue instanceof byte[]) {
-            return splitDocumentContent((byte[]) columnValue);
+        if (columnValue instanceof String string) {
+            return splitExtractedText(string);
+        } else if (columnValue instanceof byte[] bytes) {
+            return splitDocumentContent(bytes);
         } else {
             throw new IllegalArgumentException("Unable to split text from column value: " + columnValue);
         }
@@ -48,7 +47,7 @@ public class TextSplitter implements UDF1<Object, List<String>>, Serializable {
     private List<String> splitExtractedText(String columnValue) {
         return documentSplitter.split(new Document(columnValue))
             .stream().map(TextSegment::text)
-            .collect(Collectors.toList());
+            .toList();
     }
 
     private List<String> splitDocumentContent(byte[] columnValue) {
@@ -61,6 +60,6 @@ public class TextSplitter implements UDF1<Object, List<String>>, Serializable {
         }
         return documentSplitter.split(new Document(text))
             .stream().map(TextSegment::text)
-            .collect(Collectors.toList());
+            .toList();
     }
 }

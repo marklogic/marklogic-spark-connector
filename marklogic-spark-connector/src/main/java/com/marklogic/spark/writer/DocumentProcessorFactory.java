@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -37,8 +38,12 @@ abstract class DocumentProcessorFactory {
 
         try {
             Object factory = Class.forName(FACTORY_CLASS_NAME).getDeclaredConstructor().newInstance();
+            @SuppressWarnings("unchecked")
             Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>> processorFactory = (Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>>) factory;
             return processorFactory.apply(context);
+        } catch (UnsupportedClassVersionError e) {
+            throw new ConnectorException("Unable to configure support for splitting documents and/or generating embeddings. " +
+                "Please ensure you are using Java 17 or higher for these operations.", e);
         }
         // Catch every checked exception from trying to instantiate the class. Any exception from the factory class
         // itself is expected to be a RuntimeException that should bubble up.

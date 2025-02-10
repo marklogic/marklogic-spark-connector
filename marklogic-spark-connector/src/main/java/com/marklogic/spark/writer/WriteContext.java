@@ -165,7 +165,7 @@ public class WriteContext extends ContextSupport {
      */
     @Deprecated(since = "2.3.0")
     // We don't need Sonar to remind us of this deprecation.
-    @SuppressWarnings("java:S1133")
+    @SuppressWarnings({"java:S1133", "removal"})
     Format getDeprecatedFileRowsDocumentFormat() {
         final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
         if (hasOption(deprecatedOption)) {

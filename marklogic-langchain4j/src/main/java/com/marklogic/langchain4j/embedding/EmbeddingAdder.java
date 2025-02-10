@@ -4,9 +4,9 @@
 package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
-import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -91,7 +91,7 @@ public class EmbeddingAdder implements Function<DocumentWriteOperation, Iterator
         List<DocumentWriteOperation> documentsToReturn = new ArrayList<>();
 
         splitDocuments.forEachRemaining(splitDoc -> {
-            boolean hasChunks = splitDoc instanceof DocumentAndChunks && ((DocumentAndChunks) splitDoc).hasChunks();
+            boolean hasChunks = splitDoc instanceof DocumentAndChunks documentAndChunks && documentAndChunks.hasChunks();
             if (hasChunks) {
                 DocumentAndChunks documentAndChunks = (DocumentAndChunks) splitDoc;
                 pendingSourceDocuments.add(documentAndChunks);

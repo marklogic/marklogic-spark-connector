@@ -26,6 +26,12 @@ subprojects {
     }
   }
 
+  // Allows for quickly identifying compiler warnings.
+  tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
+  }
+
   repositories {
     mavenCentral()
     mavenLocal()

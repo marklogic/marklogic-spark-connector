@@ -3,15 +3,15 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import com.marklogic.spark.core.embedding.ChunkSelector;
-import com.marklogic.spark.core.embedding.DOMChunkSelector;
-import com.marklogic.spark.core.embedding.JsonChunkSelector;
-import com.marklogic.spark.core.embedding.XmlChunkConfig;
 import com.marklogic.langchain4j.splitter.DocumentTextSplitter;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.embedding.ChunkSelector;
+import com.marklogic.spark.core.embedding.DOMChunkSelector;
+import com.marklogic.spark.core.embedding.JsonChunkSelector;
+import com.marklogic.spark.core.embedding.XmlChunkConfig;
 import com.marklogic.spark.dom.NamespaceContextFactory;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
@@ -103,6 +103,7 @@ public interface EmbeddingAdderFactory {
         final String className = context.getStringOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME);
         try {
             Object instance = Class.forName(className).getDeclaredConstructor().newInstance();
+            @SuppressWarnings("unchecked")
             Function<Map<String, String>, EmbeddingModel> modelFunction = (Function<Map<String, String>, EmbeddingModel>) instance;
             Map<String, String> embedderOptions = makeEmbedderOptions(context);
             return Optional.of(modelFunction.apply(embedderOptions));

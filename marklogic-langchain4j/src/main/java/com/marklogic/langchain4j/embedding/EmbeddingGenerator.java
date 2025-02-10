@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 public class EmbeddingGenerator {
 
@@ -106,7 +105,7 @@ public class EmbeddingGenerator {
     private List<TextSegment> makeTextSegments(List<Chunk> chunks) {
         return chunks.stream()
             .map(chunk -> new TextSegment(chunk.getEmbeddingText(), TEXT_SEGMENT_METADATA))
-            .collect(Collectors.toList());
+            .toList();
     }
 
     private void logResponse(Response<List<Embedding>> response, List<TextSegment> textSegments) {
