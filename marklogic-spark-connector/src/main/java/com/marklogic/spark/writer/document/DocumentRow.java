@@ -45,11 +45,6 @@ class DocumentRow {
         return row.isNullAt(2) ? null : row.getString(2);
     }
 
-    String getExtractedText() {
-        int index = getOptionalFieldIndex(schema, "extractedText");
-        return index > -1 ? row.getString(index) : null;
-    }
-
     byte[] getClassificationResponse() {
         int index = getOptionalFieldIndex(schema, CLASSIFED_TEXT_COLUMN_NAME);
         return index > -1 ? getClassifications(CLASSIFED_TEXT_COLUMN_NAME).get(0) : null;

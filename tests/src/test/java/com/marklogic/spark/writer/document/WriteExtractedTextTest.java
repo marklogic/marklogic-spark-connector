@@ -8,36 +8,26 @@ import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.udf.TextExtractor;
 import com.marklogic.spark.udf.TextSplitterConfig;
-import org.apache.spark.SparkException;
 import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.apache.spark.sql.expressions.UserDefinedFunction;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class WriteExtractedTextTest extends AbstractIntegrationTest {
 
-    private static final UserDefinedFunction TEXT_EXTRACTOR = TextExtractor.build();
     private static final String HELLO_WORLD_DOCUMENT_EXTRACTED_TEXT = "Hello world.\n\nThis file is used for testing text extraction.\n";
     private static final String HELLO_WORLD_DOCUMENT_CHUNK_TEXT = "Hello world.\n\nThis file is used for testing text extraction.";
 
     @Test
     void defaultToJson() {
-        Dataset<Row> dataset = newSparkSession()
+        newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")));
-
-        assertEquals(2, dataset.count(), "Expecting 2 files from the directory");
-        assertEquals(9, dataset.collectAsList().get(0).size(), "Expecting the 8 standard columns for representing a " +
-            "column, plus the 'extractedText' column.");
-
-        dataset.write().format(CONNECTOR_IDENTIFIER)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
@@ -59,11 +49,11 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
             .save();
@@ -83,12 +73,12 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "original-doc")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extracted-doc")
             .option(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS, DEFAULT_PERMISSIONS + ",qconsole-user,read")
             .mode(SaveMode.Append)
@@ -112,12 +102,12 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
             .mode(SaveMode.Append)
             .save();
@@ -136,12 +126,12 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
             .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
@@ -157,11 +147,11 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Temporarily disabling while the UDFs are removed")
     void extractThenSplitToSidecar() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -170,6 +160,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .mode(SaveMode.Append)
             .save();
 
@@ -191,17 +182,18 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Temporarily disabling while the UDFs are removed")
     void extractThenSplitWithChunksInExtractedTextDoc() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("content")))
             .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/abc'")
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
             .mode(SaveMode.Append)
             .save();
 
@@ -215,17 +207,4 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertEquals(HELLO_WORLD_DOCUMENT_EXTRACTED_TEXT, doc.get("content").asText());
         assertEquals(HELLO_WORLD_DOCUMENT_CHUNK_TEXT, doc.get("chunks").get(0).get("text").asText());
     }
-
-    @Test
-    void invalidColumn() {
-        Dataset<Row> dataset = newSparkSession()
-            .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files")
-            .withColumn("extractedText", TEXT_EXTRACTOR.apply(new Column("uri")));
-
-        SparkException ex = assertThrows(SparkException.class, () -> dataset.collectAsList());
-        assertTrue(ex.getMessage().contains("Text extraction UDF must be run against a column containing non-null byte arrays."),
-            "Unexpected error: " + ex.getMessage());
-    }
-
 }
