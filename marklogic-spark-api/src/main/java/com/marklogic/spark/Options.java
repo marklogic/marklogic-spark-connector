@@ -207,7 +207,8 @@ public abstract class Options {
      *
      * @since 2.5.0
      */
-    public static final String WRITE_SPLITTER_JOIN_DELIMITER = WRITE_SPLITTER_PREFIX  + "joinDelimiter";
+    // This mistakenly omitted "write" in the option name. Will need to be deprecated and replaced.
+    public static final String WRITE_SPLITTER_JOIN_DELIMITER = "spark.marklogic.splitter.joinDelimiter";
 
     /**
      * Defines the class name of an implementation of LangChain4J's {@code dev.langchain4j.data.document.DocumentSplitter}
