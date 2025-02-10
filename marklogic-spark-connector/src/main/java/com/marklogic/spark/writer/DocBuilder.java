@@ -75,7 +75,7 @@ public class DocBuilder {
             this.graph = graph;
         }
 
-        String getInitialUri() {
+        public String getInitialUri() {
             return initialUri;
         }
 

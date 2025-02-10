@@ -6,7 +6,10 @@ package com.marklogic.spark.writer.document;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.client.io.*;
+import com.marklogic.client.io.BytesHandle;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -20,6 +23,8 @@ import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
+import org.apache.tika.Tika;
+import org.apache.tika.exception.TikaException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -39,6 +44,7 @@ public class DocumentRowConverter implements RowConverter {
     private final String uriTemplate;
     private final Format documentFormat;
     private final boolean isStreamingFromFiles;
+    private final Tika tika;
 
     public DocumentRowConverter(WriteContext writeContext) {
         this.schema = writeContext.getSchema();
@@ -46,6 +52,7 @@ public class DocumentRowConverter implements RowConverter {
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
+        this.tika = "true".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT)) ? new Tika() : null;
     }
 
     @Override
@@ -58,8 +65,6 @@ public class DocumentRowConverter implements RowConverter {
             return Stream.of(new DocBuilder.DocumentInputs(uri, null, null, metadata)).iterator();
         }
 
-        // I think it'll be fine to not support text extraction when streaming. Streaming is typically for very large
-        // files and ironically is usually slower because documents have to be written one at a time.
         return this.isStreamingFromFiles ? streamContentFromFile(uri, row) : readContentFromRow(uri, row);
     }
 
@@ -79,12 +84,25 @@ public class DocumentRowConverter implements RowConverter {
         }
 
         DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
-        documentInputs.setExtractedText(documentRow.getExtractedText());
-        documentInputs.setClassificationResponse(documentRow.getClassificationResponse());
 
+        if (this.tika != null) {
+            extractText(documentInputs, bytesHandle);
+        }
+        documentInputs.setClassificationResponse(documentRow.getClassificationResponse());
         documentInputs.setChunks(documentRow.getChunks());
         documentInputs.setClassifications(documentRow.getClassifications(CHUNKS_CLASSIFED_TEXT_COLUMN_NAME));
+
         return Stream.of(documentInputs).iterator();
+    }
+
+    private void extractText(DocBuilder.DocumentInputs documentInputs, BytesHandle content) {
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
+            String extractedText = tika.parseToString(stream);
+            documentInputs.setExtractedText(extractedText);
+        } catch (IOException | TikaException e) {
+            throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
+                documentInputs.getInitialUri(), e.getMessage()), e);
+        }
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {

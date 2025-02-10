@@ -137,6 +137,11 @@ public abstract class Options {
     /**
      * @since 2.6.0
      */
+    public static final String WRITE_EXTRACTED_TEXT = "spark.marklogic.write.extractedText";
+
+    /**
+     * @since 2.6.0
+     */
     public static final String WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE = "spark.marklogic.write.extractedText.documentType";
 
     /**
