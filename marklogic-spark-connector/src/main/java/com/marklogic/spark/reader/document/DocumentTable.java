@@ -50,6 +50,8 @@ public class DocumentTable implements SupportsRead, SupportsWrite {
     }
 
     @Override
+    // Spark has deprecated this, but it must still be implemented.
+    @SuppressWarnings("deprecation")
     public StructType schema() {
         return this.schema;
     }

@@ -59,6 +59,7 @@ public abstract class TextClassifierUdf {
         } else if (binaryContent instanceof WrappedArray) {
             fetchTokenIfNecessary();
             List<String> classifications = new ArrayList<>();
+            @SuppressWarnings("unchecked")
             WrappedArray<String> chunks = (WrappedArray<String>) binaryContent;
             chunks.foreach((String content) -> {
                 TextClassifier textClassifier = new TextClassifier(classificationConfiguration);

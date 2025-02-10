@@ -4,9 +4,9 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.core.splitter.TextSelector;
-import com.marklogic.spark.ConnectorException;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
@@ -14,7 +14,6 @@ import dev.langchain4j.data.segment.TextSegment;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -48,7 +47,7 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
                 sourceDocument.getUri(), e.getMessage()), e);
         }
 
-        List<String> strings = textSegments.stream().map(TextSegment::text).collect(Collectors.toList());
+        List<String> strings = textSegments.stream().map(TextSegment::text).toList();
         return chunkAssembler.assembleChunks(sourceDocument, strings, null);
     }
 }

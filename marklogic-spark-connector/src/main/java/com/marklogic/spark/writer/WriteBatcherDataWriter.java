@@ -194,6 +194,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      */
     private void flushDocumentProcessor() {
         if (this.documentProcessor instanceof Supplier) {
+            @SuppressWarnings("unchecked")
             Iterator<DocumentWriteOperation> remainingDocuments = ((Supplier<Iterator<DocumentWriteOperation>>) this.documentProcessor).get();
             remainingDocuments.forEachRemaining(this::writeDocument);
         }
