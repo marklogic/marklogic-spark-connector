@@ -155,6 +155,30 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void regexSplitterJoinDelimiter() {
+        readDocument("/marklogic-docs/small-java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
+            .option(Options.WRITE_SPLITTER_REGEX, "provide")
+            .option(Options.WRITE_SPLITTER_JOIN_DELIMITER, "JOIN")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, "1500")
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementCount("The max chunk size of 1500 should produce one chunk, with the " +
+            "segments joined together via the word 'JOIN'.", "/root/model:chunks/model:chunk", 1);
+
+        String chunk = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
+        final String message = "The word 'provide' should be replaced by 'JOIN'; chunk: " + chunk;
+        assertTrue(chunk.startsWith("The Java API JOINs a handle"), message);
+        assertTrue(chunk.contains("and DOM to JOIN content"), message);
+    }
+
+    @Test
     void regexSplitter() {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)

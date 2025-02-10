@@ -61,6 +61,11 @@ The net effect should be that when you run a JUnit class or method or suite of t
 added to the run configuration that Intellij creates for the class/method/suite. Those VM options are required to give
 Spark access to certain JVM modules. They are applied automatically when running the tests via Gradle.
 
+**Alternatively**, you can open Preferences in Intellij and go to 
+"Build, Execution, and Deployment" -> "Build Tools" -> "Gradle". Then change "Build and run using" and "Run tests using"
+to "Gradle". This should result in Intellij using the `test` configuration in the `marklogic-spark-connector/build.gradle`
+file that registers the required JVM options, allowing for tests to run on Java 17.
+
 ## Generating code quality reports with SonarQube
 
 In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file, and you must
