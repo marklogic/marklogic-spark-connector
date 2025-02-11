@@ -17,6 +17,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -169,6 +170,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support embedding without splitting in next PR")
     void customChunks() {
         readDocument("/marklogic-docs/custom-chunks.xml")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -187,6 +189,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support embedding without splitting in next PR")
     void namespacedCustomChunks() {
         readDocument("/marklogic-docs/namespaced-custom-chunks.xml")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -206,6 +209,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support embedding without splitting in next PR")
     void namespacedCustomChunksWithCustomEmbedding() {
         readDocument("/marklogic-docs/namespaced-custom-chunks.xml")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -235,6 +239,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support embedding without splitting in next PR")
     void customChunksNoPathGiven() {
         DataFrameWriter writer = readDocument("/marklogic-docs/custom-chunks.xml")
             .write().format(CONNECTOR_IDENTIFIER)

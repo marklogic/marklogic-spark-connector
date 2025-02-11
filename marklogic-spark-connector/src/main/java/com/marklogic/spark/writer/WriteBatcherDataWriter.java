@@ -39,8 +39,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -67,7 +65,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
-    private final Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> documentProcessor;
     private final NewDocumentProcessor newDocumentProcessor;
 
     // Updated as batches are processed.
@@ -82,14 +79,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
-
-        // This will go away soon.
-        this.documentProcessor = DocumentProcessorFactory.buildDocumentProcessor(writeContext);
-        if (this.documentProcessor != null && Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Will use document processor: {}", this.documentProcessor.getClass().getName());
-        }
-
-        // This is the new stuff.
         this.newDocumentProcessor = NewDocumentProcessorFactory.newDocumentProcessor(writeContext);
 
         if (writeContext.isAbortOnFailure()) {
@@ -118,8 +107,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         // The RDF row converter may have "pending" rows as it has not yet reached the max number of triples to include
         // in a document. Those are retrieved here.
         buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
-
-        flushDocumentProcessor();
 
         this.writeBatcher.flushAndWait();
 
@@ -160,11 +147,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                     newDocumentProcessor.processDocument(documentInputs);
                 }
                 Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(documentInputs);
-                if (this.documentProcessor != null) {
-                    documents.forEach(document -> this.documentProcessor.apply(document).forEachRemaining(this::writeDocument));
-                } else {
-                    documents.forEach(this::writeDocument);
-                }
+                documents.forEach(this::writeDocument);
             });
         } finally {
             // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
@@ -193,19 +176,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return this.rowConverter instanceof RdfRowConverter ?
             ((RdfRowConverter) rowConverter).getGraphs() :
             null;
-    }
-
-    /**
-     * A document processor can implement Supplier so that it can batch up documents to be written and then return
-     * any pending documents during the commit operation. This allows for the embedder processor to batch calls to the
-     * embedding model.
-     */
-    private void flushDocumentProcessor() {
-        if (this.documentProcessor instanceof Supplier) {
-            @SuppressWarnings("unchecked")
-            Iterator<DocumentWriteOperation> remainingDocuments = ((Supplier<Iterator<DocumentWriteOperation>>) this.documentProcessor).get();
-            remainingDocuments.forEachRemaining(this::writeDocument);
-        }
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {

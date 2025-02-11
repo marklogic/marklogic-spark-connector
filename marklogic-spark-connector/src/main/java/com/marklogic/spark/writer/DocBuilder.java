@@ -14,9 +14,11 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.dom.DOMHelper;
 import com.marklogic.spark.dom.NamespaceContextFactory;
 import org.w3c.dom.Document;
@@ -60,6 +62,7 @@ public class DocBuilder {
         private List<String> chunks;
         private List<byte[]> classifications;
         private byte[] classificationResponse;
+        private List<float[]> embeddings;
 
         public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                               DocumentMetadataHandle initialMetadata) {
@@ -125,6 +128,14 @@ public class DocBuilder {
 
         public void setClassificationResponse(byte[] classificationResponse) {
             this.classificationResponse = classificationResponse;
+        }
+
+        public List<float[]> getEmbeddings() {
+            return embeddings;
+        }
+
+        public void setEmbeddings(List<float[]> embeddings) {
+            this.embeddings = embeddings;
         }
     }
 
@@ -352,7 +363,15 @@ public class DocBuilder {
             DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
             Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(sourceDocument, inputs.getChunks(), inputs.getClassifications());
             while (iterator.hasNext()) {
-                chunkDocuments.add(iterator.next());
+                DocumentWriteOperation doc = iterator.next();
+                chunkDocuments.add(doc);
+                if (doc instanceof DocumentAndChunks && inputs.getEmbeddings() != null && !inputs.getEmbeddings().isEmpty()) {
+                    DocumentAndChunks docAndChunks = (DocumentAndChunks) doc;
+                    for (int i = 0; i < docAndChunks.getChunks().size(); i++) {
+                        Chunk chunk = docAndChunks.getChunks().get(i);
+                        chunk.addEmbedding(inputs.getEmbeddings().get(i));
+                    }
+                }
             }
         }
         return chunkDocuments;

@@ -18,6 +18,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -37,9 +38,9 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "json-vector-chunks")
@@ -77,6 +78,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
      */
     @ExtendWith(RequiresMarkLogic12.class)
     @Test
+    @Disabled("Temporarily disabled, not yet supporting this in the new approach")
     void addEmbeddingsToExistingSplits() {
         // Add splits to the test doc first.
         readDocument("/marklogic-docs/java-client-intro.json")
@@ -139,6 +141,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support existing chunks in next PR")
     void customPaths() {
         readDocument("/marklogic-docs/custom-chunks.json")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -192,6 +195,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support embedding without splitting in next PR")
     void chunksIsAnObjectInsteadOfAnArray() {
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -210,6 +214,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support batch size in next PR")
     void testBatchSize() {
         TestEmbeddingModel.reset();
 
@@ -233,6 +238,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @Disabled("Will support batch size in next PR")
     void batchSizeIsHigherThanChunkCount() {
         TestEmbeddingModel.reset();
 

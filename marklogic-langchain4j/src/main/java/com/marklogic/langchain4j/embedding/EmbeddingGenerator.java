@@ -5,6 +5,7 @@ package com.marklogic.langchain4j.embedding;
 
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
@@ -16,7 +17,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class EmbeddingGenerator {
+public class EmbeddingGenerator implements EmbeddingProducer {
 
     // We don't have any use for metadata, so just need a single instance for constructing text segments.
     private static final Metadata TEXT_SEGMENT_METADATA = new Metadata();
@@ -37,6 +38,12 @@ public class EmbeddingGenerator {
     public EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize) {
         this.embeddingModel = embeddingModel;
         this.batchSize = batchSize;
+    }
+
+    @Override
+    public float[] produceEmbedding(String text) {
+        // No batching support yet. Next PR.
+        return embeddingModel.embed(text).content().vector();
     }
 
     boolean addEmbeddings(DocumentAndChunks documentAndChunks) {

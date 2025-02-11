@@ -35,7 +35,7 @@ public interface EmbeddingAdderFactory {
         return Optional.empty();
     }
 
-    private static EmbeddingGenerator makeEmbeddingGenerator(Context context, EmbeddingModel model) {
+    static EmbeddingGenerator makeEmbeddingGenerator(Context context, EmbeddingModel model) {
         int batchSize = context.getIntOption(Options.WRITE_EMBEDDER_BATCH_SIZE, 1, 1);
         if (Util.MAIN_LOGGER.isInfoEnabled()) {
             Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
@@ -95,7 +95,7 @@ public interface EmbeddingAdderFactory {
         );
     }
 
-    private static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {
+    static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {
         if (!context.hasOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME)) {
             return Optional.empty();
         }
