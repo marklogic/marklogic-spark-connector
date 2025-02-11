@@ -14,8 +14,7 @@ public interface TextSelector {
     String selectTextToSplit(DocumentWriteOperation sourceDocument);
 
     /**
-     * For splitting text via a UDF. Unfortunately not able to include a URI in error messages from this, as the UDF
-     * only has access to the column value.
+     * Will add the URI to this soon, now that we're not using a UDF.
      */
     default String selectTextToSplit(AbstractWriteHandle contentHandle) {
         throw new UnsupportedOperationException();
