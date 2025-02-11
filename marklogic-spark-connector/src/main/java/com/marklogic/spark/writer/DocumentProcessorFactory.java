@@ -3,17 +3,16 @@
  */
 package com.marklogic.spark.writer;
 
-import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.embedding.EmbeddingProducer;
+import com.marklogic.spark.core.embedding.EmbeddingProducerFactory;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import com.marklogic.spark.core.splitter.TextSplitterFactory;
 
 import java.lang.reflect.InvocationTargetException;
-import java.util.Iterator;
-import java.util.function.Function;
 
 /**
  * This class exists in preparation for two events. First, upgrading to langchain4j 0.36.x will involve requiring Java
@@ -39,22 +38,14 @@ abstract class DocumentProcessorFactory {
         return factory != null ? factory.newTextSplitter(context) : null;
     }
 
-    static Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> buildDocumentProcessor(Context context) {
-        // We'll need to remove some of the abstraction here, as we need to determine if the user has configured either
-        // the splitter or embedder, both of which depend on langchain4j and thus Java 17.
-        boolean shouldSplitOrEmbed = context.getProperties().keySet().stream()
-            .anyMatch(key -> key.startsWith(Options.WRITE_SPLITTER_PREFIX) || key.startsWith(Options.WRITE_EMBEDDER_PREFIX));
-        if (!shouldSplitOrEmbed) {
-            return null;
-        }
-
-        Object factory = newLangchain4jProcessorFactory();
-        if (factory == null) {
+    static EmbeddingProducer newEmbeddingProducer(Context context) {
+        boolean shouldEmbed = context.getProperties().keySet().stream().anyMatch(key -> key.startsWith(Options.WRITE_EMBEDDER_PREFIX));
+        if (!shouldEmbed) {
             return null;
         }
         @SuppressWarnings("unchecked")
-        Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>> processorFactory = (Function<Context, Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>>) factory;
-        return processorFactory.apply(context);
+        EmbeddingProducerFactory factory = (EmbeddingProducerFactory) newLangchain4jProcessorFactory();
+        return factory != null ? factory.newEmbeddingProducer(context) : null;
     }
 
     private static Object newLangchain4jProcessorFactory() {

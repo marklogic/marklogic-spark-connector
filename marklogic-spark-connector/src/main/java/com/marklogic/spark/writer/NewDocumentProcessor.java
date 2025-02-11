@@ -8,6 +8,7 @@ import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
@@ -27,11 +28,13 @@ public class NewDocumentProcessor {
     private final Tika tika;
     private final TextSplitter textSplitter;
     private final TextClassifier textClassifier;
+    private final EmbeddingProducer embeddingProducer;
 
-    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier) {
+    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier, EmbeddingProducer embeddingProducer) {
         this.tika = tika;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
+        this.embeddingProducer = embeddingProducer;
     }
 
     public void processDocument(DocBuilder.DocumentInputs inputs) {
@@ -54,6 +57,12 @@ public class NewDocumentProcessor {
                 byte[] classification = textClassifier.classifyTextToBytes(uri, content);
                 inputs.setClassificationResponse(classification);
             }
+        }
+
+        // We need to add support for a ChunkSelector for the use case where chunks already exist in a document,
+        // and thus the chunks list is empty.
+        if (embeddingProducer != null && inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
+            addEmbeddings(inputs);
         }
     }
 
@@ -90,5 +99,14 @@ public class NewDocumentProcessor {
             classifications.add(result);
         }
         inputs.setClassifications(classifications);
+    }
+
+    private void addEmbeddings(DocBuilder.DocumentInputs inputs) {
+        List<float[]> embeddings = new ArrayList<>();
+        for (String chunk : inputs.getChunks()) {
+            float[] embedding = embeddingProducer.produceEmbedding(chunk);
+            embeddings.add(embedding);
+        }
+        inputs.setEmbeddings(embeddings);
     }
 }
