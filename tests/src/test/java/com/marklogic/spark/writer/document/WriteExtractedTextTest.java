@@ -8,10 +8,7 @@ import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.udf.TextSplitterConfig;
-import org.apache.spark.sql.Column;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -147,17 +144,16 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Temporarily disabling while the UDFs are removed")
     void extractThenSplitToSidecar() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
-            .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/abc'")
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
+            .option(Options.WRITE_SPLITTER_TEXT, true)
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
             .option(Options.WRITE_EXTRACTED_TEXT, true)
@@ -182,17 +178,16 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Temporarily disabling while the UDFs are removed")
     void extractThenSplitWithChunksInExtractedTextDoc() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files/hello-world.docx")
-            .withColumn("chunks", new TextSplitterConfig().buildUDF().apply(new Column("extractedText")))
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/abc'")
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
+            .option(Options.WRITE_SPLITTER_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT, true)
             .mode(SaveMode.Append)
             .save();

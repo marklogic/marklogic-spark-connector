@@ -10,13 +10,12 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.udf.TextSplitterConfig;
 import org.apache.spark.SparkException;
-import org.apache.spark.sql.*;
-import org.apache.spark.sql.expressions.UserDefinedFunction;
+import org.apache.spark.sql.DataFrameWriter;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -57,27 +56,6 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         assertTrue(lastChunk.endsWith("Choose a REST API Instance. Hello world."), "The last chunk should contain " +
             "the last bits of text in the '/text' path, plus the text in the '/more-text' path, concatenated " +
             "together with a string. Actual chunk: " + lastChunk);
-    }
-
-    @Test
-    void twoJsonPointersSplitWithUDF() {
-        TextSplitterConfig splitterConfig = new TextSplitterConfig();
-        splitterConfig.setMaxChunkSize(500);
-        splitterConfig.setMaxOverlapSize(10);
-        splitterConfig.setJsonPointers(Arrays.asList("/text", "/more-text"));
-        UserDefinedFunction splitter = splitterConfig.buildUDF();
-
-        readDocument("/marklogic-docs/java-client-intro.json")
-            .withColumn("chunks", splitter.apply(new Column("content")))
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
-            .mode(SaveMode.Append)
-            .save();
-
-        JsonNode doc = readJsonDocument("/split-test.json");
-        assertEquals(4, doc.get("chunks").size(), "Expecting 4 chunks based on max chunk size of 500.");
     }
 
     @Test
