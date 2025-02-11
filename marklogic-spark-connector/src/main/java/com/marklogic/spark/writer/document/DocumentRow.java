@@ -23,8 +23,6 @@ import java.util.List;
  */
 class DocumentRow {
 
-    private static final String CLASSIFED_TEXT_COLUMN_NAME = "classificationResponse";
-
     private final InternalRow row;
     private final StructType schema;
 
@@ -43,11 +41,6 @@ class DocumentRow {
 
     String getFormat() {
         return row.isNullAt(2) ? null : row.getString(2);
-    }
-
-    byte[] getClassificationResponse() {
-        int index = getOptionalFieldIndex(schema, CLASSIFED_TEXT_COLUMN_NAME);
-        return index > -1 ? getClassifications(CLASSIFED_TEXT_COLUMN_NAME).get(0) : null;
     }
 
     List<String> getChunks() {

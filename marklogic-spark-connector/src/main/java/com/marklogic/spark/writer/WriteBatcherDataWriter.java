@@ -157,7 +157,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         try {
             iterator.forEachRemaining(documentInputs -> {
                 if (newDocumentProcessor != null) {
-                    documentInputs = newDocumentProcessor.processDocument(documentInputs);
+                    newDocumentProcessor.processDocument(documentInputs);
                 }
                 Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(documentInputs);
                 if (this.documentProcessor != null) {
