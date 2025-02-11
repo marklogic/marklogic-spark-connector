@@ -68,6 +68,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final GenericDocumentManager documentManager;
 
     private final Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> documentProcessor;
+    private final NewDocumentProcessor newDocumentProcessor;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
@@ -81,10 +82,15 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
+
+        // This will go away soon.
         this.documentProcessor = DocumentProcessorFactory.buildDocumentProcessor(writeContext);
         if (this.documentProcessor != null && Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Will use document processor: {}", this.documentProcessor.getClass().getName());
         }
+
+        // This is the new stuff.
+        this.newDocumentProcessor = NewDocumentProcessorFactory.newDocumentProcessor(writeContext);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -150,6 +156,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void buildAndWriteDocuments(Iterator<DocBuilder.DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
+                if (newDocumentProcessor != null) {
+                    documentInputs = newDocumentProcessor.processDocument(documentInputs);
+                }
                 Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(documentInputs);
                 if (this.documentProcessor != null) {
                     documents.forEach(document -> this.documentProcessor.apply(document).forEachRemaining(this::writeDocument));

@@ -23,8 +23,6 @@ import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructType;
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -44,7 +42,6 @@ public class DocumentRowConverter implements RowConverter {
     private final String uriTemplate;
     private final Format documentFormat;
     private final boolean isStreamingFromFiles;
-    private final Tika tika;
 
     public DocumentRowConverter(WriteContext writeContext) {
         this.schema = writeContext.getSchema();
@@ -52,7 +49,6 @@ public class DocumentRowConverter implements RowConverter {
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
         this.isStreamingFromFiles = writeContext.isStreamingFiles();
-        this.tika = "true".equalsIgnoreCase(writeContext.getStringOption(Options.WRITE_EXTRACTED_TEXT)) ? new Tika() : null;
     }
 
     @Override
@@ -85,24 +81,12 @@ public class DocumentRowConverter implements RowConverter {
 
         DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
 
-        if (this.tika != null) {
-            extractText(documentInputs, bytesHandle);
-        }
+        // These will all go away soon, their processing moved to DocumentProcessor.
         documentInputs.setClassificationResponse(documentRow.getClassificationResponse());
         documentInputs.setChunks(documentRow.getChunks());
         documentInputs.setClassifications(documentRow.getClassifications(CHUNKS_CLASSIFED_TEXT_COLUMN_NAME));
 
         return Stream.of(documentInputs).iterator();
-    }
-
-    private void extractText(DocBuilder.DocumentInputs documentInputs, BytesHandle content) {
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
-            String extractedText = tika.parseToString(stream);
-            documentInputs.setExtractedText(extractedText);
-        } catch (IOException | TikaException e) {
-            throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
-                documentInputs.getInitialUri(), e.getMessage()), e);
-        }
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
