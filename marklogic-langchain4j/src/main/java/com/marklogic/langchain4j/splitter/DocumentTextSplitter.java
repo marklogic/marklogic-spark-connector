@@ -4,13 +4,16 @@
 package com.marklogic.langchain4j.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.core.splitter.TextSelector;
+import com.marklogic.spark.core.splitter.TextSplitter;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
@@ -20,7 +23,7 @@ import java.util.stream.Stream;
  * Implements the "splitter" capability by delegating to different objects for selecting text to split; splitting
  * the selected text; and then processing the given chunks
  */
-public class DocumentTextSplitter implements Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> {
+public class DocumentTextSplitter implements Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>, TextSplitter {
 
     private final TextSelector textSelector;
     private final DocumentSplitter documentSplitter;
@@ -33,10 +36,10 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
-        String text = textSelector.selectTextToSplit(sourceDocument);
+    public List<String> split(String sourceUri, AbstractWriteHandle content) {
+        String text = textSelector.selectTextToSplit(content);
         if (text == null || text.trim().isEmpty()) {
-            return Stream.of(sourceDocument).iterator();
+            return new ArrayList<>();
         }
 
         List<TextSegment> textSegments;
@@ -44,10 +47,18 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
             textSegments = documentSplitter.split(new Document(text));
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
-                sourceDocument.getUri(), e.getMessage()), e);
+                sourceUri, e.getMessage()), e);
         }
 
-        List<String> strings = textSegments.stream().map(TextSegment::text).toList();
-        return chunkAssembler.assembleChunks(sourceDocument, strings, null);
+        return textSegments.stream().map(TextSegment::text).toList();
+    }
+
+    @Override
+    public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
+        List<String> segments = split(sourceDocument.getUri(), sourceDocument.getContent());
+        if (segments == null || segments.isEmpty()) {
+            return Stream.of(sourceDocument).iterator();
+        }
+        return chunkAssembler.assembleChunks(sourceDocument, segments, null);
     }
 }

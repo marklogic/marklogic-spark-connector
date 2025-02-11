@@ -4,7 +4,9 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.io.BytesHandle;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.core.splitter.TextSplitter;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
 
@@ -19,14 +21,24 @@ import java.io.IOException;
 public class NewDocumentProcessor {
 
     private final Tika tika;
+    private final TextSplitter textSplitter;
 
-    public NewDocumentProcessor(Tika tika) {
+    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter) {
         this.tika = tika;
+        this.textSplitter = textSplitter;
     }
 
     public DocBuilder.DocumentInputs processDocument(DocBuilder.DocumentInputs inputs) {
         if (tika != null && inputs.getContent() instanceof BytesHandle) {
             extractText(inputs);
+        }
+        if (textSplitter != null) {
+            if (inputs.getExtractedText() != null) {
+                StringHandle content = new StringHandle(inputs.getExtractedText());
+                inputs.setChunks(textSplitter.split(inputs.getInitialUri(), content));
+            } else {
+                inputs.setChunks(textSplitter.split(inputs.getInitialUri(), inputs.getContent()));
+            }
         }
         return inputs;
     }
