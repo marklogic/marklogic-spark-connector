@@ -4,6 +4,7 @@
 package com.marklogic.spark.core.embedding;
 
 import com.marklogic.client.document.DocumentWriteOperation;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 
 /**
  * Abstracts how chunks are selected from a JSON or XML document.
@@ -17,4 +18,6 @@ public interface ChunkSelector {
      */
     DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument);
 
+    // The new way, above method will be removed soon.
+    DocumentAndChunks selectChunks(String uri, AbstractWriteHandle content);
 }

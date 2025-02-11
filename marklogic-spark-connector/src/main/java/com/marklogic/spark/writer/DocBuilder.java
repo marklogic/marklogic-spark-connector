@@ -52,7 +52,7 @@ public class DocBuilder {
      */
     public static class DocumentInputs {
         private final String initialUri;
-        private final AbstractWriteHandle content;
+        private AbstractWriteHandle content;
         private final JsonNode columnValuesForUriTemplate;
         private final DocumentMetadataHandle initialMetadata;
         private final String graph;
@@ -80,6 +80,10 @@ public class DocBuilder {
 
         public String getInitialUri() {
             return initialUri;
+        }
+
+        public void setContent(AbstractWriteHandle content) {
+            this.content = content;
         }
 
         AbstractWriteHandle getContent() {

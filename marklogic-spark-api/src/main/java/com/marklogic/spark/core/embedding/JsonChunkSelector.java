@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.JacksonHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.Util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,8 +60,26 @@ public class JsonChunkSelector implements ChunkSelector {
     }
 
     @Override
+    public DocumentAndChunks selectChunks(String uri, AbstractWriteHandle content) {
+        JsonNode doc = Util.getJsonFromHandle(content);
+        JsonNode chunksNode = doc.at(chunksPointer);
+        if (chunksNode == null || (!(chunksNode instanceof ArrayNode) && !(chunksNode instanceof ObjectNode))) {
+            return null;
+        }
+
+        List<Chunk> chunks = new ArrayList<>();
+        if (chunksNode instanceof ArrayNode) {
+            chunksNode.forEach(obj -> chunks.add(new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName)));
+        } else {
+            chunks.add(new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName));
+        }
+        DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(uri, null, new JacksonHandle(doc));
+        return new DocumentAndChunks(documentToWrite, chunks);
+    }
+
+    @Override
     public DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument) {
-        JsonNode doc = com.marklogic.spark.Util.getJsonFromHandle(sourceDocument.getContent());
+        JsonNode doc = Util.getJsonFromHandle(sourceDocument.getContent());
 
         JsonNode chunksNode = doc.at(chunksPointer);
         if (chunksNode == null || (!(chunksNode instanceof ArrayNode) && !(chunksNode instanceof ObjectNode))) {

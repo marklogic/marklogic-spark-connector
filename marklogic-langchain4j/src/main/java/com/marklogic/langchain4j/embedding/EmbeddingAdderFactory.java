@@ -9,10 +9,7 @@ import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.embedding.ChunkSelector;
-import com.marklogic.spark.core.embedding.DOMChunkSelector;
-import com.marklogic.spark.core.embedding.JsonChunkSelector;
-import com.marklogic.spark.core.embedding.XmlChunkConfig;
-import com.marklogic.spark.dom.NamespaceContextFactory;
+import com.marklogic.spark.core.embedding.ChunkSelectorFactory;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 
 import java.util.HashMap;
@@ -29,7 +26,7 @@ public interface EmbeddingAdderFactory {
             if (splitter != null) {
                 return Optional.of(new EmbeddingAdder(splitter, embeddingGenerator));
             }
-            ChunkSelector chunkSelector = makeChunkSelector(context);
+            ChunkSelector chunkSelector = ChunkSelectorFactory.makeChunkSelector(context);
             return Optional.of(new EmbeddingAdder(chunkSelector, embeddingGenerator));
         }
         return Optional.empty();
@@ -41,58 +38,6 @@ public interface EmbeddingAdderFactory {
             Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
         }
         return new EmbeddingGenerator(model, batchSize);
-    }
-
-    /**
-     * If the user is also splitting the documents, then we'll know the location of the chunks based on the default
-     * chunks data structure produced by the splitter. If the user is instead processing documents that already have
-     * chunks in them from a previous process, then the user needs to tell the connector where to find those chunks -
-     * either via a JSON Pointer or an XPath expression.
-     *
-     * @param context
-     * @return
-     */
-    private static ChunkSelector makeChunkSelector(Context context) {
-        if (context.hasOption(Options.WRITE_SPLITTER_JSON_POINTERS)) {
-            return makeJsonChunkSelector(context);
-        } else if (context.hasOption(Options.WRITE_SPLITTER_XPATH)) {
-            return makeXmlChunkSelector(context);
-        } else if (context.getProperties().get(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER) != null) {
-            // "" is allowed for the chunks JSON pointer.
-            return makeJsonChunkSelector(context);
-        } else if (context.hasOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH)) {
-            return makeXmlChunkSelector(context);
-        } else if (context.hasOption(Options.WRITE_SPLITTER_TEXT)) {
-            return "xml".equalsIgnoreCase(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE)) ?
-                makeXmlChunkSelector(context) :
-                makeJsonChunkSelector(context);
-        }
-        throw new ConnectorException(String.format("To generate embeddings on documents, you must specify either " +
-                "%s or %s to define the location of chunks in documents.",
-            context.getOptionNameForMessage(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER),
-            context.getOptionNameForMessage(Options.WRITE_EMBEDDER_CHUNKS_XPATH)
-        ));
-    }
-
-    private static ChunkSelector makeJsonChunkSelector(Context context) {
-        return new JsonChunkSelector.Builder()
-            .withChunksPointer(context.getProperties().get(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
-            .withTextPointer(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER))
-            .withEmbeddingArrayName(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME))
-            .build();
-    }
-
-    private static ChunkSelector makeXmlChunkSelector(Context context) {
-        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(
-            context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
-            context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
-            context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
-            NamespaceContextFactory.makeNamespaceContext(context.getProperties())
-        );
-        return new DOMChunkSelector(
-            context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH),
-            xmlChunkConfig
-        );
     }
 
     static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {

@@ -6,6 +6,7 @@ package com.marklogic.spark.core.embedding;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
@@ -37,6 +38,17 @@ public class DOMChunkSelector implements ChunkSelector {
     }
 
     @Override
+    public DocumentAndChunks selectChunks(String uri, AbstractWriteHandle content) {
+        Document doc = domHelper.extractDocument(content, uri);
+        NodeList chunkNodes = selectChunkNodes(doc);
+        if (chunkNodes.getLength() == 0) {
+            return null;
+        }
+        List<Chunk> chunks = makeChunks(uri, doc, chunkNodes);
+        return new DocumentAndChunks(new DocumentWriteOperationImpl(uri, null, new DOMHandle(doc)), chunks);
+    }
+
+    @Override
     public DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument) {
         Document doc = domHelper.extractDocument(sourceDocument);
 
@@ -45,7 +57,7 @@ public class DOMChunkSelector implements ChunkSelector {
             return new DocumentAndChunks(sourceDocument, null);
         }
 
-        List<Chunk> chunks = makeChunks(sourceDocument, doc, chunkNodes);
+        List<Chunk> chunks = makeChunks(sourceDocument.getUri(), doc, chunkNodes);
         DocumentWriteOperation docToWrite = new DocumentWriteOperationImpl(sourceDocument.getUri(),
             sourceDocument.getMetadata(), new DOMHandle(doc));
         return new DocumentAndChunks(docToWrite, chunks);
@@ -60,15 +72,15 @@ public class DOMChunkSelector implements ChunkSelector {
         }
     }
 
-    private List<Chunk> makeChunks(DocumentWriteOperation sourceDocument, Document document, NodeList chunkNodes) {
+    private List<Chunk> makeChunks(String sourceUri, Document document, NodeList chunkNodes) {
         List<Chunk> chunks = new ArrayList<>();
         for (int i = 0; i < chunkNodes.getLength(); i++) {
             Node node = chunkNodes.item(i);
             if (node.getNodeType() != Node.ELEMENT_NODE) {
                 throw new ConnectorException(String.format("XPath expression for selecting chunks must only " +
-                    "select elements; XPath: %s; document URI: %s", chunksExpression, sourceDocument.getUri()));
+                    "select elements; XPath: %s; document URI: %s", chunksExpression, sourceUri));
             }
-            chunks.add(new DOMChunk(sourceDocument.getUri(), document, (Element) node, xmlChunkConfig, xpathFactory));
+            chunks.add(new DOMChunk(sourceUri, document, (Element) node, xmlChunkConfig, xpathFactory));
         }
         return chunks;
     }
