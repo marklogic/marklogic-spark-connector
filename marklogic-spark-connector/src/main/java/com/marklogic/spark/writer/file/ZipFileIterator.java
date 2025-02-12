@@ -6,15 +6,15 @@ package com.marklogic.spark.writer.file;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.reader.file.ZipFileReader;
-import com.marklogic.spark.writer.DocBuilder;
 import org.apache.commons.crypto.utils.IoUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.io.Closeable;
 import java.util.Iterator;
 
-public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs>, Closeable {
+public class ZipFileIterator implements Iterator<DocumentInputs>, Closeable {
 
     private final ZipFileReader zipFileReader;
     private final Format documentFormat;
@@ -33,7 +33,7 @@ public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs>, Clo
     // Suppressing sonar warning about throwing a NoSuchElementException. We know this is only used by
     // DocumentRowConverter, which properly calls hasNext() before calling next().
     @SuppressWarnings("java:S2272")
-    public DocBuilder.DocumentInputs next() {
+    public DocumentInputs next() {
         InternalRow row = zipFileReader.get();
         String uri = row.getString(0);
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -43,7 +43,7 @@ public class ZipFileIterator implements Iterator<DocBuilder.DocumentInputs>, Clo
         if (this.documentFormat != null) {
             contentHandle.withFormat(this.documentFormat);
         }
-        return new DocBuilder.DocumentInputs(uri, contentHandle, null, null);
+        return new DocumentInputs(uri, contentHandle, null, null);
     }
 
     @Override

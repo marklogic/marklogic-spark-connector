@@ -7,6 +7,7 @@ import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.ChunkSelector;
@@ -43,7 +44,7 @@ public class NewDocumentProcessor {
         this.chunkSelector = chunkSelector;
     }
 
-    public void processDocument(DocBuilder.DocumentInputs inputs) {
+    public void processDocument(DocumentInputs inputs) {
         final String uri = inputs.getInitialUri();
         if (tika != null && inputs.getContent() instanceof BytesHandle) {
             extractText(inputs);
@@ -74,7 +75,7 @@ public class NewDocumentProcessor {
         }
     }
 
-    private void extractText(DocBuilder.DocumentInputs documentInputs) {
+    private void extractText(DocumentInputs documentInputs) {
         BytesHandle content = (BytesHandle) documentInputs.getContent();
         try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
             String extractedText = tika.parseToString(stream);
@@ -85,7 +86,7 @@ public class NewDocumentProcessor {
         }
     }
 
-    private void applySplitter(DocBuilder.DocumentInputs inputs) {
+    private void applySplitter(DocumentInputs inputs) {
         List<String> chunks;
         if (inputs.getExtractedText() != null) {
             StringHandle content = new StringHandle(inputs.getExtractedText());
@@ -100,7 +101,7 @@ public class NewDocumentProcessor {
         }
     }
 
-    private void classifyChunks(DocBuilder.DocumentInputs inputs) {
+    private void classifyChunks(DocumentInputs inputs) {
         List<byte[]> classifications = new ArrayList<>();
         for (String chunk : inputs.getChunks()) {
             byte[] result = textClassifier.classifyTextToBytes(inputs.getInitialUri(), chunk);
@@ -109,7 +110,7 @@ public class NewDocumentProcessor {
         inputs.setClassifications(classifications);
     }
 
-    private void addEmbeddingsToSplitterChunks(DocBuilder.DocumentInputs inputs) {
+    private void addEmbeddingsToSplitterChunks(DocumentInputs inputs) {
         List<float[]> embeddings = new ArrayList<>();
         for (String chunk : inputs.getChunks()) {
             float[] embedding = embeddingProducer.produceEmbedding(chunk);
@@ -118,7 +119,7 @@ public class NewDocumentProcessor {
         inputs.setEmbeddings(embeddings);
     }
 
-    private void addEmbeddingsToExistingChunks(DocBuilder.DocumentInputs inputs) {
+    private void addEmbeddingsToExistingChunks(DocumentInputs inputs) {
         DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
         if (documentAndChunks != null && documentAndChunks.hasChunks()) {
             for (Chunk chunk : documentAndChunks.getChunks()) {

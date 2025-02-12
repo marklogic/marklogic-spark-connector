@@ -16,6 +16,7 @@ import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
@@ -43,104 +44,6 @@ public class DocBuilder {
 
     public interface UriMaker {
         String makeURI(String initialUri, JsonNode uriTemplateValues);
-    }
-
-    /**
-     * Captures the various inputs used for constructing a document to be written to MarkLogic. {@code graph} refers
-     * to an optional MarkLogic semantics graph, which must be added to the final set of collections for the
-     * document.
-     */
-    public static class DocumentInputs {
-        private final String initialUri;
-        private AbstractWriteHandle content;
-        private final JsonNode columnValuesForUriTemplate;
-        private final DocumentMetadataHandle initialMetadata;
-        private final String graph;
-
-        // Using hacky getter/setter for now until this is proven to work well.
-        private String extractedText;
-        private List<String> chunks;
-        private List<byte[]> classifications;
-        private byte[] classificationResponse;
-        private List<float[]> embeddings;
-
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
-                              DocumentMetadataHandle initialMetadata) {
-            this(initialUri, content, columnValuesForUriTemplate, initialMetadata, null);
-        }
-
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
-                              DocumentMetadataHandle initialMetadata, String graph) {
-            this.initialUri = initialUri;
-            this.content = content;
-            this.columnValuesForUriTemplate = columnValuesForUriTemplate;
-            this.initialMetadata = initialMetadata;
-            this.graph = graph;
-        }
-
-        public String getInitialUri() {
-            return initialUri;
-        }
-
-        public void setContent(AbstractWriteHandle content) {
-            this.content = content;
-        }
-
-        AbstractWriteHandle getContent() {
-            return content;
-        }
-
-        JsonNode getColumnValuesForUriTemplate() {
-            return columnValuesForUriTemplate;
-        }
-
-        DocumentMetadataHandle getInitialMetadata() {
-            return initialMetadata;
-        }
-
-        String getGraph() {
-            return graph;
-        }
-
-        public String getExtractedText() {
-            return extractedText;
-        }
-
-        public void setExtractedText(String extractedText) {
-            this.extractedText = extractedText;
-        }
-
-        public List<String> getChunks() {
-            return chunks;
-        }
-
-        public void setChunks(List<String> chunks) {
-            this.chunks = chunks;
-        }
-
-        public List<byte[]> getClassifications() {
-            return classifications;
-        }
-
-        public void setClassifications(List<byte[]> classifications) {
-            this.classifications = classifications;
-        }
-
-        public byte[] getClassificationResponse() {
-            return classificationResponse;
-        }
-
-        public void setClassificationResponse(byte[] classificationResponse) {
-            this.classificationResponse = classificationResponse;
-        }
-
-        public List<float[]> getEmbeddings() {
-            return embeddings;
-        }
-
-        public void setEmbeddings(List<float[]> embeddings) {
-            this.embeddings = embeddings;
-        }
     }
 
     public static class ExtractedTextConfig {

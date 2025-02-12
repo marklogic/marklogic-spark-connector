@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.core.DocumentInputs;
 import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.util.Iterator;
@@ -17,7 +18,7 @@ public interface RowConverter {
      * @return an iterator of inputs for creating documents to write to MarkLogic. An iterator is used to allow the
      * implementor to return multiple documents if necessary.
      */
-    Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row);
+    Iterator<DocumentInputs> convertRow(InternalRow row);
 
     /**
      * Called when {@code WriteBatcherDataWriter} has no more rows to send, but the implementation may have one or
@@ -25,5 +26,5 @@ public interface RowConverter {
      *
      * @return
      */
-    Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs();
+    Iterator<DocumentInputs> getRemainingDocumentInputs();
 }

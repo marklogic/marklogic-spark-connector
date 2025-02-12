@@ -15,6 +15,7 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.JsonRowSerializer;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.DocumentInputs;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
@@ -52,7 +53,7 @@ class ArbitraryRowConverter implements RowConverter {
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocumentInputs> convertRow(InternalRow row) {
         String initialUri = null;
         if (this.filePathIndex > -1) {
             initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
@@ -102,12 +103,12 @@ class ArbitraryRowConverter implements RowConverter {
             }
         }
 
-        return Stream.of(new DocBuilder.DocumentInputs(initialUri, contentHandle, uriTemplateValues, null)).iterator();
+        return Stream.of(new DocumentInputs(initialUri, contentHandle, uriTemplateValues, null)).iterator();
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
+    public Iterator<DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocumentInputs>empty().iterator();
     }
 
     /**

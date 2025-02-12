@@ -15,6 +15,7 @@ import com.marklogic.client.io.marker.GenericWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
@@ -140,7 +141,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      *
      * @param iterator
      */
-    private void buildAndWriteDocuments(Iterator<DocBuilder.DocumentInputs> iterator) {
+    private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
                 if (newDocumentProcessor != null) {

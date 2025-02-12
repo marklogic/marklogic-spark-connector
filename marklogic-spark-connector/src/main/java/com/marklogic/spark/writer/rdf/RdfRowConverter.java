@@ -5,7 +5,7 @@ package com.marklogic.spark.writer.rdf;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.writer.DocBuilder;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.writer.RowConverter;
 import com.marklogic.spark.writer.WriteContext;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -60,7 +60,7 @@ public class RdfRowConverter implements RowConverter {
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocumentInputs> convertRow(InternalRow row) {
         final String graph = determineGraph(row);
         graphs.add(graph);
 
@@ -77,7 +77,7 @@ public class RdfRowConverter implements RowConverter {
             triplesDocuments.remove(graph);
             return Stream.of(triplesDocument.buildDocument()).iterator();
         }
-        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
+        return Stream.<DocumentInputs>empty().iterator();
     }
 
     /**
@@ -86,7 +86,7 @@ public class RdfRowConverter implements RowConverter {
      * @return
      */
     @Override
-    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
+    public Iterator<DocumentInputs> getRemainingDocumentInputs() {
         return this.triplesDocuments.values().stream()
             .map(TriplesDocument::buildDocument)
             .iterator();
