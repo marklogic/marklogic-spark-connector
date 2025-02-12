@@ -122,6 +122,6 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             // Use minimal options for this test to verify that default protocol/port/tokenEndpoint are used.
             .option(Options.WRITE_CLASSIFIER_APIKEY, API_KEY)
             .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/");
+            .option(Options.WRITE_CLASSIFIER_PATH, "/cls/dev/cs1/");
     }
 }

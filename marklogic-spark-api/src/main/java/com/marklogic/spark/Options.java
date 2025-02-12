@@ -410,42 +410,42 @@ public abstract class Options {
     /**
      * Defines the host for classification requests
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_HOST = "spark.marklogic.write.classifier.host";
 
     /**
-     * Specifies if the protocol should be https for classification requests
+     * Specifies if the protocol should be http for classification requests.
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
-    public static final String WRITE_CLASSIFIER_HTTPS = "spark.marklogic.write.classifier.https";
+    public static final String WRITE_CLASSIFIER_HTTP = "spark.marklogic.write.classifier.http";
 
     /**
      * Defines the port for classification requests
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_PORT = "spark.marklogic.write.classifier.port";
 
     /**
      * Defines the endpoint for classification requests
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
-    public static final String WRITE_CLASSIFIER_ENDPOINT = "spark.marklogic.write.classifier.endpoint";
+    public static final String WRITE_CLASSIFIER_PATH = "spark.marklogic.write.classifier.path";
 
     /**
-     * Defines the endpoint for generating tokens for classification requests
+     * Defines the URL path for generating tokens for classification requests
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
-    public static final String WRITE_CLASSIFIER_TOKEN_ENDPOINT = "spark.marklogic.write.classifier.token.endpoint";
+    public static final String WRITE_CLASSIFIER_TOKEN_PATH = "spark.marklogic.write.classifier.tokenPath";
 
     /**
      * Defines the apikey for classification API token requests
      *
-     * @since 2.5-SNAPSHOT
+     * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_APIKEY = "spark.marklogic.write.classifier.apikey";
 
