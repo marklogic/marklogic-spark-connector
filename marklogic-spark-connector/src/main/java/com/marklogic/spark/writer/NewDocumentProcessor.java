@@ -8,6 +8,9 @@ import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.ChunkSelector;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import org.apache.tika.Tika;
@@ -29,12 +32,15 @@ public class NewDocumentProcessor {
     private final TextSplitter textSplitter;
     private final TextClassifier textClassifier;
     private final EmbeddingProducer embeddingProducer;
+    private final ChunkSelector chunkSelector;
 
-    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier, EmbeddingProducer embeddingProducer) {
+    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier,
+                                EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
         this.tika = tika;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
         this.embeddingProducer = embeddingProducer;
+        this.chunkSelector = chunkSelector;
     }
 
     public void processDocument(DocBuilder.DocumentInputs inputs) {
@@ -59,10 +65,12 @@ public class NewDocumentProcessor {
             }
         }
 
-        // We need to add support for a ChunkSelector for the use case where chunks already exist in a document,
-        // and thus the chunks list is empty.
-        if (embeddingProducer != null && inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
-            addEmbeddings(inputs);
+        if (embeddingProducer != null) {
+            if (inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
+                addEmbeddingsToSplitterChunks(inputs);
+            } else if (chunkSelector != null) {
+                addEmbeddingsToExistingChunks(inputs);
+            }
         }
     }
 
@@ -101,12 +109,28 @@ public class NewDocumentProcessor {
         inputs.setClassifications(classifications);
     }
 
-    private void addEmbeddings(DocBuilder.DocumentInputs inputs) {
+    private void addEmbeddingsToSplitterChunks(DocBuilder.DocumentInputs inputs) {
         List<float[]> embeddings = new ArrayList<>();
         for (String chunk : inputs.getChunks()) {
             float[] embedding = embeddingProducer.produceEmbedding(chunk);
             embeddings.add(embedding);
         }
         inputs.setEmbeddings(embeddings);
+    }
+
+    private void addEmbeddingsToExistingChunks(DocBuilder.DocumentInputs inputs) {
+        DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
+        if (documentAndChunks != null && documentAndChunks.hasChunks()) {
+            for (Chunk chunk : documentAndChunks.getChunks()) {
+                String text = chunk.getEmbeddingText();
+                if (text != null && text.trim().length() > 0) {
+                    float[] embedding = embeddingProducer.produceEmbedding(text);
+                    chunk.addEmbedding(embedding);
+                }
+            }
+            // This part is key - the chunks above are being modified, so need to update the content in the
+            // DocumentInputs object.
+            inputs.setContent(documentAndChunks.getContent());
+        }
     }
 }

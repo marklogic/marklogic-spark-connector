@@ -78,7 +78,6 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
      */
     @ExtendWith(RequiresMarkLogic12.class)
     @Test
-    @Disabled("Temporarily disabled, not yet supporting this in the new approach")
     void addEmbeddingsToExistingSplits() {
         // Add splits to the test doc first.
         readDocument("/marklogic-docs/java-client-intro.json")
@@ -141,7 +140,6 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Will support existing chunks in next PR")
     void customPaths() {
         readDocument("/marklogic-docs/custom-chunks.json")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -195,7 +193,6 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Will support embedding without splitting in next PR")
     void chunksIsAnObjectInsteadOfAnArray() {
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
