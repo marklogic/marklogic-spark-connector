@@ -64,4 +64,17 @@ subprojects {
       xml.required = true
     }
   }
+
+  // Turning off coverage verification, as we haven't figured out how to configure Sonar correctly to pick up the jacoco
+  // report from the "code-coverage-report" subproject and accurately capture coverage.
+  // See https://docs.gradle.org/current/userguide/jacoco_plugin.html#sec:jacoco_report_violation_rules
+  jacocoTestCoverageVerification {
+    violationRules {
+      rule {
+        limit {
+          minimum = 0.0
+        }
+      }
+    }
+  }
 }
