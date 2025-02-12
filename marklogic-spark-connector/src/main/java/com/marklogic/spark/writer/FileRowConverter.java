@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.DocumentInputs;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.DataTypes;
 
@@ -33,17 +34,17 @@ class FileRowConverter implements RowConverter {
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocumentInputs> convertRow(InternalRow row) {
         final String path = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle contentHandle = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
         forceFormatIfNecessary(contentHandle);
         Optional<JsonNode> uriTemplateValues = deserializeContentToJson(path, contentHandle, row);
-        return Stream.of(new DocBuilder.DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null)).iterator();
+        return Stream.of(new DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null)).iterator();
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
+    public Iterator<DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocumentInputs>empty().iterator();
     }
 
     @SuppressWarnings({"deprecation", "removal"})

@@ -12,9 +12,9 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
-import com.marklogic.spark.writer.DocBuilder;
 import com.marklogic.spark.writer.RowConverter;
 import com.marklogic.spark.writer.WriteContext;
 import com.marklogic.spark.writer.file.ArchiveFileIterator;
@@ -50,24 +50,24 @@ public class DocumentRowConverter implements RowConverter {
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocumentInputs> convertRow(InternalRow row) {
         final String uri = row.getString(0);
 
         final boolean isNakedProperties = row.isNullAt(1);
         if (isNakedProperties) {
             DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-            return Stream.of(new DocBuilder.DocumentInputs(uri, null, null, metadata)).iterator();
+            return Stream.of(new DocumentInputs(uri, null, null, metadata)).iterator();
         }
 
         return this.isStreamingFromFiles ? streamContentFromFile(uri, row) : readContentFromRow(uri, row);
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
+    public Iterator<DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocumentInputs>empty().iterator();
     }
 
-    private Iterator<DocBuilder.DocumentInputs> readContentFromRow(String uri, InternalRow row) {
+    private Iterator<DocumentInputs> readContentFromRow(String uri, InternalRow row) {
         DocumentRow documentRow = new DocumentRow(row, this.schema);
         BytesHandle bytesHandle = documentRow.getContent(this.documentFormat);
 
@@ -77,7 +77,7 @@ public class DocumentRowConverter implements RowConverter {
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }
 
-        DocBuilder.DocumentInputs documentInputs = new DocBuilder.DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
+        DocumentInputs documentInputs = new DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
 
         // These will all go away soon, their processing moved to DocumentProcessor.
         documentInputs.setChunks(documentRow.getChunks());
@@ -103,7 +103,7 @@ public class DocumentRowConverter implements RowConverter {
      * In a scenario where the user wants to stream a file into MarkLogic, the content column will contain a serialized
      * instance of {@code FileContext}, which is used to stream the file into a {@code InputStreamHandle}.
      */
-    private Iterator<DocBuilder.DocumentInputs> streamContentFromFile(String filePath, InternalRow row) {
+    private Iterator<DocumentInputs> streamContentFromFile(String filePath, InternalRow row) {
         byte[] bytes = row.getBinary(1);
         FileContext fileContext;
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
@@ -122,16 +122,16 @@ public class DocumentRowConverter implements RowConverter {
         return buildIteratorForGenericFile(row, filePath, fileContext);
     }
 
-    private Iterator<DocBuilder.DocumentInputs> buildIteratorForGenericFile(InternalRow row, String filePath, FileContext fileContext) {
+    private Iterator<DocumentInputs> buildIteratorForGenericFile(InternalRow row, String filePath, FileContext fileContext) {
         InputStreamHandle contentHandle = new InputStreamHandle(fileContext.openFile(filePath));
         if (this.documentFormat != null) {
             contentHandle.withFormat(this.documentFormat);
         }
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
-        return new FileIterator(contentHandle, new DocBuilder.DocumentInputs(filePath, contentHandle, null, metadata));
+        return new FileIterator(contentHandle, new DocumentInputs(filePath, contentHandle, null, metadata));
     }
 
-    private Iterator<DocBuilder.DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
+    private Iterator<DocumentInputs> buildIteratorForArchiveFile(String filePath, FileContext fileContext) {
         FilePartition filePartition = new FilePartition(filePath);
         ArchiveFileReader archiveFileReader = new ArchiveFileReader(
             filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE
@@ -139,13 +139,13 @@ public class DocumentRowConverter implements RowConverter {
         return new ArchiveFileIterator(archiveFileReader, this.documentFormat);
     }
 
-    private Iterator<DocBuilder.DocumentInputs> buildIteratorForZipFile(String filePath, FileContext fileContext) {
+    private Iterator<DocumentInputs> buildIteratorForZipFile(String filePath, FileContext fileContext) {
         FilePartition filePartition = new FilePartition(filePath);
         ZipFileReader reader = new ZipFileReader(filePartition, fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
         return new ZipFileIterator(reader, this.documentFormat);
     }
 
-    private Iterator<DocBuilder.DocumentInputs> buildIteratorForGzipFile(String filePath, FileContext fileContext) {
+    private Iterator<DocumentInputs> buildIteratorForGzipFile(String filePath, FileContext fileContext) {
         GzipFileReader reader = new GzipFileReader(new FilePartition(filePath), fileContext, StreamingMode.STREAM_DURING_WRITER_PHASE);
         return new GzipFileIterator(reader, this.documentFormat);
     }
