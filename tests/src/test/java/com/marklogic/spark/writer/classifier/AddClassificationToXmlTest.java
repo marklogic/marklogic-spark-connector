@@ -73,7 +73,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void noHttpsSpecifiedShouldDefaultToHttpAndFail() {
         DataFrameWriter writer = readAndStartWrite()
-            .option(Options.WRITE_CLASSIFIER_HTTPS, false)
+            .option(Options.WRITE_CLASSIFIER_HTTP, true)
             .mode(SaveMode.Append);
 
         ConnectorException exception = assertThrowsConnectorException(writer::save);
@@ -106,10 +106,15 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_CLASSIFIER_APIKEY, API_KEY)
             .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_ENDPOINT, "/cls/dev/cs1/")
-            .option(Options.WRITE_CLASSIFIER_TOKEN_ENDPOINT, "token/")
+
+            // Use paths that don't begin with a "/", to further ensure that a "/" is added automatically.
+            .option(Options.WRITE_CLASSIFIER_PATH, "cls/dev/cs1")
+            .option(Options.WRITE_CLASSIFIER_TOKEN_PATH, "token")
+
+            // Defining these properties, even though they use the default values, just to get a little more
+            // coverage with them.
             .option(Options.WRITE_CLASSIFIER_PORT, 443)
-            .option(Options.WRITE_CLASSIFIER_HTTPS, true);
+            .option(Options.WRITE_CLASSIFIER_HTTP, false);
     }
 
     private Dataset<Row> readDocument(String uri) {
