@@ -18,6 +18,17 @@ subprojects {
   group = "com.marklogic"
   version "2.5-SNAPSHOT"
 
+  // See https://docs.gradle.org/current/userguide/jacoco_plugin.html#sec:jacoco_report_violation_rules
+  jacocoTestCoverageVerification {
+    violationRules {
+      rule {
+        limit {
+          minimum = 0.0
+        }
+      }
+    }
+  }
+
   // Defaults to the Java 11 toolchain. Overridden by subprojects that require Java 17.
   // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
