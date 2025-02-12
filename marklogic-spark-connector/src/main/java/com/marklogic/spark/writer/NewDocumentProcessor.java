@@ -9,7 +9,6 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.classifier.TextClassifier;
-import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
@@ -20,7 +19,9 @@ import org.apache.tika.exception.TikaException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This will soon handle extracting, splitting, classifying, and embedding.
@@ -44,45 +45,64 @@ public class NewDocumentProcessor {
         this.chunkSelector = chunkSelector;
     }
 
-    public void processDocument(DocumentInputs inputs) {
-        final String uri = inputs.getInitialUri();
+    public Optional<List<DocumentInputs>> flush() {
+        if (embeddingProducer != null) {
+            return Optional.of(embeddingProducer.flush());
+        }
+        return Optional.empty();
+    }
+
+    public List<DocumentInputs> processDocument(DocumentInputs inputs) {
         if (tika != null && inputs.getContent() instanceof BytesHandle) {
             extractText(inputs);
         }
         if (textSplitter != null) {
             applySplitter(inputs);
         }
-
-        // Not sure if we should run the classifier if the user specifies a splitter. We may need options to control
-        // whether this happens or not.
         if (textClassifier != null) {
-            if (inputs.getExtractedText() != null) {
-                byte[] classification = textClassifier.classifyTextToBytes(uri, inputs.getExtractedText());
-                inputs.setClassificationResponse(classification);
-            } else {
-                String content = HandleAccessor.contentAsString(inputs.getContent());
-                byte[] classification = textClassifier.classifyTextToBytes(uri, content);
-                inputs.setClassificationResponse(classification);
-            }
+            classifyText(inputs);
         }
 
         if (embeddingProducer != null) {
             if (inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
-                addEmbeddingsToSplitterChunks(inputs);
+                return embeddingProducer.produceEmbeddings(inputs);
             } else if (chunkSelector != null) {
-                addEmbeddingsToExistingChunks(inputs);
+                DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
+                if (documentAndChunks != null && documentAndChunks.hasChunks()) {
+                    inputs.setExistingChunks(documentAndChunks.getChunks());
+                    // Must override the content, as the chunks will be modified by the embedder, and the chunk selector
+                    // may have created a new content handle in order to produce the chunks.
+                    inputs.setContent(documentAndChunks.getContent());
+                    return embeddingProducer.produceEmbeddings(inputs);
+                }
             }
+        }
+
+        return Arrays.asList(inputs);
+    }
+
+    private void extractText(DocumentInputs inputs) {
+        BytesHandle content = (BytesHandle) inputs.getContent();
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
+            String extractedText = tika.parseToString(stream);
+            inputs.setExtractedText(extractedText);
+        } catch (IOException | TikaException e) {
+            throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
+                inputs.getInitialUri(), e.getMessage()), e);
         }
     }
 
-    private void extractText(DocumentInputs documentInputs) {
-        BytesHandle content = (BytesHandle) documentInputs.getContent();
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
-            String extractedText = tika.parseToString(stream);
-            documentInputs.setExtractedText(extractedText);
-        } catch (IOException | TikaException e) {
-            throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
-                documentInputs.getInitialUri(), e.getMessage()), e);
+    private void classifyText(DocumentInputs inputs) {
+        // Not sure if we should run the classifier if the user specifies a splitter. We may need options to control
+        // whether this happens or not.
+        final String uri = inputs.getInitialUri();
+        if (inputs.getExtractedText() != null) {
+            byte[] classification = textClassifier.classifyTextToBytes(uri, inputs.getExtractedText());
+            inputs.setClassificationResponse(classification);
+        } else {
+            String content = HandleAccessor.contentAsString(inputs.getContent());
+            byte[] classification = textClassifier.classifyTextToBytes(uri, content);
+            inputs.setClassificationResponse(classification);
         }
     }
 
@@ -101,6 +121,7 @@ public class NewDocumentProcessor {
         }
     }
 
+    // Should this impact existing chunks???
     private void classifyChunks(DocumentInputs inputs) {
         List<byte[]> classifications = new ArrayList<>();
         for (String chunk : inputs.getChunks()) {
@@ -108,30 +129,5 @@ public class NewDocumentProcessor {
             classifications.add(result);
         }
         inputs.setClassifications(classifications);
-    }
-
-    private void addEmbeddingsToSplitterChunks(DocumentInputs inputs) {
-        List<float[]> embeddings = new ArrayList<>();
-        for (String chunk : inputs.getChunks()) {
-            float[] embedding = embeddingProducer.produceEmbedding(chunk);
-            embeddings.add(embedding);
-        }
-        inputs.setEmbeddings(embeddings);
-    }
-
-    private void addEmbeddingsToExistingChunks(DocumentInputs inputs) {
-        DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
-        if (documentAndChunks != null && documentAndChunks.hasChunks()) {
-            for (Chunk chunk : documentAndChunks.getChunks()) {
-                String text = chunk.getEmbeddingText();
-                if (text != null && text.trim().length() > 0) {
-                    float[] embedding = embeddingProducer.produceEmbedding(text);
-                    chunk.addEmbedding(embedding);
-                }
-            }
-            // This part is key - the chunks above are being modified, so need to update the content in the
-            // DocumentInputs object.
-            inputs.setContent(documentAndChunks.getContent());
-        }
     }
 }

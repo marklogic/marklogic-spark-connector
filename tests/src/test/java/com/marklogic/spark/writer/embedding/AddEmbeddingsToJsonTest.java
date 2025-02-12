@@ -18,7 +18,6 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -211,7 +210,6 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Will support batch size in next PR")
     void testBatchSize() {
         TestEmbeddingModel.reset();
 
@@ -230,12 +228,16 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         JsonNode doc = readJsonDocument("/split-test.json");
         assertEquals(8, doc.get("chunks").size());
 
-        assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 2 batches to be sent to the test " +
-            "embedding model, given the batch size of 2 and 4 chunks being created.");
+        assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 3 batches to be sent to the test " +
+            "embedding model, with 3 in the first call, 3 in the second call, and 2 when the processor is flushed " +
+            "during the writer commit phase.");
+
+        assertEquals(3, TestEmbeddingModel.batchSizes.get(0));
+        assertEquals(3, TestEmbeddingModel.batchSizes.get(1));
+        assertEquals(2, TestEmbeddingModel.batchSizes.get(2));
     }
 
     @Test
-    @Disabled("Will support batch size in next PR")
     void batchSizeIsHigherThanChunkCount() {
         TestEmbeddingModel.reset();
 

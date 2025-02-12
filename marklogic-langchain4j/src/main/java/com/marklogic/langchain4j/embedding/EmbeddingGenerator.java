@@ -3,8 +3,8 @@
  */
 package com.marklogic.langchain4j.embedding;
 
-import com.marklogic.spark.core.embedding.Chunk;
-import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.embedding.Embedding;
@@ -13,7 +13,6 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,11 +28,7 @@ public class EmbeddingGenerator implements EmbeddingProducer {
     private static final AtomicLong tokenCount = new AtomicLong(0);
     private static final AtomicLong requestCount = new AtomicLong(0);
 
-    private List<Chunk> pendingChunks = new ArrayList<>();
-
-    public EmbeddingGenerator(EmbeddingModel embeddingModel) {
-        this(embeddingModel, 1);
-    }
+    private List<DocumentInputs> pendingInputs = new ArrayList<>();
 
     public EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize) {
         this.embeddingModel = embeddingModel;
@@ -41,78 +36,101 @@ public class EmbeddingGenerator implements EmbeddingProducer {
     }
 
     @Override
-    public float[] produceEmbedding(String text) {
-        // No batching support yet. Next PR.
-        return embeddingModel.embed(text).content().vector();
-    }
+    public List<DocumentInputs> produceEmbeddings(DocumentInputs newInputs) {
+        final List<DocumentInputs> inputsToReturn = new ArrayList<>();
+        final List<float[]> embeddingsForNewInputs = new ArrayList<>();
 
-    boolean addEmbeddings(DocumentAndChunks documentAndChunks) {
-        List<Chunk> chunks = documentAndChunks.getChunks();
-        if (chunks == null || chunks.isEmpty()) {
-            return false;
-        }
+        final List<TextSegment> textSegments = collectPendingChunks();
+        // Start adding chunks from the new inputs until we have enough to meet embedder batch size.
+        boolean generatedEmbeddingsAtLeastOnce = false;
+        for (String chunk : newInputs.getTextSegmentsToGenerateEmbeddings()) {
+            textSegments.add(new TextSegment(chunk, TEXT_SEGMENT_METADATA));
+            if (textSegments.size() >= batchSize) {
+                List<Embedding> embeddings = generateEmbeddings(textSegments);
+                assignEmbeddings(embeddings, embeddingsForNewInputs);
+                textSegments.clear();
 
-        // Iterate over the chunks, flushing as necessary.
-        Iterator<Chunk> chunkIterator = chunks.iterator();
-        boolean flushOccurred = false;
-        while (chunkIterator.hasNext()) {
-            addChunkToPendingChunks(chunkIterator.next());
-            if (pendingChunks.size() >= batchSize) {
-                generateEmbeddingsForPendingChunks();
-                flushOccurred = true;
+                if (!generatedEmbeddingsAtLeastOnce) {
+                    generatedEmbeddingsAtLeastOnce = true;
+                    // We know we're done with the pending inputs, so add them as inputs to return and clear out the list.
+                    inputsToReturn.addAll(pendingInputs);
+                    pendingInputs.clear();
+                }
             }
         }
 
-        // If we flushed at least once while iterating, or if we now have enough pending chunks, flush the remaining
-        // chunks.
-        if (flushOccurred || pendingChunks.size() >= batchSize) {
-            generateEmbeddingsForPendingChunks();
-            return true;
-        }
-
-        return false;
-    }
-
-    void generateEmbeddingsForPendingChunks() {
-        if (!pendingChunks.isEmpty()) {
-            if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
-                EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Generating embeddings for pending chunks; count: {}.", pendingChunks.size());
+        // If we have at least one document to return, that means we sent at least 1 of the chunks in newInputs.
+        // We don't want to leave newInputs in a partial state, so we flush the rest of the text segments.
+        if (generatedEmbeddingsAtLeastOnce) {
+            if (!textSegments.isEmpty()) {
+                List<Embedding> embeddings = generateEmbeddings(textSegments);
+                assignEmbeddings(embeddings, embeddingsForNewInputs);
             }
-            addEmbeddingsToChunks(pendingChunks);
-            pendingChunks.clear();
+            newInputs.setGeneratedEmbeddings(embeddingsForNewInputs);
+            inputsToReturn.add(newInputs);
+        } else {
+            // We didn't send anything to the embedding model, so add the new inputs to the list of pending inputs.
+            pendingInputs.add(newInputs);
         }
+
+        return inputsToReturn;
     }
 
-    private void addChunkToPendingChunks(Chunk chunk) {
-        String text = chunk.getEmbeddingText();
-        if (text != null && text.trim().length() > 0) {
-            pendingChunks.add(chunk);
-        } else if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
-            EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Not generating embedding for chunk in URI {}; could not find text to use for generating an embedding.",
-                chunk.getDocumentUri());
+    @Override
+    public List<DocumentInputs> flush() {
+        List<DocumentInputs> inputsToReturn = new ArrayList<>();
+        if (pendingInputs.isEmpty()) {
+            return inputsToReturn;
         }
+
+        List<TextSegment> textSegments = collectPendingChunks();
+        if (!textSegments.isEmpty()) {
+            List<Embedding> embeddings = generateEmbeddings(textSegments);
+            assignEmbeddings(embeddings, null);
+        }
+
+        inputsToReturn.addAll(pendingInputs);
+        pendingInputs.clear();
+
+        return inputsToReturn;
     }
 
-    private void addEmbeddingsToChunks(List<Chunk> chunks) {
-        List<TextSegment> textSegments = makeTextSegments(chunks);
+    private List<Embedding> generateEmbeddings(List<TextSegment> textSegments) {
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Embedding segments, count: {}", textSegments.size());
+        }
         Response<List<Embedding>> response = embeddingModel.embedAll(textSegments);
         logResponse(response, textSegments);
+        return response.content();
+    }
 
-        if (response.content() == null) {
-            EmbeddingUtil.LANGCHAIN4J_LOGGER.warn("Sent {} chunks; no embeddings were returned; finish reason: {}",
-                textSegments.size(), response.finishReason());
-        } else {
-            List<Embedding> embeddings = response.content();
-            for (int i = 0; i < embeddings.size(); i++) {
-                chunks.get(i).addEmbedding(embeddings.get(i).vector());
+    private void assignEmbeddings(List<Embedding> embeddings, List<float[]> embeddingsForNewInputs) {
+        int embeddingCounter = 0;
+        // Assign embeddings to the pending inputs first.
+        for (DocumentInputs pendingInput : pendingInputs) {
+            int chunkCount = pendingInput.getTextSegmentsToGenerateEmbeddings().size();
+            List<float[]> embeddingsForPendingInput = new ArrayList<>(chunkCount);
+            for (; embeddingCounter < embeddings.size(); embeddingCounter++) {
+                embeddingsForPendingInput.add(embeddings.get(embeddingCounter).vector());
             }
+            pendingInput.setGeneratedEmbeddings(embeddingsForPendingInput);
+        }
+
+        // Any remaining embeddings should go into the ones for the newInputs.
+        for (; embeddingCounter < embeddings.size(); embeddingCounter++) {
+            embeddingsForNewInputs.add(embeddings.get(embeddingCounter).vector());
         }
     }
 
-    private List<TextSegment> makeTextSegments(List<Chunk> chunks) {
-        return chunks.stream()
-            .map(chunk -> new TextSegment(chunk.getEmbeddingText(), TEXT_SEGMENT_METADATA))
-            .toList();
+    // Probably want to cache this as well.
+    private List<TextSegment> collectPendingChunks() {
+        List<TextSegment> textSegments = new ArrayList<>();
+        for (DocumentInputs pendingInput : pendingInputs) {
+            for (String chunk : pendingInput.getTextSegmentsToGenerateEmbeddings()) {
+                textSegments.add(new TextSegment(chunk, TEXT_SEGMENT_METADATA));
+            }
+        }
+        return textSegments;
     }
 
     private void logResponse(Response<List<Embedding>> response, List<TextSegment> textSegments) {
