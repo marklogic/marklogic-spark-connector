@@ -128,12 +128,13 @@ public class WriteContext extends ContextSupport {
     }
 
     DocBuilder newDocBuilder() {
+        final String permissions = getStringOption(Options.WRITE_PERMISSIONS);
         DocBuilderFactory factory = new DocBuilderFactory()
             .withCollections(getStringOption(Options.WRITE_COLLECTIONS))
-            .withPermissions(getStringOption(Options.WRITE_PERMISSIONS))
+            .withPermissions(permissions)
             .withExtractedTextDocumentType(getStringOption(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "json"))
             .withExtractedTextCollections(getStringOption(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS))
-            .withExtractedTextPermissions(getStringOption(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS))
+            .withExtractedTextPermissions(getStringOption(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS, permissions))
             .withExtractedTextDropSource(getBooleanOption(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, false))
             .withChunkAssembler(ChunkAssemblerFactory.makeChunkAssembler(this));
 

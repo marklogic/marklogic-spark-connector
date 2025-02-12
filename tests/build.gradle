@@ -43,8 +43,7 @@ dependencies {
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 
   // Adding these to test the Tika UDF. Flux will include these as well in its distribution.
-  testImplementation "org.apache.tika:tika-parser-microsoft-module:3.0.0"
-  testImplementation "org.apache.tika:tika-parser-pdf-module:3.0.0"
+  testImplementation "org.apache.tika:tika-parsers:3.0.0"
 }
 
 test {
