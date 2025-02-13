@@ -13,9 +13,10 @@ import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.ChunkSelectorFactory;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.embedding.EmbeddingProducerFactory;
+import com.marklogic.spark.core.extraction.TextExtractor;
+import com.marklogic.spark.core.extraction.TikaTextExtractor;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import com.marklogic.spark.core.splitter.TextSplitterFactory;
-import org.apache.tika.Tika;
 
 import java.lang.reflect.InvocationTargetException;
 
@@ -24,8 +25,8 @@ public abstract class DocumentProcessorFactory {
     private static final String FACTORY_CLASS_NAME = "com.marklogic.langchain4j.Langchain4jFactory";
 
     public static DocumentProcessor newDocumentProcessor(Context context) {
-        final Tika tika = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
-            new Tika() : null;
+        final TextExtractor textExtractor = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
+            new TikaTextExtractor() : null;
         final TextSplitter textSplitter = newTextSplitter(context);
         final TextClassifier textClassifier = TextClassifierFactory.newTextClassifier(context);
         final EmbeddingProducer embeddingProducer = newEmbeddingProducer(context);
@@ -42,7 +43,7 @@ public abstract class DocumentProcessorFactory {
                 ));
             }
         }
-        return new DocumentProcessor(tika, textSplitter, textClassifier, embeddingProducer, chunkSelector);
+        return new DocumentProcessor(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector);
     }
 
     private static TextSplitter newTextSplitter(Context context) {

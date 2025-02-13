@@ -9,22 +9,17 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class WriteExtractedTextTest extends AbstractIntegrationTest {
 
-    private static final String HELLO_WORLD_DOCUMENT_EXTRACTED_TEXT = "Hello world.\n\nThis file is used for testing text extraction.\n";
-    private static final String HELLO_WORLD_DOCUMENT_CHUNK_TEXT = "Hello world.\n\nThis file is used for testing text extraction.";
-
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .pdf files")
     void defaultToJson() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/mark*")
+            .load("src/test/resources/extraction-files/marklogic-getting-started.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -34,17 +29,17 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        System.out.println(doc.toPrettyString());
         assertEquals("/extract-test/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
     }
 
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .docx files")
     void extractToXml() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/mark*")
+            .load("src/test/resources/extraction-files/marklogic-getting-started.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -79,12 +74,12 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("original-doc", 2);
         assertCollectionSize("extracted-doc", 2);
 
-        PermissionsTester perms = readDocumentPermissions("/extract-test/hello-world.docx-extracted-text.json");
+        PermissionsTester perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
         assertEquals(2, perms.getDocumentPermissions().size(), "Expecting 2 roles - spark-user-role and qconsole-user");
         perms.assertReadPermissionExists("spark-user-role");
         perms.assertReadPermissionExists("qconsole-user");
 
-        perms = readDocumentPermissions("/extract-test/hello-world.docx");
+        perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf");
         assertEquals(1, perms.getDocumentPermissions().size(), "Expecting only spark-user-role");
         perms.assertReadPermissionExists("spark-user-role");
     }
@@ -112,17 +107,16 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .docx files")
     void dropSourceJson() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
             .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
             .mode(SaveMode.Append)
             .save();
@@ -130,14 +124,14 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
             "have been dropped", "extraction-test", 2);
 
-        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
+        JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
         assertTrue(doc.has("content"));
+        assertTrue(doc.has("metadata"));
         assertFalse(doc.has("source-uri"), "source-uri should be omitted since the source was dropped");
-        assertEquals(1, doc.size());
+        assertEquals(2, doc.size());
     }
 
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .docx files")
     void dropSourceXml() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
@@ -148,6 +142,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/extract-test'")
             .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, true)
             .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
             .mode(SaveMode.Append)
@@ -156,18 +151,19 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
             "have been dropped", "extraction-test", 2);
 
-        XmlNode doc = readXmlDocument("/extract-test/hello-world.docx-extracted-text.xml");
+        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
+        System.out.println(doc.getPrettyXml());
         doc.assertElementExists("/model:root/model:content");
+        doc.assertElementExists("/model:root/model:metadata");
         doc.assertElementMissing("source-uri should be omitted since the source was dropped", "/model:root/model:source-uri");
-        doc.assertElementCount("/model:root/node()", 1);
+        doc.assertElementCount("/model:root/node()", 2);
     }
 
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .docx files")
     void extractThenSplitToSidecar() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/hello-world.docx")
+            .load("src/test/resources/extraction-files/marklogic-getting-started.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -176,33 +172,33 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_TEXT, true)
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 10000)
             .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
             .mode(SaveMode.Append)
             .save();
 
         assertCollectionSize("Should contain the original binary and the extracted text doc, but not the chunks doc",
             "extraction-test", 2);
-        assertInCollections("/abc/hello-world.docx", "extraction-test");
+        assertInCollections("/abc/marklogic-getting-started.pdf", "extraction-test");
 
-        JsonNode extractedTextDoc = readJsonDocument("/abc/hello-world.docx-extracted-text.json", "extraction-test");
-        assertEquals("/abc/hello-world.docx", extractedTextDoc.get("source-uri").asText());
-        assertEquals(HELLO_WORLD_DOCUMENT_EXTRACTED_TEXT, extractedTextDoc.get("content").asText());
+        JsonNode extractedTextDoc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json", "extraction-test");
+        assertEquals("/abc/marklogic-getting-started.pdf", extractedTextDoc.get("source-uri").asText());
+        assertTrue(extractedTextDoc.get("content").asText().contains("MarkLogic Server Table of Contents"));
 
-        assertCollectionSize("chunks", 1);
-        JsonNode sidecarDoc = readJsonDocument("/abc/hello-world.docx-extracted-text.json-chunks-1.json", "chunks");
+        assertCollectionSize("Expecting 5 chunks based on a max chunk size of 10k chars", "chunks", 5);
+        JsonNode sidecarDoc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json-chunks-1.json", "chunks");
 
-        assertEquals("/abc/hello-world.docx-extracted-text.json", sidecarDoc.get("source-uri").asText());
+        assertEquals("/abc/marklogic-getting-started.pdf-extracted-text.json", sidecarDoc.get("source-uri").asText());
         assertEquals(1, sidecarDoc.get("chunks").size());
-        assertEquals(HELLO_WORLD_DOCUMENT_CHUNK_TEXT, sidecarDoc.get("chunks").get(0).get("text").asText(),
-            "The LangChain4j splitter trims each chunk, which results in the trailing newline being removed.");
+        assertTrue(sidecarDoc.get("chunks").get(0).get("text").asText().contains("MarkLogic Server Table of Contents"));
     }
 
     @Test
-    @Disabled("Temporarily disabling, Tika isn't parsing .docx files")
     void extractThenSplitWithChunksInExtractedTextDoc() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/hello-world.docx")
+            .load("src/test/resources/extraction-files/marklogic-getting-started.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -210,6 +206,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_SPLITTER_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
             .mode(SaveMode.Append)
             .save();
 
@@ -217,10 +214,10 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
                 "The chunks are in the extracted text doc since the number of max chunks per sidecar defaults to zero.",
             "extraction-test", 2);
 
-        JsonNode doc = readJsonDocument("/abc/hello-world.docx-extracted-text.json");
-        assertEquals(3, doc.size(), "Should have source-uri, content, and chunks.");
-        assertEquals("/abc/hello-world.docx", doc.get("source-uri").asText());
-        assertEquals(HELLO_WORLD_DOCUMENT_EXTRACTED_TEXT, doc.get("content").asText());
-        assertEquals(HELLO_WORLD_DOCUMENT_CHUNK_TEXT, doc.get("chunks").get(0).get("text").asText());
+        JsonNode doc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json");
+        assertEquals(4, doc.size(), "Should have source-uri, content, metadata, and chunks.");
+        assertEquals("/abc/marklogic-getting-started.pdf", doc.get("source-uri").asText());
+        assertTrue(doc.get("content").asText().contains("MarkLogic Server Table of Contents"));
+        assertTrue(doc.get("chunks").get(0).get("text").asText().contains("MarkLogic Server Table of Contents"));
     }
 }
