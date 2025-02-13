@@ -69,9 +69,17 @@ public class JsonChunkSelector implements ChunkSelector {
 
         List<Chunk> chunks = new ArrayList<>();
         if (chunksNode instanceof ArrayNode) {
-            chunksNode.forEach(obj -> chunks.add(new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName)));
+            chunksNode.forEach(obj -> {
+                JsonChunk chunk = new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName);
+                if (chunk.hasEmbeddingText()) {
+                    chunks.add(chunk);
+                }
+            });
         } else {
-            chunks.add(new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName));
+            JsonChunk chunk = new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName);
+            if (chunk.hasEmbeddingText()) {
+                chunks.add(chunk);
+            }
         }
         DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(uri, null, new JacksonHandle(doc));
         return new DocumentAndChunks(documentToWrite, chunks);

@@ -36,6 +36,11 @@ public class DOMChunk implements Chunk {
         return documentUri;
     }
 
+    public boolean hasEmbeddingText() {
+        String text = getEmbeddingText();
+        return text != null && text.trim().length() > 0;
+    }
+
     @Override
     public String getEmbeddingText() {
         NodeList embeddingTextNodes;

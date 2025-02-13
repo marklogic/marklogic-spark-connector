@@ -10,6 +10,7 @@ import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.allminilml6v2.AllMiniLmL6V2EmbeddingModel;
 import dev.langchain4j.model.output.Response;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -22,9 +23,12 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
     public static int batchCounter;
     public static int chunkCounter;
 
+    public static List<Integer> batchSizes = new ArrayList<>();
+
     public static void reset() {
         batchCounter = 0;
         chunkCounter = 0;
+        batchSizes.clear();
     }
 
     private static AllMiniLmL6V2EmbeddingModel realEmbeddingModel = new AllMiniLmL6V2EmbeddingModel();
@@ -42,6 +46,7 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
     @Override
     public Response<List<Embedding>> embedAll(List<TextSegment> textSegments) {
         batchCounter++;
+        batchSizes.add(textSegments.size());
         chunkCounter += textSegments.size();
         return realEmbeddingModel.embedAll(textSegments);
     }

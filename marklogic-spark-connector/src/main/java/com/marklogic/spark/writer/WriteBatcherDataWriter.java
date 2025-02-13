@@ -34,10 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -109,6 +106,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         // in a document. Those are retrieved here.
         buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
 
+        flushDocumentProcessor();
+
         this.writeBatcher.flushAndWait();
 
         throwWriteFailureIfExists();
@@ -144,11 +143,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
-                if (newDocumentProcessor != null) {
-                    newDocumentProcessor.processDocument(documentInputs);
-                }
-                Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(documentInputs);
-                documents.forEach(this::writeDocument);
+                List<DocumentInputs> list = this.newDocumentProcessor != null ?
+                    this.newDocumentProcessor.processDocument(documentInputs) :
+                    Arrays.asList(documentInputs);
+                writeProcessedDocumentInputs(list);
             });
         } finally {
             // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
@@ -156,6 +154,31 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             if (iterator instanceof Closeable) {
                 IOUtils.closeQuietly((Closeable) iterator);
             }
+        }
+    }
+
+    /**
+     * Due to the batching performed by the optional embedder, it is possible for some inputs to be "stuck" in the
+     * processor, and thus they need to be flushed before this writer finishes committing.
+     */
+    private void flushDocumentProcessor() {
+        if (newDocumentProcessor != null) {
+            Optional<List<DocumentInputs>> list = newDocumentProcessor.flush();
+            if (list.isPresent()) {
+                writeProcessedDocumentInputs(list.get());
+            }
+        }
+    }
+
+    /**
+     * Each {@code DocumentInputs} object can produce many documents to write to MarkLogic.
+     *
+     * @param list
+     */
+    private void writeProcessedDocumentInputs(List<DocumentInputs> list) {
+        for (DocumentInputs inputs : list) {
+            Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(inputs);
+            documents.forEach(this::writeDocument);
         }
     }
 

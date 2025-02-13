@@ -25,6 +25,11 @@ public class JsonChunk implements Chunk {
         this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "embedding";
     }
 
+    public boolean hasEmbeddingText() {
+        String text = getEmbeddingText();
+        return text != null && text.trim().length() > 0;
+    }
+
     @Override
     public String getDocumentUri() {
         return documentUri;

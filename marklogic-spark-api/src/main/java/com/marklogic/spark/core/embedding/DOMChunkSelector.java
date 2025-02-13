@@ -80,7 +80,10 @@ public class DOMChunkSelector implements ChunkSelector {
                 throw new ConnectorException(String.format("XPath expression for selecting chunks must only " +
                     "select elements; XPath: %s; document URI: %s", chunksExpression, sourceUri));
             }
-            chunks.add(new DOMChunk(sourceUri, document, (Element) node, xmlChunkConfig, xpathFactory));
+            DOMChunk chunk = new DOMChunk(sourceUri, document, (Element) node, xmlChunkConfig, xpathFactory);
+            if (chunk.hasEmbeddingText()) {
+                chunks.add(chunk);
+            }
         }
         return chunks;
     }
