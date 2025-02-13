@@ -13,11 +13,11 @@ import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.JsonChunk;
-import com.marklogic.spark.ConnectorException;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -51,7 +51,8 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             chunk.put("text", text);
             if (classifications != null && !classifications.isEmpty()) {
                 try {
-                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
+                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement()))
+                        .get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
                     chunk.set("classification", classificationNode);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
@@ -85,7 +86,8 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             chunk.put("text", text);
             if (classifications != null) {
                 try {
-                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement())).get(TextClassifier.CLASSIFICATION_MAIN_ELEMENT);
+                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement()))
+                        .get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
                     chunk.set("classification", classificationNode);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
