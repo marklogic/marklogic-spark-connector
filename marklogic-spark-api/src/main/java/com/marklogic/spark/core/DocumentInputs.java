@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.core.embedding.Chunk;
+import com.marklogic.spark.core.embedding.DocumentAndChunks;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,8 @@ public class DocumentInputs {
     }
 
     public void setGeneratedEmbeddings(List<float[]> generatedEmbeddings) {
+        // Requires the embedder to pass the entire set of embeddings for this document in one call. This avoids
+        // tricky situations with existing chunks, where we don't have a simple "add to the next existing chunk" method.
         if (existingChunks != null && !existingChunks.isEmpty()) {
             for (int i = 0; i < generatedEmbeddings.size(); i++) {
                 existingChunks.get(i).addEmbedding(generatedEmbeddings.get(i));
@@ -71,12 +74,21 @@ public class DocumentInputs {
         }
     }
 
-    public String getInitialUri() {
-        return initialUri;
+    /**
+     * Overrides the content handle, as in the process of selecting existing chunks, a new content object may have been
+     * created that the existing chunks are a part of. For example, chunks represented by DOM {@code Element}
+     * instances will be part of a parent DOM {@code Document} object that was created during the chunk selection
+     * processing. That {@code Document} object needs to be the content associated with this inputs object.
+     *
+     * @param documentAndChunks
+     */
+    public void setContentAndExistingChunks(DocumentAndChunks documentAndChunks) {
+        this.content = documentAndChunks.getContent();
+        this.existingChunks = documentAndChunks.getChunks();
     }
 
-    public void setContent(AbstractWriteHandle content) {
-        this.content = content;
+    public String getInitialUri() {
+        return initialUri;
     }
 
     public AbstractWriteHandle getContent() {
@@ -129,9 +141,5 @@ public class DocumentInputs {
 
     public List<float[]> getEmbeddings() {
         return embeddings;
-    }
-
-    public void setExistingChunks(List<Chunk> existingChunks) {
-        this.existingChunks = existingChunks;
     }
 }

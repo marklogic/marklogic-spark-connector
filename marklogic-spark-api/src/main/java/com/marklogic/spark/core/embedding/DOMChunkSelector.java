@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.core.embedding;
 
-import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
@@ -46,21 +45,6 @@ public class DOMChunkSelector implements ChunkSelector {
         }
         List<Chunk> chunks = makeChunks(uri, doc, chunkNodes);
         return new DocumentAndChunks(new DocumentWriteOperationImpl(uri, null, new DOMHandle(doc)), chunks);
-    }
-
-    @Override
-    public DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument) {
-        Document doc = domHelper.extractDocument(sourceDocument);
-
-        NodeList chunkNodes = selectChunkNodes(doc);
-        if (chunkNodes.getLength() == 0) {
-            return new DocumentAndChunks(sourceDocument, null);
-        }
-
-        List<Chunk> chunks = makeChunks(sourceDocument.getUri(), doc, chunkNodes);
-        DocumentWriteOperation docToWrite = new DocumentWriteOperationImpl(sourceDocument.getUri(),
-            sourceDocument.getMetadata(), new DOMHandle(doc));
-        return new DocumentAndChunks(docToWrite, chunks);
     }
 
     private NodeList selectChunkNodes(Document doc) {

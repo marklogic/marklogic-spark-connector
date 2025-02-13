@@ -16,6 +16,8 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
+import com.marklogic.spark.core.DocumentProcessor;
+import com.marklogic.spark.core.DocumentProcessorFactory;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
@@ -63,7 +65,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
-    private final NewDocumentProcessor newDocumentProcessor;
+    private final DocumentProcessor documentProcessor;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
@@ -77,7 +79,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
-        this.newDocumentProcessor = NewDocumentProcessorFactory.newDocumentProcessor(writeContext);
+        this.documentProcessor = DocumentProcessorFactory.newDocumentProcessor(writeContext);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -143,8 +145,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
-                List<DocumentInputs> list = this.newDocumentProcessor != null ?
-                    this.newDocumentProcessor.processDocument(documentInputs) :
+                List<DocumentInputs> list = this.documentProcessor != null ?
+                    this.documentProcessor.processDocument(documentInputs) :
                     Arrays.asList(documentInputs);
                 writeProcessedDocumentInputs(list);
             });
@@ -162,8 +164,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      * processor, and thus they need to be flushed before this writer finishes committing.
      */
     private void flushDocumentProcessor() {
-        if (newDocumentProcessor != null) {
-            Optional<List<DocumentInputs>> list = newDocumentProcessor.flush();
+        if (documentProcessor != null) {
+            Optional<List<DocumentInputs>> list = documentProcessor.flush();
             if (list.isPresent()) {
                 writeProcessedDocumentInputs(list.get());
             }

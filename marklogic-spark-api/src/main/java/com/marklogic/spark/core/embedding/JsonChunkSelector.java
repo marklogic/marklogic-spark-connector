@@ -84,27 +84,4 @@ public class JsonChunkSelector implements ChunkSelector {
         DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(uri, null, new JacksonHandle(doc));
         return new DocumentAndChunks(documentToWrite, chunks);
     }
-
-    @Override
-    public DocumentAndChunks selectChunks(DocumentWriteOperation sourceDocument) {
-        JsonNode doc = Util.getJsonFromHandle(sourceDocument.getContent());
-
-        JsonNode chunksNode = doc.at(chunksPointer);
-        if (chunksNode == null || (!(chunksNode instanceof ArrayNode) && !(chunksNode instanceof ObjectNode))) {
-            // No valid chunks found, just return the original document.
-            return new DocumentAndChunks(sourceDocument, null);
-        }
-
-        List<Chunk> chunks = new ArrayList<>();
-        if (chunksNode instanceof ArrayNode) {
-            chunksNode.forEach(obj -> chunks.add(new JsonChunk(sourceDocument.getUri(), (ObjectNode) obj, textPointer, embeddingArrayName)));
-        } else {
-            chunks.add(new JsonChunk(sourceDocument.getUri(), (ObjectNode) chunksNode, textPointer, embeddingArrayName));
-        }
-
-        DocumentWriteOperation documentToWrite = new DocumentWriteOperationImpl(
-            sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc)
-        );
-        return new DocumentAndChunks(documentToWrite, chunks);
-    }
 }

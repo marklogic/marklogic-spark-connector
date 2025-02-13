@@ -11,12 +11,16 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class EmbeddingGenerator implements EmbeddingProducer {
+
+    private static final Logger LANGCHAIN4J_LOGGER = LoggerFactory.getLogger("com.marklogic.langchain4j");
 
     // We don't have any use for metadata, so just need a single instance for constructing text segments.
     private static final Metadata TEXT_SEGMENT_METADATA = new Metadata();
@@ -134,22 +138,22 @@ public class EmbeddingGenerator implements EmbeddingProducer {
     }
 
     private void logResponse(Response<List<Embedding>> response, List<TextSegment> textSegments) {
-        if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isInfoEnabled()) {
+        if (LANGCHAIN4J_LOGGER.isInfoEnabled()) {
             // Not every embedding model provides token usage.
             if (response.tokenUsage() != null) {
-                EmbeddingUtil.LANGCHAIN4J_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
+                LANGCHAIN4J_LOGGER.info("Sent {} chunks; token usage: {}", textSegments.size(), response.tokenUsage());
             } else {
-                EmbeddingUtil.LANGCHAIN4J_LOGGER.info("Sent {} chunks", textSegments.size());
+                LANGCHAIN4J_LOGGER.info("Sent {} chunks", textSegments.size());
             }
 
-            if (EmbeddingUtil.LANGCHAIN4J_LOGGER.isDebugEnabled()) {
+            if (LANGCHAIN4J_LOGGER.isDebugEnabled()) {
                 long totalRequests = requestCount.incrementAndGet();
                 if (response.tokenUsage() != null) {
-                    EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
+                    LANGCHAIN4J_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
                         tokenCount.addAndGet(response.tokenUsage().inputTokenCount())
                     );
                 } else {
-                    EmbeddingUtil.LANGCHAIN4J_LOGGER.debug("Requests: {}", totalRequests);
+                    LANGCHAIN4J_LOGGER.debug("Requests: {}", totalRequests);
                 }
             }
         }

@@ -25,10 +25,6 @@ public class DocumentAndChunks implements DocumentWriteOperation {
         this.chunks = chunks;
     }
 
-    public DocumentWriteOperation getDocumentToWrite() {
-        return documentToWrite;
-    }
-
     public List<Chunk> getChunks() {
         return chunks;
     }

@@ -9,13 +9,6 @@ import com.marklogic.client.io.Format;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.catalyst.util.ArrayData;
-import org.apache.spark.sql.types.StructType;
-import org.apache.spark.unsafe.types.UTF8String;
-
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Encapsulates a row that confirms to {@code DocumentRowSchema} and may have additional columns as well. Intended to
@@ -24,11 +17,9 @@ import java.util.List;
 class DocumentRow {
 
     private final InternalRow row;
-    private final StructType schema;
 
-    DocumentRow(InternalRow row, StructType schema) {
+    DocumentRow(InternalRow row) {
         this.row = row;
-        this.schema = schema;
     }
 
     BytesHandle getContent(Format documentFormat) {
@@ -43,48 +34,8 @@ class DocumentRow {
         return row.isNullAt(2) ? null : row.getString(2);
     }
 
-    List<String> getChunks() {
-        int index = getOptionalFieldIndex(schema, "chunks");
-        List<String> chunks = new ArrayList<>();
-        if (index > -1) {
-            ArrayData array = row.getArray(index);
-            for (int i = 0; i < array.numElements(); i++) {
-                UTF8String val = array.getUTF8String(i);
-                if (val != null) {
-                    chunks.add(val.toString());
-                }
-            }
-        }
-        return chunks;
-    }
-
-    List<byte[]> getClassifications(String columnName) {
-        int index = getOptionalFieldIndex(schema, columnName);
-        List<byte[]> classifications = null;
-        if (index > -1) {
-            classifications = new ArrayList<>();
-            ArrayData array = row.getArray(index);
-            for (int i = 0; i < array.numElements(); i++) {
-                String val = array.getUTF8String(i).toString();
-                classifications.add(val.getBytes(StandardCharsets.UTF_8));
-            }
-        }
-        return classifications;
-    }
-
     DocumentMetadataHandle getMetadata() {
         return DocumentRowSchema.makeDocumentMetadata(row);
-    }
-
-    private int getOptionalFieldIndex(StructType schema, String fieldName) {
-        // We know what the first set of fields should be, so check each field after the expected set of document
-        // row fields.
-        for (int i = DocumentRowSchema.SCHEMA.size(); i < schema.size(); i++) {
-            if (fieldName.equals(schema.fields()[i].name())) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     private void setHandleFormat(BytesHandle bytesHandle, Format documentFormat) {

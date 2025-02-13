@@ -29,7 +29,7 @@ dependencies {
   java17Dependencies project(":marklogic-langchain4j")
 
   // Need this so that an OkHttpClientConfigurator can be created.
-  // I think this is just compileOnly, since the classes are present via the Java Client?
+  // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
   compileOnly 'com.squareup.okhttp3:okhttp:4.12.0'
 }
 
