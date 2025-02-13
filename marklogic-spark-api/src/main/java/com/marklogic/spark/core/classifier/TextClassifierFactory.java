@@ -14,16 +14,24 @@ import com.smartlogic.cloud.TokenFetcher;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public interface TextClassifierFactory {
+public abstract class TextClassifierFactory {
 
-    static TextClassifier newTextClassifier(Context context) {
+    private static final String MOCK_CLASSIFIER_OPTION = "spark.marklogic.testing.mockClassifierResponse";
+
+    public static TextClassifier newTextClassifier(Context context) {
+        if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
+            return new MockTextClassifier(context.getStringOption(MOCK_CLASSIFIER_OPTION));
+        }
+
         final String host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
         if (host != null && host.trim().length() > 0) {
             try {
                 ClassificationConfiguration config = buildClassificationConfiguration(context);
-                return new TextClassifier(config);
+                return new SemaphoreTextClassifier(config);
             } catch (Exception e) {
                 throw new ConnectorException(String.format("Unable to create a TextClassifier; cause: %s", e.getMessage()));
             }
@@ -35,25 +43,12 @@ public interface TextClassifierFactory {
     private static ClassificationConfiguration buildClassificationConfiguration(Context context) throws MalformedURLException, CloudException {
         final ConfigHelper configHelper = new ConfigHelper(context);
         final String apiKey = context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY);
-        if (Util.MAIN_LOGGER.isInfoEnabled()) {
-            Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}",
-                configHelper.getHost(), configHelper.getTokenUrl());
-        }
-
         TokenFetcher tokenFetcher = new TokenFetcher(configHelper.getTokenUrl().toString(), apiKey);
-
-        ClassificationConfiguration config = new ClassificationConfiguration();
-        config.setApiToken(tokenFetcher.getAccessToken().getAccess_token());
-
-        config.setHostName(configHelper.getHost());
-        config.setHostPort(configHelper.getPort());
-        config.setProtocol(configHelper.getProtocol());
-        config.setHostPath(configHelper.getClassifierPath());
-
-        return config;
+        String apiToken = tokenFetcher.getAccessToken().getAccess_token();
+        return configHelper.buildClassificationConfiguration(apiToken);
     }
 
-    class ConfigHelper {
+    public static class ConfigHelper {
         private final String host;
         private final int port;
         private final String protocol;
@@ -67,26 +62,30 @@ public interface TextClassifierFactory {
             this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH));
             String tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
             this.tokenUrl = new URL(protocol, host, port, tokenEndpoint);
+
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}", host, tokenUrl);
+            }
+        }
+
+        public ClassificationConfiguration buildClassificationConfiguration(String apiToken) {
+            ClassificationConfiguration config = new ClassificationConfiguration();
+            config.setApiToken(apiToken);
+
+            config.setHostName(host);
+            config.setHostPort(port);
+            config.setProtocol(protocol);
+            config.setHostPath(classifierPath);
+
+            Map<String, String> additionalParameters = new HashMap<>();
+            additionalParameters.put("threshold", "20");
+            additionalParameters.put("language", "en1");
+            config.setAdditionalParameters(additionalParameters);
+            return config;
         }
 
         public URL getTokenUrl() {
             return this.tokenUrl;
-        }
-
-        public String getHost() {
-            return host;
-        }
-
-        public int getPort() {
-            return port;
-        }
-
-        public String getProtocol() {
-            return protocol;
-        }
-
-        public String getClassifierPath() {
-            return classifierPath;
         }
 
         private String fixPath(String path) {
@@ -94,6 +93,23 @@ public interface TextClassifierFactory {
                 return null;
             }
             return path.startsWith("/") ? path : "/" + path;
+        }
+    }
+
+    private TextClassifierFactory() {
+    }
+
+    private static class MockTextClassifier implements TextClassifier {
+
+        private final String mockResponse;
+
+        private MockTextClassifier(String mockResponse) {
+            this.mockResponse = mockResponse;
+        }
+
+        @Override
+        public byte[] classifyText(String sourceUri, String text) {
+            return mockResponse.getBytes();
         }
     }
 }

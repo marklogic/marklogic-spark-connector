@@ -92,11 +92,11 @@ public class DocumentProcessor {
         // whether this happens or not.
         final String uri = inputs.getInitialUri();
         if (inputs.getExtractedText() != null) {
-            byte[] classification = textClassifier.classifyTextToBytes(uri, inputs.getExtractedText());
+            byte[] classification = textClassifier.classifyText(uri, inputs.getExtractedText());
             inputs.setClassificationResponse(classification);
         } else {
             String content = HandleAccessor.contentAsString(inputs.getContent());
-            byte[] classification = textClassifier.classifyTextToBytes(uri, content);
+            byte[] classification = textClassifier.classifyText(uri, content);
             inputs.setClassificationResponse(classification);
         }
     }
@@ -120,7 +120,7 @@ public class DocumentProcessor {
     private void classifyChunks(DocumentInputs inputs) {
         List<byte[]> classifications = new ArrayList<>();
         for (String chunk : inputs.getChunks()) {
-            byte[] result = textClassifier.classifyTextToBytes(inputs.getInitialUri(), chunk);
+            byte[] result = textClassifier.classifyText(inputs.getInitialUri(), chunk);
             classifications.add(result);
         }
         inputs.setClassifications(classifications);

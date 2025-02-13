@@ -11,20 +11,23 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
-    private static final String API_KEY = System.getenv("SEMAPHORE_API_KEY");
-
     @Test
-    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void chunkAndAddClassificationToXmlInOriginalDoc() {
         readAndStartWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
+
+            // These will be ignored because the mock response option is used. But to test S4 for real, you can comment
+            // out the line above that enables use of the mock classifier and populate the below environment variable.
+            .option(Options.WRITE_CLASSIFIER_APIKEY, System.getenv("SEMAPHORE_API_KEY"))
+            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
+            .option(Options.WRITE_CLASSIFIER_PATH, "/cls/dev/cs1/")
+
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text")
             .mode(SaveMode.Append)
             .save();
@@ -37,9 +40,9 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void sidecarChunksAddClassificationToXml() {
         readAndStartWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text")
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 3)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
@@ -59,7 +62,6 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     @Test
     void noClassificationAddedToXmlWhenNoSemaphoreServerSpecified() {
         readAndStartWrite()
-            .option(Options.WRITE_CLASSIFIER_HOST, "")
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .mode(SaveMode.Append)
             .save();
@@ -70,9 +72,9 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void noHttpsSpecifiedShouldDefaultToHttpAndFail() {
         DataFrameWriter writer = readAndStartWrite()
+            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
             .option(Options.WRITE_CLASSIFIER_HTTP, true)
             .mode(SaveMode.Append);
 
@@ -82,9 +84,9 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @EnabledIfEnvironmentVariable(named = "SEMAPHORE_API_KEY", matches = ".*")
     void classifyXmlContentsWithoutChunking() {
         readAndStartWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
             .mode(SaveMode.Append)
             .save();
 
@@ -92,29 +94,12 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element", "/root/model:classification/model:URL");
     }
 
-    @Test
-    @Disabled("Placeholder for a future test for data that is not UTF-8")
-    void classifyNonUtf8XmlData() {
-        assertTrue(true);
-    }
-
     private DataFrameWriter readAndStartWrite() {
         return readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
-            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
-            .option(Options.WRITE_CLASSIFIER_APIKEY, API_KEY)
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-
-            // Use paths that don't begin with a "/", to further ensure that a "/" is added automatically.
-            .option(Options.WRITE_CLASSIFIER_PATH, "cls/dev/cs1")
-            .option(Options.WRITE_CLASSIFIER_TOKEN_PATH, "token")
-
-            // Defining these properties, even though they use the default values, just to get a little more
-            // coverage with them.
-            .option(Options.WRITE_CLASSIFIER_PORT, 443)
-            .option(Options.WRITE_CLASSIFIER_HTTP, false);
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml");
     }
 
     private Dataset<Row> readDocument(String uri) {

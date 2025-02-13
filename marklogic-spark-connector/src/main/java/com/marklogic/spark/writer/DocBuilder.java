@@ -17,6 +17,7 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
+import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
@@ -39,8 +40,6 @@ import java.util.*;
  * of the schema of the Spark row.
  */
 public class DocBuilder {
-
-    private static final String CLASSIFICATION_MAIN_ELEMENT = "STRUCTUREDDOCUMENT";
 
     public interface UriMaker {
         String makeURI(String initialUri, JsonNode uriTemplateValues);
@@ -143,7 +142,7 @@ public class DocBuilder {
         JsonNode originalJsonContent, String uri, byte[] classificationResponse
     ) {
         try {
-            JsonNode structuredDocumentNode = xmlMapper.readTree(classificationResponse).get(CLASSIFICATION_MAIN_ELEMENT);
+            JsonNode structuredDocumentNode = xmlMapper.readTree(classificationResponse).get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
             ((ObjectNode) originalJsonContent).set("classification", structuredDocumentNode);
             return new JacksonHandle(originalJsonContent);
         } catch (IOException e) {
@@ -159,7 +158,7 @@ public class DocBuilder {
             DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
             Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
 
-            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
+            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
             Node classificationNode = originalDoc.createElementNS(com.marklogic.spark.Util.DEFAULT_XML_NAMESPACE, "classification");
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
                 Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i), true);

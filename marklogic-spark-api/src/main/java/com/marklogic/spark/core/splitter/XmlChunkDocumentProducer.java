@@ -7,13 +7,13 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
-import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.XmlChunkConfig;
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -119,7 +119,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         chunk.appendChild(text);
         if (classificationReponseNode != null) {
             Node classificationNode = doc.createElement("classification");
-            NodeList structuredDocumentNodeChildNodes = classificationReponseNode.getElementsByTagName(TextClassifier.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
+            NodeList structuredDocumentNodeChildNodes = classificationReponseNode.getElementsByTagName(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
             for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
                 Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);
