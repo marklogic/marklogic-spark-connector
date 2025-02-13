@@ -1,0 +1,6217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<envelope xmlns="http://marklogic.com/entity-services">
+  <headers/>
+  <triples/>
+  <instance>
+    <WebDocument xmlns="">
+      <searchable>
+	<xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml">
+	  <xhtml:body>
+<xhtml:p>
+
+BOOKMARKS:
+MarkLogic Server
+Table of Contents
+1. Requirements and Database Compatibility
+  1.1. Introduction
+  1.2. MarkLogic Server Assumptions
+  1.3. Memory, Disk Space, and Swap Space Requirements
+  1.4. Supported Platforms
+  1.5. Supported Filesystems
+  1.6. Supported Browsers
+  1.7. Java Virtual Machine Requirements
+  1.8. Upgrades and Database Compatibility
+  1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4
+2. Procedures
+  2.1. Upgrading from Previous Releases
+    2.1.1. Windows Service Parameters
+    2.1.2. Upgrading from Release 9.0-1 or Later
+    2.1.3. Upgrading Clusters with DB Replication Configured
+  2.2. Installing MarkLogic
+  2.3. Starting MarkLogic Server
+  2.4. Configuring the First and Subsequent Hosts
+    2.4.1. Configuring a Single Host or the First Host in a Cluster
+    2.4.2. Configuring an Additional Host in a Cluster
+    2.4.3. Leaving a Cluster and Becoming a Single Host
+  2.5. Entering a License Key
+  2.6. Checking for the Correct Software Version
+  2.7. Configuring MarkLogic Server to Run as a Non-Daemon User
+  2.8. Removing MarkLogic
+3. Appendix: Packages by Linux Platform
+  3.1. Red Hat Enterprise Linux 7
+    3.1.1. MarkLogic Server
+    3.1.2. MarkLogic Converters
+  3.2. Red Hat Enterprise Linux 8
+    3.2.1. MarkLogic Server
+    3.2.2. MarkLogic Converters
+  3.3. CentOS 7
+    3.3.1. MarkLogic Server
+    3.3.2. MarkLogic Converters
+  3.4. Amazon Linux 1
+    3.4.1. MarkLogic Server
+    3.4.2. MarkLogic Converters
+  3.5. Amazon Linux 2
+    3.5.1. MarkLogic Server
+    3.5.2. MarkLogic Converters
+4. Technical Support
+5. Copyright
+</xhtml:p>
+<xhtml:p>
+
+Page 1
+
+MarkLogic Server
+Installation Guide for All Platforms 
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11
+December, 2022
+
+
+Page 2
+
+MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Table of Contents
+1. Requirements and Database Compatibility .......................................................................... 3
+1.1. Introduction ............................................................................................................. 3
+1.2. MarkLogic Server Assumptions ................................................................................ 3
+1.3. Memory, Disk Space, and Swap Space Requirements ............................................... 4
+1.4. Supported Platforms ................................................................................................ 4
+1.5. Supported Filesystems ............................................................................................ 5
+1.6. Supported Browsers ................................................................................................ 6
+1.7. Java Virtual Machine Requirements .......................................................................... 6
+1.8. Upgrades and Database Compatibility ...................................................................... 7
+1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4 ......................... 7
+2. Procedures ........................................................................................................................ 9
+2.1. Upgrading from Previous Releases .......................................................................... 9
+2.1.1. Windows Service Parameters ........................................................................ 9
+2.1.2. Upgrading from Release 9.0-1 or Later ........................................................ 10
+2.1.3. Upgrading Clusters with DB Replication Configured ...................................... 11
+2.2. Installing MarkLogic ............................................................................................... 11
+2.3. Starting MarkLogic Server ...................................................................................... 15
+2.4. Configuring the First and Subsequent Hosts ........................................................... 16
+2.4.1. Configuring a Single Host or the First Host in a Cluster ................................. 16
+2.4.2. Configuring an Additional Host in a Cluster .................................................. 18
+2.4.3. Leaving a Cluster and Becoming a Single Host ............................................ 19
+2.5. Entering a License Key .......................................................................................... 20
+2.6. Checking for the Correct Software Version .............................................................. 21
+2.7. Configuring MarkLogic Server to Run as a Non-Daemon User ................................. 21
+2.8. Removing MarkLogic ............................................................................................. 23
+3. Appendix: Packages by Linux Platform .............................................................................. 25
+3.1. Red Hat Enterprise Linux 7 .................................................................................... 25
+3.1.1. MarkLogic Server ....................................................................................... 25
+3.1.2. MarkLogic Converters ................................................................................. 25
+3.2. Red Hat Enterprise Linux 8 .................................................................................... 25
+3.2.1. MarkLogic Server ....................................................................................... 25
+3.2.2. MarkLogic Converters ................................................................................. 26
+3.3. CentOS 7 ............................................................................................................. 26
+3.3.1. MarkLogic Server ....................................................................................... 26
+3.3.2. MarkLogic Converters ................................................................................. 26
+3.4. Amazon Linux 1 .................................................................................................... 27
+3.4.1. MarkLogic Server ....................................................................................... 27
+3.4.2. MarkLogic Converters ................................................................................. 27
+3.5. Amazon Linux 2 .................................................................................................... 27
+3.5.1. MarkLogic Server ....................................................................................... 27
+3.5.2. MarkLogic Converters ................................................................................. 27
+4. Technical Support ............................................................................................................ 29
+5. Copyright ......................................................................................................................... 30
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 2
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1. Requirements and Database Compatibility
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.1. Introduction
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.2. MarkLogic Server Assumptions
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.3. Memory, Disk Space, and Swap Space Requirements
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 4
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.4. Supported Platforms
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 4
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.5. Supported Filesystems
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 5
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.6. Supported Browsers
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 6
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.7. Java Virtual Machine Requirements
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 6
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.8. Upgrades and Database Compatibility
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2. Procedures
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 9
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.1. Upgrading from Previous Releases
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 9
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.1.1. Windows Service Parameters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 9
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.1.2. Upgrading from Release 9.0-1 or Later
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 10
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.1.3. Upgrading Clusters with DB Replication Configured
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 11
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.2. Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 11
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.3. Starting MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 15
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.4. Configuring the First and Subsequent Hosts
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 16
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.4.1. Configuring a Single Host or the First Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 16
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.4.2. Configuring an Additional Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 18
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.4.3. Leaving a Cluster and Becoming a Single Host
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 19
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.5. Entering a License Key
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 20
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.6. Checking for the Correct Software Version
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 21
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.7. Configuring MarkLogic Server to Run as a Non-Daemon User
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 21
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 2.8. Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 23
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3. Appendix: Packages by Linux Platform
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.1. Red Hat Enterprise Linux 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.1.1. MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.1.2. MarkLogic Converters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.2. Red Hat Enterprise Linux 8
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.2.1. MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.2.2. MarkLogic Converters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 26
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.3. CentOS 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 26
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.3.1. MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 26
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.3.2. MarkLogic Converters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 26
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.4. Amazon Linux 1
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.4.1. MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.4.2. MarkLogic Converters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.5. Amazon Linux 2
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.5.1. MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 3.5.2. MarkLogic Converters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 27
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 4. Technical Support
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 29
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 5. Copyright
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: 30
+
+
+Page 3
+
+MarkLogic Server  Requirements and Database Compatibility
+
+</xhtml:p>
+<xhtml:p>
+1. Requirements and Database Compatibility
+
+</xhtml:p>
+<xhtml:p>
+This chapter introduces MarkLogic Server, lists the product requirements and supported platforms, and
+describes the database compatibility with previous releases. It includes the following sections:
+
+</xhtml:p>
+<xhtml:p>
+• Introduction
+• MarkLogic Server Assumptions
+• Memory, Disk Space, and Swap Space Requirements
+• Supported Platforms
+• Supported Filesystems
+• Supported Browsers
+• Java Virtual Machine Requirements
+• Upgrades and Database Compatibility
+• MarkLogic Converters Installation Changes Starting at Release 9.0-4
+
+</xhtml:p>
+<xhtml:p>
+1.1. Introduction
+MarkLogic Server is a powerful NoSQL database for harnessing your digital content base, complete
+with enterprise features demanded by real-world, mission-critical applications. MarkLogic enables you
+to build complex applications that interact with large volumes of content in JSON, XML, SGML, HTML,
+and other popular content formats, as well as binary formats. The unique architecture of MarkLogic
+ensures that your applications are both scalable and high performance, delivering query results at
+search-engine speeds while providing transactional integrity over the underlying content repository.
+MarkLogic can be configured for a distributed environment, enabling you to scale your infrastructure
+through hardware expansion.
+
+</xhtml:p>
+<xhtml:p>
+This installation guide explains the procedures needed to install MarkLogic on your system. It is
+intended for a technical audience. This document explains how to install the software, not how to
+use the software. To learn how to get started using the software, see the rest of the MarkLogic
+documentation (available on docs.marklogic.com), including the following documents:
+
+</xhtml:p>
+<xhtml:p>
+• What's New
+• Getting Started with MarkLogic Server
+• Concepts Guide
+• Administrator's Guide
+• Getting Started with Optic
+• Application Developer's Guide
+• Search Developer's Guide
+• JavaScript Reference Guide
+• MarkLogic XQuery and XSLT Function Reference
+
+</xhtml:p>
+<xhtml:p>
+1.2. MarkLogic Server Assumptions
+During the installation process, MarkLogic sets memory and other settings based on the characteristics
+of the computer in which it is running. MarkLogic is a scalable, multi-threaded server product, and as
+such it assumes it has the entire machine available to it, including the CPU and disk I/O capacity. It
+is important to follow the guidelines as described. Furthermore, MarkLogic assumes there is only one
+MarkLogic Server process running on any given machine, so it is not recommended to run multiple
+instances of MarkLogic on a single machine.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic Server expects the system clocks to be synchronized across all the nodes in a cluster. The
+clock skew should be less than 0.5 seconds. You should use a time service such as NTP to keep
+your system clocks synchronized. For more details, see the following Knowledge Base article: https://
+help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 3
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: docs.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: What's New
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Getting Started with MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Concepts Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Administrator's Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Getting Started with Optic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Application Developer's Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Search Developer's Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: JavaScript Reference Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic XQuery and XSLT Function Reference
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Introduction
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic Server Assumptions
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Memory, Disk Space, and Swap Space Requirements
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Supported Platforms
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Supported Filesystems
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Supported Browsers
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Java Virtual Machine Requirements
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrades and Database Compatibility
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4
+
+
+Page 4
+
+MarkLogic Server  Memory, Disk Space, and Swap Space
+Requirements
+
+</xhtml:p>
+<xhtml:p>
+1.3. Memory, Disk Space, and Swap Space Requirements
+Before installing the software, be sure that your system meets the following requirements:
+
+</xhtml:p>
+<xhtml:p>
+• For a production deployment, MarkLogic recommends at least 8 vCPUs per host, with 8 GB of
+memory per vCPU. For example, for a production host with 16 vCPUs the recommended memory
+is at least 128 GB. For bare-metal systems, a hardware thread (hyperthread), is equivalent to a
+vCPU. Use memory optimized cloud compute instances or virtual machines. Memory requirements
+may increase over time as projects evolve and databases grow with more content and more indexes.
+See comment 1 in the following table.
+• For a prototyping or development deployment, MarkLogic requires a minimum of 4 GB of system
+memory and recommends at least 8 GB of memory. See comment 1 in the following table.
+• For small forests that will not grow, such as Security and Schemas, the reserve size is two times the
+size of the forest.
+For data forests, we recommend a size of 500 GB, where 400 GB is allocated to content, and 100 GB
+is left as reserved space to handle merges. See comment 2 in the following table for details about this
+storage calculation.
+• On Linux systems, you need at least as much swap space as the amount of physical memory on the
+machine or 32 GB, whichever is lower.
+If you have Huge Pages set up on a Linux system, your swap space on that machine must be at least
+the size of your physical memory minus the size of your Huge Pages (because Linux Huge Pages are
+not swapped), or 32 GB, whichever is lower. For example, if you have 48 GB of physical memory, and
+if you have Huge Pages set to 18 GB, then you need swap space of 30 GB (48 - 18). For details on
+setting up Huge Pages, see https://access.redhat.com/solutions/1578873 on the Red Hat website.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+A Red Hat subscription is required to view the content on the Web page.
+
+</xhtml:p>
+<xhtml:p>
+At system startup on Linux machines, MarkLogic Server logs a message to the ErrorLog.txt
+file showing the size of the Huge Pages, and the message indicates if the size is below the
+recommended level.
+If you are using Red Hat Enterprise Linux 7, you must turn off Transparent Huge Pages (Transparent
+Huge Pages are configured automatically by the operating system). For details on disabling
+Transparent Huge Pages, see https://access.redhat.com/solutions/1320153.
+• On Windows systems, twice the physical memory is also recommended for the swap (page) file. For
+Windows 10, you configure this by searching for View Advanced System Settings in the taskbar.
+Next, click the icon. Then, in the Performance area, click Settings &gt; Advanced and set the virtual
+memory to twice the physical memory. For earlier Windows systems, click System Control Panel &gt;
+Advanced System Settings &gt; Performance Settings &gt; Advanced tab and set the virtual memory
+settings to twice the physical memory.
+
+</xhtml:p>
+<xhtml:p>
+No  Comment
+[1]  MarkLogic automatically configures itself to reserve as much system memory as it can the first time it runs. If you need to
+change the default configuration, you can manually override these defaults later, using the Admin Interface.
+[2]  For content forests that are expected to grow over time, with the default merge settings, you need to reserve 100 GB of
+storage. Here is the calculation:
+
+</xhtml:p>
+<xhtml:p>
+You need at least 2 times the merge max size of free space per forest, regardless of the forest size. Therefore, with
+the default merge max size of 48 GB, you need at least 96 GB of free space. Additionally, if your journals are not yet
+created, you need 2 times the journal size of free disk space (if the journal space is not yet allocated). Therefore, to be
+safe, you need 100 GB of free space for each content forest.
+
+</xhtml:p>
+<xhtml:p>
+1.4. Supported Platforms
+MarkLogic Server is supported on the following platforms:
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 4
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://access.redhat.com/solutions/1578873
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://access.redhat.com/solutions/1320153
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: comment 1
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: comment 1
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: comment 2
+
+
+Page 5
+
+MarkLogic Server  Supported Filesystems
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Microsoft Windows Server 2019
+
+</xhtml:p>
+<xhtml:p>
+Microsoft Windows Server 2016
+
+</xhtml:p>
+<xhtml:p>
+Microsoft Windows Server 2012
+(x64)
+Microsoft Windows 10 (x64)
+
+</xhtml:p>
+<xhtml:p>
+Mac OS X 10.14 or later
+
+</xhtml:p>
+<xhtml:p>
+Docker
+
+</xhtml:p>
+<xhtml:p>
+Red Hat Enterprise Linux 7 (x64)
+
+</xhtml:p>
+<xhtml:p>
+Red Hat Enterprise Linux 8 (x64)
+
+</xhtml:p>
+<xhtml:p>
+CentOS 7 (x64)
+
+</xhtml:p>
+<xhtml:p>
+Amazon Linux 1 (x64)
+
+</xhtml:p>
+<xhtml:p>
+Amazon Linux 2 (x64) 
+
+</xhtml:p>
+<xhtml:p>
+Comment
+Microsoft Windows Server supports Open Neural Network Exchange format (ONNX)
+for machine learning. To use the ONNX APIs and obtain the required Machine
+Learning libraries, download the GPU-enabled version of MarkLogic Server for
+Windows.
+
+</xhtml:p>
+<xhtml:p>
+Desktop Microsoft Windows 10 (x64) is supported for development only. Use
+Windows Server for Production.
+Mac OS X is supported for development only. Conversion (Office and PDF) and entity
+enrichment are not available on Mac OS X. A 64-bit capable processor is required
+(http://support.apple.com/kb/HT3696).
+Docker is supported for development and production (one container per host
+recommended). For more details, see https://developer.marklogic.com/code/docker/.
+Red Hat Enterprise Linux 7 (x64) and CentOS 7 (x64) are supported on VMware
+ESXi 6.0 and Kernel-based Virtual Machine. Starting with MarkLogic 10.0-2, Red Hat
+Enterprise Linux 8 (x64) is also supported.
+
+</xhtml:p>
+<xhtml:p>
+CentOS 7 (x64) is supported on the Azure platform.
+
+</xhtml:p>
+<xhtml:p>
+All Linux platforms support Open Neural Network Exchange format (ONNX) for
+machine learning. To use the ONNX APIs and obtain the required Machine Learning
+libraries, download MarkLogic Server for Linux.
+
+</xhtml:p>
+<xhtml:p>
+Either none, deadline, mq-deadline, or kyber I/O scheduler is required to
+ensure efficient disk I/O for MarkLogic Server on Linux. When configuring an I/O
+scheduler with SSDs in a virtualized environment (including any cloud-based virtual
+machines), the OS I/O scheduling must be set to none for 4.x kernels or noop/none
+for older 3.x kernels. For more details, see:
+
+</xhtml:p>
+<xhtml:p>
+• https://help.marklogic.com/Knowledgebase/Article/View/8/0/notes-on-io-schedulers
+• https://lonesysadmin.net/2013/12/06/use-elevator-noop-for-linux-virtual-machines/
+• https://access.redhat.com/solutions/5427
+
+</xhtml:p>
+<xhtml:p>
+For a list of packages required for each Linux platform, see Appendix: Packages by
+Linux Platform.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+MarkLogic now supports the 1-Click AWS option in AWS Marketplace. Because of this,
+the published MarkLogic AMIs will have data volumes predefined.
+
+</xhtml:p>
+<xhtml:p>
+1.5. Supported Filesystems
+MarkLogic relies on the operating system for filesystem operations. While any filesystem that works
+properly (including under heavy load) should work, the following table lists the operating systems along
+with the filesystems under which they are supported. Other filesystems may work but have not been
+thoroughly tested by MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+Operating System
+Linux (all varieties) 
+Supported Filesystems
+XFS (recommended), EXT3, and EXT4 as well as the clustered filesystems for shared-disk failover
+mentioned in Requirements for Failed Disk Failover in the Scalability, Availability, and Failover Guide.
+
+</xhtml:p>
+<xhtml:p>
+WARNING
+Do not use data=writeback with EXT3 and EXT4 filesystems.
+
+</xhtml:p>
+<xhtml:p>
+Windows
+Mac OS
+All 
+
+</xhtml:p>
+<xhtml:p>
+NAS is supported on Red Hat Enterprise Linux 7 and NetAPP.
+NTFS
+HFS+
+Amazon S3 (no journaling with S3).
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 5
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://support.apple.com/kb/HT3696
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://developer.marklogic.com/code/docker/
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://help.marklogic.com/Knowledgebase/Article/View/8/0/notes-on-io-schedulers
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://lonesysadmin.net/2013/12/06/use-elevator-noop-for-linux-virtual-machines/
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://access.redhat.com/solutions/5427
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Requirements for Failed Disk Failover
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Appendix: Packages by Linux Platform
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Linux Platform
+
+
+Page 6
+
+MarkLogic Server  Supported Browsers
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+The Solaris OS is not supported.
+
+</xhtml:p>
+<xhtml:p>
+1.6. Supported Browsers
+The following browsers are supported:
+
+</xhtml:p>
+<xhtml:p>
+• Google Chrome
+• Mozilla Firefox
+• Microsoft Edge
+
+</xhtml:p>
+<xhtml:p>
+1.7. Java Virtual Machine Requirements
+MarkLogic Server can function with or without a Java Virtual Machine (JVM). The only requirement
+needed for a JVM to be installed on MarkLogic Server would be if you use HDFS (Hadoop Distributed
+File System).
+
+</xhtml:p>
+<xhtml:p>
+Our provided Amazon AMIs have a JDK pre-installed that is used during the MarkLogic bootstrap
+process to setup and configure MarkLogic in the Amazon environment. Therefore, you do not need to
+install a JVM on any EC2 instance.
+
+</xhtml:p>
+<xhtml:p>
+The following MarkLogic products and features require a JVM to either run or install:
+
+</xhtml:p>
+<xhtml:p>
+• Gradle (https://developer.marklogic.com/code/ml-gradle/)
+• DHF (https://marklogic.github.io/marklogic-data-hub/)
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic supports the Java 8, 9, 10, and 11 versions of the following JVMs:
+
+</xhtml:p>
+<xhtml:p>
+• Oracle/Sun
+• OpenJDK 
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+The IBM JRE is not supported.
+
+</xhtml:p>
+<xhtml:p>
+By default, MarkLogic looks for Java in the location specified via the JAVA_HOME environment variable
+or in a specific set of default locations. If JAVA_HOME is not set in the startup environment, MarkLogic
+uses the first JRE or JDK found in one of the following locations. These locations are searched in the
+order listed.
+
+</xhtml:p>
+<xhtml:p>
+• /usr/java/default
+• /usr/java/latest
+• /usr/java/jdk1.N*
+
+</xhtml:p>
+<xhtml:p>
+*where N is a supported Java version. For example, /usr/java/jdk1.8.0_202.
+• /usr/lib/jvm/java
+• /usr/lib/jvm/java-openjdk
+• /usr/lib/jvm/jre-1.N.0-*.x86_64
+
+</xhtml:p>
+<xhtml:p>
+*where N is a supported Java version, such as Java 8.
+
+</xhtml:p>
+<xhtml:p>
+If you have Java installed in a different location, you can communicate your JAVA_HOME to MarkLogic
+through the file /etc/marklogic.conf. For example:
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 6
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://developer.marklogic.com/code/ml-gradle/
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: https://marklogic.github.io/marklogic-data-hub/
+
+
+Page 7
+
+MarkLogic Server  Upgrades and Database Compatibility
+
+</xhtml:p>
+<xhtml:p>
+cat &gt; /etc/marklogic.conf
+export JAVA_HOME=/path/to/your/jdk
+
+</xhtml:p>
+<xhtml:p>
+1.8. Upgrades and Database Compatibility
+MarkLogic 11 supports upgrades from MarkLogic 9.
+
+</xhtml:p>
+<xhtml:p>
+During the upgrade, the Security database, the Schemas database, and the configuration files are
+automatically upgraded. The Security database is upgraded with the latest execute privileges and the
+Schemas database is upgraded with the latest version of the Schemas used by MarkLogic Server. The
+upgrade occurs as part of the installation procedure.
+
+</xhtml:p>
+<xhtml:p>
+Databases that contain your own content are also upgraded; once you upgrade, you will no longer be
+able to use that database with previous versions of MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+MarkLogic Corporation strongly recommends performing a backup of your databases
+before upgrading. Additionally, MarkLogic Corporation recommends that you first
+upgrade to the latest maintenance release of the major version of MarkLogic you are
+running before upgrading.
+
+</xhtml:p>
+<xhtml:p>
+For the procedure for upgrading, see Upgrading from Previous Releases. For details about known
+incompatibilities, see What's New.
+
+</xhtml:p>
+<xhtml:p>
+1.9. MarkLogic Converters Installation Changes Starting at
+Release 9.0-4
+MarkLogic Converters are used to convert Microsoft Office Word, Excel, and PowerPoint documents,
+as well as Adobe PDF files, to XHTML. MarkLogic filters are used to filter a variety of document
+formats, extract metadata and text from them, and return XHTML. The following MarkLogic XQuery API
+functions, described in the MarkLogic XQuery and XSLT Function Reference, provide this functionality:
+
+</xhtml:p>
+<xhtml:p>
+xdmp:word-convert
+xdmp:excel-convert
+xdmp:powerpoint-convert
+xdmp:pdf-convert
+xdmp:document-filter
+
+</xhtml:p>
+<xhtml:p>
+Converters/filters are also used as part of the conversion pipeline in Content Processing Framework.
+For more details, see The Default Conversion Option in the Content Processing Framework Guide.
+
+</xhtml:p>
+<xhtml:p>
+Prior to MarkLogic release 9.0-4, converters/filters were bundled and automatically installed with
+MarkLogic Server. Starting with MarkLogic release 9.0-4, converters/filters are offered as a separate
+package: MarkLogic Converters.
+
+</xhtml:p>
+<xhtml:p>
+This change provides better flexibility and enables you to install/uninstall MarkLogic converters/filters
+separately from MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+With this change, MarkLogic Server does not include MarkLogic Converters. To use converters/filters,
+install both packages: MarkLogic Server and MarkLogic Converters. An XDMP-CVTNOTFOUND error will
+be thrown upon an attempt to use converters/filters on a MarkLogic node with no MarkLogic Converters
+installed.
+
+</xhtml:p>
+<xhtml:p>
+The version of MarkLogic Converters is synchronized with the version of MarkLogic Server. For
+example, MarkLogic Converters 9.0-4 corresponds to MarkLogic Server 9.0-4 and may be installed
+with it.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: What's New
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: The Default Conversion Option
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Content Processing Framework Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 8
+
+MarkLogic Server  MarkLogic Converters Installation Changes Starting
+at Release 9.0-4
+
+</xhtml:p>
+<xhtml:p>
+You can obtain the version of MarkLogic Converters installed on a node by calling to MarkLogic
+server-side API function xdmp:host-status and examining the value of the converters-version
+element in the response. If the converters package is not installed on a node, the convertersversion element will be empty.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic Converters packages for all supported platforms are available for download at the same
+location where MarkLogic Server packages are available, namely at http://developer.marklogic.com.
+
+</xhtml:p>
+<xhtml:p>
+If you want to use the converters package with MarkLogic 9.0-4 or later, you will have to perform a
+two-step installation: first install MarkLogic Server and then install MarkLogic Converters.
+
+</xhtml:p>
+<xhtml:p>
+For details on MarkLogic Server and MarkLogic Converters installation for all supported platforms, see
+Installing MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+If you want to uninstall MarkLogic 9.0-4 or later, and if the converters package was previously installed
+with it, you will have to perform a two-step uninstall: first uninstall MarkLogic Converters and then
+uninstall MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+For details on uninstalling MarkLogic Server and MarkLogic Converters, see Removing MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 8
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+
+
+Page 9
+
+MarkLogic Server  Procedures
+
+</xhtml:p>
+<xhtml:p>
+2. Procedures
+
+</xhtml:p>
+<xhtml:p>
+This section describes the following procedures to install MarkLogic on your system.
+
+</xhtml:p>
+<xhtml:p>
+• Upgrading from Previous Releases
+• Installing MarkLogic
+• Starting MarkLogic Server
+• Configuring the First and Subsequent Hosts
+• Entering a License Key
+• Checking for the Correct Software Version
+• Configuring MarkLogic Server to Run as a Non-Daemon User
+• Removing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+2.1. Upgrading from Previous Releases
+If you have previously installed MarkLogic on a machine, you must uninstall the old release before
+proceeding with the new installation. For information on removing the software, see Removing
+MarkLogic or the Installation Guide from the previous release. This section describes the following
+information and upgrade paths:
+
+</xhtml:p>
+<xhtml:p>
+• Windows Service Parameters
+• Upgrading from Release 9.0-1 or Later
+• Upgrading Clusters with DB Replication Configured
+
+</xhtml:p>
+<xhtml:p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</xhtml:p>
+<xhtml:p>
+WARNING
+MarkLogic Server does not support downgrades. Once you have upgraded to a later
+release, you cannot downgrade to a previous version. To retain the option to restore to
+a previous version of MarkLogic Server, make a complete backup of your content and
+security databases before upgrading.
+
+</xhtml:p>
+<xhtml:p>
+2.1.1. Windows Service Parameters
+When you upgrade MarkLogic on Windows as a different user from the user that installed the
+previous version, the MarkLogic service parameters in the Windows registry will be changed. When
+the old version of MarkLogic is uninstalled, the service is deleted from the registry, including any
+customizations to the service parameters. When the new version of MarkLogic is installed, the service
+is re-created in the registry, with the default service parameters.
+
+</xhtml:p>
+<xhtml:p>
+Before starting the upgraded version of MarkLogic, make any customization to the service parameters.
+Otherwise, the default service parameters will be set and MarkLogic will start up running as the local
+system user. Any MarkLogic configuration files saved as the local system user (such as those modified
+when making changes in the Admin Interface) will be created with the Windows file permissions for the
+local system user.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 9
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide.
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Starting MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring the First and Subsequent Hosts
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Entering a License Key
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Checking for the Correct Software Version
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring MarkLogic Server to Run as a Non-Daemon User
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Windows Service Parameters
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Release 9.0-1 or Later
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading Clusters with DB Replication Configured
+
+
+Page 10
+
+MarkLogic Server  Upgrading from Previous Releases
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+When you make changes to the user in the service parameters, you should also
+change data directory file permissions. This is because files may be written when
+MarkLogic is running as the local system user.
+
+</xhtml:p>
+<xhtml:p>
+2.1.2. Upgrading from Release 9.0-1 or Later
+To upgrade from release 9.0-1 or later, perform the following basic steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Stop MarkLogic Server (as described in step 1 of Removing MarkLogic).
+2. Uninstall the old MarkLogic release (as described in Removing MarkLogic).
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you want to uninstall MarkLogic 9.0-4 or later, and if the converters package
+was previously installed with it, you will have to perform a two-step uninstall: first
+uninstall MarkLogic Converters and then uninstall MarkLogic Server. For more
+detail, see MarkLogic Converters Installation Changes Starting at Release 9.0-4
+and Removing MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+3. Install the new MarkLogic release (as described in Installing MarkLogic).
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you want to install MarkLogic 9.0-4 or later, and you plan to use the
+converters package with it, you will have to perform a two-step installation: first
+install MarkLogic Server and then install MarkLogic Converters. For more detail,
+see MarkLogic Converters Installation Changes Starting at Release 9.0-4 and
+Installing MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+4. Start MarkLogic Server (as described in Starting MarkLogic Server).
+5. Open the Admin Interface in a browser (http://localhost:8001).
+6. When the Admin Interface prompts you to upgrade the databases and the configuration files, click
+the button to confirm the upgrade.
+
+</xhtml:p>
+<xhtml:p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</xhtml:p>
+<xhtml:p>
+If you are upgrading two clusters that make use of database replication to replicate the Security
+database on the master cluster, then you must enter the following to manually upgrade the Security
+database configuration files on the machine that hosts the replica Security database:
+
+</xhtml:p>
+<xhtml:p>
+http://host:8001/security-upgrade-go.xqy?force=true
+
+</xhtml:p>
+<xhtml:p>
+WARNING
+There is no direct upgrade path from Early Access releases to this release. If you need
+to move any data from an Early Access release to this release, you must re-create the
+data in the current release.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 10
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://localhost:8001
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4 
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Removing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4 
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 11
+
+MarkLogic Server  Installing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+2.1.3. Upgrading Clusters with DB Replication Configured
+If you are upgrading clusters with DB replication configured, see Upgrading Clusters Configured with
+Database Replication in the Database Replication Guide for details.
+
+</xhtml:p>
+<xhtml:p>
+2.2. Installing MarkLogic
+This section describes the procedure for installing MarkLogic Server on each platform. Perform the
+procedure corresponding to the platform to which you are installing.
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Windows
+x64 
+
+</xhtml:p>
+<xhtml:p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package. The latest installation packages are available from http://
+developer.marklogic.com.
+3. Double-click the .msi file to start the installer.
+4. The Welcome page displays. Click Next.
+5. Select Typical.
+6. Click Install.
+7. A dialog appears with the question Do you want to allow this app to make changes to your device? Click
+Yes.
+8. The installation process will begin. When the process is completed, click Finish.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you plan to use the converters package, also perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Download the MarkLogic Converters package (.msi) for Windows from http://developer.marklogic.com.
+2. Double-click the .msi file to start the installer.
+3. The welcome page displays Welcome to the MarkLogic Converters Setup Wizard. Click Next.
+4. The Choose Setup Type page displays. Select Typical.
+5. The Ready to Install page displays. Click Install to start the installation.
+6. A dialog appears with the question Do you want to allow this app to make changes to your device? Click
+Yes.
+7. The Installing MarkLogic Converters page displays.
+8. The final page displays Completing the MarkLogic Converters Setup Wizard. Click Finish.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 11
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading Clusters Configured with Database Replication
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Database Replication
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Database Replication Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 12
+
+MarkLogic Server  Installing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Red Hat
+Linux x64 
+
+</xhtml:p>
+<xhtml:p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum install /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -i /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Download the MarkLogic Converters package for Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum install /MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 12
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 13
+
+MarkLogic Server  Installing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+Platform
+CentOS
+Linux 
+
+</xhtml:p>
+<xhtml:p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum install /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -i /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Download the MarkLogic Converters package for the Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum install /MarkLogicConverters-11.0.0.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+For CentOS 8, MarkLogic has a dependency on libnsl.so.1(). You can either rely on yum
+to pull in the dependency automatically, or install it manually.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 13
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com.
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 14
+
+MarkLogic Server  Installing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Amazon
+Linux 2 
+
+</xhtml:p>
+<xhtml:p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically figure out the dependencies. As the root user, load additional packages for EC2 support with the
+following command:
+
+</xhtml:p>
+<xhtml:p>
+sudo yum install java-11-openjdk xfsprogs
+4. As the root user, create a symbolic link with the following command:
+
+</xhtml:p>
+<xhtml:p>
+sudo ln -s system-lsb /etc/redhat-lsb
+5. As the root user, install the MarkLogic Server installation package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+sudo yum install MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+Mac OS
+X 
+
+</xhtml:p>
+<xhtml:p>
+1. Download the MarkLogic Converters package for Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum install /MarkLogicConverters-11.0.0.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</xhtml:p>
+<xhtml:p>
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+necessary steps from that section first.
+2. Download the MarkLogic Server installation package to your desktop. The latest installation packages are
+available from http://developer.marklogic.com.
+3. Double-click MarkLogic-11.0.0-x86_64.dmg to open the folder that contains the .pkg installer. Double-click on
+the installer to start.
+4. The Welcome page displays. Click Continue.
+5. In the Select a Destination window, select a destination to install MarkLogic Server or continue to select the
+default destination.
+6. In the Installation Type window, click Install. An Installation window appears that displays the progress of the
+installation.
+7. When the Installation Summary window appears, click Close.
+8. A MarkLogic control window appears from which you can start/stop MarkLogic Server, open the Admin
+Interface, and view the Error Log.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package,
+also perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Download the MarkLogic Converters package for Mac OS platform (e.g. MarkLogicConverters-11.0.0x86_64.dmg) from http://developer.marklogic.com to your desktop.
+2. Double-click the MarkLogicConverters-11.0.0-x86_64.dmg icon to open the folder that contains
+MarkLogicConverters-11.0.0-x86_64.dmg installer. Double-click on the installer to start.
+3. The Welcome page displays. Click Continue.
+4. In the Select a Destination window, select the default destination.
+5. In the Installation Type window, click Install. An Installation window appears that displays the progress of the
+installation.
+6. When the Installation Summary window appears, click Close.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 14
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 15
+
+MarkLogic Server  Starting MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+It is not recommended to install the converters while MarkLogic Server is running.
+The reason for this is that the server checks the converters presence and version
+number only upon start-up. So, the server will not have accurate information about the
+converters in this case. The recommended installation procedure is to stop the server if
+it is running, install or upgrade the server, install the converters, then start the server.
+
+</xhtml:p>
+<xhtml:p>
+The following table shows the installation directory (&lt;marklogic-dir&gt;) and the default data directory
+for each platform:
+
+</xhtml:p>
+<xhtml:p>
+Platform
+
+</xhtml:p>
+<xhtml:p>
+Windows
+Red Hat Linux
+Mac OS X 
+
+</xhtml:p>
+<xhtml:p>
+Installation Directory
+
+</xhtml:p>
+<xhtml:p>
+c:\Program Files\MarkLogic\
+/opt/MarkLogic
+~/Library/MarkLogic 
+
+</xhtml:p>
+<xhtml:p>
+Default Data Directory
+
+</xhtml:p>
+<xhtml:p>
+for configuration and log files
+c:\Program Files\MarkLogic\Data
+/var/opt/MarkLogic
+~/Library/Application Support/MarkLogic/Data
+
+</xhtml:p>
+<xhtml:p>
+The default forest directory is the same as the default data directory if the optional data directory is
+not specified during forest creation. On UNIX platforms, if you want MarkLogic Server to use another
+location for its default data directory, make your data directory (/var/opt/MarkLogic on Linux) a soft
+link to the alternate location.
+
+</xhtml:p>
+<xhtml:p>
+In MarkLogic release 9.0-4 and later, MarkLogic Converters installation directory remains the same as
+in previous releases, namely:
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Windows
+Red Hat Linux
+Mac OS X 
+
+</xhtml:p>
+<xhtml:p>
+Converters Installation Directory
+c:\Program Files\MarkLogic\Converters
+/opt/MarkLogic/Converters
+~/Library/MarkLogic/Converters
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+When a new node joins an existing cluster, the server does not try to figure out
+automatically whether the MarkLogic Converters package is needed or not. An XDMPCVTNOTFOUND error will be thrown if converters/filters built-in functions are called on
+nodes that do not have MarkLogic Converters installed.
+
+</xhtml:p>
+<xhtml:p>
+2.3. Starting MarkLogic Server
+MarkLogic Server will automatically start when the computer reboots. To start MarkLogic Server without
+rebooting, perform the following command for the corresponding platform:
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Windows 10 
+Steps
+1. In the Windows taskbar, click in the search area.
+2. Type MarkLogic.
+3. Right-click on Start MarkLogic Server.
+4. Select Run as administrator.
+5. When prompted, allow the app to make changes to your device.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 15
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+
+
+Page 16
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Windows 
+Steps
+Select Start &gt; Programs &gt; MarkLogic Server &gt; Start MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+Red Hat Linux
+
+</xhtml:p>
+<xhtml:p>
+Mac OS X 
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+When you start MarkLogic Server from the Start menu, the Windows service
+configuration for MarkLogic Server is set to start automatically. Also, to start the service,
+right-click the Start MarkLogic Server link in the Start menu and choose Run as
+Administrator, then choose to allow the action.
+
+</xhtml:p>
+<xhtml:p>
+As the root user, enter the following command:
+
+</xhtml:p>
+<xhtml:p>
+service MarkLogic start
+
+</xhtml:p>
+<xhtml:p>
+Select System Preferences &gt; MarkLogic to open the MarkLogic control winodw. Click Start MarkLogic
+Server.
+
+</xhtml:p>
+<xhtml:p>
+This starts all of the App Servers that are configured on your MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+2.4. Configuring the First and Subsequent Hosts
+The following configuration procedures differ depending on if you run MarkLogic Server in a cluster
+configuration or on a single host. The procedures are as follows:
+
+</xhtml:p>
+<xhtml:p>
+• Configuring a Single Host or the First Host in a Cluster
+• Configuring an Additional Host in a Cluster
+• Leaving a Cluster and Becoming a Single Host
+
+</xhtml:p>
+<xhtml:p>
+If you are configuring MarkLogic Server as a standalone host, or if this is the first host in a cluster
+configuration, follow the installation instructions in Configuring a Single Host or the First Host in a
+Cluster. Otherwise, follow the installation instructions in Configuring an Additional Host in a Cluster.
+
+</xhtml:p>
+<xhtml:p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</xhtml:p>
+<xhtml:p>
+2.4.1. Configuring a Single Host or the First Host in a Cluster
+To configure this installation as either a single host or as the first host in a cluster, perform the following
+steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Install and start MarkLogic as described in Installing MarkLogic and Starting MarkLogic Server.
+2. Log into the Admin Interface in a browser. It is on port 8001 of the host in which MarkLogic
+is running (for example, on the localhost, http://localhost:8001). The Server Install page
+appears:
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 16
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Release of MarkLogic Server
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Leaving a Cluster and Becoming a Single Host
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 17
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</xhtml:p>
+<xhtml:p>
+3. Click OK to continue.
+4. Wait for the server to restart.
+5. After the server restarts, you will be prompted to join a cluster:
+
+</xhtml:p>
+<xhtml:p>
+6. Click Skip.
+7. You will be prompted to create an admin user and a PKCS#11 wallet password. Enter a login name
+and password for the admin user, and enter a wallet password.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 17
+
+
+Page 18
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</xhtml:p>
+<xhtml:p>
+8. Click OK.
+9. You will be prompted to log in with your admin username and password.
+
+</xhtml:p>
+<xhtml:p>
+You will now see the Admin Interface. If you do not need to add any hosts at this time, skip to Checking
+for the Correct Software Version.
+
+</xhtml:p>
+<xhtml:p>
+2.4.2. Configuring an Additional Host in a Cluster
+All hosts in a cluster have to be on the same platform. To configure this installation as an additional host
+in a cluster of the same platform, perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. On the node you want to add to an existing cluster, install and start MarkLogic as described in
+Installing MarkLogic and Starting MarkLogic Server.
+2. Log into the Admin Interface in a browser. It is on port 8001 of the host in which MarkLogic is
+running (for example, on the localhost, http://localhost:8001). The Server Install page appears:
+
+</xhtml:p>
+<xhtml:p>
+3. Click OK to continue.
+4. Wait for the server to restart.
+5. After the server restarts, you will be prompted to join a cluster:
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 18
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Checking for the Correct Software Version
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: for the Correct Software Version
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Installing MarkLogic
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 19
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</xhtml:p>
+<xhtml:p>
+6. Enter the DNS name or the IP address of one of the machines in the cluster. For instance, if this is
+the second host you are installing, you can enter the DNS name of the first host you installed.
+7. Click OK.
+8. You will be prompted for an admin username and password. You can use the admin username and
+password you created when installing the first host. Click OK.
+9. Select a Group to assign this host. Click OK.
+
+</xhtml:p>
+<xhtml:p>
+10. Click OK to confirm that you are joining the cluster.
+11. You have now joined the cluster.
+12. Click OK to transfer the cluster configuration information.
+
+</xhtml:p>
+<xhtml:p>
+You have completed the process to join a cluster and will now see the Admin Interface.
+
+</xhtml:p>
+<xhtml:p>
+2.4.3. Leaving a Cluster and Becoming a Single Host
+If your host is currently in a cluster of multiple hosts, and you would like to leave the cluster and switch
+to a single host environment, follow the steps in this section.
+
+</xhtml:p>
+<xhtml:p>
+A host cannot leave a cluster if there are still forests assigned to it or if it has any foreign clusters
+associated with it. You must delete all forests assigned to the host and de-couple any clusters
+associated with a host before you can leave the cluster. However, if you delete only the configuration
+for a forest, the forest data will remain on the filesystem, allowing you to add the forest back to the host
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 19
+
+
+Page 20
+
+MarkLogic Server  Entering a License Key
+
+</xhtml:p>
+<xhtml:p>
+after changing the configuration. For instructions on adding a forest to a host, see the Administrator’s
+Guide.
+
+</xhtml:p>
+<xhtml:p>
+Perform the following steps to leave the cluster to which a host is connected:
+
+</xhtml:p>
+<xhtml:p>
+1. Run the Admin Interface from the host you want to remove from the cluster.
+2. Click the Hosts icon in the left menu tree. The Host Summary page appears.
+3. Click the name of the host you want to remove from the cluster, either from the left menu tree or
+from the Host Summary page. The Host Configuration page appears:
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+The Leave button only appears if the Admin Interface is running from this host.
+
+</xhtml:p>
+<xhtml:p>
+4. Click the Leave button.
+5. Click OK to confirm leaving the cluster.
+6. The host restarts to load the new configuration.
+7. Follow the instructions in sections Configuring a Single Host or the First Host in a Cluster or
+Configuring an Additional Host in a Cluster as appropriate.
+
+</xhtml:p>
+<xhtml:p>
+2.5. Entering a License Key
+MarkLogic will run without a license key, but after installing MarkLogic, you should enter a valid license
+key for the usage and features for which you are licensed. At any time, you can change the license key
+for a host from the Host Status page.
+
+</xhtml:p>
+<xhtml:p>
+These are some reasons that you would need to change your license key:
+
+</xhtml:p>
+<xhtml:p>
+• Your license key has expired.
+• You need to use some features that are not covered by your existing license key.
+• You upgraded your hardware with more CPUs and/or more cores.
+• You need a license that covers a larger database.
+• You require different languages.
+
+</xhtml:p>
+<xhtml:p>
+Changing the license key sometimes results in an automatic restart of MarkLogic (for example, if your
+new license enables a new language).
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 20
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Administrator’s Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Guide
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+
+
+Page 21
+
+MarkLogic Server  Checking for the Correct Software Version
+
+</xhtml:p>
+<xhtml:p>
+To change the license key for a host, perform the following steps using the Admin Interface:
+
+</xhtml:p>
+<xhtml:p>
+1. Click the Hosts icon on the left tree menu.
+2. Click the name of the host for which you want to change the license key, either on the tree menu or
+the summary page. The Host Configuration page appears.
+3. Click the Status tab. The Host Status page appears.
+4. Click the License key button. The License Key Entry page appears.
+5. Enter your new license key information. For information about licensing MarkLogic Server, contact
+your MarkLogic sales representative.
+6. After entering valid information in the Licensee and License Key fields, click OK. If it needs to,
+MarkLogic will automatically restart, and the new license key will take effect.
+
+</xhtml:p>
+<xhtml:p>
+2.6. Checking for the Correct Software Version
+After you log in with your admin username and password, the Admin Interface appears. To view more
+details about the release of MarkLogic Server that is installed and licensed, complete the following
+steps:
+
+</xhtml:p>
+<xhtml:p>
+1. Click the Hosts icon on the left menu tree.
+2. Select the name of the host you just installed, either from the left menu tree or from the Host
+Summary page.
+3. Click the Status tab. The Host Status page appears.
+4. Check that &lt;version&gt; is correct.
+
+</xhtml:p>
+<xhtml:p>
+You have successfully installed MarkLogic onto your system.
+
+</xhtml:p>
+<xhtml:p>
+To begin using MarkLogic Server, see Getting Started with MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+2.7. Configuring MarkLogic Server to Run as a Non-Daemon
+User
+On UNIX-based systems (Linux), MarkLogic runs as the UNIX user named daemon. This section
+describes how to change a configuration to run as a different UNIX user. This procedure must be run by
+the root user. Additionally, the root user is still required for installing and uninstalling MarkLogic and
+for starting and stopping MarkLogic from the startup scripts.
+
+</xhtml:p>
+<xhtml:p>
+To modify an installation to run as a user other than daemon, perform the following steps:
+
+</xhtml:p>
+<xhtml:p>
+1. In a command window on the machine in which you installed MarkLogic, log in as the root user.
+2. Make sure MarkLogic is stopped. If it is still running, stop it as follows:
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 21
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Getting Started with MarkLogic Server
+
+
+Page 22
+
+MarkLogic Server  Configuring MarkLogic Server to Run as a NonDaemon User
+
+</xhtml:p>
+<xhtml:p>
+Platfrom
+Red Hat Linux 
+Steps
+As the root user, enter the following command:
+
+</xhtml:p>
+<xhtml:p>
+/sbin/service MarkLogic stop
+3. Edit the configuration file for your platform using a text editor such as vi.
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Red Hat Linux  /etc/marklogic.conf 
+
+</xhtml:p>
+<xhtml:p>
+Configuration file
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+You must create the /etc/marklogic.conf file if it does not exist. The file is
+only read by the MarkLogic startup: it is never written to. Therefore, it will survive
+uninstalling MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+4. In the file /etc/marklogic.conf, add or edit the MARKLOGIC_USER environment variable to
+point to the user in which you want MarkLogic Server to run. For example, if you want it to run as a
+user named raymond, change the following line:
+
+</xhtml:p>
+<xhtml:p>
+export MARKLOGIC_USER=daemon
+
+</xhtml:p>
+<xhtml:p>
+to the following:
+
+</xhtml:p>
+<xhtml:p>
+export MARKLOGIC_USER=raymond
+5. Save the changes to the /etc/marklogic.conf file.
+6. If you have not yet started MarkLogic after performing a clean installation (that is, after installing
+into a directory where MarkLogic has never been installed), then you are done and you can skip
+the rest of the steps in this procedure. If you have an existing installation (for example, if you are
+upgrading to a maintenance release), then continue with the following steps.
+7. For all of the MarkLogic files owned by daemon, you need to change the owner to the new user.
+This includes all forest data and all of the configuration files. By default, the forest data is in the
+following directories:
+
+</xhtml:p>
+<xhtml:p>
+Platform  Configuration file
+Red Hat Linux  /var/opt/marklogic
+8. For example, on a Linux system, perform a command similar to the following, which changes the
+owner to the user specified earlier in the /etc//MarkLogic.conf file:
+
+</xhtml:p>
+<xhtml:p>
+chown -R raymond /var/opt/MarkLogic
+9. Make sure to change the owner for all forests in the system; otherwise, forests will fail to mount
+upon startup. Note that the above command only changes the owner for forests installed in the
+default directory. You need to run a similar command on the data directory for each forest in which
+a data directory is specified.
+10. When you have completed all the file and directory ownership changes, start MarkLogic as
+described in Starting MarkLogic Server.
+
+</xhtml:p>
+<xhtml:p>
+Once you have performed this procedure, all new files created by MarkLogic are created with the new
+user ownership; there will be no need to change any ownership again.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 22
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 23
+
+MarkLogic Server  Removing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+WARNING
+On Linux systems, use the /etc/marklogic.conf script to set environment
+variables. Any configuration changes you make to the MarkLogic-supplied startup
+script (for example, /etc/sysconfig/MarkLogic) will not survive an upgrade and
+need to be merged in during any upgrade of MarkLogic (because the installation
+installs a new version of the startup scripts). Under Linux, the uninstallation
+process saves an old version of the scripts (for example, /etc/sysconfig/
+MarkLogic.rpmsave), so you can use that version to merge in your changes. If you
+perform a clean installation (not an upgrade installation), however, you will need to run
+this entire procedure again. If you use /etc/marklogic.conf for your environment
+variable changes, they will survive an upgrade and you will not need to merge your
+changes.
+
+</xhtml:p>
+<xhtml:p>
+The following are default values of environment variables you can override in /etc/marklogic.conf
+on Linux-based systems (you will have to create the file if it does not exist):
+
+</xhtml:p>
+<xhtml:p>
+export MARKLOGIC_INSTALL_DIR=/opt/MarkLogic
+export MARKLOGIC_DATA_DIR=/var/opt/MarkLogic
+export MARKLOGIC_FSTYPE=ext4
+export MARKLOGIC_USER=daemon
+export MARKLOGIC_PID_FILE=/var/run/MarkLogic.pid
+export MARKLOGIC_UMASK=022
+export MARKLOGIC_DISABLE_JVM=0
+export MARKLOGIC_EC2_HOST
+export TZ=:/etc/localtime
+
+</xhtml:p>
+<xhtml:p>
+2.8. Removing MarkLogic
+To remove MarkLogic from your system, complete the following steps for the corresponding platform:
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Windows 10
+
+</xhtml:p>
+<xhtml:p>
+Windows 
+
+</xhtml:p>
+<xhtml:p>
+Perform the following:
+1. In the Windows taskbar, click in the search area.
+2. Type MarkLogic.
+3. Click Stop MarkLogic Server, then choose to allow the action. The server is now stopped.
+4. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: Go to Add or remove programs, select MarkLogic Converters and click
+Uninstall.
+5. Uninstall MarkLogic by navigating to Add or remove Programs, selecting MarkLogic Server and
+clicking Uninstall.
+1. Select System Control Panel &gt; Programs&gt; MarkLogic Server &gt;.
+2. Right-click Stop MarkLogic Server.
+3. Select Run as Administrator, then choose to allow the action. The server is now stopped.
+4. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: Select MarkLogic Converters in Add/Remove Programs of Control
+Panel, right click on it, and select Uninstall.
+5. Uninstall MarkLogic: select MarkLogic Server in Add/Remove Programs of Control Panel, right click
+on it, and select Uninstall.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 23
+
+
+Page 24
+
+MarkLogic Server  Removing MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+Platform
+Red Hat Linux
+
+</xhtml:p>
+<xhtml:p>
+Mac OS X 
+
+</xhtml:p>
+<xhtml:p>
+Perform the following:
+1. Stop MarkLogic: as the root user, enter the following command:
+
+</xhtml:p>
+<xhtml:p>
+/sbin/service MarkLogic stop
+2. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: As the root user: enter the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum remove MarkLogicConverters
+
+</xhtml:p>
+<xhtml:p>
+For environments that don’t allow a yum uninstallation, the rpm uninstall can be used. To do an rpm
+uninstall: As the root user, uninstall the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -e MarkLogicConverters
+
+</xhtml:p>
+<xhtml:p>
+3. Uninstall MarkLogic: as the root user, enter the following command:
+
+</xhtml:p>
+<xhtml:p>
+yum remove MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+For environments that don’t allow a yum uninstallation, the rpm uninstall can be used. To do an rpm
+uninstall: as the root user, uninstall the package with the following command:
+
+</xhtml:p>
+<xhtml:p>
+rpm -e MarkLogic
+
+</xhtml:p>
+<xhtml:p>
+1. Stop MarkLogic: select System Preferences &gt; MarkLogic to open the MarkLogic control window, and
+click Stop MarkLogic Server.
+2. [Uninstalling MarkLogic 9.0-4 or later] if you have the converters package installed, you need to
+uninstall it before continuing: Use these commands:
+
+</xhtml:p>
+<xhtml:p>
+sudo pkgutil --forget com.marklogic.converters
+
+</xhtml:p>
+<xhtml:p>
+rm ~/Library/MarkLogic/Converters
+3. No action is necessary when upgrading. If you want to remove the user data and do a fresh install,
+then remove the following directory:
+
+</xhtml:p>
+<xhtml:p>
+~/Library/ApplicationSupport/MarkLogic/Data
+4. To entirely remove MarkLogic, remove the following directories:
+
+</xhtml:p>
+<xhtml:p>
+~/Library/MarkLogic
+~/Library/Application Support/MarkLogic
+~/Library/StartupItems/MarkLogic
+~/Library/PreferencePanes/MarkLogic.prefPane
+5. To make Mac OS X completely forget it ever had a MarkLogic installation, run the following command
+from a terminal window:
+
+</xhtml:p>
+<xhtml:p>
+sudo pkgutil --forget com.marklogic.server
+
+</xhtml:p>
+<xhtml:p>
+NOTE
+Using this procedure to remove MarkLogic from your system will not remove user
+data (configuration information, XQuery files used by HTTP or XDBC servers, or forest
+content). This data is left in place to simplify the software upgrade process. If you wish
+to remove the user data, you must do so manually using standard operating system
+commands.
+
+</xhtml:p>
+<xhtml:p>
+In case you previously used converters/filters and want to remove this functionality:
+
+</xhtml:p>
+<xhtml:p>
+• To remove MarkLogic Converters from a node that has MarkLogic 9.0-4 or later release installed,
+you can use a package management tool, such as Control Panel on Windows or rpm on Linux, to
+uninstall MarkLogic Converters.
+• To remove converters/filters from a node that has MarkLogic 9.0-3 or earlier release installed, you
+need to uninstall that release of MarkLogic, and then install MarkLogic Server from release 9.0-4 or
+later but do not install MarkLogic Converters.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 24
+
+
+Page 25
+
+MarkLogic Server  Appendix: Packages by Linux Platform
+
+</xhtml:p>
+<xhtml:p>
+3. Appendix: Packages by Linux Platform
+
+</xhtml:p>
+<xhtml:p>
+This appendix is a reference guide for packages by Linux platform used for installing MarkLogic
+Server installation and MarkLogic Converters packages. If you cannot download the MarkLogic
+Server installation and MarkLogic Converters packages from http://developer.marklogic.com, you can
+download the packages required for the Linux platform you are installing. This appendix contains the
+following topics:
+
+</xhtml:p>
+<xhtml:p>
+• Red Hat Enterprise Linux 7
+• Red Hat Enterprise Linux 8
+• CentOS 7
+• Amazon Linux 1
+• Amazon Linux 2
+
+</xhtml:p>
+<xhtml:p>
+3.1. Red Hat Enterprise Linux 7
+3.1.1. MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14) (64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</xhtml:p>
+<xhtml:p>
+Package
+gdb-7.6.1-114.el7.x86_64
+glibc-2.17-260.el7.x86_64
+libgcc-4.8.5-39.el7.x86_64
+libtool-ltdl-2.4.2-22.el7_3.x86_64
+glibc-2.17-196.el7.x86_64
+libstdc++-4.8.5-39.el7.x86_64
+redhat-lsb-core-4.1-27.el7.x86_64
+rpm-libs-4.11.3-35.el7.x86_64
+bash-4.2.46-31.el7_4.x86_64
+
+</xhtml:p>
+<xhtml:p>
+3.1.2. MarkLogic Converters
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</xhtml:p>
+<xhtml:p>
+Package
+glibc-2.17-260.el7.i686
+glibc-2.17-260-.el7.x86_64
+libgcc-4.8.5-39.el7.i686
+libgcc-4.8.5-16.el7.x86_64
+libstdc++-4.8.5-16.el7.i686
+libstdc++-4.8.5-39.el7.x86_64
+rpm-libs-4.11.3-35.el8.x86_64
+bash-4.2.46-31.el7_4.x86_64
+
+</xhtml:p>
+<xhtml:p>
+3.2. Red Hat Enterprise Linux 8
+3.2.1. MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit) 
+
+</xhtml:p>
+<xhtml:p>
+Package
+gdb-8.2-5.el8.x86_64
+glibc-2.28-42.el8_0.1.x86_64
+libgcc-8.2.1-3.5.el8.x86_64
+libtool-ltdl-2.4.6-25.el8.x86_64
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 25
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Red Hat Enterprise Linux 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Red Hat Enterprise Linux 8
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: CentOS 7
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Amazon Linux 1
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Amazon Linux 2
+
+
+Page 26
+
+MarkLogic Server 
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.2.2. MarkLogic Converters
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.3. CentOS 7
+3.3.1. MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.3.2. MarkLogic Converters
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</xhtml:p>
+<xhtml:p>
+Package
+libnsl-2.28-42.el8_0.1.x86_64
+libstdc++-8.2.1-3.5.el8.x86_64
+redhat-lsb-core-4.1-47.el8.x86_64
+rpm-libs-4.14.3-23.el8.x86_64
+bash-4.4.19-7.el8.x86_64 
+
+</xhtml:p>
+<xhtml:p>
+CentOS 7
+
+</xhtml:p>
+<xhtml:p>
+Package
+glibc-2.28-42.el8_0.1.i686
+glibc-2.28-42.el8_0.1.x86_64
+libgcc-8.2.1-3.5.el8.i686
+libgcc-8.2.1-3.5.el8.x86_64
+libstdc++-8.2.1-3.5.el8.i686
+libstdc++-8.2.1-3.5.el8.x86_64
+rpm-libs-4.14.3-23.el8.x86_64
+bash-4.4.19-7.el8.x86_64
+
+</xhtml:p>
+<xhtml:p>
+Package
+gdb-7.6.1-119.el7.x86_64
+glibc-2.17-307.el7.1.x86_64
+libgcc-4.8.5-39.el7.x86_64
+libtool-ltdl-2.4.2-22.el7_3.x86_64
+glibc-2.17-307.el7.1.x86_64
+libstdc++-4.8.5-39.el7.x86_64
+redhat-lsb-core-4.1-27.el7.centos.1.x86_64
+rpm-libs-4.11.3-43.el7.x86_64
+bash-4.2.46-34.el7.x86_64 
+
+</xhtml:p>
+<xhtml:p>
+Package
+
+</xhtml:p>
+<xhtml:p>
+glibc-2.17-307.el7.1.x86_64
+libgcc-4.8.5-39.el7.i686
+libgcc-4.8.5-39.el7.x86_64
+libstdc++-4.8.5-39.el7.i686
+libstdc++-4.8.5-39.el7.i686
+rpm-libs-4.11.3-43.el7.x86_64
+bash-4.2.46-34.el7.x86_64
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 26
+
+
+Page 27
+
+MarkLogic Server  Amazon Linux 1
+
+</xhtml:p>
+<xhtml:p>
+3.4. Amazon Linux 1
+3.4.1. MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.4.2. MarkLogic Converters
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.5. Amazon Linux 2
+3.5.1. MarkLogic Server
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</xhtml:p>
+<xhtml:p>
+3.5.2. MarkLogic Converters
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit) 
+
+</xhtml:p>
+<xhtml:p>
+Package
+gdb-7.6.1-64.33.amzn1.x86_64
+glibc-2.17-292.180.amzn1.x86_64
+libgcc72-7.2.1-2.59.amzn1.x86_64
+libtool-ltdl-2.4.2-20.4.8.5.32.amzn1.x86_64
+glibc-2.17-292.180.amzn1.x86_64
+libstdc++72-7.2.1-2.59.amzn1.x86_64
+redhat-lsb-core-4.0-7.14.amzn1.x86_64
+rpm-libs-4.11.3-40.76.amzn1.x86_64
+bash-4.2.46-28.37.amzn1.x86_64
+
+</xhtml:p>
+<xhtml:p>
+Package
+glibc-2.17-292.180.amzn1.i686
+glibc-2.17-292.180.amzn1.x86_64
+libgcc64-6.4.1-1.45.amzn1.i686
+libgcc72-7.2.1-2.59.amzn1.x86_64
+libstdc++64-6.4.1-1.45.amzn1.i686
+libstdc++72-7.2.1-2.59.amzn1.x86_64
+rpm-libs-4.11.3-40.76.amzn1.x86_64
+bash-4.2.46-28.37.amzn1.x86_64
+
+</xhtml:p>
+<xhtml:p>
+Package
+gdb-8.0.1-30.amzn2.0.3.x86_64
+glibc-2.26-34.amzn2.x86_64
+libgcc-7.3.1-6.amzn2.0.4.x86_64
+libtool-ltdl-2.4.2-22.2.amzn2.0.2.x86_64
+glibc-2.26-34.amzn2.x86_64
+libstdc++-7.3.1-6.amzn2.0.4.x86_64
+system-lsb-core-4.1-27.amzn2.3.6.x86_64
+rpm-libs-4.11.3-40.amzn2.0.4.x86_64
+bash-4.2.46-33.amzn2.x86_64
+
+</xhtml:p>
+<xhtml:p>
+Package
+glibc-2.26-34.amzn2.i686
+glibc-2.26-34.amzn2.x86_64
+libgcc-7.3.1-6.amzn2.0.4.i686
+libgcc-7.3.1-6.amzn2.0.4.x86_64
+libstdc++-7.3.1-6.amzn2.0.4.i686
+libstdc++-7.3.1-6.amzn2.0.4.x86_64
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 27
+
+
+Page 28
+
+MarkLogic Server 
+
+</xhtml:p>
+<xhtml:p>
+Dependency
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</xhtml:p>
+<xhtml:p>
+Amazon Linux 2
+
+</xhtml:p>
+<xhtml:p>
+Package
+rpm-libs-4.11.3-40.amzn2.0.4.x86_64
+bash-4.2.46-33.amzn2.x86_64
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 28
+
+
+Page 29
+
+MarkLogic Server  Technical Support
+
+</xhtml:p>
+<xhtml:p>
+4. Technical Support
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic provides technical support according to the terms detailed in your Software License
+Agreement or End User License Agreement.
+
+</xhtml:p>
+<xhtml:p>
+We invite you to visit our support website at http://help.marklogic.com to access information on
+known and fixed issues, knowledge base articles, and more. For licensed customers with an active
+maintenance contract, see the Support Handbook for instructions on registering support contacts and
+on working with the MarkLogic Technical Support team.
+
+</xhtml:p>
+<xhtml:p>
+Complete product documentation, the latest product release downloads, and other useful information
+is available for all developers at http://developer.marklogic.com. For technical questions, we encourage
+you to ask your question on Stack Overflow.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 29
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://help.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Support Handbook
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: http://developer.marklogic.com
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Stack Overflow
+</xhtml:p>
+<xhtml:p>
+
+ANNOTATION: Stack Overflow
+
+
+Page 30
+
+MarkLogic Server  Copyright
+
+</xhtml:p>
+<xhtml:p>
+5. Copyright
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic Server MarkLogic 11 and supporting products. Last updated: November, 2022
+
+</xhtml:p>
+<xhtml:p>
+Copyright © 2022 MarkLogic Corporation. All rights reserved.This technology is protected by U.S.
+Patent No. 7,127,469B2, U.S. Patent No. 7,171,404B2, U.S. Patent No. 7,756,858 B2, and U.S. Patent
+No 7,962,474 B2, US 8,892,599, and US 8,935,267.
+
+</xhtml:p>
+<xhtml:p>
+The MarkLogic software is protected by United States and international copyright laws, and
+incorporates certain third party libraries and components which are subject to the attributions, terms,
+conditions and disclaimers set forth below.
+
+</xhtml:p>
+<xhtml:p>
+For all copyright notices, including third-party copyright notices, see the Combined Product Notices for
+your version of MarkLogic.
+
+</xhtml:p>
+<xhtml:p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 30
+
+</xhtml:p>
+</xhtml:body>
+	</xhtml:html>
+      </searchable>
+      <products>
+	<product>
+	  <name>MarkLogic Server</name>
+	  <version>11.0</version>
+	</product>
+      </products>
+      <category>guide</category>
+      <last-updated>2023-01-11T22:16:00.146646-08:00</last-updated>
+      <title>MarkLogic Server</title>
+      <owner>docs.marklogic.com</owner>
+      <url>https://docs.marklogic.com/11.0/guide/installation.pdf</url>
+    </WebDocument>
+  </instance>
+  <attachments><html xmlns="http://www.w3.org/1999/xhtml">
+      <head>
+	<meta name="content-type" content="application/pdf"/>
+	<meta name="filter-capabilities" content="text subfiles HD-HTML"/>
+	<meta name="CreationDate" content="2022/12/14 21:37:56+01'00'"/>
+	<meta name="ModDate" content="2022/12/14 21:37:56+01'00'"/>
+	<meta name="Creator" content="AH XSL Formatter V7.2 MR1 for Linux64 : 7.2.2.53984 (2021-10-18T16:29+09)"/>
+	<meta name="Producer" content="Antenna House PDF Output Library 7.2.1712"/>
+	<title>MarkLogic Server</title>
+	<meta name="Generated_with" content="Paligo https://paligo.net/"/>
+	<meta name="size" content="467616"/>
+      </head>
+      <body>
+<p>
+
+BOOKMARKS:
+MarkLogic Server
+Table of Contents
+1. Requirements and Database Compatibility
+  1.1. Introduction
+  1.2. MarkLogic Server Assumptions
+  1.3. Memory, Disk Space, and Swap Space Requirements
+  1.4. Supported Platforms
+  1.5. Supported Filesystems
+  1.6. Supported Browsers
+  1.7. Java Virtual Machine Requirements
+  1.8. Upgrades and Database Compatibility
+  1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4
+2. Procedures
+  2.1. Upgrading from Previous Releases
+    2.1.1. Windows Service Parameters
+    2.1.2. Upgrading from Release 9.0-1 or Later
+    2.1.3. Upgrading Clusters with DB Replication Configured
+  2.2. Installing MarkLogic
+  2.3. Starting MarkLogic Server
+  2.4. Configuring the First and Subsequent Hosts
+    2.4.1. Configuring a Single Host or the First Host in a Cluster
+    2.4.2. Configuring an Additional Host in a Cluster
+    2.4.3. Leaving a Cluster and Becoming a Single Host
+  2.5. Entering a License Key
+  2.6. Checking for the Correct Software Version
+  2.7. Configuring MarkLogic Server to Run as a Non-Daemon User
+  2.8. Removing MarkLogic
+3. Appendix: Packages by Linux Platform
+  3.1. Red Hat Enterprise Linux 7
+    3.1.1. MarkLogic Server
+    3.1.2. MarkLogic Converters
+  3.2. Red Hat Enterprise Linux 8
+    3.2.1. MarkLogic Server
+    3.2.2. MarkLogic Converters
+  3.3. CentOS 7
+    3.3.1. MarkLogic Server
+    3.3.2. MarkLogic Converters
+  3.4. Amazon Linux 1
+    3.4.1. MarkLogic Server
+    3.4.2. MarkLogic Converters
+  3.5. Amazon Linux 2
+    3.5.1. MarkLogic Server
+    3.5.2. MarkLogic Converters
+4. Technical Support
+5. Copyright
+</p>
+<p>
+
+Page 1
+
+MarkLogic Server
+Installation Guide for All Platforms 
+
+</p>
+<p>
+MarkLogic 11
+December, 2022
+
+
+Page 2
+
+MarkLogic Server
+
+</p>
+<p>
+Table of Contents
+1. Requirements and Database Compatibility .......................................................................... 3
+1.1. Introduction ............................................................................................................. 3
+1.2. MarkLogic Server Assumptions ................................................................................ 3
+1.3. Memory, Disk Space, and Swap Space Requirements ............................................... 4
+1.4. Supported Platforms ................................................................................................ 4
+1.5. Supported Filesystems ............................................................................................ 5
+1.6. Supported Browsers ................................................................................................ 6
+1.7. Java Virtual Machine Requirements .......................................................................... 6
+1.8. Upgrades and Database Compatibility ...................................................................... 7
+1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4 ......................... 7
+2. Procedures ........................................................................................................................ 9
+2.1. Upgrading from Previous Releases .......................................................................... 9
+2.1.1. Windows Service Parameters ........................................................................ 9
+2.1.2. Upgrading from Release 9.0-1 or Later ........................................................ 10
+2.1.3. Upgrading Clusters with DB Replication Configured ...................................... 11
+2.2. Installing MarkLogic ............................................................................................... 11
+2.3. Starting MarkLogic Server ...................................................................................... 15
+2.4. Configuring the First and Subsequent Hosts ........................................................... 16
+2.4.1. Configuring a Single Host or the First Host in a Cluster ................................. 16
+2.4.2. Configuring an Additional Host in a Cluster .................................................. 18
+2.4.3. Leaving a Cluster and Becoming a Single Host ............................................ 19
+2.5. Entering a License Key .......................................................................................... 20
+2.6. Checking for the Correct Software Version .............................................................. 21
+2.7. Configuring MarkLogic Server to Run as a Non-Daemon User ................................. 21
+2.8. Removing MarkLogic ............................................................................................. 23
+3. Appendix: Packages by Linux Platform .............................................................................. 25
+3.1. Red Hat Enterprise Linux 7 .................................................................................... 25
+3.1.1. MarkLogic Server ....................................................................................... 25
+3.1.2. MarkLogic Converters ................................................................................. 25
+3.2. Red Hat Enterprise Linux 8 .................................................................................... 25
+3.2.1. MarkLogic Server ....................................................................................... 25
+3.2.2. MarkLogic Converters ................................................................................. 26
+3.3. CentOS 7 ............................................................................................................. 26
+3.3.1. MarkLogic Server ....................................................................................... 26
+3.3.2. MarkLogic Converters ................................................................................. 26
+3.4. Amazon Linux 1 .................................................................................................... 27
+3.4.1. MarkLogic Server ....................................................................................... 27
+3.4.2. MarkLogic Converters ................................................................................. 27
+3.5. Amazon Linux 2 .................................................................................................... 27
+3.5.1. MarkLogic Server ....................................................................................... 27
+3.5.2. MarkLogic Converters ................................................................................. 27
+4. Technical Support ............................................................................................................ 29
+5. Copyright ......................................................................................................................... 30
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 2
+</p>
+<p>
+
+ANNOTATION: 1. Requirements and Database Compatibility
+</p>
+<p>
+
+ANNOTATION: 3
+</p>
+<p>
+
+ANNOTATION: 1.1. Introduction
+</p>
+<p>
+
+ANNOTATION: 3
+</p>
+<p>
+
+ANNOTATION: 1.2. MarkLogic Server Assumptions
+</p>
+<p>
+
+ANNOTATION: 3
+</p>
+<p>
+
+ANNOTATION: 1.3. Memory, Disk Space, and Swap Space Requirements
+</p>
+<p>
+
+ANNOTATION: 4
+</p>
+<p>
+
+ANNOTATION: 1.4. Supported Platforms
+</p>
+<p>
+
+ANNOTATION: 4
+</p>
+<p>
+
+ANNOTATION: 1.5. Supported Filesystems
+</p>
+<p>
+
+ANNOTATION: 5
+</p>
+<p>
+
+ANNOTATION: 1.6. Supported Browsers
+</p>
+<p>
+
+ANNOTATION: 6
+</p>
+<p>
+
+ANNOTATION: 1.7. Java Virtual Machine Requirements
+</p>
+<p>
+
+ANNOTATION: 6
+</p>
+<p>
+
+ANNOTATION: 1.8. Upgrades and Database Compatibility
+</p>
+<p>
+
+ANNOTATION: 7
+</p>
+<p>
+
+ANNOTATION: 1.9. MarkLogic Converters Installation Changes Starting at Release 9.0-4
+</p>
+<p>
+
+ANNOTATION: 7
+</p>
+<p>
+
+ANNOTATION: 2. Procedures
+</p>
+<p>
+
+ANNOTATION: 9
+</p>
+<p>
+
+ANNOTATION: 2.1. Upgrading from Previous Releases
+</p>
+<p>
+
+ANNOTATION: 9
+</p>
+<p>
+
+ANNOTATION: 2.1.1. Windows Service Parameters
+</p>
+<p>
+
+ANNOTATION: 9
+</p>
+<p>
+
+ANNOTATION: 2.1.2. Upgrading from Release 9.0-1 or Later
+</p>
+<p>
+
+ANNOTATION: 10
+</p>
+<p>
+
+ANNOTATION: 2.1.3. Upgrading Clusters with DB Replication Configured
+</p>
+<p>
+
+ANNOTATION: 11
+</p>
+<p>
+
+ANNOTATION: 2.2. Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: 11
+</p>
+<p>
+
+ANNOTATION: 2.3. Starting MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 15
+</p>
+<p>
+
+ANNOTATION: 2.4. Configuring the First and Subsequent Hosts
+</p>
+<p>
+
+ANNOTATION: 16
+</p>
+<p>
+
+ANNOTATION: 2.4.1. Configuring a Single Host or the First Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: 16
+</p>
+<p>
+
+ANNOTATION: 2.4.2. Configuring an Additional Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: 18
+</p>
+<p>
+
+ANNOTATION: 2.4.3. Leaving a Cluster and Becoming a Single Host
+</p>
+<p>
+
+ANNOTATION: 19
+</p>
+<p>
+
+ANNOTATION: 2.5. Entering a License Key
+</p>
+<p>
+
+ANNOTATION: 20
+</p>
+<p>
+
+ANNOTATION: 2.6. Checking for the Correct Software Version
+</p>
+<p>
+
+ANNOTATION: 21
+</p>
+<p>
+
+ANNOTATION: 2.7. Configuring MarkLogic Server to Run as a Non-Daemon User
+</p>
+<p>
+
+ANNOTATION: 21
+</p>
+<p>
+
+ANNOTATION: 2.8. Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: 23
+</p>
+<p>
+
+ANNOTATION: 3. Appendix: Packages by Linux Platform
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.1. Red Hat Enterprise Linux 7
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.1.1. MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.1.2. MarkLogic Converters
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.2. Red Hat Enterprise Linux 8
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.2.1. MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 25
+</p>
+<p>
+
+ANNOTATION: 3.2.2. MarkLogic Converters
+</p>
+<p>
+
+ANNOTATION: 26
+</p>
+<p>
+
+ANNOTATION: 3.3. CentOS 7
+</p>
+<p>
+
+ANNOTATION: 26
+</p>
+<p>
+
+ANNOTATION: 3.3.1. MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 26
+</p>
+<p>
+
+ANNOTATION: 3.3.2. MarkLogic Converters
+</p>
+<p>
+
+ANNOTATION: 26
+</p>
+<p>
+
+ANNOTATION: 3.4. Amazon Linux 1
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 3.4.1. MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 3.4.2. MarkLogic Converters
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 3.5. Amazon Linux 2
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 3.5.1. MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 3.5.2. MarkLogic Converters
+</p>
+<p>
+
+ANNOTATION: 27
+</p>
+<p>
+
+ANNOTATION: 4. Technical Support
+</p>
+<p>
+
+ANNOTATION: 29
+</p>
+<p>
+
+ANNOTATION: 5. Copyright
+</p>
+<p>
+
+ANNOTATION: 30
+
+
+Page 3
+
+MarkLogic Server  Requirements and Database Compatibility
+
+</p>
+<p>
+1. Requirements and Database Compatibility
+
+</p>
+<p>
+This chapter introduces MarkLogic Server, lists the product requirements and supported platforms, and
+describes the database compatibility with previous releases. It includes the following sections:
+
+</p>
+<p>
+• Introduction
+• MarkLogic Server Assumptions
+• Memory, Disk Space, and Swap Space Requirements
+• Supported Platforms
+• Supported Filesystems
+• Supported Browsers
+• Java Virtual Machine Requirements
+• Upgrades and Database Compatibility
+• MarkLogic Converters Installation Changes Starting at Release 9.0-4
+
+</p>
+<p>
+1.1. Introduction
+MarkLogic Server is a powerful NoSQL database for harnessing your digital content base, complete
+with enterprise features demanded by real-world, mission-critical applications. MarkLogic enables you
+to build complex applications that interact with large volumes of content in JSON, XML, SGML, HTML,
+and other popular content formats, as well as binary formats. The unique architecture of MarkLogic
+ensures that your applications are both scalable and high performance, delivering query results at
+search-engine speeds while providing transactional integrity over the underlying content repository.
+MarkLogic can be configured for a distributed environment, enabling you to scale your infrastructure
+through hardware expansion.
+
+</p>
+<p>
+This installation guide explains the procedures needed to install MarkLogic on your system. It is
+intended for a technical audience. This document explains how to install the software, not how to
+use the software. To learn how to get started using the software, see the rest of the MarkLogic
+documentation (available on docs.marklogic.com), including the following documents:
+
+</p>
+<p>
+• What's New
+• Getting Started with MarkLogic Server
+• Concepts Guide
+• Administrator's Guide
+• Getting Started with Optic
+• Application Developer's Guide
+• Search Developer's Guide
+• JavaScript Reference Guide
+• MarkLogic XQuery and XSLT Function Reference
+
+</p>
+<p>
+1.2. MarkLogic Server Assumptions
+During the installation process, MarkLogic sets memory and other settings based on the characteristics
+of the computer in which it is running. MarkLogic is a scalable, multi-threaded server product, and as
+such it assumes it has the entire machine available to it, including the CPU and disk I/O capacity. It
+is important to follow the guidelines as described. Furthermore, MarkLogic assumes there is only one
+MarkLogic Server process running on any given machine, so it is not recommended to run multiple
+instances of MarkLogic on a single machine.
+
+</p>
+<p>
+MarkLogic Server expects the system clocks to be synchronized across all the nodes in a cluster. The
+clock skew should be less than 0.5 seconds. You should use a time service such as NTP to keep
+your system clocks synchronized. For more details, see the following Knowledge Base article: https://
+help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 3
+</p>
+<p>
+
+ANNOTATION: docs.marklogic.com
+</p>
+<p>
+
+ANNOTATION: What's New
+</p>
+<p>
+
+ANNOTATION: Getting Started with MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Concepts Guide
+</p>
+<p>
+
+ANNOTATION: Administrator's Guide
+</p>
+<p>
+
+ANNOTATION: Getting Started with Optic
+</p>
+<p>
+
+ANNOTATION: Application Developer's Guide
+</p>
+<p>
+
+ANNOTATION: Search Developer's Guide
+</p>
+<p>
+
+ANNOTATION: JavaScript Reference Guide
+</p>
+<p>
+
+ANNOTATION: MarkLogic XQuery and XSLT Function Reference
+</p>
+<p>
+
+ANNOTATION: https://help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster
+</p>
+<p>
+
+ANNOTATION: help.marklogic.com/knowledgebase/article/View/24/15/synchronizing-system-clocks-in-a-cluster
+</p>
+<p>
+
+ANNOTATION: Introduction
+</p>
+<p>
+
+ANNOTATION: MarkLogic Server Assumptions
+</p>
+<p>
+
+ANNOTATION: Memory, Disk Space, and Swap Space Requirements
+</p>
+<p>
+
+ANNOTATION: Supported Platforms
+</p>
+<p>
+
+ANNOTATION: Supported Filesystems
+</p>
+<p>
+
+ANNOTATION: Supported Browsers
+</p>
+<p>
+
+ANNOTATION: Java Virtual Machine Requirements
+</p>
+<p>
+
+ANNOTATION: Upgrades and Database Compatibility
+</p>
+<p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4
+
+
+Page 4
+
+MarkLogic Server  Memory, Disk Space, and Swap Space
+Requirements
+
+</p>
+<p>
+1.3. Memory, Disk Space, and Swap Space Requirements
+Before installing the software, be sure that your system meets the following requirements:
+
+</p>
+<p>
+• For a production deployment, MarkLogic recommends at least 8 vCPUs per host, with 8 GB of
+memory per vCPU. For example, for a production host with 16 vCPUs the recommended memory
+is at least 128 GB. For bare-metal systems, a hardware thread (hyperthread), is equivalent to a
+vCPU. Use memory optimized cloud compute instances or virtual machines. Memory requirements
+may increase over time as projects evolve and databases grow with more content and more indexes.
+See comment 1 in the following table.
+• For a prototyping or development deployment, MarkLogic requires a minimum of 4 GB of system
+memory and recommends at least 8 GB of memory. See comment 1 in the following table.
+• For small forests that will not grow, such as Security and Schemas, the reserve size is two times the
+size of the forest.
+For data forests, we recommend a size of 500 GB, where 400 GB is allocated to content, and 100 GB
+is left as reserved space to handle merges. See comment 2 in the following table for details about this
+storage calculation.
+• On Linux systems, you need at least as much swap space as the amount of physical memory on the
+machine or 32 GB, whichever is lower.
+If you have Huge Pages set up on a Linux system, your swap space on that machine must be at least
+the size of your physical memory minus the size of your Huge Pages (because Linux Huge Pages are
+not swapped), or 32 GB, whichever is lower. For example, if you have 48 GB of physical memory, and
+if you have Huge Pages set to 18 GB, then you need swap space of 30 GB (48 - 18). For details on
+setting up Huge Pages, see https://access.redhat.com/solutions/1578873 on the Red Hat website.
+
+</p>
+<p>
+NOTE
+A Red Hat subscription is required to view the content on the Web page.
+
+</p>
+<p>
+At system startup on Linux machines, MarkLogic Server logs a message to the ErrorLog.txt
+file showing the size of the Huge Pages, and the message indicates if the size is below the
+recommended level.
+If you are using Red Hat Enterprise Linux 7, you must turn off Transparent Huge Pages (Transparent
+Huge Pages are configured automatically by the operating system). For details on disabling
+Transparent Huge Pages, see https://access.redhat.com/solutions/1320153.
+• On Windows systems, twice the physical memory is also recommended for the swap (page) file. For
+Windows 10, you configure this by searching for View Advanced System Settings in the taskbar.
+Next, click the icon. Then, in the Performance area, click Settings &gt; Advanced and set the virtual
+memory to twice the physical memory. For earlier Windows systems, click System Control Panel &gt;
+Advanced System Settings &gt; Performance Settings &gt; Advanced tab and set the virtual memory
+settings to twice the physical memory.
+
+</p>
+<p>
+No  Comment
+[1]  MarkLogic automatically configures itself to reserve as much system memory as it can the first time it runs. If you need to
+change the default configuration, you can manually override these defaults later, using the Admin Interface.
+[2]  For content forests that are expected to grow over time, with the default merge settings, you need to reserve 100 GB of
+storage. Here is the calculation:
+
+</p>
+<p>
+You need at least 2 times the merge max size of free space per forest, regardless of the forest size. Therefore, with
+the default merge max size of 48 GB, you need at least 96 GB of free space. Additionally, if your journals are not yet
+created, you need 2 times the journal size of free disk space (if the journal space is not yet allocated). Therefore, to be
+safe, you need 100 GB of free space for each content forest.
+
+</p>
+<p>
+1.4. Supported Platforms
+MarkLogic Server is supported on the following platforms:
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 4
+</p>
+<p>
+
+ANNOTATION: https://access.redhat.com/solutions/1578873
+</p>
+<p>
+
+ANNOTATION: https://access.redhat.com/solutions/1320153
+</p>
+<p>
+
+ANNOTATION: comment 1
+</p>
+<p>
+
+ANNOTATION: comment 1
+</p>
+<p>
+
+ANNOTATION: comment 2
+
+
+Page 5
+
+MarkLogic Server  Supported Filesystems
+
+</p>
+<p>
+Platform
+Microsoft Windows Server 2019
+
+</p>
+<p>
+Microsoft Windows Server 2016
+
+</p>
+<p>
+Microsoft Windows Server 2012
+(x64)
+Microsoft Windows 10 (x64)
+
+</p>
+<p>
+Mac OS X 10.14 or later
+
+</p>
+<p>
+Docker
+
+</p>
+<p>
+Red Hat Enterprise Linux 7 (x64)
+
+</p>
+<p>
+Red Hat Enterprise Linux 8 (x64)
+
+</p>
+<p>
+CentOS 7 (x64)
+
+</p>
+<p>
+Amazon Linux 1 (x64)
+
+</p>
+<p>
+Amazon Linux 2 (x64) 
+
+</p>
+<p>
+Comment
+Microsoft Windows Server supports Open Neural Network Exchange format (ONNX)
+for machine learning. To use the ONNX APIs and obtain the required Machine
+Learning libraries, download the GPU-enabled version of MarkLogic Server for
+Windows.
+
+</p>
+<p>
+Desktop Microsoft Windows 10 (x64) is supported for development only. Use
+Windows Server for Production.
+Mac OS X is supported for development only. Conversion (Office and PDF) and entity
+enrichment are not available on Mac OS X. A 64-bit capable processor is required
+(http://support.apple.com/kb/HT3696).
+Docker is supported for development and production (one container per host
+recommended). For more details, see https://developer.marklogic.com/code/docker/.
+Red Hat Enterprise Linux 7 (x64) and CentOS 7 (x64) are supported on VMware
+ESXi 6.0 and Kernel-based Virtual Machine. Starting with MarkLogic 10.0-2, Red Hat
+Enterprise Linux 8 (x64) is also supported.
+
+</p>
+<p>
+CentOS 7 (x64) is supported on the Azure platform.
+
+</p>
+<p>
+All Linux platforms support Open Neural Network Exchange format (ONNX) for
+machine learning. To use the ONNX APIs and obtain the required Machine Learning
+libraries, download MarkLogic Server for Linux.
+
+</p>
+<p>
+Either none, deadline, mq-deadline, or kyber I/O scheduler is required to
+ensure efficient disk I/O for MarkLogic Server on Linux. When configuring an I/O
+scheduler with SSDs in a virtualized environment (including any cloud-based virtual
+machines), the OS I/O scheduling must be set to none for 4.x kernels or noop/none
+for older 3.x kernels. For more details, see:
+
+</p>
+<p>
+• https://help.marklogic.com/Knowledgebase/Article/View/8/0/notes-on-io-schedulers
+• https://lonesysadmin.net/2013/12/06/use-elevator-noop-for-linux-virtual-machines/
+• https://access.redhat.com/solutions/5427
+
+</p>
+<p>
+For a list of packages required for each Linux platform, see Appendix: Packages by
+Linux Platform.
+
+</p>
+<p>
+NOTE
+MarkLogic now supports the 1-Click AWS option in AWS Marketplace. Because of this,
+the published MarkLogic AMIs will have data volumes predefined.
+
+</p>
+<p>
+1.5. Supported Filesystems
+MarkLogic relies on the operating system for filesystem operations. While any filesystem that works
+properly (including under heavy load) should work, the following table lists the operating systems along
+with the filesystems under which they are supported. Other filesystems may work but have not been
+thoroughly tested by MarkLogic.
+
+</p>
+<p>
+Operating System
+Linux (all varieties) 
+Supported Filesystems
+XFS (recommended), EXT3, and EXT4 as well as the clustered filesystems for shared-disk failover
+mentioned in Requirements for Failed Disk Failover in the Scalability, Availability, and Failover Guide.
+
+</p>
+<p>
+WARNING
+Do not use data=writeback with EXT3 and EXT4 filesystems.
+
+</p>
+<p>
+Windows
+Mac OS
+All 
+
+</p>
+<p>
+NAS is supported on Red Hat Enterprise Linux 7 and NetAPP.
+NTFS
+HFS+
+Amazon S3 (no journaling with S3).
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 5
+</p>
+<p>
+
+ANNOTATION: http://support.apple.com/kb/HT3696
+</p>
+<p>
+
+ANNOTATION: https://developer.marklogic.com/code/docker/
+</p>
+<p>
+
+ANNOTATION: https://help.marklogic.com/Knowledgebase/Article/View/8/0/notes-on-io-schedulers
+</p>
+<p>
+
+ANNOTATION: https://lonesysadmin.net/2013/12/06/use-elevator-noop-for-linux-virtual-machines/
+</p>
+<p>
+
+ANNOTATION: https://access.redhat.com/solutions/5427
+</p>
+<p>
+
+ANNOTATION: Requirements for Failed Disk Failover
+</p>
+<p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</p>
+<p>
+
+ANNOTATION: Appendix: Packages by Linux Platform
+</p>
+<p>
+
+ANNOTATION: Linux Platform
+
+
+Page 6
+
+MarkLogic Server  Supported Browsers
+
+</p>
+<p>
+NOTE
+The Solaris OS is not supported.
+
+</p>
+<p>
+1.6. Supported Browsers
+The following browsers are supported:
+
+</p>
+<p>
+• Google Chrome
+• Mozilla Firefox
+• Microsoft Edge
+
+</p>
+<p>
+1.7. Java Virtual Machine Requirements
+MarkLogic Server can function with or without a Java Virtual Machine (JVM). The only requirement
+needed for a JVM to be installed on MarkLogic Server would be if you use HDFS (Hadoop Distributed
+File System).
+
+</p>
+<p>
+Our provided Amazon AMIs have a JDK pre-installed that is used during the MarkLogic bootstrap
+process to setup and configure MarkLogic in the Amazon environment. Therefore, you do not need to
+install a JVM on any EC2 instance.
+
+</p>
+<p>
+The following MarkLogic products and features require a JVM to either run or install:
+
+</p>
+<p>
+• Gradle (https://developer.marklogic.com/code/ml-gradle/)
+• DHF (https://marklogic.github.io/marklogic-data-hub/)
+
+</p>
+<p>
+MarkLogic supports the Java 8, 9, 10, and 11 versions of the following JVMs:
+
+</p>
+<p>
+• Oracle/Sun
+• OpenJDK 
+
+</p>
+<p>
+NOTE
+The IBM JRE is not supported.
+
+</p>
+<p>
+By default, MarkLogic looks for Java in the location specified via the JAVA_HOME environment variable
+or in a specific set of default locations. If JAVA_HOME is not set in the startup environment, MarkLogic
+uses the first JRE or JDK found in one of the following locations. These locations are searched in the
+order listed.
+
+</p>
+<p>
+• /usr/java/default
+• /usr/java/latest
+• /usr/java/jdk1.N*
+
+</p>
+<p>
+*where N is a supported Java version. For example, /usr/java/jdk1.8.0_202.
+• /usr/lib/jvm/java
+• /usr/lib/jvm/java-openjdk
+• /usr/lib/jvm/jre-1.N.0-*.x86_64
+
+</p>
+<p>
+*where N is a supported Java version, such as Java 8.
+
+</p>
+<p>
+If you have Java installed in a different location, you can communicate your JAVA_HOME to MarkLogic
+through the file /etc/marklogic.conf. For example:
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 6
+</p>
+<p>
+
+ANNOTATION: https://developer.marklogic.com/code/ml-gradle/
+</p>
+<p>
+
+ANNOTATION: https://marklogic.github.io/marklogic-data-hub/
+
+
+Page 7
+
+MarkLogic Server  Upgrades and Database Compatibility
+
+</p>
+<p>
+cat &gt; /etc/marklogic.conf
+export JAVA_HOME=/path/to/your/jdk
+
+</p>
+<p>
+1.8. Upgrades and Database Compatibility
+MarkLogic 11 supports upgrades from MarkLogic 9.
+
+</p>
+<p>
+During the upgrade, the Security database, the Schemas database, and the configuration files are
+automatically upgraded. The Security database is upgraded with the latest execute privileges and the
+Schemas database is upgraded with the latest version of the Schemas used by MarkLogic Server. The
+upgrade occurs as part of the installation procedure.
+
+</p>
+<p>
+Databases that contain your own content are also upgraded; once you upgrade, you will no longer be
+able to use that database with previous versions of MarkLogic.
+
+</p>
+<p>
+NOTE
+MarkLogic Corporation strongly recommends performing a backup of your databases
+before upgrading. Additionally, MarkLogic Corporation recommends that you first
+upgrade to the latest maintenance release of the major version of MarkLogic you are
+running before upgrading.
+
+</p>
+<p>
+For the procedure for upgrading, see Upgrading from Previous Releases. For details about known
+incompatibilities, see What's New.
+
+</p>
+<p>
+1.9. MarkLogic Converters Installation Changes Starting at
+Release 9.0-4
+MarkLogic Converters are used to convert Microsoft Office Word, Excel, and PowerPoint documents,
+as well as Adobe PDF files, to XHTML. MarkLogic filters are used to filter a variety of document
+formats, extract metadata and text from them, and return XHTML. The following MarkLogic XQuery API
+functions, described in the MarkLogic XQuery and XSLT Function Reference, provide this functionality:
+
+</p>
+<p>
+xdmp:word-convert
+xdmp:excel-convert
+xdmp:powerpoint-convert
+xdmp:pdf-convert
+xdmp:document-filter
+
+</p>
+<p>
+Converters/filters are also used as part of the conversion pipeline in Content Processing Framework.
+For more details, see The Default Conversion Option in the Content Processing Framework Guide.
+
+</p>
+<p>
+Prior to MarkLogic release 9.0-4, converters/filters were bundled and automatically installed with
+MarkLogic Server. Starting with MarkLogic release 9.0-4, converters/filters are offered as a separate
+package: MarkLogic Converters.
+
+</p>
+<p>
+This change provides better flexibility and enables you to install/uninstall MarkLogic converters/filters
+separately from MarkLogic Server.
+
+</p>
+<p>
+With this change, MarkLogic Server does not include MarkLogic Converters. To use converters/filters,
+install both packages: MarkLogic Server and MarkLogic Converters. An XDMP-CVTNOTFOUND error will
+be thrown upon an attempt to use converters/filters on a MarkLogic node with no MarkLogic Converters
+installed.
+
+</p>
+<p>
+The version of MarkLogic Converters is synchronized with the version of MarkLogic Server. For
+example, MarkLogic Converters 9.0-4 corresponds to MarkLogic Server 9.0-4 and may be installed
+with it.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 7
+</p>
+<p>
+
+ANNOTATION: What's New
+</p>
+<p>
+
+ANNOTATION: The Default Conversion Option
+</p>
+<p>
+
+ANNOTATION: Content Processing Framework Guide
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 8
+
+MarkLogic Server  MarkLogic Converters Installation Changes Starting
+at Release 9.0-4
+
+</p>
+<p>
+You can obtain the version of MarkLogic Converters installed on a node by calling to MarkLogic
+server-side API function xdmp:host-status and examining the value of the converters-version
+element in the response. If the converters package is not installed on a node, the convertersversion element will be empty.
+
+</p>
+<p>
+MarkLogic Converters packages for all supported platforms are available for download at the same
+location where MarkLogic Server packages are available, namely at http://developer.marklogic.com.
+
+</p>
+<p>
+If you want to use the converters package with MarkLogic 9.0-4 or later, you will have to perform a
+two-step installation: first install MarkLogic Server and then install MarkLogic Converters.
+
+</p>
+<p>
+For details on MarkLogic Server and MarkLogic Converters installation for all supported platforms, see
+Installing MarkLogic.
+
+</p>
+<p>
+If you want to uninstall MarkLogic 9.0-4 or later, and if the converters package was previously installed
+with it, you will have to perform a two-step uninstall: first uninstall MarkLogic Converters and then
+uninstall MarkLogic Server.
+
+</p>
+<p>
+For details on uninstalling MarkLogic Server and MarkLogic Converters, see Removing MarkLogic.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 8
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+
+
+Page 9
+
+MarkLogic Server  Procedures
+
+</p>
+<p>
+2. Procedures
+
+</p>
+<p>
+This section describes the following procedures to install MarkLogic on your system.
+
+</p>
+<p>
+• Upgrading from Previous Releases
+• Installing MarkLogic
+• Starting MarkLogic Server
+• Configuring the First and Subsequent Hosts
+• Entering a License Key
+• Checking for the Correct Software Version
+• Configuring MarkLogic Server to Run as a Non-Daemon User
+• Removing MarkLogic
+
+</p>
+<p>
+2.1. Upgrading from Previous Releases
+If you have previously installed MarkLogic on a machine, you must uninstall the old release before
+proceeding with the new installation. For information on removing the software, see Removing
+MarkLogic or the Installation Guide from the previous release. This section describes the following
+information and upgrade paths:
+
+</p>
+<p>
+• Windows Service Parameters
+• Upgrading from Release 9.0-1 or Later
+• Upgrading Clusters with DB Replication Configured
+
+</p>
+<p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</p>
+<p>
+WARNING
+MarkLogic Server does not support downgrades. Once you have upgraded to a later
+release, you cannot downgrade to a previous version. To retain the option to restore to
+a previous version of MarkLogic Server, make a complete backup of your content and
+security databases before upgrading.
+
+</p>
+<p>
+2.1.1. Windows Service Parameters
+When you upgrade MarkLogic on Windows as a different user from the user that installed the
+previous version, the MarkLogic service parameters in the Windows registry will be changed. When
+the old version of MarkLogic is uninstalled, the service is deleted from the registry, including any
+customizations to the service parameters. When the new version of MarkLogic is installed, the service
+is re-created in the registry, with the default service parameters.
+
+</p>
+<p>
+Before starting the upgraded version of MarkLogic, make any customization to the service parameters.
+Otherwise, the default service parameters will be set and MarkLogic will start up running as the local
+system user. Any MarkLogic configuration files saved as the local system user (such as those modified
+when making changes in the Admin Interface) will be created with the Windows file permissions for the
+local system user.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 9
+</p>
+<p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide.
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Starting MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Configuring the First and Subsequent Hosts
+</p>
+<p>
+
+ANNOTATION: Entering a License Key
+</p>
+<p>
+
+ANNOTATION: Checking for the Correct Software Version
+</p>
+<p>
+
+ANNOTATION: Configuring MarkLogic Server to Run as a Non-Daemon User
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: MarkLogic
+</p>
+<p>
+
+ANNOTATION: Windows Service Parameters
+</p>
+<p>
+
+ANNOTATION: Upgrading from Release 9.0-1 or Later
+</p>
+<p>
+
+ANNOTATION: Upgrading Clusters with DB Replication Configured
+
+
+Page 10
+
+MarkLogic Server  Upgrading from Previous Releases
+
+</p>
+<p>
+NOTE
+When you make changes to the user in the service parameters, you should also
+change data directory file permissions. This is because files may be written when
+MarkLogic is running as the local system user.
+
+</p>
+<p>
+2.1.2. Upgrading from Release 9.0-1 or Later
+To upgrade from release 9.0-1 or later, perform the following basic steps:
+
+</p>
+<p>
+1. Stop MarkLogic Server (as described in step 1 of Removing MarkLogic).
+2. Uninstall the old MarkLogic release (as described in Removing MarkLogic).
+
+</p>
+<p>
+NOTE
+If you want to uninstall MarkLogic 9.0-4 or later, and if the converters package
+was previously installed with it, you will have to perform a two-step uninstall: first
+uninstall MarkLogic Converters and then uninstall MarkLogic Server. For more
+detail, see MarkLogic Converters Installation Changes Starting at Release 9.0-4
+and Removing MarkLogic.
+
+</p>
+<p>
+3. Install the new MarkLogic release (as described in Installing MarkLogic).
+
+</p>
+<p>
+NOTE
+If you want to install MarkLogic 9.0-4 or later, and you plan to use the
+converters package with it, you will have to perform a two-step installation: first
+install MarkLogic Server and then install MarkLogic Converters. For more detail,
+see MarkLogic Converters Installation Changes Starting at Release 9.0-4 and
+Installing MarkLogic.
+
+</p>
+<p>
+4. Start MarkLogic Server (as described in Starting MarkLogic Server).
+5. Open the Admin Interface in a browser (http://localhost:8001).
+6. When the Admin Interface prompts you to upgrade the databases and the configuration files, click
+the button to confirm the upgrade.
+
+</p>
+<p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</p>
+<p>
+If you are upgrading two clusters that make use of database replication to replicate the Security
+database on the master cluster, then you must enter the following to manually upgrade the Security
+database configuration files on the machine that hosts the replica Security database:
+
+</p>
+<p>
+http://host:8001/security-upgrade-go.xqy?force=true
+
+</p>
+<p>
+WARNING
+There is no direct upgrade path from Early Access releases to this release. If you need
+to move any data from an Early Access release to this release, you must re-create the
+data in the current release.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 10
+</p>
+<p>
+
+ANNOTATION: http://localhost:8001
+</p>
+<p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4 
+</p>
+<p>
+
+ANNOTATION: Removing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: MarkLogic Converters Installation Changes Starting at Release 9.0-4 
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 11
+
+MarkLogic Server  Installing MarkLogic
+
+</p>
+<p>
+2.1.3. Upgrading Clusters with DB Replication Configured
+If you are upgrading clusters with DB replication configured, see Upgrading Clusters Configured with
+Database Replication in the Database Replication Guide for details.
+
+</p>
+<p>
+2.2. Installing MarkLogic
+This section describes the procedure for installing MarkLogic Server on each platform. Perform the
+procedure corresponding to the platform to which you are installing.
+
+</p>
+<p>
+Platform
+Windows
+x64 
+
+</p>
+<p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package. The latest installation packages are available from http://
+developer.marklogic.com.
+3. Double-click the .msi file to start the installer.
+4. The Welcome page displays. Click Next.
+5. Select Typical.
+6. Click Install.
+7. A dialog appears with the question Do you want to allow this app to make changes to your device? Click
+Yes.
+8. The installation process will begin. When the process is completed, click Finish.
+
+</p>
+<p>
+NOTE
+If you plan to use the converters package, also perform the following steps:
+
+</p>
+<p>
+1. Download the MarkLogic Converters package (.msi) for Windows from http://developer.marklogic.com.
+2. Double-click the .msi file to start the installer.
+3. The welcome page displays Welcome to the MarkLogic Converters Setup Wizard. Click Next.
+4. The Choose Setup Type page displays. Select Typical.
+5. The Ready to Install page displays. Click Install to start the installation.
+6. A dialog appears with the question Do you want to allow this app to make changes to your device? Click
+Yes.
+7. The Installing MarkLogic Converters page displays.
+8. The final page displays Completing the MarkLogic Converters Setup Wizard. Click Finish.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 11
+</p>
+<p>
+
+ANNOTATION: Upgrading Clusters Configured with Database Replication
+</p>
+<p>
+
+ANNOTATION: Database Replication
+</p>
+<p>
+
+ANNOTATION: Database Replication Guide
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 12
+
+MarkLogic Server  Installing MarkLogic
+
+</p>
+<p>
+Platform
+Red Hat
+Linux x64 
+
+</p>
+<p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</p>
+<p>
+yum install /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</p>
+<p>
+rpm -i /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</p>
+<p>
+1. Download the MarkLogic Converters package for Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</p>
+<p>
+yum install /MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</p>
+<p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 12
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 13
+
+MarkLogic Server  Installing MarkLogic
+
+</p>
+<p>
+Platform
+CentOS
+Linux 
+
+</p>
+<p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</p>
+<p>
+yum install /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</p>
+<p>
+rpm -i /tmp/MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</p>
+<p>
+1. Download the MarkLogic Converters package for the Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</p>
+<p>
+yum install /MarkLogicConverters-11.0.0.x86_64.rpm
+
+</p>
+<p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</p>
+<p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+NOTE
+For CentOS 8, MarkLogic has a dependency on libnsl.so.1(). You can either rely on yum
+to pull in the dependency automatically, or install it manually.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 13
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com.
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 14
+
+MarkLogic Server  Installing MarkLogic
+
+</p>
+<p>
+Platform
+Amazon
+Linux 2 
+
+</p>
+<p>
+Steps
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+the necessary steps from that section first.
+2. Download the MarkLogic Server installation package to /tmp or another location. The latest installation
+packages are available from http://developer.marklogic.com.
+3. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically figure out the dependencies. As the root user, load additional packages for EC2 support with the
+following command:
+
+</p>
+<p>
+sudo yum install java-11-openjdk xfsprogs
+4. As the root user, create a symbolic link with the following command:
+
+</p>
+<p>
+sudo ln -s system-lsb /etc/redhat-lsb
+5. As the root user, install the MarkLogic Server installation package with the following command:
+
+</p>
+<p>
+sudo yum install MarkLogic-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package, also
+perform the following steps:
+
+</p>
+<p>
+Mac OS
+X 
+
+</p>
+<p>
+1. Download the MarkLogic Converters package for Linux platform (for example,
+MarkLogicConverters-11.0.0-rhel.x86_64.rpm) from http://developer.marklogic.com to /tmp or
+another location.
+2. We recommend that you use yum to install MarkLogic instead of an rpm install. The yum install will
+automatically determine the dependencies. As the root user, install the package with the following command:
+
+</p>
+<p>
+yum install /MarkLogicConverters-11.0.0.x86_64.rpm
+
+</p>
+<p>
+TIP
+If a yum installation cannot be completed, an rpm install can be used. To do an rpm
+install, as the root user, install the package with the following command:
+
+</p>
+<p>
+rpm -i /tmp/MarkLogicConverters-11.0.0-rhel.x86_64.rpm
+
+</p>
+<p>
+1. If you are upgrading from a previous MarkLogic release, review Upgrading from Previous Releases and perform
+necessary steps from that section first.
+2. Download the MarkLogic Server installation package to your desktop. The latest installation packages are
+available from http://developer.marklogic.com.
+3. Double-click MarkLogic-11.0.0-x86_64.dmg to open the folder that contains the .pkg installer. Double-click on
+the installer to start.
+4. The Welcome page displays. Click Continue.
+5. In the Select a Destination window, select a destination to install MarkLogic Server or continue to select the
+default destination.
+6. In the Installation Type window, click Install. An Installation window appears that displays the progress of the
+installation.
+7. When the Installation Summary window appears, click Close.
+8. A MarkLogic control window appears from which you can start/stop MarkLogic Server, open the Admin
+Interface, and view the Error Log.
+
+</p>
+<p>
+NOTE
+If you are installing MarkLogic 9.0-4 or later, and you plan to use the converters package,
+also perform the following steps:
+
+</p>
+<p>
+1. Download the MarkLogic Converters package for Mac OS platform (e.g. MarkLogicConverters-11.0.0x86_64.dmg) from http://developer.marklogic.com to your desktop.
+2. Double-click the MarkLogicConverters-11.0.0-x86_64.dmg icon to open the folder that contains
+MarkLogicConverters-11.0.0-x86_64.dmg installer. Double-click on the installer to start.
+3. The Welcome page displays. Click Continue.
+4. In the Select a Destination window, select the default destination.
+5. In the Installation Type window, click Install. An Installation window appears that displays the progress of the
+installation.
+6. When the Installation Summary window appears, click Close.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 14
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+</p>
+<p>
+
+ANNOTATION: Upgrading from Previous Releases
+
+
+Page 15
+
+MarkLogic Server  Starting MarkLogic Server
+
+</p>
+<p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</p>
+<p>
+NOTE
+It is not recommended to install the converters while MarkLogic Server is running.
+The reason for this is that the server checks the converters presence and version
+number only upon start-up. So, the server will not have accurate information about the
+converters in this case. The recommended installation procedure is to stop the server if
+it is running, install or upgrade the server, install the converters, then start the server.
+
+</p>
+<p>
+The following table shows the installation directory (&lt;marklogic-dir&gt;) and the default data directory
+for each platform:
+
+</p>
+<p>
+Platform
+
+</p>
+<p>
+Windows
+Red Hat Linux
+Mac OS X 
+
+</p>
+<p>
+Installation Directory
+
+</p>
+<p>
+c:\Program Files\MarkLogic\
+/opt/MarkLogic
+~/Library/MarkLogic 
+
+</p>
+<p>
+Default Data Directory
+
+</p>
+<p>
+for configuration and log files
+c:\Program Files\MarkLogic\Data
+/var/opt/MarkLogic
+~/Library/Application Support/MarkLogic/Data
+
+</p>
+<p>
+The default forest directory is the same as the default data directory if the optional data directory is
+not specified during forest creation. On UNIX platforms, if you want MarkLogic Server to use another
+location for its default data directory, make your data directory (/var/opt/MarkLogic on Linux) a soft
+link to the alternate location.
+
+</p>
+<p>
+In MarkLogic release 9.0-4 and later, MarkLogic Converters installation directory remains the same as
+in previous releases, namely:
+
+</p>
+<p>
+Platform
+Windows
+Red Hat Linux
+Mac OS X 
+
+</p>
+<p>
+Converters Installation Directory
+c:\Program Files\MarkLogic\Converters
+/opt/MarkLogic/Converters
+~/Library/MarkLogic/Converters
+
+</p>
+<p>
+NOTE
+When a new node joins an existing cluster, the server does not try to figure out
+automatically whether the MarkLogic Converters package is needed or not. An XDMPCVTNOTFOUND error will be thrown if converters/filters built-in functions are called on
+nodes that do not have MarkLogic Converters installed.
+
+</p>
+<p>
+2.3. Starting MarkLogic Server
+MarkLogic Server will automatically start when the computer reboots. To start MarkLogic Server without
+rebooting, perform the following command for the corresponding platform:
+
+</p>
+<p>
+Platform
+Windows 10 
+Steps
+1. In the Windows taskbar, click in the search area.
+2. Type MarkLogic.
+3. Right-click on Start MarkLogic Server.
+4. Select Run as administrator.
+5. When prompted, allow the app to make changes to your device.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 15
+</p>
+<p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+
+
+Page 16
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</p>
+<p>
+Platform
+Windows 
+Steps
+Select Start &gt; Programs &gt; MarkLogic Server &gt; Start MarkLogic Server.
+
+</p>
+<p>
+Red Hat Linux
+
+</p>
+<p>
+Mac OS X 
+
+</p>
+<p>
+NOTE
+When you start MarkLogic Server from the Start menu, the Windows service
+configuration for MarkLogic Server is set to start automatically. Also, to start the service,
+right-click the Start MarkLogic Server link in the Start menu and choose Run as
+Administrator, then choose to allow the action.
+
+</p>
+<p>
+As the root user, enter the following command:
+
+</p>
+<p>
+service MarkLogic start
+
+</p>
+<p>
+Select System Preferences &gt; MarkLogic to open the MarkLogic control winodw. Click Start MarkLogic
+Server.
+
+</p>
+<p>
+This starts all of the App Servers that are configured on your MarkLogic Server.
+
+</p>
+<p>
+2.4. Configuring the First and Subsequent Hosts
+The following configuration procedures differ depending on if you run MarkLogic Server in a cluster
+configuration or on a single host. The procedures are as follows:
+
+</p>
+<p>
+• Configuring a Single Host or the First Host in a Cluster
+• Configuring an Additional Host in a Cluster
+• Leaving a Cluster and Becoming a Single Host
+
+</p>
+<p>
+If you are configuring MarkLogic Server as a standalone host, or if this is the first host in a cluster
+configuration, follow the installation instructions in Configuring a Single Host or the First Host in a
+Cluster. Otherwise, follow the installation instructions in Configuring an Additional Host in a Cluster.
+
+</p>
+<p>
+If you are upgrading a cluster to a new release, see Upgrading a Cluster to a New Maintenance
+Release of MarkLogic Server in the Scalability, Availability, and Failover Guide. The Security database
+and the Schemas database must be on the same host, and that host should be the first host you
+upgrade when upgrading a cluster.
+
+</p>
+<p>
+2.4.1. Configuring a Single Host or the First Host in a Cluster
+To configure this installation as either a single host or as the first host in a cluster, perform the following
+steps:
+
+</p>
+<p>
+1. Install and start MarkLogic as described in Installing MarkLogic and Starting MarkLogic Server.
+2. Log into the Admin Interface in a browser. It is on port 8001 of the host in which MarkLogic
+is running (for example, on the localhost, http://localhost:8001). The Server Install page
+appears:
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 16
+</p>
+<p>
+
+ANNOTATION: Upgrading a Cluster to a New Maintenance Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Release of MarkLogic Server
+</p>
+<p>
+
+ANNOTATION: Scalability, Availability, and Failover Guide
+</p>
+<p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: Leaving a Cluster and Becoming a Single Host
+</p>
+<p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: Cluster
+</p>
+<p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 17
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</p>
+<p>
+3. Click OK to continue.
+4. Wait for the server to restart.
+5. After the server restarts, you will be prompted to join a cluster:
+
+</p>
+<p>
+6. Click Skip.
+7. You will be prompted to create an admin user and a PKCS#11 wallet password. Enter a login name
+and password for the admin user, and enter a wallet password.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 17
+
+
+Page 18
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</p>
+<p>
+8. Click OK.
+9. You will be prompted to log in with your admin username and password.
+
+</p>
+<p>
+You will now see the Admin Interface. If you do not need to add any hosts at this time, skip to Checking
+for the Correct Software Version.
+
+</p>
+<p>
+2.4.2. Configuring an Additional Host in a Cluster
+All hosts in a cluster have to be on the same platform. To configure this installation as an additional host
+in a cluster of the same platform, perform the following steps:
+
+</p>
+<p>
+1. On the node you want to add to an existing cluster, install and start MarkLogic as described in
+Installing MarkLogic and Starting MarkLogic Server.
+2. Log into the Admin Interface in a browser. It is on port 8001 of the host in which MarkLogic is
+running (for example, on the localhost, http://localhost:8001). The Server Install page appears:
+
+</p>
+<p>
+3. Click OK to continue.
+4. Wait for the server to restart.
+5. After the server restarts, you will be prompted to join a cluster:
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 18
+</p>
+<p>
+
+ANNOTATION: Checking for the Correct Software Version
+</p>
+<p>
+
+ANNOTATION: for the Correct Software Version
+</p>
+<p>
+
+ANNOTATION: Installing MarkLogic
+</p>
+<p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 19
+
+MarkLogic Server  Configuring the First and Subsequent Hosts
+
+</p>
+<p>
+6. Enter the DNS name or the IP address of one of the machines in the cluster. For instance, if this is
+the second host you are installing, you can enter the DNS name of the first host you installed.
+7. Click OK.
+8. You will be prompted for an admin username and password. You can use the admin username and
+password you created when installing the first host. Click OK.
+9. Select a Group to assign this host. Click OK.
+
+</p>
+<p>
+10. Click OK to confirm that you are joining the cluster.
+11. You have now joined the cluster.
+12. Click OK to transfer the cluster configuration information.
+
+</p>
+<p>
+You have completed the process to join a cluster and will now see the Admin Interface.
+
+</p>
+<p>
+2.4.3. Leaving a Cluster and Becoming a Single Host
+If your host is currently in a cluster of multiple hosts, and you would like to leave the cluster and switch
+to a single host environment, follow the steps in this section.
+
+</p>
+<p>
+A host cannot leave a cluster if there are still forests assigned to it or if it has any foreign clusters
+associated with it. You must delete all forests assigned to the host and de-couple any clusters
+associated with a host before you can leave the cluster. However, if you delete only the configuration
+for a forest, the forest data will remain on the filesystem, allowing you to add the forest back to the host
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 19
+
+
+Page 20
+
+MarkLogic Server  Entering a License Key
+
+</p>
+<p>
+after changing the configuration. For instructions on adding a forest to a host, see the Administrator’s
+Guide.
+
+</p>
+<p>
+Perform the following steps to leave the cluster to which a host is connected:
+
+</p>
+<p>
+1. Run the Admin Interface from the host you want to remove from the cluster.
+2. Click the Hosts icon in the left menu tree. The Host Summary page appears.
+3. Click the name of the host you want to remove from the cluster, either from the left menu tree or
+from the Host Summary page. The Host Configuration page appears:
+
+</p>
+<p>
+NOTE
+The Leave button only appears if the Admin Interface is running from this host.
+
+</p>
+<p>
+4. Click the Leave button.
+5. Click OK to confirm leaving the cluster.
+6. The host restarts to load the new configuration.
+7. Follow the instructions in sections Configuring a Single Host or the First Host in a Cluster or
+Configuring an Additional Host in a Cluster as appropriate.
+
+</p>
+<p>
+2.5. Entering a License Key
+MarkLogic will run without a license key, but after installing MarkLogic, you should enter a valid license
+key for the usage and features for which you are licensed. At any time, you can change the license key
+for a host from the Host Status page.
+
+</p>
+<p>
+These are some reasons that you would need to change your license key:
+
+</p>
+<p>
+• Your license key has expired.
+• You need to use some features that are not covered by your existing license key.
+• You upgraded your hardware with more CPUs and/or more cores.
+• You need a license that covers a larger database.
+• You require different languages.
+
+</p>
+<p>
+Changing the license key sometimes results in an automatic restart of MarkLogic (for example, if your
+new license enables a new language).
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 20
+</p>
+<p>
+
+ANNOTATION: Administrator’s Guide
+</p>
+<p>
+
+ANNOTATION: Guide
+</p>
+<p>
+
+ANNOTATION: Configuring a Single Host or the First Host in a Cluster
+</p>
+<p>
+
+ANNOTATION: Configuring an Additional Host in a Cluster
+
+
+Page 21
+
+MarkLogic Server  Checking for the Correct Software Version
+
+</p>
+<p>
+To change the license key for a host, perform the following steps using the Admin Interface:
+
+</p>
+<p>
+1. Click the Hosts icon on the left tree menu.
+2. Click the name of the host for which you want to change the license key, either on the tree menu or
+the summary page. The Host Configuration page appears.
+3. Click the Status tab. The Host Status page appears.
+4. Click the License key button. The License Key Entry page appears.
+5. Enter your new license key information. For information about licensing MarkLogic Server, contact
+your MarkLogic sales representative.
+6. After entering valid information in the Licensee and License Key fields, click OK. If it needs to,
+MarkLogic will automatically restart, and the new license key will take effect.
+
+</p>
+<p>
+2.6. Checking for the Correct Software Version
+After you log in with your admin username and password, the Admin Interface appears. To view more
+details about the release of MarkLogic Server that is installed and licensed, complete the following
+steps:
+
+</p>
+<p>
+1. Click the Hosts icon on the left menu tree.
+2. Select the name of the host you just installed, either from the left menu tree or from the Host
+Summary page.
+3. Click the Status tab. The Host Status page appears.
+4. Check that &lt;version&gt; is correct.
+
+</p>
+<p>
+You have successfully installed MarkLogic onto your system.
+
+</p>
+<p>
+To begin using MarkLogic Server, see Getting Started with MarkLogic Server.
+
+</p>
+<p>
+2.7. Configuring MarkLogic Server to Run as a Non-Daemon
+User
+On UNIX-based systems (Linux), MarkLogic runs as the UNIX user named daemon. This section
+describes how to change a configuration to run as a different UNIX user. This procedure must be run by
+the root user. Additionally, the root user is still required for installing and uninstalling MarkLogic and
+for starting and stopping MarkLogic from the startup scripts.
+
+</p>
+<p>
+To modify an installation to run as a user other than daemon, perform the following steps:
+
+</p>
+<p>
+1. In a command window on the machine in which you installed MarkLogic, log in as the root user.
+2. Make sure MarkLogic is stopped. If it is still running, stop it as follows:
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 21
+</p>
+<p>
+
+ANNOTATION: Getting Started with MarkLogic Server
+
+
+Page 22
+
+MarkLogic Server  Configuring MarkLogic Server to Run as a NonDaemon User
+
+</p>
+<p>
+Platfrom
+Red Hat Linux 
+Steps
+As the root user, enter the following command:
+
+</p>
+<p>
+/sbin/service MarkLogic stop
+3. Edit the configuration file for your platform using a text editor such as vi.
+
+</p>
+<p>
+Platform
+Red Hat Linux  /etc/marklogic.conf 
+
+</p>
+<p>
+Configuration file
+
+</p>
+<p>
+NOTE
+You must create the /etc/marklogic.conf file if it does not exist. The file is
+only read by the MarkLogic startup: it is never written to. Therefore, it will survive
+uninstalling MarkLogic.
+
+</p>
+<p>
+4. In the file /etc/marklogic.conf, add or edit the MARKLOGIC_USER environment variable to
+point to the user in which you want MarkLogic Server to run. For example, if you want it to run as a
+user named raymond, change the following line:
+
+</p>
+<p>
+export MARKLOGIC_USER=daemon
+
+</p>
+<p>
+to the following:
+
+</p>
+<p>
+export MARKLOGIC_USER=raymond
+5. Save the changes to the /etc/marklogic.conf file.
+6. If you have not yet started MarkLogic after performing a clean installation (that is, after installing
+into a directory where MarkLogic has never been installed), then you are done and you can skip
+the rest of the steps in this procedure. If you have an existing installation (for example, if you are
+upgrading to a maintenance release), then continue with the following steps.
+7. For all of the MarkLogic files owned by daemon, you need to change the owner to the new user.
+This includes all forest data and all of the configuration files. By default, the forest data is in the
+following directories:
+
+</p>
+<p>
+Platform  Configuration file
+Red Hat Linux  /var/opt/marklogic
+8. For example, on a Linux system, perform a command similar to the following, which changes the
+owner to the user specified earlier in the /etc//MarkLogic.conf file:
+
+</p>
+<p>
+chown -R raymond /var/opt/MarkLogic
+9. Make sure to change the owner for all forests in the system; otherwise, forests will fail to mount
+upon startup. Note that the above command only changes the owner for forests installed in the
+default directory. You need to run a similar command on the data directory for each forest in which
+a data directory is specified.
+10. When you have completed all the file and directory ownership changes, start MarkLogic as
+described in Starting MarkLogic Server.
+
+</p>
+<p>
+Once you have performed this procedure, all new files created by MarkLogic are created with the new
+user ownership; there will be no need to change any ownership again.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 22
+</p>
+<p>
+
+ANNOTATION: Starting MarkLogic Server
+
+
+Page 23
+
+MarkLogic Server  Removing MarkLogic
+
+</p>
+<p>
+WARNING
+On Linux systems, use the /etc/marklogic.conf script to set environment
+variables. Any configuration changes you make to the MarkLogic-supplied startup
+script (for example, /etc/sysconfig/MarkLogic) will not survive an upgrade and
+need to be merged in during any upgrade of MarkLogic (because the installation
+installs a new version of the startup scripts). Under Linux, the uninstallation
+process saves an old version of the scripts (for example, /etc/sysconfig/
+MarkLogic.rpmsave), so you can use that version to merge in your changes. If you
+perform a clean installation (not an upgrade installation), however, you will need to run
+this entire procedure again. If you use /etc/marklogic.conf for your environment
+variable changes, they will survive an upgrade and you will not need to merge your
+changes.
+
+</p>
+<p>
+The following are default values of environment variables you can override in /etc/marklogic.conf
+on Linux-based systems (you will have to create the file if it does not exist):
+
+</p>
+<p>
+export MARKLOGIC_INSTALL_DIR=/opt/MarkLogic
+export MARKLOGIC_DATA_DIR=/var/opt/MarkLogic
+export MARKLOGIC_FSTYPE=ext4
+export MARKLOGIC_USER=daemon
+export MARKLOGIC_PID_FILE=/var/run/MarkLogic.pid
+export MARKLOGIC_UMASK=022
+export MARKLOGIC_DISABLE_JVM=0
+export MARKLOGIC_EC2_HOST
+export TZ=:/etc/localtime
+
+</p>
+<p>
+2.8. Removing MarkLogic
+To remove MarkLogic from your system, complete the following steps for the corresponding platform:
+
+</p>
+<p>
+Platform
+Windows 10
+
+</p>
+<p>
+Windows 
+
+</p>
+<p>
+Perform the following:
+1. In the Windows taskbar, click in the search area.
+2. Type MarkLogic.
+3. Click Stop MarkLogic Server, then choose to allow the action. The server is now stopped.
+4. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: Go to Add or remove programs, select MarkLogic Converters and click
+Uninstall.
+5. Uninstall MarkLogic by navigating to Add or remove Programs, selecting MarkLogic Server and
+clicking Uninstall.
+1. Select System Control Panel &gt; Programs&gt; MarkLogic Server &gt;.
+2. Right-click Stop MarkLogic Server.
+3. Select Run as Administrator, then choose to allow the action. The server is now stopped.
+4. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: Select MarkLogic Converters in Add/Remove Programs of Control
+Panel, right click on it, and select Uninstall.
+5. Uninstall MarkLogic: select MarkLogic Server in Add/Remove Programs of Control Panel, right click
+on it, and select Uninstall.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 23
+
+
+Page 24
+
+MarkLogic Server  Removing MarkLogic
+
+</p>
+<p>
+Platform
+Red Hat Linux
+
+</p>
+<p>
+Mac OS X 
+
+</p>
+<p>
+Perform the following:
+1. Stop MarkLogic: as the root user, enter the following command:
+
+</p>
+<p>
+/sbin/service MarkLogic stop
+2. [Uninstalling MarkLogic 9.0-4 or later] If you have the converters package installed, you need to
+uninstall it before continuing: As the root user: enter the following command:
+
+</p>
+<p>
+yum remove MarkLogicConverters
+
+</p>
+<p>
+For environments that don’t allow a yum uninstallation, the rpm uninstall can be used. To do an rpm
+uninstall: As the root user, uninstall the package with the following command:
+
+</p>
+<p>
+rpm -e MarkLogicConverters
+
+</p>
+<p>
+3. Uninstall MarkLogic: as the root user, enter the following command:
+
+</p>
+<p>
+yum remove MarkLogic
+
+</p>
+<p>
+For environments that don’t allow a yum uninstallation, the rpm uninstall can be used. To do an rpm
+uninstall: as the root user, uninstall the package with the following command:
+
+</p>
+<p>
+rpm -e MarkLogic
+
+</p>
+<p>
+1. Stop MarkLogic: select System Preferences &gt; MarkLogic to open the MarkLogic control window, and
+click Stop MarkLogic Server.
+2. [Uninstalling MarkLogic 9.0-4 or later] if you have the converters package installed, you need to
+uninstall it before continuing: Use these commands:
+
+</p>
+<p>
+sudo pkgutil --forget com.marklogic.converters
+
+</p>
+<p>
+rm ~/Library/MarkLogic/Converters
+3. No action is necessary when upgrading. If you want to remove the user data and do a fresh install,
+then remove the following directory:
+
+</p>
+<p>
+~/Library/ApplicationSupport/MarkLogic/Data
+4. To entirely remove MarkLogic, remove the following directories:
+
+</p>
+<p>
+~/Library/MarkLogic
+~/Library/Application Support/MarkLogic
+~/Library/StartupItems/MarkLogic
+~/Library/PreferencePanes/MarkLogic.prefPane
+5. To make Mac OS X completely forget it ever had a MarkLogic installation, run the following command
+from a terminal window:
+
+</p>
+<p>
+sudo pkgutil --forget com.marklogic.server
+
+</p>
+<p>
+NOTE
+Using this procedure to remove MarkLogic from your system will not remove user
+data (configuration information, XQuery files used by HTTP or XDBC servers, or forest
+content). This data is left in place to simplify the software upgrade process. If you wish
+to remove the user data, you must do so manually using standard operating system
+commands.
+
+</p>
+<p>
+In case you previously used converters/filters and want to remove this functionality:
+
+</p>
+<p>
+• To remove MarkLogic Converters from a node that has MarkLogic 9.0-4 or later release installed,
+you can use a package management tool, such as Control Panel on Windows or rpm on Linux, to
+uninstall MarkLogic Converters.
+• To remove converters/filters from a node that has MarkLogic 9.0-3 or earlier release installed, you
+need to uninstall that release of MarkLogic, and then install MarkLogic Server from release 9.0-4 or
+later but do not install MarkLogic Converters.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 24
+
+
+Page 25
+
+MarkLogic Server  Appendix: Packages by Linux Platform
+
+</p>
+<p>
+3. Appendix: Packages by Linux Platform
+
+</p>
+<p>
+This appendix is a reference guide for packages by Linux platform used for installing MarkLogic
+Server installation and MarkLogic Converters packages. If you cannot download the MarkLogic
+Server installation and MarkLogic Converters packages from http://developer.marklogic.com, you can
+download the packages required for the Linux platform you are installing. This appendix contains the
+following topics:
+
+</p>
+<p>
+• Red Hat Enterprise Linux 7
+• Red Hat Enterprise Linux 8
+• CentOS 7
+• Amazon Linux 1
+• Amazon Linux 2
+
+</p>
+<p>
+3.1. Red Hat Enterprise Linux 7
+3.1.1. MarkLogic Server
+
+</p>
+<p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14) (64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</p>
+<p>
+Package
+gdb-7.6.1-114.el7.x86_64
+glibc-2.17-260.el7.x86_64
+libgcc-4.8.5-39.el7.x86_64
+libtool-ltdl-2.4.2-22.el7_3.x86_64
+glibc-2.17-196.el7.x86_64
+libstdc++-4.8.5-39.el7.x86_64
+redhat-lsb-core-4.1-27.el7.x86_64
+rpm-libs-4.11.3-35.el7.x86_64
+bash-4.2.46-31.el7_4.x86_64
+
+</p>
+<p>
+3.1.2. MarkLogic Converters
+
+</p>
+<p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</p>
+<p>
+Package
+glibc-2.17-260.el7.i686
+glibc-2.17-260-.el7.x86_64
+libgcc-4.8.5-39.el7.i686
+libgcc-4.8.5-16.el7.x86_64
+libstdc++-4.8.5-16.el7.i686
+libstdc++-4.8.5-39.el7.x86_64
+rpm-libs-4.11.3-35.el8.x86_64
+bash-4.2.46-31.el7_4.x86_64
+
+</p>
+<p>
+3.2. Red Hat Enterprise Linux 8
+3.2.1. MarkLogic Server
+
+</p>
+<p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit) 
+
+</p>
+<p>
+Package
+gdb-8.2-5.el8.x86_64
+glibc-2.28-42.el8_0.1.x86_64
+libgcc-8.2.1-3.5.el8.x86_64
+libtool-ltdl-2.4.6-25.el8.x86_64
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 25
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Red Hat Enterprise Linux 7
+</p>
+<p>
+
+ANNOTATION: Red Hat Enterprise Linux 8
+</p>
+<p>
+
+ANNOTATION: CentOS 7
+</p>
+<p>
+
+ANNOTATION: Amazon Linux 1
+</p>
+<p>
+
+ANNOTATION: Amazon Linux 2
+
+
+Page 26
+
+MarkLogic Server 
+
+</p>
+<p>
+Dependency
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.2.2. MarkLogic Converters
+
+</p>
+<p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.3. CentOS 7
+3.3.1. MarkLogic Server
+
+</p>
+<p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.3.2. MarkLogic Converters
+
+</p>
+<p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</p>
+<p>
+Package
+libnsl-2.28-42.el8_0.1.x86_64
+libstdc++-8.2.1-3.5.el8.x86_64
+redhat-lsb-core-4.1-47.el8.x86_64
+rpm-libs-4.14.3-23.el8.x86_64
+bash-4.4.19-7.el8.x86_64 
+
+</p>
+<p>
+CentOS 7
+
+</p>
+<p>
+Package
+glibc-2.28-42.el8_0.1.i686
+glibc-2.28-42.el8_0.1.x86_64
+libgcc-8.2.1-3.5.el8.i686
+libgcc-8.2.1-3.5.el8.x86_64
+libstdc++-8.2.1-3.5.el8.i686
+libstdc++-8.2.1-3.5.el8.x86_64
+rpm-libs-4.14.3-23.el8.x86_64
+bash-4.4.19-7.el8.x86_64
+
+</p>
+<p>
+Package
+gdb-7.6.1-119.el7.x86_64
+glibc-2.17-307.el7.1.x86_64
+libgcc-4.8.5-39.el7.x86_64
+libtool-ltdl-2.4.2-22.el7_3.x86_64
+glibc-2.17-307.el7.1.x86_64
+libstdc++-4.8.5-39.el7.x86_64
+redhat-lsb-core-4.1-27.el7.centos.1.x86_64
+rpm-libs-4.11.3-43.el7.x86_64
+bash-4.2.46-34.el7.x86_64 
+
+</p>
+<p>
+Package
+
+</p>
+<p>
+glibc-2.17-307.el7.1.x86_64
+libgcc-4.8.5-39.el7.i686
+libgcc-4.8.5-39.el7.x86_64
+libstdc++-4.8.5-39.el7.i686
+libstdc++-4.8.5-39.el7.i686
+rpm-libs-4.11.3-43.el7.x86_64
+bash-4.2.46-34.el7.x86_64
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 26
+
+
+Page 27
+
+MarkLogic Server  Amazon Linux 1
+
+</p>
+<p>
+3.4. Amazon Linux 1
+3.4.1. MarkLogic Server
+
+</p>
+<p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.4.2. MarkLogic Converters
+
+</p>
+<p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.5. Amazon Linux 2
+3.5.1. MarkLogic Server
+
+</p>
+<p>
+Dependency
+gdb
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1()(64bit)
+libltdl.so.7()(64bit)
+libnsl.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit)
+lsb-core-amd64
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh
+
+</p>
+<p>
+3.5.2. MarkLogic Converters
+
+</p>
+<p>
+Dependency
+libc.so.6(GLIBC_2.14)
+libc.so.6(GLIBC_2.14)(64bit)
+libgcc_s.so.1
+libgcc_s.so.1()(64bit)
+libstdc++.so.6(GLIBCXX_3.4.15)
+libstdc++.so.6(GLIBCXX_3.4.15)(64bit) 
+
+</p>
+<p>
+Package
+gdb-7.6.1-64.33.amzn1.x86_64
+glibc-2.17-292.180.amzn1.x86_64
+libgcc72-7.2.1-2.59.amzn1.x86_64
+libtool-ltdl-2.4.2-20.4.8.5.32.amzn1.x86_64
+glibc-2.17-292.180.amzn1.x86_64
+libstdc++72-7.2.1-2.59.amzn1.x86_64
+redhat-lsb-core-4.0-7.14.amzn1.x86_64
+rpm-libs-4.11.3-40.76.amzn1.x86_64
+bash-4.2.46-28.37.amzn1.x86_64
+
+</p>
+<p>
+Package
+glibc-2.17-292.180.amzn1.i686
+glibc-2.17-292.180.amzn1.x86_64
+libgcc64-6.4.1-1.45.amzn1.i686
+libgcc72-7.2.1-2.59.amzn1.x86_64
+libstdc++64-6.4.1-1.45.amzn1.i686
+libstdc++72-7.2.1-2.59.amzn1.x86_64
+rpm-libs-4.11.3-40.76.amzn1.x86_64
+bash-4.2.46-28.37.amzn1.x86_64
+
+</p>
+<p>
+Package
+gdb-8.0.1-30.amzn2.0.3.x86_64
+glibc-2.26-34.amzn2.x86_64
+libgcc-7.3.1-6.amzn2.0.4.x86_64
+libtool-ltdl-2.4.2-22.2.amzn2.0.2.x86_64
+glibc-2.26-34.amzn2.x86_64
+libstdc++-7.3.1-6.amzn2.0.4.x86_64
+system-lsb-core-4.1-27.amzn2.3.6.x86_64
+rpm-libs-4.11.3-40.amzn2.0.4.x86_64
+bash-4.2.46-33.amzn2.x86_64
+
+</p>
+<p>
+Package
+glibc-2.26-34.amzn2.i686
+glibc-2.26-34.amzn2.x86_64
+libgcc-7.3.1-6.amzn2.0.4.i686
+libgcc-7.3.1-6.amzn2.0.4.x86_64
+libstdc++-7.3.1-6.amzn2.0.4.i686
+libstdc++-7.3.1-6.amzn2.0.4.x86_64
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 27
+
+
+Page 28
+
+MarkLogic Server 
+
+</p>
+<p>
+Dependency
+rpmlib(CompressedFileNames) &lt;= 3.0.4-1
+/bin/sh 
+
+</p>
+<p>
+Amazon Linux 2
+
+</p>
+<p>
+Package
+rpm-libs-4.11.3-40.amzn2.0.4.x86_64
+bash-4.2.46-33.amzn2.x86_64
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 28
+
+
+Page 29
+
+MarkLogic Server  Technical Support
+
+</p>
+<p>
+4. Technical Support
+
+</p>
+<p>
+MarkLogic provides technical support according to the terms detailed in your Software License
+Agreement or End User License Agreement.
+
+</p>
+<p>
+We invite you to visit our support website at http://help.marklogic.com to access information on
+known and fixed issues, knowledge base articles, and more. For licensed customers with an active
+maintenance contract, see the Support Handbook for instructions on registering support contacts and
+on working with the MarkLogic Technical Support team.
+
+</p>
+<p>
+Complete product documentation, the latest product release downloads, and other useful information
+is available for all developers at http://developer.marklogic.com. For technical questions, we encourage
+you to ask your question on Stack Overflow.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 29
+</p>
+<p>
+
+ANNOTATION: http://help.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Support Handbook
+</p>
+<p>
+
+ANNOTATION: http://developer.marklogic.com
+</p>
+<p>
+
+ANNOTATION: Stack Overflow
+</p>
+<p>
+
+ANNOTATION: Stack Overflow
+
+
+Page 30
+
+MarkLogic Server  Copyright
+
+</p>
+<p>
+5. Copyright
+
+</p>
+<p>
+MarkLogic Server MarkLogic 11 and supporting products. Last updated: November, 2022
+
+</p>
+<p>
+Copyright © 2022 MarkLogic Corporation. All rights reserved.This technology is protected by U.S.
+Patent No. 7,127,469B2, U.S. Patent No. 7,171,404B2, U.S. Patent No. 7,756,858 B2, and U.S. Patent
+No 7,962,474 B2, US 8,892,599, and US 8,935,267.
+
+</p>
+<p>
+The MarkLogic software is protected by United States and international copyright laws, and
+incorporates certain third party libraries and components which are subject to the attributions, terms,
+conditions and disclaimers set forth below.
+
+</p>
+<p>
+For all copyright notices, including third-party copyright notices, see the Combined Product Notices for
+your version of MarkLogic.
+
+</p>
+<p>
+MarkLogic 11 - December, 2022 Installation Guide - All Platforms  Page 30
+
+</p>
+</body>
+    </html></attachments>
+</envelope>

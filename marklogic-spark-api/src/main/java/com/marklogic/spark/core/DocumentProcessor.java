@@ -6,17 +6,14 @@ package com.marklogic.spark.core;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
+import com.marklogic.spark.core.extraction.ExtractionResult;
+import com.marklogic.spark.core.extraction.TextExtractor;
 import com.marklogic.spark.core.splitter.TextSplitter;
-import org.apache.tika.Tika;
-import org.apache.tika.exception.TikaException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,15 +25,15 @@ import java.util.Optional;
  */
 public class DocumentProcessor {
 
-    private final Tika tika;
+    private final TextExtractor textExtractor;
     private final TextSplitter textSplitter;
     private final TextClassifier textClassifier;
     private final EmbeddingProducer embeddingProducer;
     private final ChunkSelector chunkSelector;
 
-    public DocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier,
+    public DocumentProcessor(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier,
                              EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
-        this.tika = tika;
+        this.textExtractor = textExtractor;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
         this.embeddingProducer = embeddingProducer;
@@ -51,7 +48,10 @@ public class DocumentProcessor {
     }
 
     public List<DocumentInputs> processDocument(DocumentInputs inputs) {
-        if (tika != null && inputs.getContent() instanceof BytesHandle) {
+        // There's no getInputStream() on an AbstractWriteHandle. As our main use case so far involves reading
+        // files, which are read into a BytesHandle, we check for a BytesHandle and only perform text extraction on that
+        // for now.
+        if (textExtractor != null && inputs.getContent() instanceof BytesHandle) {
             extractText(inputs);
         }
         if (textSplitter != null) {
@@ -77,13 +77,10 @@ public class DocumentProcessor {
     }
 
     private void extractText(DocumentInputs inputs) {
-        BytesHandle content = (BytesHandle) inputs.getContent();
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
-            String extractedText = tika.parseToString(stream);
-            inputs.setExtractedText(extractedText);
-        } catch (IOException | TikaException e) {
-            throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
-                inputs.getInitialUri(), e.getMessage()), e);
+        ExtractionResult result = textExtractor.extractText(inputs);
+        if (result != null) {
+            inputs.setExtractedText(result.getText());
+            inputs.setExtractedMetadata(result.getMetadata());
         }
     }
 

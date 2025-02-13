@@ -11,6 +11,7 @@ import com.marklogic.spark.core.embedding.DocumentAndChunks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -27,6 +28,7 @@ public class DocumentInputs {
     private final String graph;
 
     private String extractedText;
+    private Map<String, String> extractedMetadata;
     private List<byte[]> classifications;
     private byte[] classificationResponse;
     private List<float[]> embeddings;
@@ -113,6 +115,14 @@ public class DocumentInputs {
 
     public void setExtractedText(String extractedText) {
         this.extractedText = extractedText;
+    }
+
+    public Map<String, String> getExtractedMetadata() {
+        return extractedMetadata;
+    }
+
+    public void setExtractedMetadata(Map<String, String> extractedMetadata) {
+        this.extractedMetadata = extractedMetadata;
     }
 
     public List<String> getChunks() {
