@@ -22,7 +22,6 @@ import com.marklogic.spark.writer.file.FileIterator;
 import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
-import org.apache.spark.sql.types.StructType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -35,14 +34,12 @@ import java.util.stream.Stream;
  */
 public class DocumentRowConverter implements RowConverter {
 
-    private final StructType schema;
     private final ObjectMapper objectMapper;
     private final String uriTemplate;
     private final Format documentFormat;
     private final boolean isStreamingFromFiles;
 
     public DocumentRowConverter(WriteContext writeContext) {
-        this.schema = writeContext.getSchema();
         this.uriTemplate = writeContext.getStringOption(Options.WRITE_URI_TEMPLATE);
         this.documentFormat = writeContext.getDocumentFormat();
         this.objectMapper = new ObjectMapper();
@@ -68,7 +65,7 @@ public class DocumentRowConverter implements RowConverter {
     }
 
     private Iterator<DocumentInputs> readContentFromRow(String uri, InternalRow row) {
-        DocumentRow documentRow = new DocumentRow(row, this.schema);
+        DocumentRow documentRow = new DocumentRow(row);
         BytesHandle bytesHandle = documentRow.getContent(this.documentFormat);
 
         JsonNode uriTemplateValues = null;
@@ -78,10 +75,6 @@ public class DocumentRowConverter implements RowConverter {
         }
 
         DocumentInputs documentInputs = new DocumentInputs(uri, bytesHandle, uriTemplateValues, documentRow.getMetadata());
-
-        // These will all go away soon, their processing moved to DocumentProcessor.
-        documentInputs.setChunks(documentRow.getChunks());
-
         return Stream.of(documentInputs).iterator();
     }
 

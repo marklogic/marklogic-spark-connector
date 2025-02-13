@@ -1,17 +1,14 @@
 /*
  * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.langchain4j.embedding;
+package com.marklogic.spark.core;
 
-import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.client.impl.DocumentWriteOperationImpl;
-import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunkSelector;
 import com.marklogic.spark.core.embedding.XmlChunkConfig;
-import com.marklogic.spark.Options;
 import com.marklogic.spark.dom.NamespaceContextFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -50,7 +47,7 @@ class DOMChunkSelectorTest {
     void test(String textExpression, String expectedChunkText) {
         XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, null);
         String actualChunkText = new DOMChunkSelector("/root/chunk", xmlChunkConfig)
-            .selectChunks(makeDocument(XML))
+            .selectChunks("/test.xml", new StringHandle(XML).withFormat(Format.XML))
             .getChunks().get(0).getEmbeddingText();
 
         assertEquals(expectedChunkText, actualChunkText);
@@ -65,18 +62,13 @@ class DOMChunkSelectorTest {
         properties.put(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example");
 
         XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, NamespaceContextFactory.makeNamespaceContext(properties));
-        List<Chunk> chunks = new DOMChunkSelector("/ex:root/ex:chunk", xmlChunkConfig).selectChunks(makeDocument(NAMESPACED_XML)).getChunks();
+        List<Chunk> chunks = new DOMChunkSelector("/ex:root/ex:chunk", xmlChunkConfig)
+            .selectChunks("/test.xml", new StringHandle(NAMESPACED_XML).withFormat(Format.XML))
+            .getChunks();
         assertNotNull(chunks);
         assertEquals(1, chunks.size());
 
         String actualChunkText = chunks.get(0).getEmbeddingText();
         assertEquals(expectedChunkText, actualChunkText);
-    }
-
-    private DocumentWriteOperation makeDocument(String xml) {
-        return new DocumentWriteOperationImpl(
-            "/test.xml", new DocumentMetadataHandle(),
-            new StringHandle(xml).withFormat(Format.XML)
-        );
     }
 }

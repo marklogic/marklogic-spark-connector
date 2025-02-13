@@ -3,10 +3,8 @@
  */
 package com.marklogic.langchain4j.splitter;
 
-import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.core.splitter.TextSelector;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import dev.langchain4j.data.document.Document;
@@ -14,25 +12,20 @@ import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Implements the "splitter" capability by delegating to different objects for selecting text to split; splitting
  * the selected text; and then processing the given chunks
  */
-public class DocumentTextSplitter implements Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>>, TextSplitter {
+public class DocumentTextSplitter implements TextSplitter {
 
     private final TextSelector textSelector;
     private final DocumentSplitter documentSplitter;
-    private final ChunkAssembler chunkAssembler;
 
-    public DocumentTextSplitter(TextSelector textSelector, DocumentSplitter documentSplitter, ChunkAssembler chunkAssembler) {
+    public DocumentTextSplitter(TextSelector textSelector, DocumentSplitter documentSplitter) {
         this.textSelector = textSelector;
         this.documentSplitter = documentSplitter;
-        this.chunkAssembler = chunkAssembler;
     }
 
     @Override
@@ -51,14 +44,5 @@ public class DocumentTextSplitter implements Function<DocumentWriteOperation, It
         }
 
         return textSegments.stream().map(TextSegment::text).toList();
-    }
-
-    @Override
-    public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
-        List<String> segments = split(sourceDocument.getUri(), sourceDocument.getContent());
-        if (segments == null || segments.isEmpty()) {
-            return Stream.of(sourceDocument).iterator();
-        }
-        return chunkAssembler.assembleChunks(sourceDocument, segments, null);
     }
 }

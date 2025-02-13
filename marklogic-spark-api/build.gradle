@@ -38,12 +38,12 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
   }
 
-  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
-  api "org.jdom:jdom2:2.0.6.1"
-
-  // Supports reading and writing RDF data.
+  // Supports reading and writing RDF data. Including this here so it's available to the tests as well.
   api("org.apache.jena:jena-arq:4.10.0") {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
+
+  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
+  api "org.jdom:jdom2:2.0.6.1"
 }

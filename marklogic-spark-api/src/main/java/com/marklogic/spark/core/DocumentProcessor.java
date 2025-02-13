@@ -1,13 +1,12 @@
 /*
  * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.writer;
+package com.marklogic.spark.core;
 
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
@@ -24,11 +23,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * This will soon handle extracting, splitting, classifying, and embedding.
- * And ideally, it and DocBuilder can all be moved to the marklogic-spark-api project where
- * it can be more easily reused in the future.
+ * Handles "processing" a document, which involves receiving a {@code DocumentInputs} instance, enriching it,
+ * and returning one or more input instances.
  */
-public class NewDocumentProcessor {
+public class DocumentProcessor {
 
     private final Tika tika;
     private final TextSplitter textSplitter;
@@ -36,8 +34,8 @@ public class NewDocumentProcessor {
     private final EmbeddingProducer embeddingProducer;
     private final ChunkSelector chunkSelector;
 
-    public NewDocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier,
-                                EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
+    public DocumentProcessor(Tika tika, TextSplitter textSplitter, TextClassifier textClassifier,
+                             EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
         this.tika = tika;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
@@ -69,10 +67,7 @@ public class NewDocumentProcessor {
             } else if (chunkSelector != null) {
                 DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
                 if (documentAndChunks != null && documentAndChunks.hasChunks()) {
-                    inputs.setExistingChunks(documentAndChunks.getChunks());
-                    // Must override the content, as the chunks will be modified by the embedder, and the chunk selector
-                    // may have created a new content handle in order to produce the chunks.
-                    inputs.setContent(documentAndChunks.getContent());
+                    inputs.setContentAndExistingChunks(documentAndChunks);
                     return embeddingProducer.produceEmbeddings(inputs);
                 }
             }

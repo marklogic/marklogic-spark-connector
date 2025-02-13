@@ -1,34 +1,51 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
-package com.marklogic.spark.writer;
+package com.marklogic.spark.core;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.classifier.TextClassifierFactory;
+import com.marklogic.spark.core.embedding.ChunkSelector;
+import com.marklogic.spark.core.embedding.ChunkSelectorFactory;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.embedding.EmbeddingProducerFactory;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import com.marklogic.spark.core.splitter.TextSplitterFactory;
+import org.apache.tika.Tika;
 
 import java.lang.reflect.InvocationTargetException;
 
-/**
- * This class exists in preparation for two events. First, upgrading to langchain4j 0.36.x will involve requiring Java
- * 17, and we don't yet want to force Flux users to use Java 17. Second, we may want to have marklogic-langchain4j be
- * a separate module that is available as a dependency. This class acts as a bridge, trying to instantiate the
- * langchain4j-specific class. If that's not on the classpath, that's fine - the splitter/embedder options simply won't
- * work.
- * <p>
- * At least for the 2.5.0 connector release, everything is being packaged together as we're sticking with langchain4j
- * 0.35.0 which only requires Java 11.
- */
-abstract class DocumentProcessorFactory {
+public abstract class DocumentProcessorFactory {
 
-    private static final String FACTORY_CLASS_NAME = "com.marklogic.spark.langchain4j.Langchain4jDocumentProcessorFactory";
+    private static final String FACTORY_CLASS_NAME = "com.marklogic.langchain4j.Langchain4jFactory";
 
-    static TextSplitter newTextSplitter(Context context) {
+    public static DocumentProcessor newDocumentProcessor(Context context) {
+        final Tika tika = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
+            new Tika() : null;
+        final TextSplitter textSplitter = newTextSplitter(context);
+        final TextClassifier textClassifier = TextClassifierFactory.newTextClassifier(context);
+        final EmbeddingProducer embeddingProducer = newEmbeddingProducer(context);
+
+        ChunkSelector chunkSelector = null;
+        if (embeddingProducer != null && textSplitter == null) {
+            // A ChunkSelector is needed when no splitter is provided.
+            chunkSelector = ChunkSelectorFactory.makeChunkSelector(context);
+            if (chunkSelector == null) {
+                throw new ConnectorException(String.format("To generate embeddings on documents, you must specify either " +
+                        "%s or %s to define the location of chunks in documents.",
+                    context.getOptionNameForMessage(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER),
+                    context.getOptionNameForMessage(Options.WRITE_EMBEDDER_CHUNKS_XPATH)
+                ));
+            }
+        }
+        return new DocumentProcessor(tika, textSplitter, textClassifier, embeddingProducer, chunkSelector);
+    }
+
+    private static TextSplitter newTextSplitter(Context context) {
         boolean shouldSplit = context.getProperties().keySet().stream().anyMatch(key -> key.startsWith(Options.WRITE_SPLITTER_PREFIX));
         if (!shouldSplit) {
             return null;
@@ -38,7 +55,7 @@ abstract class DocumentProcessorFactory {
         return factory != null ? factory.newTextSplitter(context) : null;
     }
 
-    static EmbeddingProducer newEmbeddingProducer(Context context) {
+    private static EmbeddingProducer newEmbeddingProducer(Context context) {
         boolean shouldEmbed = context.getProperties().keySet().stream().anyMatch(key -> key.startsWith(Options.WRITE_EMBEDDER_PREFIX));
         if (!shouldEmbed) {
             return null;
