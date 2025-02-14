@@ -83,7 +83,6 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
 
         Throwable cause = getCauseFromWriterException(ex);
         assertTrue(cause instanceof RuntimeException, "Unexpected cause: " + cause);
-        System.out.println(cause.getMessage());
     }
 
     private void verifyTemplateIsInvalid(String uriTemplate, String expectedMessage) {

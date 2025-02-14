@@ -99,9 +99,10 @@ public abstract class TextClassifierFactory {
     private TextClassifierFactory() {
     }
 
-    private static class MockTextClassifier implements TextClassifier {
+    public static class MockTextClassifier implements TextClassifier {
 
         private final String mockResponse;
+        private static boolean wasClosed;
 
         private MockTextClassifier(String mockResponse) {
             this.mockResponse = mockResponse;
@@ -110,6 +111,17 @@ public abstract class TextClassifierFactory {
         @Override
         public byte[] classifyText(String sourceUri, String text) {
             return mockResponse.getBytes();
+        }
+
+        public static boolean isClosed() {
+            return wasClosed;
+        }
+
+        @Override
+        // Sonar doesn't like this, but it's fine in a class that's only used as a mock.
+        @SuppressWarnings("java:S2696")
+        public void close() {
+            MockTextClassifier.wasClosed = true;
         }
     }
 }

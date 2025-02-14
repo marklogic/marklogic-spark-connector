@@ -29,7 +29,6 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
-        System.out.println(doc.toPrettyString());
         assertEquals("/extract-test/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
@@ -152,7 +151,6 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             "have been dropped", "extraction-test", 2);
 
         XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
-        System.out.println(doc.getPrettyXml());
         doc.assertElementExists("/model:root/model:content");
         doc.assertElementExists("/model:root/model:metadata");
         doc.assertElementMissing("source-uri should be omitted since the source was dropped", "/model:root/model:source-uri");

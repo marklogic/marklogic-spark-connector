@@ -43,8 +43,8 @@ dependencies {
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 
   // Getting a classpath conflict with commons-compress, so only testing with PDFs for now.
-//  testImplementation "org.apache.tika:tika-parser-microsoft-module:3.0.0"
-  testImplementation "org.apache.tika:tika-parser-pdf-module:3.0.0"
+//  testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
+  testImplementation "org.apache.tika:tika-parser-pdf-module:${tikaVersion}"
 }
 
 test {

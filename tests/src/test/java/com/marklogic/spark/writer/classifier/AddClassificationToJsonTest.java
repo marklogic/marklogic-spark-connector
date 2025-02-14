@@ -6,15 +6,22 @@ package com.marklogic.spark.writer.classifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AddClassificationToJsonTest extends AbstractIntegrationTest {
+
+    @AfterEach
+    void afterEach() {
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+    }
 
     @Test
     void chunkAndAddClassificationToJsonInOriginalJsonDoc() {

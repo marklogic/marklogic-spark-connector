@@ -14,6 +14,8 @@ import com.marklogic.spark.core.extraction.ExtractionResult;
 import com.marklogic.spark.core.extraction.TextExtractor;
 import com.marklogic.spark.core.splitter.TextSplitter;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -23,7 +25,7 @@ import java.util.Optional;
  * Handles "processing" a document, which involves receiving a {@code DocumentInputs} instance, enriching it,
  * and returning one or more input instances.
  */
-public class DocumentProcessor {
+public class DocumentProcessor implements Closeable {
 
     private final TextExtractor textExtractor;
     private final TextSplitter textSplitter;
@@ -38,6 +40,13 @@ public class DocumentProcessor {
         this.textClassifier = textClassifier;
         this.embeddingProducer = embeddingProducer;
         this.chunkSelector = chunkSelector;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (textClassifier != null) {
+            textClassifier.close();
+        }
     }
 
     public Optional<List<DocumentInputs>> flush() {

@@ -3,7 +3,9 @@
  */
 package com.marklogic.spark.core.classifier;
 
-public interface TextClassifier {
+import java.io.Closeable;
+
+public interface TextClassifier extends Closeable {
 
     byte[] classifyText(String sourceUri, String text);
 

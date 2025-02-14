@@ -74,8 +74,6 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
 
         assertEquals(4, rows.size());
 
-        rows.forEach(row -> System.out.println(row.prettyJson()));
-
         assertEquals("/mixed-files/hello.json", rows.get(0).getString(0));
         assertEquals("JSON", rows.get(0).getString(2));
 

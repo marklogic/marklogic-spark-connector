@@ -32,4 +32,11 @@ class SemaphoreTextClassifier implements TextClassifier {
             throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
         }
     }
+
+    @Override
+    public void close() {
+        if (classificationClient != null) {
+            classificationClient.close();
+        }
+    }
 }
