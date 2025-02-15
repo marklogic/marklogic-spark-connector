@@ -111,7 +111,6 @@ class ReadRowsWithInferredSchemaTest extends AbstractIntegrationTest {
             .load()
             .collectAsList();
 
-        rows.forEach(row -> System.out.println(row.prettyJson()));
         assertEquals(1, rows.size());
         Row row = rows.get(0);
         assertEquals(3, row.getInt(0));

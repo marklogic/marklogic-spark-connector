@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -47,31 +48,14 @@ class WriteRdfFilesTest extends AbstractIntegrationTest {
      * does not seem to be causing any issue. Perhaps a bug in Jena, as TriX supports a 'datatype' attribute on a
      * 'typedLiteral' element.
      */
-    @Test
-    void trix(@TempDir Path tempDir) {
-        writeExampleGraphToFiles(tempDir, "trix");
-
-        List<Row> rows = readRdfFiles(tempDir);
-        verifyEachRowHasGraph(rows);
-        verifyDebtRowHasLang(rows);
-        verifyCreatorRowHasDatatype(rows);
-
-        rows.forEach(row -> System.out.println(row.prettyJson()));
-    }
-
-    @Test
-    void trig(@TempDir Path tempDir) {
-        writeExampleGraphToFiles(tempDir, "trig");
-
-        List<Row> rows = readRdfFiles(tempDir);
-        verifyEachRowHasGraph(rows);
-        verifyDebtRowHasLang(rows);
-        verifyCreatorRowHasDatatype(rows);
-    }
-
-    @Test
-    void nq(@TempDir Path tempDir) {
-        writeExampleGraphToFiles(tempDir, "nq");
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "trix",
+        "trig",
+        "nq"
+    })
+    void trix(String format, @TempDir Path tempDir) {
+        writeExampleGraphToFiles(tempDir, format);
 
         List<Row> rows = readRdfFiles(tempDir);
         verifyEachRowHasGraph(rows);

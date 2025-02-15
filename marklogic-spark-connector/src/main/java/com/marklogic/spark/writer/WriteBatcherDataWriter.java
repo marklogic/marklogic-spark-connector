@@ -133,6 +133,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         stopJobAndRelease();
         closeArchiveWriter();
+
+        if (documentProcessor != null) {
+            IOUtils.closeQuietly(documentProcessor);
+        }
     }
 
     /**

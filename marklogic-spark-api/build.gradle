@@ -30,7 +30,7 @@ dependencies {
 
   // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
   // include the necessary parsers.
-  api "org.apache.tika:tika-core:3.0.0"
+  api "org.apache.tika:tika-core:${tikaVersion}"
 
   // Needed for using XmlMapper.
   api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2") {

@@ -7,15 +7,22 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AddClassificationToXmlTest extends AbstractIntegrationTest {
+
+    @AfterEach
+    void afterEach() {
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+    }
 
     @Test
     void chunkAndAddClassificationToXmlInOriginalDoc() {
