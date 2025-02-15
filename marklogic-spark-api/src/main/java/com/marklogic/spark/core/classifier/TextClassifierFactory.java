@@ -7,7 +7,6 @@ package com.marklogic.spark.core.classifier;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
 import com.smartlogic.cloud.CloudException;
 import com.smartlogic.cloud.TokenFetcher;
@@ -63,8 +62,9 @@ public abstract class TextClassifierFactory {
             String tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
             this.tokenUrl = new URL(protocol, host, port, tokenEndpoint);
 
-            if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}", host, tokenUrl);
+            if (SemaphoreTextClassifier.CLASSIFIER_LOGGER.isInfoEnabled()) {
+                SemaphoreTextClassifier.CLASSIFIER_LOGGER
+                    .info("Will classify text via host {}; token URL: {}", this.host, this.tokenUrl);
             }
         }
 

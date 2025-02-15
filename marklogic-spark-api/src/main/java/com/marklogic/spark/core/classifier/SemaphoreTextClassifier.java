@@ -4,17 +4,20 @@
 package com.marklogic.spark.core.classifier;
 
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Util;
 import com.smartlogic.classificationserver.client.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class SemaphoreTextClassifier implements TextClassifier {
+
+    protected static final Logger CLASSIFIER_LOGGER = LoggerFactory.getLogger("com.marklogic.semaphore.classifier");
 
     private final ClassificationClient classificationClient;
     private long totalDurationOfCalls;
 
-    SemaphoreTextClassifier(ClassificationConfiguration classificationConfiguration) {
+    SemaphoreTextClassifier(ClassificationConfiguration config) {
         this.classificationClient = new ClassificationClient();
-        classificationClient.setClassificationConfiguration(classificationConfiguration);
+        classificationClient.setClassificationConfiguration(config);
     }
 
     @Override
@@ -22,10 +25,12 @@ class SemaphoreTextClassifier implements TextClassifier {
         try {
             long start = System.currentTimeMillis();
             byte[] response = classificationClient.getClassificationServerResponse(new Body(text), new Title(sourceUri));
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            if (CLASSIFIER_LOGGER.isDebugEnabled()) {
                 long time = (System.currentTimeMillis() - start);
                 totalDurationOfCalls += time;
-                Util.MAIN_LOGGER.debug("Source URI: {}; time: {}; total duration: {}", sourceUri, time, totalDurationOfCalls);
+                if (CLASSIFIER_LOGGER.isTraceEnabled()) {
+                    CLASSIFIER_LOGGER.trace("Source URI: {}; time: {}; total duration: {}", sourceUri, time, totalDurationOfCalls);
+                }
             }
             return response;
         } catch (ClassificationException e) {
@@ -35,6 +40,9 @@ class SemaphoreTextClassifier implements TextClassifier {
 
     @Override
     public void close() {
+        if (CLASSIFIER_LOGGER.isDebugEnabled() && totalDurationOfCalls > 0) {
+            CLASSIFIER_LOGGER.debug("Total duration of calls: {}", totalDurationOfCalls);
+        }
         if (classificationClient != null) {
             classificationClient.close();
         }
