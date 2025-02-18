@@ -18,15 +18,13 @@ configurations {
 }
 
 dependencies {
-  // This is compileOnly as any environment this is used in will provide the Spark dependencies itself.
-  compileOnly('org.apache.spark:spark-sql_2.12:' + sparkVersion) {
-    // Excluded from our ETL tool for size reasons, so excluded here as well to ensure we don't need it.
-    exclude module: "rocksdbjni"
-  }
-
+  compileOnly "org.apache.spark:spark-sql_2.12:${sparkVersion}"
   shadowDependencies project(":marklogic-spark-api")
-
   java17Dependencies project(":marklogic-langchain4j")
+
+  // Ensuring the desired version of commons-compress is included in the connector jar. Some tests have failed in Flux
+  // because an older version - likely the one depended on by Jena - is included instead.
+  shadowDependencies "org.apache.commons:commons-compress:1.27.1"
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.

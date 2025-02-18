@@ -6,10 +6,7 @@ java {
 }
 
 dependencies {
-  testImplementation('org.apache.spark:spark-sql_2.12:' + sparkVersion) {
-    exclude module: "rocksdbjni"
-  }
-
+  testImplementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
@@ -42,8 +39,7 @@ dependencies {
   testImplementation "org.slf4j:jcl-over-slf4j:2.0.13"
   testImplementation "org.skyscreamer:jsonassert:1.5.1"
 
-  // Getting a classpath conflict with commons-compress, so only testing with PDFs for now.
-//  testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
+  testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
   testImplementation "org.apache.tika:tika-parser-pdf-module:${tikaVersion}"
 }
 

@@ -41,11 +41,31 @@ subprojects {
   }
 
   configurations.all {
-    // Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can lead to this
-    // issue - https://www.slf4j.org/codes.html#StaticLoggerBinder .
-    resolutionStrategy {
-      force "org.slf4j:slf4j-api:2.0.13"
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if (details.requested.group.equals("org.slf4j")) {
+        details.useVersion "2.0.16"
+        details.because "Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can " +
+          "lead to this issue - https://www.slf4j.org/codes.html#StaticLoggerBinder."
+      }
+      if (details.requested.group.equals("org.apache.logging.log4j")) {
+        details.useVersion "2.24.3"
+        details.because "Need to match the version used by Apache Tika. Spark uses 2.20.0 but automated tests confirm " +
+          "that Spark seems fine with 2.24.3."
+      }
     }
+
+    resolutionStrategy {
+      // Avoids a classpath conflict between Spark and the tika-parser-microsoft-module. Tika needs a
+      // more recent version and Spark (and Jena as well) both seems fine with this (as they should be per semver).
+      force "org.apache.commons:commons-compress:1.27.1"
+    }
+
+    // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
+    exclude module: "rocksdbjni"
+  }
+
+  task allDeps(type: DependencyReportTask) {
+    description = "Allows for generating dependency reports for every subproject in a single task."
   }
 
   test {
