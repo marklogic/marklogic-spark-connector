@@ -9,7 +9,13 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.SaveMode;
+import org.apache.tika.Tika;
+import org.apache.tika.metadata.Metadata;
 import org.junit.jupiter.api.Test;
+import org.springframework.util.FileCopyUtils;
+
+import java.io.ByteArrayInputStream;
+import java.io.File;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -32,6 +38,42 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertEquals("/extract-test/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+    }
+
+    @Test
+    void microsoftFile() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files/hello-world.docx")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_REPLACE, ".*files,'/extract-test'")
+            .mode(SaveMode.Append)
+            .save();
+
+        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
+        assertEquals("/extract-test/hello-world.docx", doc.get("source-uri").asText());
+        assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", doc.get("content").asText());
+        assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            doc.get("metadata").get("Content-Type").asText());
+    }
+
+    @Test
+    void plainTika() throws Exception {
+        File file = new File("src/test/resources/extraction-files/hello-world.docx");
+        byte[] bytes = FileCopyUtils.copyToByteArray(file);
+        try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)) {
+            Metadata metadata = new Metadata();
+            String text = new Tika().parseToString(inputStream, metadata);
+            assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", text,
+                "The point of this test is to make sure that Tika works by itself with the tika-parser-microsoft-module " +
+                    "dependency on the classpath, as we've had some mysterious classpath issues, like the wrong " +
+                    "version of commons-compress being used. If this test fails, then we know something is awry " +
+                    "with the classpath.");
+            assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document", metadata.get("Content-Type"));
+        }
     }
 
     @Test
@@ -58,6 +100,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void customCollectionsAndPermissions() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
+            .option("pathGlobFilter", "*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -109,6 +152,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void dropSourceJson() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
+            .option("pathGlobFilter", "*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -134,6 +178,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void dropSourceXml() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
+            .option("pathGlobFilter", "*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
