@@ -42,8 +42,13 @@ shadowJar {
   // Spark uses an older version of OkHttp; see
   // https://stackoverflow.com/questions/61147800/how-to-override-spark-jars-while-running-spark-submit-command-in-cluster-mode
   // for more information on why these are relocated.
-  relocate "okhttp3", "com.marklogic.okhttp3"
-  relocate "okio", "com.marklogic.okio"
+  relocate "okhttp3", "marklogicspark.okhttp3"
+  relocate "okio", "marklogicspark.okio"
+
+  // Shadowing these as well to avoid issues where a user needs to use the "normal" Java Client with the
+  // regular OkHttp classes.
+  relocate "com.marklogic.client", "marklogicspark.marklogic.client"
+  relocate "com.burgstaller.okhttp", "marklogicspark.com.burgstaller.okhttp"
 }
 
 // Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .
