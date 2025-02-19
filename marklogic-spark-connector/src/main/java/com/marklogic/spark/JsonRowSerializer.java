@@ -32,7 +32,9 @@ public class JsonRowSerializer {
 
         this.jsonOptions = new JSONOptions(
             // Funky code to convert a Java map into a Scala immutable Map.
-            JavaConverters.mapAsScalaMapConverter(options).asScala().toMap(Predef.$conforms()),
+            null,
+//            JavaConverters.mapAsScalaMapConverter(options).asScala().toMap(Predef.),
+//            JavaConverters.mapAsScalaMapConverter(options).asScala().toMap(Predef.$conforms()),
 
             // As verified via tests, this default timezone ID is overridden by a user via
             // the spark.sql.session.timeZone option.

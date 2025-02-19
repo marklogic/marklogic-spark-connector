@@ -49,8 +49,8 @@ public class JsonRowDeserializer {
 
     private JacksonParser newJacksonParser(StructType schema) {
         final boolean allowArraysAsStructs = true;
-        final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList<Filter>().iterator()).toSeq();
+//        final Seq<Filter> filters = JavaConverters.asScala(new ArrayList<Filter>().iterator()).toSeq();
         JSONOptions jsonOptions = new JsonRowSerializer(schema, new HashMap<>()).getJsonOptions();
-        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
+        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, JavaConverters.asScala(new ArrayList<Filter>().iterator()).toSeq());
     }
 }

@@ -38,7 +38,7 @@ class MarkLogicFileTable extends FileTable {
     private final StructType schema;
 
     MarkLogicFileTable(SparkSession sparkSession, CaseInsensitiveStringMap options, Seq<String> paths, StructType schema) {
-        super(sparkSession, options, paths, Option.apply(schema));
+        super(sparkSession, options, null, Option.apply(schema));
         if (isWriteFilesOperation(options, paths)) {
             makeWritePath(paths.head(), sparkSession);
         }
@@ -61,10 +61,15 @@ class MarkLogicFileTable extends FileTable {
     }
 
     @Override
-    public Option<StructType> inferSchema(Seq<FileStatus> files) {
+    public Option<StructType> inferSchema(scala.collection.immutable.Seq<FileStatus> files) {
         return Option.apply(this.schema);
     }
 
+    //    @Override
+//    public Option<StructType> inferSchema(Seq<FileStatus> files) {
+//        return Option.apply(this.schema);
+//    }
+//
     @Override
     public String name() {
         return "marklogic-file";

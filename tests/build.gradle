@@ -6,7 +6,7 @@ java {
 }
 
 dependencies {
-  testImplementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+  testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
