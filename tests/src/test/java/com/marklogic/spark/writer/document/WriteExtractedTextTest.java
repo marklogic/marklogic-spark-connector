@@ -34,7 +34,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.json");
         assertEquals("/extract-test/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
@@ -53,7 +53,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
+        JsonNode doc = readJsonDocument("/extract-test/hello-world.docx/extracted-text.json");
         assertEquals("/extract-test/hello-world.docx", doc.get("source-uri").asText());
         assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", doc.get("content").asText());
         assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -90,7 +90,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
+        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.xml");
         doc.assertElementValue("/model:root/model:source-uri", "/extract-test/marklogic-getting-started.pdf");
         String content = doc.getElementValue("/model:root/model:content");
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
@@ -116,7 +116,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("original-doc", 2);
         assertCollectionSize("extracted-doc", 2);
 
-        PermissionsTester perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        PermissionsTester perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf/extracted-text.json");
         assertEquals(2, perms.getDocumentPermissions().size(), "Expecting 2 roles - spark-user-role and qconsole-user");
         perms.assertReadPermissionExists("spark-user-role");
         perms.assertReadPermissionExists("qconsole-user");
@@ -141,7 +141,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        PermissionsTester perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        PermissionsTester perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf/extracted-text.json");
         final String message = "The extracted text doc should default to " + Options.WRITE_PERMISSIONS + " when " +
             "extracted text permissions are not specified.";
         perms.assertReadPermissionExists(message, "spark-user-role");
@@ -167,7 +167,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
             "have been dropped", "extraction-test", 2);
 
-        JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.json");
+        JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.json");
         assertTrue(doc.has("content"));
         assertTrue(doc.has("metadata"));
         assertFalse(doc.has("source-uri"), "source-uri should be omitted since the source was dropped");
@@ -195,7 +195,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertCollectionSize("Should only have the 2 extracted text docs as the two source docs should " +
             "have been dropped", "extraction-test", 2);
 
-        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
+        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.xml");
         doc.assertElementExists("/model:root/model:content");
         doc.assertElementExists("/model:root/model:metadata");
         doc.assertElementMissing("source-uri should be omitted since the source was dropped", "/model:root/model:source-uri");
@@ -225,14 +225,14 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             "extraction-test", 2);
         assertInCollections("/abc/marklogic-getting-started.pdf", "extraction-test");
 
-        JsonNode extractedTextDoc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json", "extraction-test");
+        JsonNode extractedTextDoc = readJsonDocument("/abc/marklogic-getting-started.pdf/extracted-text.json", "extraction-test");
         assertEquals("/abc/marklogic-getting-started.pdf", extractedTextDoc.get("source-uri").asText());
         assertTrue(extractedTextDoc.get("content").asText().contains("MarkLogic Server Table of Contents"));
 
         assertCollectionSize("Expecting 5 chunks based on a max chunk size of 10k chars", "chunks", 5);
-        JsonNode sidecarDoc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json-chunks-1.json", "chunks");
+        JsonNode sidecarDoc = readJsonDocument("/abc/marklogic-getting-started.pdf/extracted-text.json-chunks-1.json", "chunks");
 
-        assertEquals("/abc/marklogic-getting-started.pdf-extracted-text.json", sidecarDoc.get("source-uri").asText());
+        assertEquals("/abc/marklogic-getting-started.pdf/extracted-text.json", sidecarDoc.get("source-uri").asText());
         assertEquals(1, sidecarDoc.get("chunks").size());
         assertTrue(sidecarDoc.get("chunks").get(0).get("text").asText().contains("MarkLogic Server Table of Contents"));
     }
@@ -257,7 +257,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
                 "The chunks are in the extracted text doc since the number of max chunks per sidecar defaults to zero.",
             "extraction-test", 2);
 
-        JsonNode doc = readJsonDocument("/abc/marklogic-getting-started.pdf-extracted-text.json");
+        JsonNode doc = readJsonDocument("/abc/marklogic-getting-started.pdf/extracted-text.json");
         assertEquals(4, doc.size(), "Should have source-uri, content, metadata, and chunks.");
         assertEquals("/abc/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         assertTrue(doc.get("content").asText().contains("MarkLogic Server Table of Contents"));

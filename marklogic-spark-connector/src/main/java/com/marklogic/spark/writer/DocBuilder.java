@@ -241,7 +241,7 @@ public class DocBuilder {
             ObjectNode node = doc.putObject("metadata");
             inputs.getExtractedMetadata().entrySet().forEach(entry -> node.put(entry.getKey(), entry.getValue()));
         }
-        String uri = sourceUri + "-extracted-text.json";
+        String uri = sourceUri + "/extracted-text.json";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new JacksonHandle(doc));
     }
 
@@ -274,7 +274,7 @@ public class DocBuilder {
             });
         }
 
-        String uri = sourceUri + "-extracted-text.xml";
+        String uri = sourceUri + "/extracted-text.xml";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new DOMHandle(doc));
     }
 
