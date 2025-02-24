@@ -9,7 +9,6 @@ import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
-import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
@@ -18,7 +17,6 @@ import com.marklogic.spark.dom.DOMHelper;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -64,9 +62,9 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         root.appendChild(chunksElement);
 
         List<Chunk> chunks = new ArrayList<>();
-        AtomicInteger ct = new AtomicInteger(0);
+        int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            Element classificationReponseNode = getNthClassificationResponseElement(ct.getAndIncrement());
+            Element classificationReponseNode = getNthClassificationResponseElement(chunksCounter++);
             addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode);
         }
 
@@ -111,21 +109,23 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
     }
 
-    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationReponseNode) {
+    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
+
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
         text.setTextContent(textSegment);
         chunk.appendChild(text);
-        if (classificationReponseNode != null) {
+
+        if (classificationResponse != null) {
             Node classificationNode = doc.createElement("classification");
-            NodeList structuredDocumentNodeChildNodes = classificationReponseNode.getElementsByTagName(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
-            for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
-                Node importedChildNode = doc.importNode(structuredDocumentNodeChildNodes.item(i), true);
-                classificationNode.appendChild(importedChildNode);
-            }
             chunk.appendChild(classificationNode);
+            for (int i = 0; i < classificationResponse.getChildNodes().getLength(); i++) {
+                Node childNode = classificationResponse.getChildNodes().item(i);
+                classificationNode.appendChild(doc.importNode(childNode, true));
+            }
         }
+
         chunks.add(new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory));
     }
 

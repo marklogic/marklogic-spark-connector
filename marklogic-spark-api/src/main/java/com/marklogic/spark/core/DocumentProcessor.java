@@ -71,21 +71,21 @@ public class DocumentProcessor implements Closeable {
     private void classifyText(List<DocumentInputs> inputs) {
         List<TextClassifier.ClassifiableContent> contents = new ArrayList<>();
         for (DocumentInputs input : inputs) {
-            // Not sure if we'll keep this behavior, where we always classify the document, even if it has chunks.
             contents.add(new ClassifiableDocument(input));
-            if (input.getChunks() != null && !input.getChunks().isEmpty()) {
+            if (input.getChunks() != null) {
                 for (int i = 0; i < input.getChunks().size(); i++) {
                     contents.add(new ClassifiableChunk(input, i));
                 }
             }
         }
+
         textClassifier.classifyText(contents);
     }
 
     private void addEmbeddings(List<DocumentInputs> inputs) {
         List<Chunk> chunks = new ArrayList<>();
         for (DocumentInputs input : inputs) {
-            if (input.getChunks() != null && !input.getChunks().isEmpty()) {
+            if (input.getChunks() != null) {
                 for (int i = 0; i < input.getChunks().size(); i++) {
                     chunks.add(new EmbeddableChunk(input, i));
                 }
@@ -135,11 +135,6 @@ public class DocumentProcessor implements Closeable {
         }
 
         @Override
-        public String getSourceUri() {
-            return documentInputs.getInitialUri();
-        }
-
-        @Override
         public String getTextToClassify() {
             return documentInputs.getExtractedText() != null ?
                 documentInputs.getExtractedText() :
@@ -159,11 +154,6 @@ public class DocumentProcessor implements Closeable {
         private ClassifiableChunk(DocumentInputs documentInputs, int chunkListIndex) {
             this.documentInputs = documentInputs;
             this.chunkListIndex = chunkListIndex;
-        }
-
-        @Override
-        public String getSourceUri() {
-            return documentInputs.getInitialUri();
         }
 
         @Override
