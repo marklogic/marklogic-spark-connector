@@ -14,6 +14,7 @@ import com.smartlogic.cloud.TokenFetcher;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -115,6 +116,14 @@ public abstract class TextClassifierFactory {
 
         public static boolean isClosed() {
             return wasClosed;
+        }
+
+        @Override
+        public void classifyText(List<ClassifiableContent> classifiableContents) {
+            classifiableContents.forEach(contents -> {
+                byte[] classification = classifyText(contents.getSourceUri(), contents.getTextToClassify());
+                contents.addClassification(classification);
+            });
         }
 
         @Override

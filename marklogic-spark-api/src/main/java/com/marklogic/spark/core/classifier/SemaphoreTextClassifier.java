@@ -8,6 +8,8 @@ import com.smartlogic.classificationserver.client.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 class SemaphoreTextClassifier implements TextClassifier {
 
     protected static final Logger CLASSIFIER_LOGGER = LoggerFactory.getLogger("com.marklogic.semaphore.classifier");
@@ -36,6 +38,14 @@ class SemaphoreTextClassifier implements TextClassifier {
         } catch (ClassificationException e) {
             throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
         }
+    }
+
+    @Override
+    public void classifyText(List<ClassifiableContent> classifiableContents) {
+        classifiableContents.forEach(content -> {
+            byte[] response = classifyText(content.getSourceUri(), content.getTextToClassify());
+            content.addClassification(response);
+        });
     }
 
     @Override

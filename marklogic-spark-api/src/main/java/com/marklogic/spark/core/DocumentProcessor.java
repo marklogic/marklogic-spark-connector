@@ -7,6 +7,7 @@ import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.core.classifier.TextClassifier;
+import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.ChunkSelector;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
@@ -17,9 +18,7 @@ import com.marklogic.spark.core.splitter.TextSplitter;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Handles "processing" a document, which involves receiving a {@code DocumentInputs} instance, enriching it,
@@ -49,40 +48,135 @@ public class DocumentProcessor implements Closeable {
         }
     }
 
-    public Optional<List<DocumentInputs>> flush() {
-        if (embeddingProducer != null) {
-            return Optional.of(embeddingProducer.flush());
+    public List<DocumentInputs> batchProcessDocuments(List<DocumentInputs> inputs) {
+        if (textExtractor != null) {
+            inputs.stream().filter(input -> input.getContent() instanceof BytesHandle).forEach(this::extractText);
         }
-        return Optional.empty();
-    }
 
-    public List<DocumentInputs> processDocument(DocumentInputs inputs) {
-        // There's no getInputStream() on an AbstractWriteHandle. As our main use case so far involves reading
-        // files, which are read into a BytesHandle, we check for a BytesHandle and only perform text extraction on that
-        // for now.
-        if (textExtractor != null && inputs.getContent() instanceof BytesHandle) {
-            extractText(inputs);
-        }
         if (textSplitter != null) {
-            applySplitter(inputs);
+            inputs.forEach(this::applySplitter);
         }
+
         if (textClassifier != null) {
             classifyText(inputs);
         }
 
         if (embeddingProducer != null) {
-            if (inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
-                return embeddingProducer.produceEmbeddings(inputs);
-            } else if (chunkSelector != null) {
-                DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(inputs.getInitialUri(), inputs.getContent());
-                if (documentAndChunks != null && documentAndChunks.hasChunks()) {
-                    inputs.setContentAndExistingChunks(documentAndChunks);
-                    return embeddingProducer.produceEmbeddings(inputs);
+            addEmbeddings(inputs);
+        }
+
+        return inputs;
+    }
+
+    private void classifyText(List<DocumentInputs> inputs) {
+        List<TextClassifier.ClassifiableContent> contents = new ArrayList<>();
+        for (DocumentInputs input : inputs) {
+            // Not sure if we'll keep this behavior, where we always classify the document, even if it has chunks.
+            contents.add(new ClassifiableDocument(input));
+            if (input.getChunks() != null && !input.getChunks().isEmpty()) {
+                for (int i = 0; i < input.getChunks().size(); i++) {
+                    contents.add(new ClassifiableChunk(input, i));
                 }
             }
         }
+        textClassifier.classifyText(contents);
+    }
 
-        return Arrays.asList(inputs);
+    private void addEmbeddings(List<DocumentInputs> inputs) {
+        List<Chunk> chunks = new ArrayList<>();
+        for (DocumentInputs input : inputs) {
+            if (input.getChunks() != null && !input.getChunks().isEmpty()) {
+                for (int i = 0; i < input.getChunks().size(); i++) {
+                    chunks.add(new EmbeddableChunk(input, i));
+                }
+            } else if (chunkSelector != null) {
+                DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(input.getInitialUri(), input.getContent());
+                if (documentAndChunks != null && documentAndChunks.hasChunks()) {
+                    input.overrideContent(documentAndChunks.getContent());
+                    documentAndChunks.getChunks().forEach(chunks::add);
+                }
+            }
+        }
+        if (!chunks.isEmpty()) {
+            embeddingProducer.addEmbeddings(chunks);
+        }
+    }
+
+    private static class EmbeddableChunk implements Chunk {
+        private final DocumentInputs inputs;
+        private final int chunkIndex;
+
+        public EmbeddableChunk(DocumentInputs inputs, int chunkIndex) {
+            this.inputs = inputs;
+            this.chunkIndex = chunkIndex;
+        }
+
+        @Override
+        public String getDocumentUri() {
+            return inputs.getInitialUri();
+        }
+
+        @Override
+        public String getEmbeddingText() {
+            return inputs.getChunks().get(chunkIndex);
+        }
+
+        @Override
+        public void addEmbedding(float[] embedding) {
+            inputs.addEmbedding(embedding);
+        }
+    }
+
+    private static class ClassifiableDocument implements TextClassifier.ClassifiableContent {
+        private final DocumentInputs documentInputs;
+
+        private ClassifiableDocument(DocumentInputs documentInputs) {
+            this.documentInputs = documentInputs;
+        }
+
+        @Override
+        public String getSourceUri() {
+            return documentInputs.getInitialUri();
+        }
+
+        @Override
+        public String getTextToClassify() {
+            return documentInputs.getExtractedText() != null ?
+                documentInputs.getExtractedText() :
+                HandleAccessor.contentAsString(documentInputs.getContent());
+        }
+
+        @Override
+        public void addClassification(byte[] classification) {
+            documentInputs.setClassificationResponse(classification);
+        }
+    }
+
+    private static class ClassifiableChunk implements TextClassifier.ClassifiableContent {
+        private final int chunkListIndex;
+        private final DocumentInputs documentInputs;
+
+        private ClassifiableChunk(DocumentInputs documentInputs, int chunkListIndex) {
+            this.documentInputs = documentInputs;
+            this.chunkListIndex = chunkListIndex;
+        }
+
+        @Override
+        public String getSourceUri() {
+            return documentInputs.getInitialUri();
+        }
+
+        @Override
+        public String getTextToClassify() {
+            return documentInputs.getChunks().get(chunkListIndex);
+        }
+
+        @Override
+        public void addClassification(byte[] classification) {
+            // We shouldn't need an index here, as we expect to add classifications in the correct order, based on
+            // classifying chunks in the order defined by the chunks list.
+            documentInputs.addChunkClassification(classification);
+        }
     }
 
     private void extractText(DocumentInputs inputs) {
@@ -90,20 +184,6 @@ public class DocumentProcessor implements Closeable {
         if (result != null) {
             inputs.setExtractedText(result.getText());
             inputs.setExtractedMetadata(result.getMetadata());
-        }
-    }
-
-    private void classifyText(DocumentInputs inputs) {
-        // Not sure if we should run the classifier if the user specifies a splitter. We may need options to control
-        // whether this happens or not.
-        final String uri = inputs.getInitialUri();
-        if (inputs.getExtractedText() != null) {
-            byte[] classification = textClassifier.classifyText(uri, inputs.getExtractedText());
-            inputs.setClassificationResponse(classification);
-        } else {
-            String content = HandleAccessor.contentAsString(inputs.getContent());
-            byte[] classification = textClassifier.classifyText(uri, content);
-            inputs.setClassificationResponse(classification);
         }
     }
 
@@ -116,19 +196,5 @@ public class DocumentProcessor implements Closeable {
             chunks = textSplitter.split(inputs.getInitialUri(), inputs.getContent());
         }
         inputs.setChunks(chunks);
-
-        if (textClassifier != null && chunks != null && !chunks.isEmpty()) {
-            classifyChunks(inputs);
-        }
-    }
-
-    // Should this impact existing chunks???
-    private void classifyChunks(DocumentInputs inputs) {
-        List<byte[]> classifications = new ArrayList<>();
-        for (String chunk : inputs.getChunks()) {
-            byte[] result = textClassifier.classifyText(inputs.getInitialUri(), chunk);
-            classifications.add(result);
-        }
-        inputs.setClassifications(classifications);
     }
 }

@@ -71,6 +71,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
 
+    private final List<DocumentInputs> documentInputsBatch = new ArrayList<>();
+    private final int processorBatchSize;
+
     WriteBatcherDataWriter(WriteContext writeContext, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.writeContext = writeContext;
         this.writeFailure = new AtomicReference<>();
@@ -80,6 +83,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
         this.documentProcessor = DocumentProcessorFactory.newDocumentProcessor(writeContext);
+        this.processorBatchSize = writeContext.getIntOption(Options.WRITE_PROCESSOR_BATCH_SIZE, 1, 1);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -99,19 +103,17 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
-        buildAndWriteDocuments(rowConverter.convertRow(row));
+        Iterator<DocumentInputs> inputs = rowConverter.convertRow(row);
+        buildAndWriteDocuments(inputs, false);
     }
 
     @Override
     public WriterCommitMessage commit() {
         // The RDF row converter may have "pending" rows as it has not yet reached the max number of triples to include
         // in a document. Those are retrieved here.
-        buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
-
-        flushDocumentProcessor();
+        buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs(), true);
 
         this.writeBatcher.flushAndWait();
-
         throwWriteFailureIfExists();
 
         Set<String> graphs = getGraphNames();
@@ -133,10 +135,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         stopJobAndRelease();
         closeArchiveWriter();
-
-        if (documentProcessor != null) {
-            IOUtils.closeQuietly(documentProcessor);
-        }
+        IOUtils.closeQuietly(documentProcessor);
     }
 
     /**
@@ -146,13 +145,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      *
      * @param iterator
      */
-    private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator) {
+    private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator, boolean forceProcessorFlush) {
+        // The Iterator seems needlessly confusing now.
         try {
             iterator.forEachRemaining(documentInputs -> {
-                List<DocumentInputs> list = this.documentProcessor != null ?
-                    this.documentProcessor.processDocument(documentInputs) :
-                    Arrays.asList(documentInputs);
-                writeProcessedDocumentInputs(list);
+                if (documentProcessor != null) {
+                    if (processorBatchSize > 1) {
+                        documentInputsBatch.add(documentInputs);
+                    } else {
+                        List<DocumentInputs> list = this.documentProcessor.batchProcessDocuments(Arrays.asList(documentInputs));
+                        writeDocumentInputs(list);
+                    }
+                } else {
+                    writeDocumentInputs(Arrays.asList(documentInputs));
+                }
             });
         } finally {
             // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
@@ -161,18 +167,11 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 IOUtils.closeQuietly((Closeable) iterator);
             }
         }
-    }
 
-    /**
-     * Due to the batching performed by the optional embedder, it is possible for some inputs to be "stuck" in the
-     * processor, and thus they need to be flushed before this writer finishes committing.
-     */
-    private void flushDocumentProcessor() {
-        if (documentProcessor != null) {
-            Optional<List<DocumentInputs>> list = documentProcessor.flush();
-            if (list.isPresent()) {
-                writeProcessedDocumentInputs(list.get());
-            }
+        if (documentInputsBatch.size() >= processorBatchSize || (forceProcessorFlush && !documentInputsBatch.isEmpty())) {
+            List<DocumentInputs> list = this.documentProcessor.batchProcessDocuments(documentInputsBatch);
+            writeDocumentInputs(list);
+            documentInputsBatch.clear();
         }
     }
 
@@ -181,7 +180,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      *
      * @param list
      */
-    private void writeProcessedDocumentInputs(List<DocumentInputs> list) {
+    private void writeDocumentInputs(List<DocumentInputs> list) {
         for (DocumentInputs inputs : list) {
             Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(inputs);
             documents.forEach(this::writeDocument);

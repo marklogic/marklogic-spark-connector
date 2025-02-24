@@ -6,13 +6,10 @@ package com.marklogic.spark.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
-import com.marklogic.spark.core.embedding.Chunk;
-import com.marklogic.spark.core.embedding.DocumentAndChunks;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Captures the various inputs used for constructing a document to be written to MarkLogic. {@code graph} refers
@@ -29,15 +26,12 @@ public class DocumentInputs {
 
     private String extractedText;
     private Map<String, String> extractedMetadata;
-    private List<byte[]> classifications;
+    private List<byte[]> chunkClassifications;
     private byte[] classificationResponse;
     private List<float[]> embeddings;
 
     // These will be created via a splitter.
     private List<String> chunks;
-
-    // While these are for when the user wants to create embeddings on a document that already has chunks.
-    private List<Chunk> existingChunks;
 
     public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                           DocumentMetadataHandle initialMetadata) {
@@ -53,40 +47,23 @@ public class DocumentInputs {
         this.graph = graph;
     }
 
-    public List<String> getTextSegmentsToGenerateEmbeddings() {
-        // Shields the embedder from having to know whether to look for just-split chunks or existing chunks.
-        if (existingChunks != null && !existingChunks.isEmpty()) {
-            return this.existingChunks.stream().map(Chunk::getEmbeddingText).collect(Collectors.toList());
-        }
-        return this.chunks;
+    public void overrideContent(AbstractWriteHandle modifiedContent) {
+        // For when chunks have been selected.
+        this.content = modifiedContent;
     }
 
-    public void setGeneratedEmbeddings(List<float[]> generatedEmbeddings) {
-        // Requires the embedder to pass the entire set of embeddings for this document in one call. This avoids
-        // tricky situations with existing chunks, where we don't have a simple "add to the next existing chunk" method.
-        if (existingChunks != null && !existingChunks.isEmpty()) {
-            for (int i = 0; i < generatedEmbeddings.size(); i++) {
-                existingChunks.get(i).addEmbedding(generatedEmbeddings.get(i));
-            }
-        } else {
-            if (embeddings == null) {
-                embeddings = new ArrayList<>();
-            }
-            embeddings.addAll(generatedEmbeddings);
+    public void addChunkClassification(byte[] classification) {
+        if (chunkClassifications == null) {
+            chunkClassifications = new ArrayList<>();
         }
+        chunkClassifications.add(classification);
     }
 
-    /**
-     * Overrides the content handle, as in the process of selecting existing chunks, a new content object may have been
-     * created that the existing chunks are a part of. For example, chunks represented by DOM {@code Element}
-     * instances will be part of a parent DOM {@code Document} object that was created during the chunk selection
-     * processing. That {@code Document} object needs to be the content associated with this inputs object.
-     *
-     * @param documentAndChunks
-     */
-    public void setContentAndExistingChunks(DocumentAndChunks documentAndChunks) {
-        this.content = documentAndChunks.getContent();
-        this.existingChunks = documentAndChunks.getChunks();
+    public void addEmbedding(float[] embedding) {
+        if (embeddings == null) {
+            embeddings = new ArrayList<>();
+        }
+        embeddings.add(embedding);
     }
 
     public String getInitialUri() {
@@ -134,11 +111,7 @@ public class DocumentInputs {
     }
 
     public List<byte[]> getClassifications() {
-        return classifications;
-    }
-
-    public void setClassifications(List<byte[]> classifications) {
-        this.classifications = classifications;
+        return chunkClassifications;
     }
 
     public byte[] getClassificationResponse() {
