@@ -226,7 +226,12 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertEquals(8, doc.get("chunks").size());
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(8, chunks.size());
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("embedding"), "No embedding found in chunk " + i);
+        }
 
         assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 3 batches to be sent to the test " +
             "embedding model, with 3 in the first call, 3 in the second call, and 2 when the processor is flushed " +

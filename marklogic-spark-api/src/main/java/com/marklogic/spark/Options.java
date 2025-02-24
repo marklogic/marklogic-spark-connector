@@ -407,6 +407,9 @@ public abstract class Options {
      */
     public static final String WRITE_EMBEDDER_BATCH_SIZE = WRITE_EMBEDDER_PREFIX + "batchSize";
 
+    // Temporary, likely to change in next PR.
+    public static final String WRITE_PROCESSOR_BATCH_SIZE = "spark.marklogic.write.processor.batchSize";
+
     /**
      * Defines the host for classification requests
      *
