@@ -66,6 +66,11 @@ Spark access to certain JVM modules. They are applied automatically when running
 to "Gradle". This should result in Intellij using the `test` configuration in the `marklogic-spark-connector/build.gradle`
 file that registers the required JVM options, allowing for tests to run on Java 17.
 
+## Testing text classification
+
+See the `ClassifyAdHocTest` class for instructions on how to test the text classification feature with a 
+valid connection to Semaphore.
+
 ## Generating code quality reports with SonarQube
 
 In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file, and you must

@@ -1,4 +1,5 @@
 plugins {
+  id 'net.saliman.properties' version '1.5.2'
   id "java-library"
   id "org.sonarqube" version "6.0.1.5171"
 }
@@ -12,6 +13,7 @@ sonar {
 }
 
 subprojects {
+  apply plugin: "net.saliman.properties"
   apply plugin: "java-library"
   apply plugin: "jacoco"
 
@@ -75,6 +77,9 @@ subprojects {
       events 'started', 'passed', 'skipped', 'failed'
       exceptionFormat 'full'
     }
+    environment "SEMAPHORE_API_KEY", semaphoreApiKey
+    environment "SEMAPHORE_HOST", semaphoreHost
+    environment "SEMAPHORE_PATH", semaphorePath
   }
 
   // See https://docs.gradle.org/current/userguide/jacoco_plugin.html .

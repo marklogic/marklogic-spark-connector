@@ -26,7 +26,7 @@
     <appender-ref ref="STDOUT"/>
   </logger>
 
-  <logger name="com.marklogic.semaphore.classifier" level="TRACE" additivity="false">
+  <logger name="com.marklogic.semaphore.classifier" level="DEBUG" additivity="false">
     <appender-ref ref="STDOUT"/>
   </logger>
 

@@ -22,13 +22,6 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
     void chunkAndAddClassificationToJsonInOriginalJsonDoc() {
         readAndStartWrite()
             .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(3))
-
-            // These will be ignored because the mock response option is used. But to test S4 for real, you can comment
-            // out the line above that enables use of the mock classifier and populate the below environment variable.
-            .option(Options.WRITE_CLASSIFIER_APIKEY, System.getenv("SEMAPHORE_API_KEY"))
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_PATH, "/cls/dev/cs1/")
-
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text\n/more-text")
             .mode(SaveMode.Append)
             .save();
