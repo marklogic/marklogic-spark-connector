@@ -150,7 +150,6 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
         File dir = tempDir.toFile();
         assertEquals(1, dir.listFiles().length);
         String filename = dir.listFiles()[0].getName();
-        System.out.println(filename);
         assertEquals("has space.json", filename,
             "Just like MLCP, if the connector cannot construct a java.net.URI from the document URI (it will fail " +
                 "due to a space), the error should be logged and the file should be written with its unaltered " +

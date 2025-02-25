@@ -14,7 +14,6 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.JsonChunk;
@@ -22,7 +21,6 @@ import com.marklogic.spark.core.embedding.JsonChunk;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -44,22 +42,20 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = doc.putArray(determineChunksArrayName(doc));
         List<Chunk> chunks = new ArrayList<>();
-        AtomicInteger ct = new AtomicInteger(0);
-        textSegments.forEach(textSegment -> {
-            String text = textSegment;
+        int chunksCounter = 0;
+        for (String text : textSegments) {
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            if (classifications != null && !classifications.isEmpty()) {
+            if (classifications != null && classifications.size() > chunksCounter) {
                 try {
-                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement()))
-                        .get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
-                    chunk.set("classification", classificationNode);
+                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter++));
+                    chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
                 }
             }
             chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
-        });
+        }
 
         return new DocumentAndChunks(
             new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new JacksonHandle(doc)),
@@ -79,16 +75,15 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = rootField.putArray(DEFAULT_CHUNKS_ARRAY_NAME);
         List<Chunk> chunks = new ArrayList<>();
-        AtomicInteger ct = new AtomicInteger(0);
+        int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             String text = textSegments.get(listIndex++);
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
-            if (classifications != null) {
+            if (classifications != null && classifications.size() > chunksCounter) {
                 try {
-                    JsonNode classificationNode = xmlMapper.readTree(classifications.get(ct.getAndIncrement()))
-                        .get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
-                    chunk.set("classification", classificationNode);
+                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter++));
+                    chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
                 }

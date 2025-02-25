@@ -17,7 +17,6 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
-import com.marklogic.spark.core.classifier.SemaphoreUtil;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
@@ -142,8 +141,8 @@ public class DocBuilder {
         JsonNode originalJsonContent, String uri, byte[] classificationResponse
     ) {
         try {
-            JsonNode structuredDocumentNode = xmlMapper.readTree(classificationResponse).get(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT);
-            ((ObjectNode) originalJsonContent).set("classification", structuredDocumentNode);
+            JsonNode classificationData = xmlMapper.readTree(classificationResponse);
+            ((ObjectNode) originalJsonContent).set("classification", classificationData);
             return new JacksonHandle(originalJsonContent);
         } catch (IOException e) {
             throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
@@ -158,10 +157,10 @@ public class DocBuilder {
             DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
             Document responseDoc = builder.parse(new ByteArrayInputStream(classificationResponse));
 
-            NodeList structuredDocumentNodeChildNodes = responseDoc.getElementsByTagName(SemaphoreUtil.CLASSIFICATION_MAIN_ELEMENT).item(0).getChildNodes();
+            NodeList articleChildNodes = responseDoc.getElementsByTagName("ARTICLE").item(0).getChildNodes();
             Node classificationNode = originalDoc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "classification");
-            for (int i = 0; i < structuredDocumentNodeChildNodes.getLength(); i++) {
-                Node importedChildNode = originalDoc.importNode(structuredDocumentNodeChildNodes.item(i), true);
+            for (int i = 0; i < articleChildNodes.getLength(); i++) {
+                Node importedChildNode = originalDoc.importNode(articleChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);
             }
             originalDoc.getFirstChild().appendChild(classificationNode);

@@ -7,37 +7,43 @@ package com.marklogic.spark.core.classifier;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.dom.DOMHelper;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
 import com.smartlogic.cloud.CloudException;
 import com.smartlogic.cloud.TokenFetcher;
+import org.w3c.dom.Document;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-
 
 public abstract class TextClassifierFactory {
 
     private static final String MOCK_CLASSIFIER_OPTION = "spark.marklogic.testing.mockClassifierResponse";
 
     public static TextClassifier newTextClassifier(Context context) {
-        if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
-            return new MockTextClassifier(context.getStringOption(MOCK_CLASSIFIER_OPTION));
-        }
-
+        MultiArticleClassifier multiArticleClassifier = null;
         final String host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
-        if (host != null && host.trim().length() > 0) {
+
+        if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
+            multiArticleClassifier = new MockTextClassifier(context.getStringOption(MOCK_CLASSIFIER_OPTION));
+        } else if (host != null && host.trim().length() > 0) {
             try {
                 ClassificationConfiguration config = buildClassificationConfiguration(context);
-                return new SemaphoreTextClassifier(config);
+                multiArticleClassifier = new SemaphoreMultiArticleClassifier(config);
             } catch (Exception e) {
-                throw new ConnectorException(String.format("Unable to create a TextClassifier; cause: %s", e.getMessage()));
+                throw new ConnectorException(String.format("Unable to configure a connection for classifying text; cause: %s", e.getMessage()));
             }
-        } else {
-            return null;
         }
+
+        if (multiArticleClassifier != null) {
+            // We may need a dedicated encoding for this
+            String encoding = context.getStringOption(Options.READ_FILES_ENCODING, "UTF-8");
+            return new SemaphoreTextClassifier(multiArticleClassifier, encoding);
+        }
+        return null;
     }
 
     private static ClassificationConfiguration buildClassificationConfiguration(Context context) throws MalformedURLException, CloudException {
@@ -63,9 +69,8 @@ public abstract class TextClassifierFactory {
             String tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
             this.tokenUrl = new URL(protocol, host, port, tokenEndpoint);
 
-            if (SemaphoreTextClassifier.CLASSIFIER_LOGGER.isInfoEnabled()) {
-                SemaphoreTextClassifier.CLASSIFIER_LOGGER
-                    .info("Will classify text via host {}; token URL: {}", this.host, this.tokenUrl);
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}", this.host, this.tokenUrl);
             }
         }
 
@@ -100,18 +105,13 @@ public abstract class TextClassifierFactory {
     private TextClassifierFactory() {
     }
 
-    public static class MockTextClassifier implements TextClassifier {
+    public static class MockTextClassifier implements MultiArticleClassifier {
 
-        private final String mockResponse;
+        private final Document mockResponse;
         private static boolean wasClosed;
 
         private MockTextClassifier(String mockResponse) {
-            this.mockResponse = mockResponse;
-        }
-
-        @Override
-        public byte[] classifyText(String sourceUri, String text) {
-            return mockResponse.getBytes();
+            this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
         }
 
         public static boolean isClosed() {
@@ -119,11 +119,8 @@ public abstract class TextClassifierFactory {
         }
 
         @Override
-        public void classifyText(List<ClassifiableContent> classifiableContents) {
-            classifiableContents.forEach(contents -> {
-                byte[] classification = classifyText(contents.getSourceUri(), contents.getTextToClassify());
-                contents.addClassification(classification);
-            });
+        public Document classifyArticles(byte[] multiArticleDocumentBytes) {
+            return mockResponse;
         }
 
         @Override

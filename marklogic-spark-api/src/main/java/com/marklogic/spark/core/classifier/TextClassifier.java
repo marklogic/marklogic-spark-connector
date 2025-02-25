@@ -6,11 +6,16 @@ package com.marklogic.spark.core.classifier;
 import java.io.Closeable;
 import java.util.List;
 
+/**
+ * Main interface for the text classification system; intended to hide the use of Semaphore.
+ */
 public interface TextClassifier extends Closeable {
 
-    // This will be removed soon in favor of the below method.
-    byte[] classifyText(String sourceUri, String text);
-
+    /**
+     * Classify the text in each object, with the classification being added to each associated object.
+     *
+     * @param classifiableContents
+     */
     void classifyText(List<ClassifiableContent> classifiableContents);
 
     /**
@@ -18,8 +23,6 @@ public interface TextClassifier extends Closeable {
      * classifier, it doesn't matter in terms of batching up requests.
      */
     interface ClassifiableContent {
-
-        String getSourceUri();
 
         String getTextToClassify();
 

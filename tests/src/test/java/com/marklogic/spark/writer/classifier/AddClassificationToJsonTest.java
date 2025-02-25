@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer.classifier;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.core.classifier.TextClassifierFactory;
@@ -11,22 +12,16 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class AddClassificationToJsonTest extends AbstractIntegrationTest {
 
-    @AfterEach
-    void afterEach() {
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
-    }
-
     @Test
     void chunkAndAddClassificationToJsonInOriginalJsonDoc() {
         readAndStartWrite()
-            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(3))
 
             // These will be ignored because the mock response option is used. But to test S4 for real, you can comment
             // out the line above that enables use of the mock classifier and populate the below environment variable.
@@ -38,9 +33,11 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("URL"));
-        assertTrue(doc.get("chunks").get(0).get("classification").has("URL"));
+        assertTrue(doc.get("classification").has("SYSTEM"));
+        assertTrue(doc.get("chunks").get(0).get("classification").has("SYSTEM"));
     }
 
     /**
@@ -50,19 +47,21 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
     @Test
     void sidecarChunksAddClassificationToJson() {
         readAndStartWrite()
-            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(3))
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text\n/more-text")
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 3)
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
             .mode(SaveMode.Append)
             .save();
 
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("URL"));
+        assertTrue(doc.get("classification").has("SYSTEM"));
 
         doc = readJsonDocument("/split-test.json-chunks-1.json");
-        assertTrue(doc.get("chunks").get(0).get("classification").has("URL"));
-        assertTrue(doc.get("chunks").get(1).get("classification").has("URL"));
+        assertTrue(doc.get("chunks").get(0).get("classification").has("SYSTEM"));
+        assertTrue(doc.get("chunks").get(1).get("classification").has("SYSTEM"));
     }
 
     /**
@@ -86,26 +85,38 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
     @Test
     void classifyJsonContentsWithoutChunking() {
         readAndStartWrite()
-            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
             .mode(SaveMode.Append)
             .save();
 
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("URL"));
+        assertTrue(doc.get("classification").has("SYSTEM"));
         assertFalse(doc.has("chunks"));
     }
 
     @Test
     void chunkAndAddClassificationOnlyToChunksInOriginalDoc() {
         readAndStartWrite()
-            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.MOCK_RESPONSE)
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(5))
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text\n/more-text")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .mode(SaveMode.Append)
             .save();
 
+        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+
         JsonNode doc = readJsonDocument("/split-test.json");
         assertEquals(4, doc.get("chunks").size(), "Expecting 4 chunks based on max chunk size of 500.");
+
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("text"));
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
+        }
     }
 
     private Dataset<Row> readDocument(String uri) {

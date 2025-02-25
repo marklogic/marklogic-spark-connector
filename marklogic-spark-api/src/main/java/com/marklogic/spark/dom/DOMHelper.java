@@ -49,7 +49,10 @@ public class DOMHelper {
         }
 
         String xml = HandleAccessor.contentAsString(handle);
+        return parseXmlString(xml, sourceUri);
+    }
 
+    public Document parseXmlString(String xml, String sourceUri) {
         try {
             return getDocumentBuilder().parse(new InputSource(new StringReader(xml)));
         } catch (Exception e) {

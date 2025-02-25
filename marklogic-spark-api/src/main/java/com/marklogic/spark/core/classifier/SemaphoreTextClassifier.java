@@ -4,57 +4,127 @@
 package com.marklogic.spark.core.classifier;
 
 import com.marklogic.spark.ConnectorException;
-import com.smartlogic.classificationserver.client.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.marklogic.spark.dom.DOMHelper;
+import org.apache.commons.io.IOUtils;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.XMLConstants;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 
+/**
+ * Knows how to build a multi-article request and parse a structured document response. The actual call to Semaphore
+ * is hidden behind the {@code MultiArticleClassifier} interface so that it can be mocked for testing purposes.
+ */
 class SemaphoreTextClassifier implements TextClassifier {
 
-    protected static final Logger CLASSIFIER_LOGGER = LoggerFactory.getLogger("com.marklogic.semaphore.classifier");
+    private final MultiArticleClassifier multiArticleClassifier;
+    private final DOMHelper domHelper;
+    private final Transformer transformer;
+    private final String encoding;
+    private final XPathExpression articleExpression;
 
-    private final ClassificationClient classificationClient;
-    private long totalDurationOfCalls;
-
-    SemaphoreTextClassifier(ClassificationConfiguration config) {
-        this.classificationClient = new ClassificationClient();
-        classificationClient.setClassificationConfiguration(config);
-    }
-
-    @Override
-    public byte[] classifyText(String sourceUri, String text) {
-        try {
-            long start = System.currentTimeMillis();
-            byte[] response = classificationClient.getClassificationServerResponse(new Body(text), new Title(sourceUri));
-            if (CLASSIFIER_LOGGER.isDebugEnabled()) {
-                long time = (System.currentTimeMillis() - start);
-                totalDurationOfCalls += time;
-                if (CLASSIFIER_LOGGER.isTraceEnabled()) {
-                    CLASSIFIER_LOGGER.trace("Source URI: {}; time: {}; total duration: {}", sourceUri, time, totalDurationOfCalls);
-                }
-            }
-            return response;
-        } catch (ClassificationException e) {
-            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceUri, e.getMessage()), e);
-        }
+    SemaphoreTextClassifier(MultiArticleClassifier multiArticleClassifier, String encoding) {
+        this.multiArticleClassifier = multiArticleClassifier;
+        this.domHelper = new DOMHelper(null);
+        this.transformer = newTransformer();
+        this.encoding = encoding;
+        this.articleExpression = domHelper.compileXPath("//ARTICLE", "Unable to evaluate XPath expression");
     }
 
     @Override
     public void classifyText(List<ClassifiableContent> classifiableContents) {
-        classifiableContents.forEach(content -> {
-            byte[] response = classifyText(content.getSourceUri(), content.getTextToClassify());
-            content.addClassification(response);
-        });
+        Document doc = buildMultiArticleRequest(classifiableContents);
+        byte[] documentBytes = convertNodeIntoBytes(doc);
+
+        Document structuredDocument;
+        try {
+            structuredDocument = multiArticleClassifier.classifyArticles(documentBytes);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify content, cause: %s", e.getMessage()), e);
+        }
+
+        addArticlesToContents(classifiableContents, structuredDocument);
     }
 
     @Override
-    public void close() {
-        if (CLASSIFIER_LOGGER.isDebugEnabled() && totalDurationOfCalls > 0) {
-            CLASSIFIER_LOGGER.debug("Total duration of calls: {}", totalDurationOfCalls);
+    public void close() throws IOException {
+        IOUtils.closeQuietly(multiArticleClassifier);
+    }
+
+    private Document buildMultiArticleRequest(List<ClassifiableContent> classifiableContents) {
+        Document doc = domHelper.newDocument();
+        Element root = doc.createElement("STRUCTUREDDOCUMENT");
+        doc.appendChild(root);
+        for (ClassifiableContent content : classifiableContents) {
+            Element article = doc.createElement("ARTICLE");
+            article.setTextContent(content.getTextToClassify());
+            root.appendChild(article);
         }
-        if (classificationClient != null) {
-            classificationClient.close();
+        return doc;
+    }
+
+    private byte[] convertNodeIntoBytes(Node doc) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        Result result = new StreamResult(baos);
+        try {
+            this.transformer.transform(new DOMSource(doc), result);
+            return baos.toByteArray();
+        } catch (TransformerException e) {
+            throw new ConnectorException(String.format("Unable to generate XML; cause: %s", e.getMessage()), e);
+        }
+    }
+
+    private void addArticlesToContents(List<ClassifiableContent> classifiableContents, Document structuredDocument) {
+        NodeList articles;
+        try {
+            articles = (NodeList) articleExpression.evaluate(structuredDocument, XPathConstants.NODESET);
+        } catch (XPathExpressionException e) {
+            throw new ConnectorException(String.format(
+                "Unable to retrieve articles from classification response; cause: %s", e.getMessage()), e);
+        }
+        for (int i = 0; i < articles.getLength(); i++) {
+            byte[] articleBytes = convertNodeIntoBytes(articles.item(i));
+            classifiableContents.get(i).addClassification(articleBytes);
+        }
+    }
+
+    private Transformer newTransformer() {
+        try {
+            TransformerFactory factory = TransformerFactory.newInstance();
+            // Disables certain features as recommended by Sonar to prevent security vulnerabilities.
+            // Also see https://stackoverflow.com/questions/32178558/how-to-prevent-xml-external-entity-injection-on-transformerfactory .
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+
+            final Transformer t = factory.newTransformer();
+            if (this.encoding != null) {
+                t.setOutputProperty(OutputKeys.ENCODING, this.encoding);
+            } else {
+                t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            }
+
+            // Semaphore needs the XML declaration present.
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+
+            // No need to waste time indenting XML, Semaphore doesn't need it.
+            t.setOutputProperty(OutputKeys.INDENT, "no");
+            return t;
+        } catch (TransformerConfigurationException e) {
+            throw new ConnectorException(
+                String.format("Unable to instantiate transformer for classifying text; cause: %s", e.getMessage()), e
+            );
         }
     }
 }
