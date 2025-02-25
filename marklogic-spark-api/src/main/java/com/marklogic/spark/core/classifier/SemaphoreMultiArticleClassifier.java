@@ -7,15 +7,11 @@ import com.marklogic.spark.ConnectorException;
 import com.smartlogic.classificationserver.client.ClassificationClient;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
 import com.smartlogic.classificationserver.client.ClassificationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 
 import java.io.IOException;
 
 class SemaphoreMultiArticleClassifier implements MultiArticleClassifier {
-
-    private static final Logger SEMAPHORE_LOGGER = LoggerFactory.getLogger("com.marklogic.semaphore.classifier");
 
     private final ClassificationClient classificationClient;
     private long totalDurationOfCalls;
@@ -31,11 +27,11 @@ class SemaphoreMultiArticleClassifier implements MultiArticleClassifier {
         try {
             long start = System.currentTimeMillis();
             Document response = classificationClient.getStructuredDocument(multiArticleDocumentBytes, "content.xml");
-            if (SEMAPHORE_LOGGER.isDebugEnabled()) {
+            if (SemaphoreTextClassifier.SEMAPHORE_LOGGER.isDebugEnabled()) {
                 long time = (System.currentTimeMillis() - start);
                 totalDurationOfCalls += time;
-                if (SEMAPHORE_LOGGER.isTraceEnabled()) {
-                    SEMAPHORE_LOGGER.trace("Time: {}; total duration: {}", time, totalDurationOfCalls);
+                if (SemaphoreTextClassifier.SEMAPHORE_LOGGER.isTraceEnabled()) {
+                    SemaphoreTextClassifier.SEMAPHORE_LOGGER.trace("Time: {}; total duration: {}", time, totalDurationOfCalls);
                 }
             }
             return response;
@@ -46,8 +42,8 @@ class SemaphoreMultiArticleClassifier implements MultiArticleClassifier {
 
     @Override
     public void close() throws IOException {
-        if (SEMAPHORE_LOGGER.isDebugEnabled() && totalDurationOfCalls > 0) {
-            SEMAPHORE_LOGGER.debug("Total duration of calls: {}", totalDurationOfCalls);
+        if (SemaphoreTextClassifier.SEMAPHORE_LOGGER.isDebugEnabled() && totalDurationOfCalls > 0) {
+            SemaphoreTextClassifier.SEMAPHORE_LOGGER.debug("Total duration of calls: {}", totalDurationOfCalls);
         }
         if (classificationClient != null) {
             classificationClient.close();

@@ -26,8 +26,9 @@ public class DocumentInputs {
 
     private String extractedText;
     private Map<String, String> extractedMetadata;
+
+    private byte[] documentClassification;
     private List<byte[]> chunkClassifications;
-    private byte[] classificationResponse;
     private List<float[]> embeddings;
 
     // These will be created via a splitter.
@@ -114,12 +115,12 @@ public class DocumentInputs {
         return chunkClassifications;
     }
 
-    public byte[] getClassificationResponse() {
-        return classificationResponse;
+    public byte[] getDocumentClassification() {
+        return documentClassification;
     }
 
-    public void setClassificationResponse(byte[] classificationResponse) {
-        this.classificationResponse = classificationResponse;
+    public void setDocumentClassification(byte[] documentClassification) {
+        this.documentClassification = documentClassification;
     }
 
     public List<float[]> getEmbeddings() {

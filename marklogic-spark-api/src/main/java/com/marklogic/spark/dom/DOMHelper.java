@@ -9,16 +9,22 @@ import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import org.w3c.dom.Document;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.*;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
 
 /**
@@ -81,6 +87,32 @@ public class DOMHelper {
                 "Unable to compile XPath expression for %s: %s; cause: %s",
                 purposeForErrorMessage, xpathExpression, message), e
             );
+        }
+    }
+
+    public static TransformerFactory newTransformerFactory() throws TransformerConfigurationException {
+        TransformerFactory factory = TransformerFactory.newInstance();
+        // Disables certain features as recommended by Sonar to prevent security vulnerabilities.
+        // Also see https://stackoverflow.com/questions/32178558/how-to-prevent-xml-external-entity-injection-on-transformerfactory .
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+        factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
+        return factory;
+    }
+
+    // Only intended for trace logging and manual debugging/testing.
+    public static String prettyPrintNode(Node node) {
+        try {
+            final Transformer t = newTransformerFactory().newTransformer();
+            t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            t.setOutputProperty(OutputKeys.INDENT, "yes");
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Result result = new StreamResult(baos);
+            t.transform(new DOMSource(node), result);
+            return new String(baos.toByteArray());
+        } catch (Exception ex) {
+            throw new ConnectorException(ex.getMessage(), ex);
         }
     }
 
