@@ -24,7 +24,7 @@ import java.util.List;
  * Handles "processing" a document, which involves receiving a {@code DocumentInputs} instance, enriching it,
  * and returning one or more input instances.
  */
-public class DocumentProcessor implements Closeable {
+public class DocumentPipeline implements Closeable {
 
     private final TextExtractor textExtractor;
     private final TextSplitter textSplitter;
@@ -32,8 +32,8 @@ public class DocumentProcessor implements Closeable {
     private final EmbeddingProducer embeddingProducer;
     private final ChunkSelector chunkSelector;
 
-    public DocumentProcessor(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier,
-                             EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
+    public DocumentPipeline(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier,
+                            EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
         this.textExtractor = textExtractor;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
@@ -48,7 +48,11 @@ public class DocumentProcessor implements Closeable {
         }
     }
 
-    public List<DocumentInputs> batchProcessDocuments(List<DocumentInputs> inputs) {
+    /**
+     * Implements the pipeline for processing documents via text extraction, text splitting, text classification, and
+     * embedding generation.
+     */
+    public void processDocuments(List<DocumentInputs> inputs) {
         if (textExtractor != null) {
             inputs.stream().filter(input -> input.getContent() instanceof BytesHandle).forEach(this::extractText);
         }
@@ -64,8 +68,6 @@ public class DocumentProcessor implements Closeable {
         if (embeddingProducer != null) {
             addEmbeddings(inputs);
         }
-
-        return inputs;
     }
 
     private void classifyText(List<DocumentInputs> inputs) {

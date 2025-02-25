@@ -135,6 +135,14 @@ public abstract class Options {
     public static final String WRITE_JSON_SERIALIZATION_OPTION_PREFIX = "spark.marklogic.write.json.";
 
     /**
+     * Defines the number of rows to batch up before sending them through the optional document pipeline process.
+     * Defaults to 1.
+     *
+     * @since 2.6.0
+     */
+    public static final String WRITE_PIPELINE_BATCH_SIZE = "spark.marklogic.write.pipeline.batchSize";
+
+    /**
      * @since 2.6.0
      */
     public static final String WRITE_EXTRACTED_TEXT = "spark.marklogic.write.extractedText";
@@ -406,9 +414,6 @@ public abstract class Options {
      * @since 2.5.0
      */
     public static final String WRITE_EMBEDDER_BATCH_SIZE = WRITE_EMBEDDER_PREFIX + "batchSize";
-
-    // Temporary, likely to change in next PR.
-    public static final String WRITE_PROCESSOR_BATCH_SIZE = "spark.marklogic.write.processor.batchSize";
 
     /**
      * Defines the host for classification requests

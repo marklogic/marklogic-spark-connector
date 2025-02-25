@@ -16,8 +16,8 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
-import com.marklogic.spark.core.DocumentProcessor;
-import com.marklogic.spark.core.DocumentProcessorFactory;
+import com.marklogic.spark.core.DocumentPipeline;
+import com.marklogic.spark.core.DocumentPipelineFactory;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
@@ -65,14 +65,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
-    private final DocumentProcessor documentProcessor;
+    private final DocumentPipeline documentPipeline;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
 
     private final List<DocumentInputs> documentInputsBatch = new ArrayList<>();
-    private final int processorBatchSize;
+    private final int pipelineBatchSize;
 
     WriteBatcherDataWriter(WriteContext writeContext, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.writeContext = writeContext;
@@ -82,8 +82,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
-        this.documentProcessor = DocumentProcessorFactory.newDocumentProcessor(writeContext);
-        this.processorBatchSize = writeContext.getIntOption(Options.WRITE_PROCESSOR_BATCH_SIZE, 1, 1);
+        this.documentPipeline = DocumentPipelineFactory.newDocumentPipeline(writeContext);
+        this.pipelineBatchSize = writeContext.getIntOption(Options.WRITE_PIPELINE_BATCH_SIZE, 1, 1);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -104,16 +104,21 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
         Iterator<DocumentInputs> inputs = rowConverter.convertRow(row);
-        buildAndWriteDocuments(inputs, false);
+        buildDocumentsAndFlushAsNeeded(inputs);
     }
 
     @Override
     public WriterCommitMessage commit() {
         // The RDF row converter may have "pending" rows as it has not yet reached the max number of triples to include
         // in a document. Those are retrieved here.
-        buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs(), true);
+        buildDocumentsAndFlushAsNeeded(rowConverter.getRemainingDocumentInputs());
 
+        // May have a batch of documentInputs less than the pipeline batch size, so flush these.
+        processDocumentInputsBatch();
+
+        // Wait for the writeBatcher to finish all writes to MarkLogic.
         this.writeBatcher.flushAndWait();
+
         throwWriteFailureIfExists();
 
         Set<String> graphs = getGraphNames();
@@ -135,29 +140,38 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         stopJobAndRelease();
         closeArchiveWriter();
-        IOUtils.closeQuietly(documentProcessor);
+        IOUtils.closeQuietly(documentPipeline);
     }
 
     /**
-     * Processes the document inputs returned by the RowConverter for a single row. A row can return multiple instances
-     * of document inputs. Each instance is run through the document processor if it's not null, which can produce
-     * additional documents.
+     * "process" = run each set of inputs through the optional document pipeline if necessary. Then convert each
+     * set of inputs into a set of documents and write those to MarkLogic.
+     */
+    private void processDocumentInputsBatch() {
+        if (Util.MAIN_LOGGER.isDebugEnabled() && pipelineBatchSize > 1) {
+            Util.MAIN_LOGGER.debug("Processing batch of documents, count: {}", documentInputsBatch.size());
+        }
+        if (documentPipeline != null) {
+            documentPipeline.processDocuments(documentInputsBatch);
+        }
+        buildAndWriteDocuments(documentInputsBatch);
+        documentInputsBatch.clear();
+    }
+
+    /**
+     * Builds up a batch of document inputs based in the given iterator, which produces inputs based on a single row.
+     * A row can return multiple instances of document inputs. If the size of the inputs batch is that of the pipeline
+     * batch size or greater, flush the batch, which forces the inputs to be converted into real documents and written
+     * to MarkLogic.
      *
      * @param iterator
      */
-    private void buildAndWriteDocuments(Iterator<DocumentInputs> iterator, boolean forceProcessorFlush) {
-        // The Iterator seems needlessly confusing now.
+    private void buildDocumentsAndFlushAsNeeded(Iterator<DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
-                if (documentProcessor != null) {
-                    if (processorBatchSize > 1) {
-                        documentInputsBatch.add(documentInputs);
-                    } else {
-                        List<DocumentInputs> list = this.documentProcessor.batchProcessDocuments(Arrays.asList(documentInputs));
-                        writeDocumentInputs(list);
-                    }
-                } else {
-                    writeDocumentInputs(Arrays.asList(documentInputs));
+                documentInputsBatch.add(documentInputs);
+                if (documentInputsBatch.size() >= pipelineBatchSize) {
+                    processDocumentInputsBatch();
                 }
             });
         } finally {
@@ -167,12 +181,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 IOUtils.closeQuietly((Closeable) iterator);
             }
         }
-
-        if (documentInputsBatch.size() >= processorBatchSize || (forceProcessorFlush && !documentInputsBatch.isEmpty())) {
-            List<DocumentInputs> list = this.documentProcessor.batchProcessDocuments(documentInputsBatch);
-            writeDocumentInputs(list);
-            documentInputsBatch.clear();
-        }
     }
 
     /**
@@ -180,18 +188,16 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      *
      * @param list
      */
-    private void writeDocumentInputs(List<DocumentInputs> list) {
+    private void buildAndWriteDocuments(List<DocumentInputs> list) {
         for (DocumentInputs inputs : list) {
             Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(inputs);
-            documents.forEach(this::writeDocument);
-        }
-    }
-
-    private void writeDocument(DocumentWriteOperation writeOp) {
-        if (this.isStreamingFiles) {
-            writeDocumentViaPutOperation(writeOp);
-        } else {
-            this.writeBatcher.add(writeOp);
+            for (DocumentWriteOperation document : documents) {
+                if (this.isStreamingFiles) {
+                    writeDocumentViaPutOperation(document);
+                } else {
+                    this.writeBatcher.add(document);
+                }
+            }
         }
     }
 
