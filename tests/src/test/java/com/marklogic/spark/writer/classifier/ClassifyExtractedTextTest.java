@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -59,6 +60,21 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             assertTrue(chunk.has("classification"));
             assertTrue(chunk.get("classification").has("SYSTEM"));
         }
+    }
+
+    @Test
+    void withBatchSize() {
+        startReadAndWrite()
+            // It's fine if each mock response has more articles than expected, the connector is expected to ignore
+            // the extra ones.
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(28))
+            .option(Options.WRITE_CLASSIFIER_BATCH_SIZE, 10)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(3, TextClassifierFactory.MockTextClassifier.getTimesInvoked(), "The mock classifier should " +
+            "have been invoked 3 times - with 10, 10, and then 8 articles.");
     }
 
     @Test
@@ -122,6 +138,8 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .load("src/test/resources/extraction-files/marklogic-reference-architecture.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
+            // Force use of a single batch by matching the document + its 27 expected chunks.
+            .option(Options.WRITE_CLASSIFIER_BATCH_SIZE, 28)
             .option(Options.WRITE_URI_TEMPLATE, "/aaa/arch.pdf")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_EXTRACTED_TEXT, true);
