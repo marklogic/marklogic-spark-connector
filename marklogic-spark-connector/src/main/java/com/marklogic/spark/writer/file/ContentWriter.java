@@ -11,11 +11,11 @@ import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.dom.DOMHelper;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
-import javax.xml.XMLConstants;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -119,13 +119,7 @@ class ContentWriter {
 
     private Transformer newTransformer() {
         try {
-            TransformerFactory factory = TransformerFactory.newInstance();
-            // Disables certain features as recommended by Sonar to prevent security vulnerabilities.
-            // Also see https://stackoverflow.com/questions/32178558/how-to-prevent-xml-external-entity-injection-on-transformerfactory .
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_STYLESHEET, "");
-            final Transformer t = factory.newTransformer();
+            final Transformer t = DOMHelper.newTransformerFactory().newTransformer();
             if (this.encoding != null) {
                 t.setOutputProperty(OutputKeys.ENCODING, this.encoding.name());
             } else {

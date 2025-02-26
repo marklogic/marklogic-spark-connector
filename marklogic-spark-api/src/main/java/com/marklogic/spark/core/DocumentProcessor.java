@@ -143,7 +143,7 @@ public class DocumentProcessor implements Closeable {
 
         @Override
         public void addClassification(byte[] classification) {
-            documentInputs.setClassificationResponse(classification);
+            documentInputs.setDocumentClassification(classification);
         }
     }
 
