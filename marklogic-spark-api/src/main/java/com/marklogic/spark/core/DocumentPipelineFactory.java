@@ -24,6 +24,9 @@ public abstract class DocumentPipelineFactory {
 
     private static final String FACTORY_CLASS_NAME = "com.marklogic.langchain4j.Langchain4jFactory";
 
+    // For some reason, Sonar thinks the check for four nulls always resolves to false, even though it's definitely
+    // possible. So ignoring that warning.
+    @SuppressWarnings("java:S2589")
     public static DocumentPipeline newDocumentPipeline(Context context) {
         final TextExtractor textExtractor = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
             new TikaTextExtractor() : null;
@@ -44,9 +47,9 @@ public abstract class DocumentPipelineFactory {
             }
         }
 
-        return textExtractor != null || textSplitter != null || textClassifier != null || embeddingProducer != null ?
-            new DocumentPipeline(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector) :
-            null;
+        return textExtractor == null && textSplitter == null && textClassifier == null && embeddingProducer == null ?
+            null :
+            new DocumentPipeline(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector);
     }
 
     private static TextSplitter newTextSplitter(Context context) {

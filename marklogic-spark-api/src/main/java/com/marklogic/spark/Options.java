@@ -464,6 +464,13 @@ public abstract class Options {
      */
     public static final String WRITE_CLASSIFIER_BATCH_SIZE = "spark.marklogic.write.classifier.batchSize";
 
+    /**
+     * Allows for passing any additional options to the text classifier.
+     *
+     * @since 2.6.0
+     */
+    public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
+
     private Options() {
     }
 }
