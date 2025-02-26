@@ -446,11 +446,18 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_TOKEN_PATH = "spark.marklogic.write.classifier.tokenPath";
 
     /**
-     * Defines the apikey for classification API token requests
+     * Defines the API key for classification API token requests
      *
      * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_APIKEY = "spark.marklogic.write.classifier.apikey";
+
+    /**
+     * Defines the number of documents and/or chunks of text to send to the classifier in a single request.
+     *
+     * @since 2.6.0
+     */
+    public static final String WRITE_CLASSIFIER_BATCH_SIZE = "spark.marklogic.write.classifier.batchSize";
 
     private Options() {
     }

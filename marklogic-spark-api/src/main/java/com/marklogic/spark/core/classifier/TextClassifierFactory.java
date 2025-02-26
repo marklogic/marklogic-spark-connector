@@ -41,7 +41,8 @@ public abstract class TextClassifierFactory {
         if (multiArticleClassifier != null) {
             // We may need a dedicated encoding for this
             String encoding = context.getStringOption(Options.READ_FILES_ENCODING, "UTF-8");
-            return new SemaphoreTextClassifier(multiArticleClassifier, encoding);
+            int batchSize = context.getIntOption(Options.WRITE_CLASSIFIER_BATCH_SIZE, 20, 1);
+            return new SemaphoreTextClassifier(multiArticleClassifier, encoding, batchSize);
         }
         return null;
     }
@@ -105,29 +106,38 @@ public abstract class TextClassifierFactory {
     private TextClassifierFactory() {
     }
 
+    // Sonar doesn't like static assignments in this class, but this class is only used as a mock for testing.
+    @SuppressWarnings("java:S2696")
     public static class MockTextClassifier implements MultiArticleClassifier {
 
         private final Document mockResponse;
+        private static int timesInvoked;
         private static boolean wasClosed;
 
+        // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
+        @SuppressWarnings("java:S3010")
         private MockTextClassifier(String mockResponse) {
             this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
+            timesInvoked = 0;
         }
 
         public static boolean isClosed() {
             return wasClosed;
         }
 
+        public static int getTimesInvoked() {
+            return timesInvoked;
+        }
+
         @Override
         public Document classifyArticles(byte[] multiArticleDocumentBytes) {
+            timesInvoked++;
             return mockResponse;
         }
 
         @Override
-        // Sonar doesn't like this, but it's fine in a class that's only used as a mock.
-        @SuppressWarnings("java:S2696")
         public void close() {
-            MockTextClassifier.wasClosed = true;
+            wasClosed = true;
         }
     }
 }

@@ -22,6 +22,7 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -37,18 +38,38 @@ class SemaphoreTextClassifier implements TextClassifier {
     private final Transformer transformer;
     private final String encoding;
     private final XPathExpression articleExpression;
+    private final int batchSize;
 
-    SemaphoreTextClassifier(MultiArticleClassifier multiArticleClassifier, String encoding) {
+    SemaphoreTextClassifier(MultiArticleClassifier multiArticleClassifier, String encoding, int batchSize) {
         this.multiArticleClassifier = multiArticleClassifier;
         this.domHelper = new DOMHelper(null);
         this.transformer = newTransformer();
         this.encoding = encoding;
+        this.batchSize = batchSize;
         this.articleExpression = domHelper.compileXPath("//ARTICLE", "Unable to evaluate XPath expression");
     }
 
     @Override
     public void classifyText(List<ClassifiableContent> classifiableContents) {
-        Document doc = buildMultiArticleRequest(classifiableContents);
+        List<ClassifiableContent> batch = new ArrayList<>();
+        for (ClassifiableContent content : classifiableContents) {
+            batch.add(content);
+            if (batch.size() >= batchSize) {
+                classifyBatch(batch);
+                batch.clear();
+            }
+        }
+        if (!batch.isEmpty()) {
+            classifyBatch(batch);
+        }
+    }
+
+    private void classifyBatch(List<ClassifiableContent> contentBatch) {
+        if (SEMAPHORE_LOGGER.isDebugEnabled()) {
+            SEMAPHORE_LOGGER.debug("Invoking classifier with content count: {}", contentBatch.size());
+        }
+        
+        Document doc = buildMultiArticleRequest(contentBatch);
         byte[] documentBytes = convertNodeIntoBytes(doc);
 
         Document structuredDocument;
@@ -62,7 +83,7 @@ class SemaphoreTextClassifier implements TextClassifier {
             SEMAPHORE_LOGGER.trace("Structured document response: {}", DOMHelper.prettyPrintNode(structuredDocument));
         }
 
-        addArticlesToContents(classifiableContents, structuredDocument);
+        addArticlesToContents(contentBatch, structuredDocument);
     }
 
     @Override
@@ -96,7 +117,7 @@ class SemaphoreTextClassifier implements TextClassifier {
         }
     }
 
-    private void addArticlesToContents(List<ClassifiableContent> classifiableContents, Document structuredDocument) {
+    private void addArticlesToContents(List<ClassifiableContent> contentBatch, Document structuredDocument) {
         NodeList articles;
         try {
             articles = (NodeList) articleExpression.evaluate(structuredDocument, XPathConstants.NODESET);
@@ -106,10 +127,11 @@ class SemaphoreTextClassifier implements TextClassifier {
         }
         for (int i = 0; i < articles.getLength(); i++) {
             byte[] articleBytes = convertNodeIntoBytes(articles.item(i));
-            if (i >= classifiableContents.size()) {
-                Util.MAIN_LOGGER.warn("Received {} articles but only have {} chunks.", articles.getLength(), classifiableContents.size());
+            if (i >= contentBatch.size()) {
+                Util.MAIN_LOGGER.warn("Received {} articles but only have {} chunks.", articles.getLength(), contentBatch.size());
+                break;
             } else {
-                classifiableContents.get(i).addClassification(articleBytes);
+                contentBatch.get(i).addClassification(articleBytes);
             }
         }
     }
