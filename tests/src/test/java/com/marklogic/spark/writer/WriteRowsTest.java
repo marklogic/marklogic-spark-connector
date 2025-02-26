@@ -45,6 +45,20 @@ class WriteRowsTest extends AbstractWriteTest {
             .save();
     }
 
+    /**
+     * Only included for observing logging when using a pipeline batch size.
+     */
+    @Test
+    void logProgressWithProcessorBatchSize() {
+        newWriter(1)
+            .option(Options.WRITE_PIPELINE_BATCH_SIZE, 30)
+            .option(Options.WRITE_BATCH_SIZE, 50)
+            .option(Options.WRITE_LOG_PROGRESS, 50)
+            .save();
+
+        verifyTwoHundredDocsWereWritten();
+    }
+
     @Test
     void batchSizeGreaterThanNumberOfRowsToWrite() {
         newWriter()

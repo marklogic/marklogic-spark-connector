@@ -20,11 +20,11 @@ import com.marklogic.spark.core.splitter.TextSplitterFactory;
 
 import java.lang.reflect.InvocationTargetException;
 
-public abstract class DocumentProcessorFactory {
+public abstract class DocumentPipelineFactory {
 
     private static final String FACTORY_CLASS_NAME = "com.marklogic.langchain4j.Langchain4jFactory";
 
-    public static DocumentProcessor newDocumentProcessor(Context context) {
+    public static DocumentPipeline newDocumentPipeline(Context context) {
         final TextExtractor textExtractor = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
             new TikaTextExtractor() : null;
         final TextSplitter textSplitter = newTextSplitter(context);
@@ -43,7 +43,10 @@ public abstract class DocumentProcessorFactory {
                 ));
             }
         }
-        return new DocumentProcessor(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector);
+
+        return textExtractor != null || textSplitter != null || textClassifier != null || embeddingProducer != null ?
+            new DocumentPipeline(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector) :
+            null;
     }
 
     private static TextSplitter newTextSplitter(Context context) {
@@ -87,6 +90,6 @@ public abstract class DocumentProcessorFactory {
         }
     }
 
-    private DocumentProcessorFactory() {
+    private DocumentPipelineFactory() {
     }
 }
