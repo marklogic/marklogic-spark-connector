@@ -66,4 +66,21 @@ class ConfigHelperTest {
         assertEquals("http://somehost:8080/classifier", config.getUrl());
         assertEquals("http://somehost:8080/my-token", helper.getTokenUrl().toString());
     }
+
+    @Test
+    void dynamicOptions() throws Exception {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+            put(Options.WRITE_CLASSIFIER_PATH, "classifier");
+            put(Options.WRITE_CLASSIFIER_OPTION_PREFIX + "threshold", "17");
+            put(Options.WRITE_CLASSIFIER_OPTION_PREFIX + "language", "ch1");
+        }};
+
+        TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
+        
+        Map<String, String> additionalParams = config.getAdditionalParameters();
+        assertEquals("17", additionalParams.get("threshold"));
+        assertEquals("ch1", additionalParams.get("language"));
+    }
 }

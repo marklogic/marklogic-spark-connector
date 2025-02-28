@@ -61,6 +61,7 @@ public abstract class TextClassifierFactory {
         private final String protocol;
         private final String classifierPath;
         private final URL tokenUrl;
+        private final Map<String, String> additionalParameters = new HashMap<>();
 
         public ConfigHelper(Context context) throws MalformedURLException {
             this.host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
@@ -70,6 +71,13 @@ public abstract class TextClassifierFactory {
             String tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
             this.tokenUrl = new URL(protocol, host, port, tokenEndpoint);
 
+            context.getProperties().forEach((key, value) -> {
+                if (key.startsWith(Options.WRITE_CLASSIFIER_OPTION_PREFIX)) {
+                    String name = key.substring(Options.WRITE_CLASSIFIER_OPTION_PREFIX.length());
+                    additionalParameters.put(name, context.getStringOption(key));
+                }
+            });
+
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}", this.host, this.tokenUrl);
             }
@@ -78,16 +86,13 @@ public abstract class TextClassifierFactory {
         public ClassificationConfiguration buildClassificationConfiguration(String apiToken) {
             ClassificationConfiguration config = new ClassificationConfiguration();
             config.setApiToken(apiToken);
-
             config.setHostName(host);
             config.setHostPort(port);
             config.setProtocol(protocol);
             config.setHostPath(classifierPath);
-
-            Map<String, String> additionalParameters = new HashMap<>();
-            additionalParameters.put("threshold", "20");
-            additionalParameters.put("language", "en1");
-            config.setAdditionalParameters(additionalParameters);
+            if (!this.additionalParameters.isEmpty()) {
+                config.setAdditionalParameters(additionalParameters);
+            }
             return config;
         }
 
