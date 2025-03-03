@@ -16,6 +16,7 @@ import org.springframework.util.FileCopyUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.util.Iterator;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,6 +39,18 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertEquals("/extract-test/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+
+        JsonNode metadata = doc.get("metadata");
+        // Verify a couple fields as a sanity check.
+        assertEquals("Getting Started With MarkLogic Server", metadata.get("pdf-docinfo-title").asText());
+        assertEquals("application/pdf", metadata.get("Content-Type").asText());
+
+        Iterator<String> fieldNames = metadata.fieldNames();
+        while (fieldNames.hasNext()) {
+            String fieldName = fieldNames.next();
+            assertFalse(fieldName.contains(":"), "Colons should be replaced with hyphens so that a user can " +
+                "optionally create a range index. Field name: " + fieldName);
+        }
     }
 
     @Test
