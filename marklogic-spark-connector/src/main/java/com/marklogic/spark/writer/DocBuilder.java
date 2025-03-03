@@ -237,7 +237,11 @@ public class DocBuilder {
         doc.put("content", inputs.getExtractedText());
         if (inputs.getExtractedMetadata() != null) {
             ObjectNode node = doc.putObject("metadata");
-            inputs.getExtractedMetadata().entrySet().forEach(entry -> node.put(entry.getKey(), entry.getValue()));
+            inputs.getExtractedMetadata().entrySet().forEach(entry -> {
+                // Replacing the colon, which is not allowable in an index declaration.
+                String key = entry.getKey().replace(":", "-");
+                node.put(key, entry.getValue());
+            });
         }
         if (inputs.getDocumentClassification() != null) {
             addClassificationToJsonDocument(doc, sourceUri, inputs.getDocumentClassification());
