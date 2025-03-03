@@ -19,6 +19,7 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
+import com.marklogic.spark.core.extraction.ExtractionUtil;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.dom.DOMHelper;
 import com.marklogic.spark.dom.NamespaceContextFactory;
@@ -264,12 +265,8 @@ public class DocBuilder {
             Element metadata = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "metadata");
             root.appendChild(metadata);
             inputs.getExtractedMetadata().entrySet().forEach(entry -> {
-                // Temporary fix for metadata keys that have colons in them. Ideally, we can associate some of them
-                // with real namespaces, such as "dc".
-                String key = entry.getKey().replace(":", "-");
-                Element keyElement = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, key);
-                keyElement.appendChild(doc.createTextNode(entry.getValue()));
-                metadata.appendChild(keyElement);
+                Element metadataElement = createXmlMetadataElement(doc, entry);
+                metadata.appendChild(metadataElement);
             });
         }
 
@@ -279,6 +276,29 @@ public class DocBuilder {
 
         String uri = sourceUri + "/extracted-text.xml";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new DOMHandle(doc));
+    }
+
+    private Element createXmlMetadataElement(Document doc, Map.Entry<String, String> metadataEntry) {
+        final String key = metadataEntry.getKey();
+
+        // Ideally, the metadata entry has a recognized XML prefix that can be mapped to a useful namespace.
+        // If not, we default to this local name to avoid creating an element with a colon in its name, which is not
+        // allowed.
+        String localName = metadataEntry.getKey().replace(":", "-");
+        String namespace = Util.DEFAULT_XML_NAMESPACE;
+        final int pos = key.indexOf(":");
+        if (pos > -1) {
+            final String prefix = key.substring(0, pos);
+            String associatedNamespace = ExtractionUtil.getNamespace(prefix);
+            if (associatedNamespace != null) {
+                namespace = associatedNamespace;
+                localName = key.substring(pos + 1);
+            }
+        }
+
+        Element metadataElement = doc.createElementNS(namespace, localName);
+        metadataElement.appendChild(doc.createTextNode(metadataEntry.getValue()));
+        return metadataElement;
     }
 
     private List<DocumentWriteOperation> buildChunkDocuments(DocumentInputs inputs, DocumentWriteOperation mainDocument, DocumentWriteOperation extractedTextDocument) {

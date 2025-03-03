@@ -94,6 +94,9 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         doc.assertElementValue("/model:root/model:source-uri", "/extract-test/marklogic-getting-started.pdf");
         String content = doc.getElementValue("/model:root/model:content");
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+
+        doc.assertElementValue("/model:root/model:metadata/pdf:PDFVersion", "1.5");
+        doc.assertElementValue("/model:root/model:metadata/dc:description", "MarkLogic Server");
     }
 
     @Test
