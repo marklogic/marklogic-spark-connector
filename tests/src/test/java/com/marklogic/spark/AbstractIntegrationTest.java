@@ -181,11 +181,15 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
 
     @Override
     protected XmlNode readXmlDocument(String uri) {
-        // Registers two frequently used namespaces in tests.
+        // Registers frequently used namespaces in tests.
         return readXmlDocument(uri,
             Namespace.getNamespace("model", "http://marklogic.com/appservices/model"),
             Namespace.getNamespace("ex", "org:example"),
-            Namespace.getNamespace("acme", "org:acme")
+            Namespace.getNamespace("acme", "org:acme"),
+
+            // These are specific to text extraction tests, but no harm in including them here.
+            Namespace.getNamespace("pdf", "http://ns.adobe.com/pdf/1.3/"),
+            Namespace.getNamespace("dc", "http://purl.org/dc/elements/1.1/")
         );
     }
 
