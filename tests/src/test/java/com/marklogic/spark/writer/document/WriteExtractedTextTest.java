@@ -40,7 +40,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         String content = doc.get("content").asText();
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
 
-        JsonNode metadata = doc.get("metadata");
+        JsonNode metadata = doc.get("extracted-metadata");
         // Verify a couple fields as a sanity check.
         assertEquals("Getting Started With MarkLogic Server", metadata.get("pdf-docinfo-title").asText());
         assertEquals("application/pdf", metadata.get("Content-Type").asText());
@@ -70,7 +70,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertEquals("/extract-test/hello-world.docx", doc.get("source-uri").asText());
         assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", doc.get("content").asText());
         assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            doc.get("metadata").get("Content-Type").asText());
+            doc.get("extracted-metadata").get("Content-Type").asText());
     }
 
     @Test
@@ -108,8 +108,8 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         String content = doc.getElementValue("/model:root/model:content");
         assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
 
-        doc.assertElementValue("/model:root/model:metadata/pdf:PDFVersion", "1.5");
-        doc.assertElementValue("/model:root/model:metadata/dc:description", "MarkLogic Server");
+        doc.assertElementValue("/model:root/model:extracted-metadata/pdf:PDFVersion", "1.5");
+        doc.assertElementValue("/model:root/model:extracted-metadata/dc:description", "MarkLogic Server");
     }
 
     @Test
@@ -185,7 +185,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
 
         JsonNode doc = readJsonDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.json");
         assertTrue(doc.has("content"));
-        assertTrue(doc.has("metadata"));
+        assertTrue(doc.has("extracted-metadata"));
         assertFalse(doc.has("source-uri"), "source-uri should be omitted since the source was dropped");
         assertEquals(2, doc.size());
     }
@@ -213,7 +213,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf/extracted-text.xml");
         doc.assertElementExists("/model:root/model:content");
-        doc.assertElementExists("/model:root/model:metadata");
+        doc.assertElementExists("/model:root/model:extracted-metadata");
         doc.assertElementMissing("source-uri should be omitted since the source was dropped", "/model:root/model:source-uri");
         doc.assertElementCount("/model:root/node()", 2);
     }

@@ -236,7 +236,7 @@ public class DocBuilder {
         }
         doc.put("content", inputs.getExtractedText());
         if (inputs.getExtractedMetadata() != null) {
-            ObjectNode node = doc.putObject("metadata");
+            ObjectNode node = doc.putObject("extracted-metadata");
             inputs.getExtractedMetadata().entrySet().forEach(entry -> {
                 // Replacing the colon, which is not allowable in an index declaration.
                 String key = entry.getKey().replace(":", "-");
@@ -266,7 +266,7 @@ public class DocBuilder {
         root.appendChild(content);
 
         if (inputs.getExtractedMetadata() != null && !inputs.getExtractedMetadata().isEmpty()) {
-            Element metadata = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "metadata");
+            Element metadata = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "extracted-metadata");
             root.appendChild(metadata);
             inputs.getExtractedMetadata().entrySet().forEach(entry -> {
                 Element metadataElement = createXmlMetadataElement(doc, entry);
