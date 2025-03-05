@@ -33,8 +33,11 @@ public abstract class TextClassifierFactory {
             try {
                 ClassificationConfiguration config = buildClassificationConfiguration(context);
                 multiArticleClassifier = new SemaphoreMultiArticleClassifier(config);
+            } catch (ConnectorException ex) {
+                throw ex;
             } catch (Exception e) {
-                throw new ConnectorException(String.format("Unable to configure a connection for classifying text; cause: %s", e.getMessage()));
+                throw new ConnectorException(String.format("Unable to configure a connection for classifying text; cause: %s",
+                    e.getMessage()), e);
             }
         }
 
@@ -47,12 +50,23 @@ public abstract class TextClassifierFactory {
         return null;
     }
 
-    private static ClassificationConfiguration buildClassificationConfiguration(Context context) throws MalformedURLException, CloudException {
+    protected static ClassificationConfiguration buildClassificationConfiguration(Context context) {
         final ConfigHelper configHelper = new ConfigHelper(context);
         final String apiKey = context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY);
-        TokenFetcher tokenFetcher = new TokenFetcher(configHelper.getTokenUrl().toString(), apiKey);
-        String apiToken = tokenFetcher.getAccessToken().getAccess_token();
+        String apiToken = null;
+        if (apiKey != null && apiKey.trim().length() > 0) {
+            apiToken = generateApiToken(configHelper, apiKey);
+        }
         return configHelper.buildClassificationConfiguration(apiToken);
+    }
+
+    private static String generateApiToken(ConfigHelper configHelper, String apiKey) {
+        TokenFetcher tokenFetcher = new TokenFetcher(configHelper.getTokenUrl().toString(), apiKey);
+        try {
+            return tokenFetcher.getAccessToken().getAccess_token();
+        } catch (CloudException e) {
+            throw new ConnectorException(String.format("Unable to generate token for classifying text; cause: %s", e.getMessage()), e);
+        }
     }
 
     public static class ConfigHelper {
@@ -60,16 +74,15 @@ public abstract class TextClassifierFactory {
         private final int port;
         private final String protocol;
         private final String classifierPath;
-        private final URL tokenUrl;
+        private final String tokenEndpoint;
         private final Map<String, String> additionalParameters = new HashMap<>();
 
-        public ConfigHelper(Context context) throws MalformedURLException {
+        public ConfigHelper(Context context) {
             this.host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
             this.port = context.getIntOption(Options.WRITE_CLASSIFIER_PORT, 443, 0);
             this.protocol = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_CLASSIFIER_HTTP)) ? "http" : "https";
             this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH));
-            String tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
-            this.tokenUrl = new URL(protocol, host, port, tokenEndpoint);
+            this.tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
 
             context.getProperties().forEach((key, value) -> {
                 if (key.startsWith(Options.WRITE_CLASSIFIER_OPTION_PREFIX)) {
@@ -79,7 +92,7 @@ public abstract class TextClassifierFactory {
             });
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Will classify text via host {}; token URL: {}", this.host, this.tokenUrl);
+                Util.MAIN_LOGGER.info("Will classify text via host {}", this.host);
             }
         }
 
@@ -97,7 +110,12 @@ public abstract class TextClassifierFactory {
         }
 
         public URL getTokenUrl() {
-            return this.tokenUrl;
+            try {
+                return new URL(protocol, host, port, tokenEndpoint);
+            } catch (MalformedURLException e) {
+                throw new ConnectorException(String.format("Unable to construct token URL with endpoint: %s; cause: %s",
+                    tokenEndpoint, e.getMessage()), e);
+            }
         }
 
         private String fixPath(String path) {

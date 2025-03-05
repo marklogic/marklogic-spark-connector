@@ -5,7 +5,6 @@ package com.marklogic.spark.writer.classifier;
 
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import org.apache.spark.sql.DataFrameWriter;
@@ -70,18 +69,6 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void noHttpsSpecifiedShouldDefaultToHttpAndFail() {
-        DataFrameWriter writer = readAndStartWrite()
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_HTTP, true)
-            .mode(SaveMode.Append);
-
-        ConnectorException exception = assertThrowsConnectorException(writer::save);
-        assertTrue(exception.getMessage().contains("CloudException thrown fetching token"),
-            "Unexpected error: " + exception.getMessage());
-    }
-
-    @Test
     void classifyXmlContentsWithoutChunking() {
         readAndStartWrite()
             .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
@@ -98,11 +85,6 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
     private DataFrameWriter readAndStartWrite() {
         return readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
-            // These will be ignored because the mock response option is used. But to test S4 for real, you can comment
-            // out the line above that enables use of the mock classifier and populate the below environment variable.
-            .option(Options.WRITE_CLASSIFIER_APIKEY, System.getenv("SEMAPHORE_API_KEY"))
-            .option(Options.WRITE_CLASSIFIER_HOST, "demo.data.progress.cloud")
-            .option(Options.WRITE_CLASSIFIER_PATH, "/cls/dev/cs1/")
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml");
