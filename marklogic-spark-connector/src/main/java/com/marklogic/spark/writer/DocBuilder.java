@@ -246,7 +246,7 @@ public class DocBuilder {
         if (inputs.getDocumentClassification() != null) {
             addClassificationToJsonDocument(doc, sourceUri, inputs.getDocumentClassification());
         }
-        String uri = sourceUri + "/extracted-text.json";
+        String uri = sourceUri + "-extracted-text.json";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new JacksonHandle(doc));
     }
 
@@ -277,8 +277,7 @@ public class DocBuilder {
         if (inputs.getDocumentClassification() != null) {
             addClassificationToXmlDocument(doc, sourceUri, inputs.getDocumentClassification());
         }
-
-        String uri = sourceUri + "/extracted-text.xml";
+        String uri = sourceUri + "-extracted-text.xml";
         return new DocumentWriteOperationImpl(uri, sourceMetadata, new DOMHandle(doc));
     }
 

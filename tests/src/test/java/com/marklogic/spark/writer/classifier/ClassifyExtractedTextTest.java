@@ -146,7 +146,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
     }
 
     private JsonNode verifyExtractedJsonDocumentHasMetadataAndClassification() {
-        JsonNode doc = readJsonDocument("/aaa/arch.pdf/extracted-text.json");
+        JsonNode doc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
         assertTrue(doc.has("extracted-metadata"));
         assertEquals("application/pdf", doc.get("extracted-metadata").get("Content-Type").asText());
         verifyJsonHasClassification(doc);
@@ -159,7 +159,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
     }
 
     private XmlNode verifyExtractedXmlDocumentHasMetadataAndClassification() {
-        XmlNode doc = readXmlDocument("/aaa/arch.pdf/extracted-text.xml");
+        XmlNode doc = readXmlDocument("/aaa/arch.pdf-extracted-text.xml");
         doc.assertElementValue("/model:root/model:extracted-metadata/model:Content-Type", "application/pdf");
         doc.assertElementExists("/model:root/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
         doc.assertElementExists("/model:root/model:classification/model:SYSTEM[@name = 'LanguageGuessed']");
