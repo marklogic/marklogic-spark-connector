@@ -17,7 +17,9 @@ public interface ChunkAssembler {
      * @param sourceDocument
      * @param chunks
      * @param classifications
+     * @param embeddings
      * @return an iterator, which allows for an implementation to lazily construct documents if necessary.
      */
-    Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> chunks, List<byte[]> classifications);
+    Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> chunks,
+                                                    List<byte[]> classifications, List<float[]> embeddings);
 }

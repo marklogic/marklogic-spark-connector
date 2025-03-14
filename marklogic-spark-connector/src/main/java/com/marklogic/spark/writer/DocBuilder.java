@@ -17,8 +17,6 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
-import com.marklogic.spark.core.embedding.Chunk;
-import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.extraction.ExtractionUtil;
 import com.marklogic.spark.core.splitter.ChunkAssembler;
 import com.marklogic.spark.dom.DOMHelper;
@@ -310,17 +308,14 @@ public class DocBuilder {
             // If there's an extracted doc, we want to use that as the source document so that the user has the option
             // of adding chunks to it.
             DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
-            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(sourceDocument, inputs.getChunks(), inputs.getClassifications());
+            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(
+                sourceDocument,
+                inputs.getChunks(),
+                inputs.getClassifications(),
+                inputs.getEmbeddings());
             while (iterator.hasNext()) {
                 DocumentWriteOperation doc = iterator.next();
                 chunkDocuments.add(doc);
-                if (doc instanceof DocumentAndChunks && inputs.getEmbeddings() != null && !inputs.getEmbeddings().isEmpty()) {
-                    DocumentAndChunks docAndChunks = (DocumentAndChunks) doc;
-                    for (int i = 0; i < docAndChunks.getChunks().size(); i++) {
-                        Chunk chunk = docAndChunks.getChunks().get(i);
-                        chunk.addEmbedding(inputs.getEmbeddings().get(i));
-                    }
-                }
             }
         }
         return chunkDocuments;

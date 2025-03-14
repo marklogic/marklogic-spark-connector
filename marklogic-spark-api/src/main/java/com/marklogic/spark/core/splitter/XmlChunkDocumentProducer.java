@@ -36,8 +36,8 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final DocumentBuilderFactory documentBuilderFactory;
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
+                             List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
+        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
@@ -65,7 +65,8 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             Element classificationReponseNode = getNthClassificationResponseElement(chunksCounter++);
-            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode);
+            float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
+            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode, embedding);
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
@@ -84,8 +85,10 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         List<Chunk> chunks = new ArrayList<>();
         AtomicInteger ct = new AtomicInteger(0);
         for (String textSegment : textSegments) {
-            Element classificationReponseNode = getNthClassificationResponseElement(ct.getAndIncrement());
-            addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode);
+            int segCounter = ct.getAndIncrement();
+            Element classificationReponseNode = getNthClassificationResponseElement(segCounter);
+            float[] embedding = getEmbeddingIfExists(embeddings, segCounter);
+            addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode, embedding);
         }
 
         return new DocumentAndChunks(
@@ -109,7 +112,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
     }
 
-    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse) {
+    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse, float[] embedding) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
 
@@ -126,7 +129,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
         }
 
-        chunks.add(new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory));
+        var domChunk = new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory);
+        if (embedding != null) {
+            domChunk.addEmbedding(embedding);
+        }
+        chunks.add(domChunk);
     }
 
     private String determineChunksElementName(Document doc) {
