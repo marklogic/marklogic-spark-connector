@@ -30,8 +30,8 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final XmlMapper xmlMapper;
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                              List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
+                              List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
+        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
         xmlMapper = new XmlMapper();
     }
 
@@ -48,13 +48,19 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             chunk.put("text", text);
             if (classifications != null && classifications.size() > chunksCounter) {
                 try {
-                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter++));
+                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter));
                     chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
                 }
             }
-            chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
+            float[] embedding = getEmbeddingIfExists(embeddings, chunksCounter);
+            var jsonChunk = new JsonChunk(sourceDocument.getUri(), chunk);
+            if (embedding != null) {
+                jsonChunk.addEmbedding(embedding);
+            }
+            chunksCounter++;
+            chunks.add(jsonChunk);
         }
 
         return new DocumentAndChunks(
@@ -77,18 +83,25 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         List<Chunk> chunks = new ArrayList<>();
         int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            String text = textSegments.get(listIndex++);
+            String text = textSegments.get(listIndex);
             ObjectNode chunk = chunksArray.addObject();
             chunk.put("text", text);
             if (classifications != null && classifications.size() > chunksCounter) {
                 try {
-                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter++));
+                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter));
                     chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
                 }
             }
-            chunks.add(new JsonChunk(sourceDocument.getUri(), chunk));
+            float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
+            var jsonChunk = new JsonChunk(sourceDocument.getUri(), chunk);
+            if (embedding != null) {
+                jsonChunk.addEmbedding(embedding);
+            }
+            chunks.add(jsonChunk);
+            chunksCounter++;
+            listIndex++;
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "json");

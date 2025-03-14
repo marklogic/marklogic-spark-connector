@@ -20,7 +20,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> textSegments, List<byte[]> classifications) {
+    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> textSegments, List<byte[]> classifications, List<float[]> embeddings) {
         final Format sourceDocumentFormat = Util.determineSourceDocumentFormat(sourceDocument.getContent(), sourceDocument.getUri());
         if (sourceDocumentFormat == null) {
             Util.MAIN_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
@@ -30,8 +30,8 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
 
         return Format.XML.equals(chunkDocumentFormat) ?
-            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications) :
-            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications);
+            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings) :
+            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
     }
 
     private Format determineChunkDocumentFormat(Format sourceDocumentFormat) {

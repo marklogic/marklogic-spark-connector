@@ -5,6 +5,8 @@ package com.marklogic.spark.writer.embedding;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeType;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
@@ -14,6 +16,8 @@ import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,11 +38,24 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             .save();
 
         List<String> uris = getUrisInCollection("text-chunks", 4);
+        Map<String, String> chunkEmbeddings = Maps.newHashMap();
         for (String uri : uris) {
             assertTrue(uri.endsWith(".json"));
             JsonNode doc = readJsonDocument(uri);
             assertEquals(JsonNodeType.ARRAY, doc.get("chunks").getNodeType());
+            doc.get("chunks").forEach(chunkEmbedding -> {
+                String textValue = chunkEmbedding.get("text").asText();
+                String embeddingValue = chunkEmbedding.get("embedding").toPrettyString();
+                if (!chunkEmbeddings.containsKey(textValue)) {
+                    chunkEmbeddings.put(textValue, embeddingValue);
+                }
+            });
         }
+
+        // collapse embedding values in map to set. Any duplicates will be ignored. If there's a duplicate embedding
+        // count of values will be less than the number of embeddings and we have an error.
+        Set<String> distinctValues = Sets.newHashSet(chunkEmbeddings.values());
+        assertEquals(chunkEmbeddings.size(), distinctValues.size(), "Detected duplicate embedding values for different text chunks");
     }
 
     @Test
@@ -49,11 +66,23 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             .save();
 
         List<String> uris = getUrisInCollection("text-chunks", 4);
+        Map<String, String> chunkEmbeddings = Maps.newHashMap();
         for (String uri : uris) {
             assertTrue(uri.endsWith(".xml"));
             XmlNode doc = readXmlDocument(uri);
             doc.assertElementCount("/node()/model:chunks/model:chunk", 1);
+            String textValue = doc.getElementValue("/node()/model:chunks/model:chunk/model:text");
+            String embeddingValue = doc.getElementValue("/node()/model:chunks/model:chunk/model:embedding");
+            if (!chunkEmbeddings.containsKey(textValue)) {
+                chunkEmbeddings.put(textValue, embeddingValue);
+            }
         }
+
+        // collapse embedding values in map to set. Any duplicates will be ignored. If there's a duplicate embedding
+        // count of values will be less than the number of embeddings and we have an error.
+        Set<String> distinctValues = Sets.newHashSet(chunkEmbeddings.values());
+        assertEquals(chunkEmbeddings.size(), distinctValues.size(), "Detected duplicate embedding values for different text chunks");
+
     }
 
     private DataFrameWriter<Row> prepareToWriteChunks() {
