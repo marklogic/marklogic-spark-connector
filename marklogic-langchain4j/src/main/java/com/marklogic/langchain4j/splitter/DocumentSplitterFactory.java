@@ -6,7 +6,7 @@ package com.marklogic.langchain4j.splitter;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
-import dev.langchain4j.data.document.Document;
+import dev.langchain4j.data.document.DefaultDocument;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.splitter.DocumentByRegexSplitter;
 import dev.langchain4j.data.document.splitter.DocumentSplitters;
@@ -68,7 +68,7 @@ public interface DocumentSplitterFactory {
         DocumentSplitter splitter = new DocumentByRegexSplitter(regex, joinDelimiter, getMaxChunkSize(context), getMaxOverlapSize(context));
         // Test the splitter to ensure an invalid regex causes an immediate failure.
         try {
-            splitter.split(new Document("Test data"));
+            splitter.split(new DefaultDocument("Test data"));
         } catch (Exception e) {
             throw new ConnectorException(String.format(
                 "Cannot split documents due to invalid regex: %s; cause: %s", regex, e.getMessage()), e);

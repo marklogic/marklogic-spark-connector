@@ -7,6 +7,7 @@ import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.core.splitter.TextSelector;
 import com.marklogic.spark.core.splitter.TextSplitter;
+import dev.langchain4j.data.document.DefaultDocument;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
@@ -37,7 +38,7 @@ public class DocumentTextSplitter implements TextSplitter {
 
         List<TextSegment> textSegments;
         try {
-            textSegments = documentSplitter.split(new Document(text));
+            textSegments = documentSplitter.split(new DefaultDocument(text));
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
                 sourceUri, e.getMessage()), e);
