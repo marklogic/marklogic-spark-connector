@@ -5,15 +5,18 @@ package com.marklogic.spark.core.extraction;
 
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
 import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
+import org.apache.tika.exception.ZeroByteFileException;
 import org.apache.tika.metadata.Metadata;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class TikaTextExtractor implements TextExtractor {
 
@@ -22,7 +25,7 @@ public class TikaTextExtractor implements TextExtractor {
     private final Tika tika = new Tika();
 
     @Override
-    public ExtractionResult extractText(DocumentInputs inputs) {
+    public Optional<ExtractionResult> extractText(DocumentInputs inputs) {
         BytesHandle content = (BytesHandle) inputs.getContent();
         try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
             Metadata metadata = new Metadata();
@@ -34,7 +37,13 @@ public class TikaTextExtractor implements TextExtractor {
                     map.put(name, metadata.get(name));
                 }
             }
-            return new ExtractionResult(extractedText, map);
+            return Optional.of(new ExtractionResult(extractedText, map));
+        } catch (ZeroByteFileException ex) {
+            // Tika explodes on this, but for us, we just don't return any extracted text.
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Document has empty content, so not extracting text; URI: {}", inputs.getInitialUri());
+            }
+            return Optional.empty();
         } catch (IOException | TikaException e) {
             throw new ConnectorException(String.format("Unable to extract text; URI: %s; cause: %s",
                 inputs.getInitialUri(), e.getMessage()), e);

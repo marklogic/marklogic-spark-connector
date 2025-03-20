@@ -17,7 +17,6 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -330,7 +329,7 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
     }
 
     private List<String> getUrisFromRows(List<Row> rows) {
-        return rows.stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        return rows.stream().map(row -> row.getString(0)).toList();
     }
 
     private JsonNode readJsonContent(Row row) {

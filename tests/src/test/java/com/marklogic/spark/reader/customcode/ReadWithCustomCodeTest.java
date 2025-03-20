@@ -233,7 +233,7 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
         assertEquals(15, rows.size(), "Expecting all 15 author URIs to be returned across all forests, " +
             "as each forest was used as a partition.");
 
-        final List<String> uris = rows.stream().map(row -> row.getString(0)).collect(Collectors.toList());
+        final List<String> uris = rows.stream().map(row -> row.getString(0)).toList();
         for (int i = 1; i <= 15; i++) {
             String expectedUri = String.format("/author/author%d.json", i);
             assertTrue(uris.contains(expectedUri), String.format("Did not find %s in %s", expectedUri, uris));

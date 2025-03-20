@@ -112,7 +112,7 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
             .save(tempDir.toFile().getAbsolutePath());
 
         File[] files = tempDir.toFile().listFiles();
-        List<String> filenames = Arrays.stream(files).map(f -> f.getName()).collect(Collectors.toList());
+        List<String> filenames = Arrays.stream(files).map(f -> f.getName()).toList();
         assertEquals(2, filenames.size());
         assertTrue(filenames.contains("example.txt"), "Unexpected filenames: " + filenames);
         assertTrue(filenames.contains("example2.txt"), "MLCP has a check for an 'opaque' URI, of which org:example2.txt " +

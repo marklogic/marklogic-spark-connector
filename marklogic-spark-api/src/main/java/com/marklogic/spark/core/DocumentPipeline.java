@@ -19,6 +19,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Handles "processing" a document, which involves receiving a {@code DocumentInputs} instance, enriching it,
@@ -32,8 +33,7 @@ public class DocumentPipeline implements Closeable {
     private final EmbeddingProducer embeddingProducer;
     private final ChunkSelector chunkSelector;
 
-    public DocumentPipeline(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier,
-                            EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
+    public DocumentPipeline(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier, EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
         this.textExtractor = textExtractor;
         this.textSplitter = textSplitter;
         this.textClassifier = textClassifier;
@@ -138,9 +138,7 @@ public class DocumentPipeline implements Closeable {
 
         @Override
         public String getTextToClassify() {
-            return documentInputs.getExtractedText() != null ?
-                documentInputs.getExtractedText() :
-                HandleAccessor.contentAsString(documentInputs.getContent());
+            return documentInputs.getExtractedText() != null ? documentInputs.getExtractedText() : HandleAccessor.contentAsString(documentInputs.getContent());
         }
 
         @Override
@@ -172,10 +170,10 @@ public class DocumentPipeline implements Closeable {
     }
 
     private void extractText(DocumentInputs inputs) {
-        ExtractionResult result = textExtractor.extractText(inputs);
-        if (result != null) {
-            inputs.setExtractedText(result.getText());
-            inputs.setExtractedMetadata(result.getMetadata());
+        Optional<ExtractionResult> result = textExtractor.extractText(inputs);
+        if (result.isPresent()) {
+            inputs.setExtractedText(result.get().getText());
+            inputs.setExtractedMetadata(result.get().getMetadata());
         }
     }
 
