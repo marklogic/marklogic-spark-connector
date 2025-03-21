@@ -119,8 +119,8 @@ class ReadZipFilesTest extends AbstractIntegrationTest {
             .load("src/test/resources/zip-files")
             .collectAsList();
 
-        assertEquals(5, rows.size(), "Expecting 4 rows from mixed-files.zip and 1 row from " +
-            "logback.zip, which is picked up due to recursiveFileLookup=true.");
+        assertEquals(6, rows.size(), "Expecting 4 rows from mixed-files.zip and 1 row from " +
+            "logback.zip and 1 row from empty-entry.zip, which is picked up due to recursiveFileLookup=true.");
     }
 
     @Test

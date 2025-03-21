@@ -5,7 +5,9 @@ package com.marklogic.spark.core.extraction;
 
 import com.marklogic.spark.core.DocumentInputs;
 
+import java.util.Optional;
+
 public interface TextExtractor {
 
-    ExtractionResult extractText(DocumentInputs inputs);
+    Optional<ExtractionResult> extractText(DocumentInputs inputs);
 }

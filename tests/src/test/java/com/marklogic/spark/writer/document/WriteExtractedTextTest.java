@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer.document;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
@@ -278,5 +279,27 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         assertEquals("/abc/marklogic-getting-started.pdf", doc.get("source-uri").asText());
         assertTrue(doc.get("content").asText().contains("MarkLogic Server Table of Contents"));
         assertTrue(doc.get("chunks").get(0).get("text").asText().contains("MarkLogic Server Table of Contents"));
+    }
+
+    @Test
+    void zipWithEmptyEntry() {
+        newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .load("src/test/resources/zip-files/empty-entry.zip")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_REPLACE, ".*/zip-files,'/abc'")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_COLLECTIONS, "output")
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertInCollections("/abc/empty-entry.zip/empty.txt", "output");
+
+        String content = getDatabaseClient().newTextDocumentManager().read("/abc/empty-entry.zip/empty.txt", new StringHandle()).get();
+        assertNull(content, "The document should be written without error, it just won't have any extracted text.");
     }
 }
