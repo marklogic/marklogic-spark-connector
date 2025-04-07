@@ -37,7 +37,7 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
     @Test
     void zeroPartitions() {
         Dataset<Row> dataset = readAuthors(0);
-        assertThrows(ConnectorException.class, () -> dataset.count());
+        assertThrows(ConnectorException.class, dataset::count);
     }
 
     @Test
@@ -49,7 +49,7 @@ class ReadDocumentRowsWithPartitionCountsTest extends AbstractIntegrationTest {
             .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, "abc")
             .load();
 
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.count());
+        ConnectorException ex = assertThrows(ConnectorException.class, dataset::count);
         assertEquals("The value of 'spark.marklogic.read.documents.partitionsPerForest' must be numeric.", ex.getMessage());
     }
 

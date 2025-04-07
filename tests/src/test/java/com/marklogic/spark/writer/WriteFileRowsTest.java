@@ -71,7 +71,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .option(Options.WRITE_URI_REPLACE, ".*/src/test,'/test',resources")
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getCause() instanceof ConnectorException);
         assertEquals("The URI replacement expression must contain an equal number of patterns and replacement strings: .*/src/test,'/test',resources",
             ex.getCause().getMessage());
@@ -83,7 +83,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .option(Options.WRITE_URI_REPLACE, ".*/src/test,/test")
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getCause() instanceof ConnectorException);
         assertEquals("Each URI replacement value must be surrounded with single quotes: .*/src/test,/test",
             ex.getCause().getMessage());
@@ -150,7 +150,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .option(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE, "not valid")
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getCause() instanceof ConnectorException);
         ConnectorException ce = (ConnectorException) ex.getCause();
         assertEquals("Invalid value for " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +

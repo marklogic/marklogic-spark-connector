@@ -17,7 +17,7 @@ public class Context implements Serializable {
 
     public final boolean hasOption(String... options) {
         return Stream.of(options)
-            .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
+            .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
     }
 
     public final String getStringOption(String option) {

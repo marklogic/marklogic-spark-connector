@@ -144,7 +144,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     private StructType inferSchemaFromOpticQuery(Map<String, String> caseSensitiveOptions) {
         final String query = caseSensitiveOptions.get(Options.READ_OPTIC_QUERY);
-        if (query == null || query.trim().length() < 1) {
+        if (query == null || query.trim().isEmpty()) {
             throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
         RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();

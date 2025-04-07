@@ -38,7 +38,7 @@ public class DOMChunk implements Chunk {
 
     public boolean hasEmbeddingText() {
         String text = getEmbeddingText();
-        return text != null && text.trim().length() > 0;
+        return text != null && !text.trim().isEmpty();
     }
 
     @Override

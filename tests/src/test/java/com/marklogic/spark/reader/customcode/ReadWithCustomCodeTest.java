@@ -18,7 +18,6 @@ import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -175,7 +174,7 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
             .option(Options.READ_JAVASCRIPT, "const forestId = PARTITION; cts.uris(null, [], cts.collectionQuery('author'), 0, [forestId])")
             .load();
 
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> dataset.collectAsList());
+        RuntimeException ex = assertThrows(RuntimeException.class, dataset::collectAsList);
         assertTrue(ex.getMessage().contains("Unable to retrieve partitions; cause: Local message: failed to apply resource at eval"),
             "Unexpected error: " + ex.getMessage());
         assertTrue(ex.getCause() instanceof FailedRequestException, "Unexpected cause: " + ex.getCause());
@@ -188,7 +187,7 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
             .option("spark.marklogic.client.callTimeout", "1")
             .load();
 
-        SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
+        SparkException ex = assertThrows(SparkException.class, dataset::count);
         assertTrue(ex.getCause() instanceof MarkLogicIOException, "Unexpected cause: " + ex.getCause());
         assertTrue(ex.getCause().getMessage().contains("timeout"),
             "Expecting a timeout due to the callTimeout being set to 1sec. Curiously, the Java Client does not " +

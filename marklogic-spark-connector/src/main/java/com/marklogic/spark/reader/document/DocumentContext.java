@@ -76,8 +76,8 @@ class DocumentContext extends ContextSupport {
     private String combineCollectionsAndGraphs() {
         String graphs = getProperties().get(Options.READ_TRIPLES_GRAPHS);
         String collections = getProperties().get(Options.READ_TRIPLES_COLLECTIONS);
-        if (graphs != null && graphs.trim().length() > 0) {
-            if (collections == null || collections.trim().length() == 0) {
+        if (graphs != null && !graphs.trim().isEmpty()) {
+            if (collections == null || collections.trim().isEmpty()) {
                 collections = graphs;
             } else {
                 collections += "," + graphs;

@@ -76,7 +76,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidQuery() {
         DataFrameReader reader = newDefaultReader().option(Options.READ_OPTIC_QUERY, "op.fromView('Medical', 'ViewNotFound')");
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> reader.load());
+        RuntimeException ex = assertThrows(RuntimeException.class, reader::load);
 
         assertTrue(ex.getMessage().startsWith("Unable to run Optic query op.fromView('Medical', 'ViewNotFound'); cause: "),
             "If the query throws an error for any reason other than no rows being found, the error should be wrapped " +
@@ -87,7 +87,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
     @Test
     void invalidCredentials() {
         DataFrameReader reader = newDefaultReader().option(Options.CLIENT_PASSWORD, "invalid password");
-        RuntimeException ex = assertThrows(RuntimeException.class, () -> reader.load());
+        RuntimeException ex = assertThrows(RuntimeException.class, reader::load);
 
         assertEquals("Unable to connect to MarkLogic; status code: 401; error message: Unauthorized", ex.getMessage(),
             "The connector should verify that it can connect to MarkLogic before it tries to analyze the user's query. " +
@@ -100,7 +100,7 @@ class ReadRowsTest extends AbstractIntegrationTest {
         Dataset<Row> reader = newDefaultReader()
             .option(Options.READ_NUM_PARTITIONS, "abc")
             .load();
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        ConnectorException ex = assertThrows(ConnectorException.class, reader::count);
         assertEquals("The value of 'spark.marklogic.read.numPartitions' must be numeric.", ex.getMessage());
     }
 
@@ -110,21 +110,21 @@ class ReadRowsTest extends AbstractIntegrationTest {
             .option(Options.READ_NUM_PARTITIONS, "0")
             .load();
 
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.count());
+        ConnectorException ex = assertThrows(ConnectorException.class, reader::count);
         assertEquals("The value of 'spark.marklogic.read.numPartitions' must be 1 or greater.", ex.getMessage());
     }
 
     @Test
     void nonNumericBatchSize() {
         DataFrameReader reader = newDefaultReader().option(Options.READ_BATCH_SIZE, "abc");
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
+        ConnectorException ex = assertThrows(ConnectorException.class, reader::load);
         assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
     @Test
     void batchSizeLessThanZero() {
         DataFrameReader reader = newDefaultReader().option(Options.READ_BATCH_SIZE, "-1");
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
+        ConnectorException ex = assertThrows(ConnectorException.class, reader::load);
         assertEquals("The value of 'spark.marklogic.read.batchSize' must be 0 or greater.", ex.getMessage());
     }
 }

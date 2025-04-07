@@ -94,7 +94,7 @@ class WriteRowsTest extends AbstractWriteTest {
             .option(Options.CLIENT_URI, String.format("spark-test-user:spark@%s:%d/Documents",
                 testConfig.getHost(), testConfig.getRestPort()));
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertNull(ex.getCause(), "Surprisingly, in this scenario where the exception is thrown during the " +
             "construction of WriteBatcherDataWriter, Spark does not populate the 'cause' of the exception but rather " +
             "shoves the entire stacktrace of the exception into the exception message. This is not a good UX for " +
@@ -142,7 +142,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void invalidThreadCount() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, writer::save);
         assertEquals("The value of 'spark.marklogic.write.threadCount' must be 1 or greater.", ex.getMessage());
         verifyNoDocsWereWritten();
     }
@@ -150,7 +150,7 @@ class WriteRowsTest extends AbstractWriteTest {
     @Test
     void invalidBatchSize() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_BATCH_SIZE, 0);
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, writer::save);
         assertEquals("The value of 'spark.marklogic.write.batchSize' must be 1 or greater.", ex.getMessage(),
             "Note that batchSize is very different for writing than it is for reading. For writing, it specifies the " +
                 "exact number of documents to send to MarkLogic in each call. For reading, it used to determine how " +
@@ -237,8 +237,8 @@ class WriteRowsTest extends AbstractWriteTest {
     void dontAbortOnFailure() {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
-        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
+        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
 
         newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)

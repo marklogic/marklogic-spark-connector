@@ -134,7 +134,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "not-valid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Unable to use JSON pointer expression: not-valid; cause: Invalid input: " +
                 "JSON Pointer expression must start with '/': \"not-valid\"",
             ex.getMessage());
@@ -177,7 +177,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, -1)
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getMessage().contains("The value of 'spark.marklogic.write.splitter.sidecar.maxChunks' must be 0 or greater."),
             "Unexpected error: " + ex.getMessage());
     }
@@ -289,7 +289,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "not.valid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Cannot find custom splitter with class name: not.valid", ex.getMessage());
     }
 
@@ -299,7 +299,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.spark.writer.splitter.BadCustomSplitter")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Cannot create custom splitter with class name: com.marklogic.spark.writer.splitter.BadCustomSplitter; " +
                 "the class must have a public constructor that accepts a java.util.Map<String, String>.",
             ex.getMessage());

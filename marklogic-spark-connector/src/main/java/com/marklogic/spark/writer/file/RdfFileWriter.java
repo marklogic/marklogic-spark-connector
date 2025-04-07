@@ -60,7 +60,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         String value = rdfContext.getStringOption(Options.WRITE_FILES_COMPRESSION);
         if ("gzip".equals(value)) {
             this.isGZIP = true;
-        } else if (value != null && value.trim().length() > 0) {
+        } else if (value != null && !value.trim().isEmpty()) {
             throw new ConnectorException(String.format("Unsupported compression value; only 'gzip' is supported: %s", value));
         } else {
             this.isGZIP = false;

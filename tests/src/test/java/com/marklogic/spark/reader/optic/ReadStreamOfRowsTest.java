@@ -76,7 +76,7 @@ class ReadStreamOfRowsTest extends AbstractIntegrationTest {
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri());
 
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> reader.load());
+        ConnectorException ex = assertThrows(ConnectorException.class, reader::load);
         assertEquals("No Optic query found; must define spark.marklogic.read.opticQuery", ex.getMessage());
     }
 }

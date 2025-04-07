@@ -31,7 +31,7 @@ class DocBuilderFactory {
     }
 
     DocBuilderFactory withCollections(String collections) {
-        if (collections != null && collections.trim().length() > 0) {
+        if (collections != null && !collections.trim().isEmpty()) {
             metadata.withCollections(collections.split(","));
         }
         return this;
@@ -48,14 +48,14 @@ class DocBuilderFactory {
     }
 
     DocBuilderFactory withExtractedTextDocumentType(String extractedTextDocumentType) {
-        if (extractedTextDocumentType != null && extractedTextDocumentType.trim().length() > 0) {
+        if (extractedTextDocumentType != null && !extractedTextDocumentType.trim().isEmpty()) {
             this.extractedTextFormat = "xml".equalsIgnoreCase(extractedTextDocumentType) ? Format.XML : Format.JSON;
         }
         return this;
     }
 
     DocBuilderFactory withExtractedTextCollections(String collections) {
-        if (collections != null && collections.trim().length() > 0) {
+        if (collections != null && !collections.trim().isEmpty()) {
             if (extractedTextMetadata == null) {
                 extractedTextMetadata = new DocumentMetadataHandle();
             }
@@ -65,7 +65,7 @@ class DocBuilderFactory {
     }
 
     DocBuilderFactory withExtractedTextPermissions(String permissionsString) {
-        if (permissionsString != null && permissionsString.trim().length() > 0) {
+        if (permissionsString != null && !permissionsString.trim().isEmpty()) {
             if (extractedTextMetadata == null) {
                 extractedTextMetadata = new DocumentMetadataHandle();
             }

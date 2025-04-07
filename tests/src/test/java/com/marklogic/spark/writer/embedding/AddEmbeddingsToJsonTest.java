@@ -115,7 +115,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_OPTION_PREFIX + "throwError", "true")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Unable to instantiate class for creating an embedding model; class name: com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction; " +
                 "cause: Intentional error.", ex.getMessage(),
             "This test verifies that a custom option can be sent to the embedding model function class. In this " +
@@ -132,7 +132,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "not.valid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Unable to instantiate class for creating an embedding model; class name: not.valid; " +
                 "cause: Could not load class not.valid",
             ex.getMessage());
@@ -278,7 +278,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_BATCH_SIZE, "abc")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("The value of 'spark.marklogic.write.embedder.batchSize' must be numeric.", ex.getMessage());
     }
 

@@ -81,7 +81,7 @@ class WriteXmlRowsTest extends AbstractWriteTest {
             .option(Options.WRITE_XML_ROOT_NAME, "myDoc")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Cannot specify both spark.marklogic.write.jsonRootName and spark.marklogic.write.xmlRootName",
             ex.getMessage());
     }

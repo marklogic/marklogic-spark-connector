@@ -29,7 +29,7 @@ public abstract class TextClassifierFactory {
 
         if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
             multiArticleClassifier = new MockTextClassifier(context.getStringOption(MOCK_CLASSIFIER_OPTION));
-        } else if (host != null && host.trim().length() > 0) {
+        } else if (host != null && !host.trim().isEmpty()) {
             try {
                 ClassificationConfiguration config = buildClassificationConfiguration(context);
                 multiArticleClassifier = new SemaphoreMultiArticleClassifier(config);
@@ -54,7 +54,7 @@ public abstract class TextClassifierFactory {
         final ConfigHelper configHelper = new ConfigHelper(context);
         final String apiKey = context.getStringOption(Options.WRITE_CLASSIFIER_APIKEY);
         String apiToken = null;
-        if (apiKey != null && apiKey.trim().length() > 0) {
+        if (apiKey != null && !apiKey.trim().isEmpty()) {
             apiToken = generateApiToken(configHelper, apiKey);
         }
         return configHelper.buildClassificationConfiguration(apiToken);

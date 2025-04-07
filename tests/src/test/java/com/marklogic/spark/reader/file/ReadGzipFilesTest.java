@@ -53,7 +53,7 @@ class ReadGzipFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_FILES_COMPRESSION, "gzip")
             .load("src/test/resources/zip-files/mixed-files.zip");
 
-        SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
+        SparkException ex = assertThrows(SparkException.class, dataset::count);
         assertTrue(ex.getCause() instanceof ConnectorException);
         assertTrue(ex.getCause().getMessage().startsWith("Unable to read file at file:/"),
             "Unexpected error message: " + ex.getCause().getMessage());

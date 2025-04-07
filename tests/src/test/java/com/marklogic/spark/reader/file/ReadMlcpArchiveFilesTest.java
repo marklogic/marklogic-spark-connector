@@ -164,7 +164,7 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_FILES_TYPE, "mlcp_archive")
             .load("src/test/resources/zip-files/mixed-files.zip");
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         String message = ex.getMessage();
         assertTrue(message.startsWith("Unable to read metadata for entry: mixed-files/hello.json"), "Unexpected message: " + message);
     }

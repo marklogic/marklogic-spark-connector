@@ -36,8 +36,8 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
     void happyPath(@TempDir Path tempDir) {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
-        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
+        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
 
         SparkSession session = newSparkSession();
 

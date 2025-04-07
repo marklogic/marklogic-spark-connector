@@ -149,7 +149,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             .option(Options.READ_FILES_TYPE, "archive")
             .load("src/test/resources/archive-files/firstEntryInvalid.zip");
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         assertTrue(ex.getMessage().startsWith("Could not find metadata entry for entry test/1.xml in file"),
             "The connector should default to throwing an error when it cannot find a metadata entry; error: " + ex.getMessage());
     }

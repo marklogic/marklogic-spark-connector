@@ -25,7 +25,7 @@ public class GraphWriter {
 
     public GraphWriter(DatabaseClient databaseClient, String rolesAndCapabilities) {
         this.databaseClient = databaseClient;
-        this.permissions = rolesAndCapabilities != null && rolesAndCapabilities.trim().length() > 0 ?
+        this.permissions = rolesAndCapabilities != null && !rolesAndCapabilities.trim().isEmpty() ?
             parsePermissions(rolesAndCapabilities) :
             "xdmp:default-permissions()";
     }

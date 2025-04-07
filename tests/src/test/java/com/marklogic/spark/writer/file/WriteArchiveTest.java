@@ -154,6 +154,8 @@ class WriteArchiveTest extends AbstractIntegrationTest {
                 verifyProperties(metadata);
                 verifyMetadataValues(metadata);
                 break;
+            default:
+                throw new IllegalArgumentException("Unrecognized metadata value: " + metadataValue);
         }
     }
 

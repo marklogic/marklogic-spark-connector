@@ -88,7 +88,7 @@ public class ContextSupport extends Context implements Serializable {
 
     public final boolean optionExists(String option) {
         String value = getProperties().get(option);
-        return value != null && value.trim().length() > 0;
+        return value != null && !value.trim().isEmpty();
     }
 
     /**

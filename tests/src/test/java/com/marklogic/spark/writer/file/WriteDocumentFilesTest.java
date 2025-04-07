@@ -25,7 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -112,7 +111,7 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
             .save(tempDir.toFile().getAbsolutePath());
 
         File[] files = tempDir.toFile().listFiles();
-        List<String> filenames = Arrays.stream(files).map(f -> f.getName()).toList();
+        List<String> filenames = Arrays.stream(files).map(File::getName).toList();
         assertEquals(2, filenames.size());
         assertTrue(filenames.contains("example.txt"), "Unexpected filenames: " + filenames);
         assertTrue(filenames.contains("example2.txt"), "MLCP has a check for an 'opaque' URI, of which org:example2.txt " +

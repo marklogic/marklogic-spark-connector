@@ -110,7 +110,7 @@ class ReadRdfFilesTest extends AbstractIntegrationTest {
     @Test
     void unrecognizedExtension() {
         Dataset<Row> dataset = startRead().load("src/test/resources/rdf/turtle-triples.txt");
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.show());
+        ConnectorException ex = assertThrowsConnectorException(dataset::show);
         assertTrue(
             ex.getMessage().contains("RDF syntax is not supported or the file extension is not recognized."),
             "We rely on Jena to identify a file based on its extension (with the exception of RDF JSON; Jena for " +

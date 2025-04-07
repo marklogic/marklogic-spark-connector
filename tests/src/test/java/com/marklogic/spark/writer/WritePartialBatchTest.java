@@ -40,7 +40,7 @@ class WritePartialBatchTest extends AbstractWriteTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getMessage().contains("Document is not JSON"), "Verifying that trying to write non-JSON " +
             "documents with a .json extension should produce an error; unexpected error: " + ex.getMessage());
     }
