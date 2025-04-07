@@ -49,7 +49,7 @@ class WriteStreamOfRowsTest extends AbstractWriteTest {
         // No error will be thrown yet as the streaming occurs in the background, though we'll likely see errors
         // from the background thread. Calling processAllAvailable should force an error to occur.
 
-        StreamingQueryException ex = assertThrows(StreamingQueryException.class, () -> query.processAllAvailable());
+        StreamingQueryException ex = assertThrows(StreamingQueryException.class, query::processAllAvailable);
         Throwable cause = getCauseFromWriterException(ex);
         cause = isSpark340OrHigher() ? cause : cause.getCause();
         assertTrue(cause.getMessage().contains("Extension this-doesnt-exist or a dependency does not exist"),

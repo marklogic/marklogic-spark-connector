@@ -51,9 +51,10 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     void evalJavaScript() {
         // For easier testing, this uses the same code as what's in processUri.sjs so the same assertions can be made.
         newWriterWithDefaultConfig("three-uris.csv", 2)
-            .option(Options.WRITE_JAVASCRIPT, "declareUpdate(); var URI; " +
-                "xdmp.documentInsert(URI + '.json', {\"hello\":\"world\"}, " +
-                "{\"permissions\": [xdmp.permission(\"spark-user-role\", \"read\"), xdmp.permission(\"spark-user-role\", \"update\")]});")
+            .option(Options.WRITE_JAVASCRIPT, """
+                declareUpdate(); var URI;
+                xdmp.documentInsert(URI + '.json', {"hello":"world"},
+                {"permissions": [xdmp.permission("spark-user-role", "read"), xdmp.permission("spark-user-role", "update")]});""")
             .save();
 
         verifyThreeJsonDocumentsWereWritten();
@@ -81,11 +82,12 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     void evalXQuery() {
         // For easier testing, this uses the same code as what's in process-uri.xqy so the same assertions can be made.
         newWriterWithDefaultConfig("three-uris.csv", 1)
-            .option(Options.WRITE_XQUERY, "declare variable $URI external;\n" +
-                "xdmp:document-insert($URI || \".xml\", <hello>world</hello>,\n" +
-                "(xdmp:permission(\"spark-user-role\", \"read\"),\n" +
-                "xdmp:permission(\"spark-user-role\", \"update\")\n" +
-                "));")
+            .option(Options.WRITE_XQUERY, """
+                declare variable $URI external;
+                xdmp:document-insert($URI || ".xml", <hello>world</hello>,
+                (xdmp:permission("spark-user-role", "read"),
+                xdmp:permission("spark-user-role", "update")
+                ));""")
             .save();
 
         verifyThreeXmlDocumentsWereWritten();
@@ -104,9 +106,10 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     void customExternalVariableName() {
         newWriterWithDefaultConfig("three-uris.csv", 2)
             .option(Options.WRITE_EXTERNAL_VARIABLE_NAME, "MY_VAR")
-            .option(Options.WRITE_JAVASCRIPT, "declareUpdate(); var MY_VAR; " +
-                "xdmp.documentInsert(MY_VAR + '.json', {\"hello\":\"world\"}, " +
-                "{\"permissions\": [xdmp.permission(\"spark-user-role\", \"read\"), xdmp.permission(\"spark-user-role\", \"update\")]});")
+            .option(Options.WRITE_JAVASCRIPT, """
+                declareUpdate(); var MY_VAR;
+                xdmp.documentInsert(MY_VAR + '.json', {"hello":"world"},
+                {"permissions": [xdmp.permission("spark-user-role", "read"), xdmp.permission("spark-user-role", "update")]});""")
             .save();
 
         verifyThreeJsonDocumentsWereWritten();
@@ -139,10 +142,11 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     @Test
     void userDefinedVariables() {
         newWriterWithDefaultConfig("three-uris.csv", 2)
-            .option(Options.WRITE_JAVASCRIPT, "declareUpdate(); var URI; var keyName; var keyValue;" +
-                "const doc = {}; doc[keyName] = keyValue; " +
-                "xdmp.documentInsert(URI + '.json', doc, " +
-                "{\"permissions\": [xdmp.permission(\"spark-user-role\", \"read\"), xdmp.permission(\"spark-user-role\", \"update\")]});")
+            .option(Options.WRITE_JAVASCRIPT, """
+                declareUpdate(); var URI; var keyName; var keyValue;
+                const doc = {}; doc[keyName] = keyValue;
+                xdmp.documentInsert(URI + '.json', doc,
+                {"permissions": [xdmp.permission("spark-user-role", "read"), xdmp.permission("spark-user-role", "update")]});""")
             .option(Options.WRITE_VARS_PREFIX + "keyName", "hello")
             .option(Options.WRITE_VARS_PREFIX + "keyValue", "world")
             .save();
@@ -167,8 +171,8 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
     void dontAbortOnFailure() {
         AtomicInteger successCount = new AtomicInteger();
         AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(count -> successCount.set(count));
-        MarkLogicWrite.setFailureCountConsumer(count -> failureCount.set(count));
+        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
+        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
 
         // The lack of an error here indicates that the job did not abort. The connector is expected to have logged
         // each error instead.

@@ -131,7 +131,7 @@ class WriteDocumentRowsToMarkLogicTest extends AbstractIntegrationTest {
             .option(Options.WRITE_DOCUMENT_TYPE, "notvalid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Invalid value for spark.marklogic.write.documentType: notvalid; must be one of 'JSON', 'XML', or 'TEXT'.",
             ex.getMessage());
     }

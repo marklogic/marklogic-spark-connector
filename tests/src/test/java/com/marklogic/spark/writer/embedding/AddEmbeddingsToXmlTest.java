@@ -244,7 +244,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("To generate embeddings on documents, you must specify either spark.marklogic.write.embedder.chunks.jsonPointer or spark.marklogic.write.embedder.chunks.xpath to define the location of chunks in documents.",
             ex.getMessage(), "When generating embeddings without splitting the text - i.e. when a document is read " +
                 "from MarkLogic and chunks already exist - the user must specify the location of the chunks so that " +

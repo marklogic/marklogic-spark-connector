@@ -86,7 +86,7 @@ class ReadRdfZipFilesTest extends AbstractIntegrationTest {
     @Test
     void abortOnBadEntry() {
         Dataset<Row> dataset = startRead().load("src/test/resources/rdf/good-and-bad-rdf.zip");
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         assertTrue(ex.getMessage().contains("Unable to read bad-quads.trig; cause: "),
             "Unexpected error: " + ex.getMessage());
     }

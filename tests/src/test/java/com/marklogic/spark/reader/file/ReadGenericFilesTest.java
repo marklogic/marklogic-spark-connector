@@ -73,7 +73,7 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append);
 
-        SparkException ex = assertThrows(SparkException.class, () -> writer.save());
+        SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getMessage().contains("document is not UTF-8 encoded"), "Actual error: " + ex.getMessage());
     }
 
@@ -105,7 +105,7 @@ class ReadGenericFilesTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> writer.save());
+        ConnectorException ex = assertThrows(ConnectorException.class, writer::save);
         assertTrue(ex.getMessage().contains("Unsupported encoding value: not-a-real-encoding"), "Actual error: " + ex.getMessage());
     }
 

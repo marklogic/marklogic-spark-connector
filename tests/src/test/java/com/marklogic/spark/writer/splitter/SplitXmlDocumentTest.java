@@ -67,7 +67,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals(
             "Unable to compile XPath expression for selecting text: /ex:root/ex:text/text(); cause: Prefix must resolve to a namespace: ex",
             ex.getMessage()
@@ -102,7 +102,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 300)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Unable to create splitter for documents; cause: spark.marklogic.write.splitter.maxOverlapSize " +
             "must be between 0 and 200, but is: 300", ex.getMessage().trim());
     }
@@ -116,7 +116,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, -1)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("The value of 'spark.marklogic.write.splitter.maxChunkSize' must be 0 or greater.", ex.getMessage());
     }
 
@@ -129,7 +129,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, -1)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("The value of 'spark.marklogic.write.splitter.maxOverlapSize' must be 0 or greater.", ex.getMessage());
     }
 
@@ -187,7 +187,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_REGEX, ".*(not valid")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertTrue(ex.getMessage().contains("Cannot split documents due to invalid regex: .*(not valid; cause: Unclosed group"),
             "Unexpected error message: " + ex.getMessage());
     }
@@ -202,7 +202,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertTrue(ex.getMessage().contains("Unable to split document with URI: /marklogic-docs/java-client-intro.xml; cause: " +
                 "The text \"When working with the Java API...\" (886 characters long) doesn't fit into the " +
                 "maximum segment size (100 characters)"),

@@ -148,7 +148,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         if (this.graphBaseIri != null && isGraphRelative(value)) {
             value = this.graphBaseIri + value;
         }
-        return value != null && value.trim().length() > 0 ? UTF8String.fromString(value) : null;
+        return value != null && !value.trim().isEmpty() ? UTF8String.fromString(value) : null;
     }
 
     private boolean isGraphRelative(String value) {
@@ -162,6 +162,6 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
 
     private UTF8String getString(RowRecord row, String column) {
         String value = row.getString(column);
-        return value != null && value.trim().length() > 0 ? UTF8String.fromString(value) : null;
+        return value != null && !value.trim().isEmpty() ? UTF8String.fromString(value) : null;
     }
 }

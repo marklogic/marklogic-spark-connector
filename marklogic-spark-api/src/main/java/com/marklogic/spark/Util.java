@@ -28,7 +28,7 @@ public interface Util {
 
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
-            .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
+            .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
     }
 
     /**
@@ -79,7 +79,7 @@ public interface Util {
     static String getOptionNameForErrorMessage(String option) {
         ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
         String optionName = bundle.getString(option);
-        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+        return optionName != null && !optionName.trim().isEmpty() ? optionName.trim() : option;
     }
 
     static Format determineSourceDocumentFormat(AbstractWriteHandle content, String sourceUri) {

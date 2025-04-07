@@ -194,7 +194,7 @@ public class WriteContext extends ContextSupport {
         factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias));
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);
-            if (value != null && value.trim().length() > 0) {
+            if (value != null && !value.trim().isEmpty()) {
                 Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
             }
         });
@@ -226,10 +226,10 @@ public class WriteContext extends ContextSupport {
 
     private Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
-        if (transformName != null && transformName.trim().length() > 0) {
+        if (transformName != null && !transformName.trim().isEmpty()) {
             ServerTransform transform = new ServerTransform(transformName);
             String paramsValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS);
-            if (paramsValue != null && paramsValue.trim().length() > 0) {
+            if (paramsValue != null && !paramsValue.trim().isEmpty()) {
                 addRestTransformParams(transform, paramsValue);
             }
             return Optional.of(transform);
@@ -239,7 +239,7 @@ public class WriteContext extends ContextSupport {
 
     private void addRestTransformParams(ServerTransform transform, String paramsValue) {
         String delimiterValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS_DELIMITER);
-        String delimiter = delimiterValue != null && delimiterValue.trim().length() > 0 ? delimiterValue : ",";
+        String delimiter = delimiterValue != null && !delimiterValue.trim().isEmpty() ? delimiterValue : ",";
         String[] params = paramsValue.split(delimiter);
         if (params.length % 2 != 0) {
             throw new ConnectorException(

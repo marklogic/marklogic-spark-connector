@@ -74,7 +74,7 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
             .option(Options.CLIENT_CONNECTION_TYPE, "direct")
             .load();
 
-        SparkException ex = assertThrows(SparkException.class, () -> rows.count());
+        SparkException ex = assertThrows(SparkException.class, rows::count);
         assertTrue(ex.getCause() instanceof MarkLogicIOException, "This test is expected to fail when run against " +
             "the cluster created by docker-compose.yaml, as the host name of the MarkLogic cluster is not expected " +
             "to be accessible. Actual exception: " + ex.getCause());
@@ -95,7 +95,7 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
             .option(Options.READ_BATCH_SIZE, "abc")
             .load();
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         assertEquals("The value of 'spark.marklogic.read.batchSize' must be numeric.", ex.getMessage());
     }
 
@@ -314,7 +314,7 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
             .option(Options.READ_DOCUMENTS_TRANSFORM, "throwError")
             .load();
 
-        SparkException ex = assertThrows(SparkException.class, () -> dataset.count());
+        SparkException ex = assertThrows(SparkException.class, dataset::count);
         assertTrue(ex.getMessage().contains("This is an intentional error for testing purposes."),
             "When the transform throws an error, our connector throws a ConnectorException, but Spark seems to wrap " +
                 "its stacktrace into a SparkException, such that we can't access the original ConnectorException " +

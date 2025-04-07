@@ -21,9 +21,10 @@ class ReadDocumentRowsByUrisTest extends AbstractIntegrationTest {
     @Test
     void readByUris() {
         List<Row> rows = startRead()
-            .option(Options.READ_DOCUMENTS_URIS, "/author/author1.json\n" +
-                "/author/author12.json\n" +
-                "/author/author3.json")
+            .option(Options.READ_DOCUMENTS_URIS, """
+                /author/author1.json
+                /author/author12.json
+                /author/author3.json""")
             .option(Options.READ_DOCUMENTS_DIRECTORY, "/author/")
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "author")
             .load()
@@ -35,9 +36,10 @@ class ReadDocumentRowsByUrisTest extends AbstractIntegrationTest {
     @Test
     void urisWithStringQuery() {
         List<Row> rows = startRead()
-            .option(Options.READ_DOCUMENTS_URIS, "/author/author1.json\n" +
-                "/author/author12.json\n" +
-                "/author/author3.json")
+            .option(Options.READ_DOCUMENTS_URIS, """
+                /author/author1.json
+                "/author/author12.json
+                "/author/author3.json""")
             .option(Options.READ_DOCUMENTS_STRING_QUERY, "Wooles")
             .load()
             .collectAsList();

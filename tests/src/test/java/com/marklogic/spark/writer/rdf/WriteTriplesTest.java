@@ -59,7 +59,7 @@ class WriteTriplesTest extends AbstractWriteRdfTest {
             .option(Options.WRITE_GRAPH_OVERRIDE, "my-graph-override")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("Can only specify one of spark.marklogic.write.graph and spark.marklogic.write.graphOverride.",
             ex.getMessage());
     }

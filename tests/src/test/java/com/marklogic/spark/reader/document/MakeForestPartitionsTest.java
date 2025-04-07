@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MakeForestPartitionsTest {
 
-    private final long FAKE_SERVER_TIMESTAMP = 100;
+    private static final long FAKE_SERVER_TIMESTAMP = 100;
 
     ForestPartition[] partitions;
 

@@ -69,7 +69,7 @@ public class DocumentRowConverter implements RowConverter {
         BytesHandle bytesHandle = documentRow.getContent(this.documentFormat);
 
         JsonNode uriTemplateValues = null;
-        if (this.uriTemplate != null && this.uriTemplate.trim().length() > 0) {
+        if (this.uriTemplate != null && !this.uriTemplate.trim().isEmpty()) {
             String format = documentRow.getFormat();
             uriTemplateValues = deserializeContentToJson(uri, bytesHandle, format);
         }

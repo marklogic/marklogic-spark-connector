@@ -132,7 +132,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
 
     protected final String rowsToString(List<Row> rows) {
         // Used for debugging and in some assertions.
-        return rows.stream().map(row -> row.prettyJson()).collect(Collectors.joining());
+        return rows.stream().map(Row::prettyJson).collect(Collectors.joining());
     }
 
     /**
@@ -155,7 +155,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     }
 
     protected final ConnectorException assertThrowsConnectorException(Runnable r) {
-        SparkException ex = assertThrows(SparkException.class, () -> r.run());
+        SparkException ex = assertThrows(SparkException.class, r::run);
         if (ex.getCause() instanceof SparkException) {
             ex = (SparkException) ex.getCause();
         }

@@ -38,16 +38,19 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
 
         File dir = new File(tempDir.toFile(), "pretty-print");
         String doc1 = FileUtils.readFileToString(new File(dir, "doc1.xml"), "UTF-8");
-        assertEquals("<root>\n" +
-                "    <hello>world</hello>\n" +
-                "</root>\n", doc1,
+        assertEquals("""
+                <root>
+                    <hello>world</hello>
+                </root>
+                """, doc1,
             "Pretty-printing should result in the XML declaration being omitted and child elements being " +
                 "indented with a default indent of 4. This mirrors how XML is pretty-printed by MLCP.");
 
         String doc2 = FileUtils.readFileToString(new File(dir, "doc2.json"), "UTF-8");
-        assertEquals("{\n" +
-            "  \"hello\" : \"world\"\n" +
-            "}", doc2, "The JSON should be pretty-printed.");
+        assertEquals("""
+            {
+              "hello" : "world"
+            }""", doc2, "The JSON should be pretty-printed.");
     }
 
     @Test
@@ -79,14 +82,17 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
             .collectAsList();
 
         String xml = new String((byte[]) rows.get(0).get(1));
-        assertEquals("<root>\n" +
-            "    <hello>world</hello>\n" +
-            "</root>\n", xml);
+        assertEquals("""
+            <root>
+                <hello>world</hello>
+            </root>
+            """, xml);
 
         String json = new String((byte[]) rows.get(1).get(1));
-        assertEquals("{\n" +
-            "  \"hello\" : \"world\"\n" +
-            "}", json);
+        assertEquals("""
+            {
+              "hello" : "world"
+            }""", json);
     }
 
     @Test
@@ -103,8 +109,9 @@ class PrettyPrintFilesTest extends AbstractIntegrationTest {
 
         File dir = new File(tempDir.toFile(), "pretty-print");
         String doc1 = FileUtils.readFileToString(new File(dir, "doc1.xml"), "UTF-8");
-        assertEquals("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<root><hello>world</hello></root>", doc1);
+        assertEquals("""
+            <?xml version="1.0" encoding="UTF-8"?>
+            <root><hello>world</hello></root>""", doc1);
 
         String doc2 = FileUtils.readFileToString(new File(dir, "doc2.json"), "UTF-8");
         assertEquals("{\"hello\":\"world\"}", doc2);

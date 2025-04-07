@@ -8,7 +8,7 @@ public interface ClassifierTestUtil {
     String MOCK_RESPONSE_OPTION = "spark.marklogic.testing.mockClassifierResponse";
 
     static String buildMockResponse(int articleCount) {
-        String response = """
+        String start = """
             <?xml version=\"1.0\" encoding=\"UTF-8\"?>
             <response>
               <STRUCTUREDDOCUMENT>
@@ -18,14 +18,15 @@ public interface ClassifierTestUtil {
               <META name=\"title/document_title\" value=\"/some-uri.xml\"/>
               <SYSTEM name=\"Template\" value=\"default\"/>""";
 
+        StringBuilder response = new StringBuilder(start);
         for (int i = 0; i < articleCount; i++) {
-            response += """
+            response.append("""
                 <ARTICLE>
                  <SYSTEM name=\"DeterminedLanguage\" value=\"english\"/>
                  <SYSTEM name=\"LanguageGuessed\" value=\"no\"/>
-                </ARTICLE>""";
+                </ARTICLE>""");
         }
 
-        return response + "</STRUCTUREDDOCUMENT></response>";
+        return response.append("</STRUCTUREDDOCUMENT></response>").toString();
     }
 }

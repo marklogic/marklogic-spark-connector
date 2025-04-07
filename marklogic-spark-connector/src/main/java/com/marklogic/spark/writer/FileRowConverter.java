@@ -61,7 +61,7 @@ class FileRowConverter implements RowConverter {
     }
 
     private Optional<JsonNode> deserializeContentToJson(String path, BytesHandle contentHandle, InternalRow row) {
-        if (this.uriTemplate == null || this.uriTemplate.trim().length() == 0) {
+        if (this.uriTemplate == null || this.uriTemplate.trim().isEmpty()) {
             return Optional.empty();
         }
         try {

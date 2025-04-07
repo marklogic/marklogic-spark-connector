@@ -128,7 +128,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "elementDoesntExist")
             .load("src/test/resources/aggregates/employees.xml");
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         String message = ex.getMessage();
         assertTrue(message.startsWith("No occurrence of URI element 'elementDoesntExist' found in aggregate element 1 in file"),
             "The error should identify which aggregate element did not contain the URI element; actual error: " + message);
@@ -142,7 +142,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_AGGREGATES_XML_URI_ELEMENT, "name")
             .load("src/test/resources/500-employees.json");
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.count());
+        ConnectorException ex = assertThrowsConnectorException(dataset::count);
         String message = ex.getMessage();
         assertTrue(message.startsWith("Unable to read XML from file"), "Unexpected error: " + message);
         assertTrue(message.endsWith("500-employees.json; cause: Failed to traverse document"),
@@ -198,7 +198,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_FILES_ENCODING, "UTF-16")
             .load(ISO_8859_1_ENCODED_FILE);
 
-        ConnectorException ex = assertThrowsConnectorException(() -> dataset.show());
+        ConnectorException ex = assertThrowsConnectorException(dataset::show);
         assertTrue(ex.getMessage().contains("Failed to traverse document"), "When an incorrect encoding is used, " +
             "the connector should throw an error stating that it cannot read the document. The stacktrace has more " +
             "detail in it. Actual error: " + ex.getMessage());
@@ -212,7 +212,7 @@ class ReadAggregateXmlFilesTest extends AbstractIntegrationTest {
             .option(Options.READ_FILES_ENCODING, "Not-a-real-encoding")
             .load(ISO_8859_1_ENCODED_FILE);
 
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> dataset.show());
+        ConnectorException ex = assertThrows(ConnectorException.class, dataset::show);
         assertTrue(ex.getMessage().contains("Unsupported encoding value: Not-a-real-encoding"),
             "Actual error: " + ex.getMessage());
     }

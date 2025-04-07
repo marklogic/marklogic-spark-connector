@@ -58,7 +58,7 @@ class RdfSerializer {
             if ("".equals(lang)) {
                 lang = null;
             }
-            if (lang != null && lang.trim().length() > 0) {
+            if (lang != null && !lang.trim().isEmpty()) {
                 // MarkLogic uses this datatype when a string has a lang associated with it.
                 type = "http://www.w3.org/1999/02/22-rdf-syntax-ns#langString";
             } else if ("".equals(lang) || lang == null) {
