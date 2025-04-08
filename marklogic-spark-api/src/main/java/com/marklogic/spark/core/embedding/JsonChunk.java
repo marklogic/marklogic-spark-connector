@@ -9,17 +9,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonChunk implements Chunk {
 
-    private final String documentUri;
     private final ObjectNode chunk;
     private final JsonPointer textPointer;
     private final String embeddingArrayName;
 
-    public JsonChunk(String documentUri, ObjectNode chunk) {
-        this(documentUri, chunk, null, null);
+    public JsonChunk(ObjectNode chunk) {
+        this(chunk, null, null);
     }
 
-    public JsonChunk(String documentUri, ObjectNode chunk, String textPointer, String embeddingArrayName) {
-        this.documentUri = documentUri;
+    public JsonChunk(ObjectNode chunk, String textPointer, String embeddingArrayName) {
         this.chunk = chunk;
         this.textPointer = JsonPointer.compile(textPointer != null ? textPointer : "/text");
         this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "embedding";
@@ -28,11 +26,6 @@ public class JsonChunk implements Chunk {
     public boolean hasEmbeddingText() {
         String text = getEmbeddingText();
         return text != null && !text.trim().isEmpty();
-    }
-
-    @Override
-    public String getDocumentUri() {
-        return documentUri;
     }
 
     @Override

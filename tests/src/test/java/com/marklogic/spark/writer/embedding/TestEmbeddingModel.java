@@ -60,11 +60,6 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         }
 
         @Override
-        public String getDocumentUri() {
-            return "/doesnt/matter.json";
-        }
-
-        @Override
         public String getEmbeddingText() {
             return text;
         }

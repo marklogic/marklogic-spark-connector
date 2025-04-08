@@ -70,13 +70,13 @@ public class JsonChunkSelector implements ChunkSelector {
         List<Chunk> chunks = new ArrayList<>();
         if (chunksNode instanceof ArrayNode) {
             chunksNode.forEach(obj -> {
-                JsonChunk chunk = new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName);
+                JsonChunk chunk = new JsonChunk((ObjectNode) obj, textPointer, embeddingArrayName);
                 if (chunk.hasEmbeddingText()) {
                     chunks.add(chunk);
                 }
             });
         } else {
-            JsonChunk chunk = new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName);
+            JsonChunk chunk = new JsonChunk((ObjectNode) chunksNode, textPointer, embeddingArrayName);
             if (chunk.hasEmbeddingText()) {
                 chunks.add(chunk);
             }

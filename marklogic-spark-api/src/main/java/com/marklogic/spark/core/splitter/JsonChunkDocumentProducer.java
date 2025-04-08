@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
@@ -55,7 +56,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 }
             }
             float[] embedding = getEmbeddingIfExists(embeddings, chunksCounter);
-            var jsonChunk = new JsonChunk(sourceDocument.getUri(), chunk);
+            var jsonChunk = new JsonChunk(chunk);
             if (embedding != null) {
                 jsonChunk.addEmbedding(embedding);
             }
@@ -95,7 +96,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 }
             }
             float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
-            var jsonChunk = new JsonChunk(sourceDocument.getUri(), chunk);
+            var jsonChunk = new JsonChunk(chunk);
             if (embedding != null) {
                 jsonChunk.addEmbedding(embedding);
             }
@@ -105,8 +106,14 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "json");
+        // So we can cheat here a bit because we know the metadata only has permissions and collections.
+        DocumentMetadataHandle newMetadata = new DocumentMetadataHandle();
+        newMetadata.getCollections().addAll(chunkConfig.getMetadata().getCollections());
+        newMetadata.getPermissions().putAll(chunkConfig.getMetadata().getPermissions());
+        newMetadata.getCollections().add(sourceDocument.getUri());
+
         return new DocumentAndChunks(
-            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc)),
+            new DocumentWriteOperationImpl(chunkDocumentUri, newMetadata, new JacksonHandle(doc)),
             chunks
         );
     }
