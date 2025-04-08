@@ -94,7 +94,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void extractToXml() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/marklogic-getting-started.pdf")
+            .load("src/test/resources/extraction-files/armstrong_neil.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -104,13 +104,16 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        XmlNode doc = readXmlDocument("/extract-test/marklogic-getting-started.pdf-extracted-text.xml");
-        doc.assertElementValue("/model:root/model:source-uri", "/extract-test/marklogic-getting-started.pdf");
+        XmlNode doc = readXmlDocument("/extract-test/armstrong_neil.pdf-extracted-text.xml");
+        doc.assertElementValue("/model:root/model:source-uri", "/extract-test/armstrong_neil.pdf");
         String content = doc.getElementValue("/model:root/model:content");
-        assertTrue(content.contains("MarkLogic Server Table of Contents"), "Unexpected text: " + content);
+        assertTrue(content.contains("NEIL A. ARMSTRONG"), "Unexpected text: " + content);
 
         doc.assertElementValue("/model:root/model:extracted-metadata/pdf:PDFVersion", "1.5");
-        doc.assertElementValue("/model:root/model:extracted-metadata/dc:description", "MarkLogic Server");
+        doc.assertElementValue("/model:root/model:extracted-metadata/dc:creator", "NASA/JSC");
+        doc.assertElementValue("Extracted metadata names with a namespace and other colons should have the " +
+                "colons replaced with hyphens to avoid namespace errors",
+            "/model:root/model:extracted-metadata/pdf:docinfo-custom-Company", "NASA/JSC");
     }
 
     @Test
