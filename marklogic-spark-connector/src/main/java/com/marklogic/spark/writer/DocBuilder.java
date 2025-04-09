@@ -267,8 +267,12 @@ public class DocBuilder {
             Element metadata = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "extracted-metadata");
             root.appendChild(metadata);
             inputs.getExtractedMetadata().entrySet().forEach(entry -> {
-                Element metadataElement = createXmlMetadataElement(doc, entry);
-                metadata.appendChild(metadataElement);
+                try {
+                    Element metadataElement = createXmlMetadataElement(doc, entry);
+                    metadata.appendChild(metadataElement);
+                } catch (Exception e) {
+                    Util.MAIN_LOGGER.warn("Unable to convert extracted metadata into XML: {}; cause: {}", entry, e.getMessage());
+                }
             });
         }
 
@@ -293,7 +297,7 @@ public class DocBuilder {
             String associatedNamespace = ExtractionUtil.getNamespace(prefix);
             if (associatedNamespace != null) {
                 namespace = associatedNamespace;
-                localName = key.substring(pos + 1);
+                localName = key.substring(pos + 1).replace(":", "-");
             }
         }
 
