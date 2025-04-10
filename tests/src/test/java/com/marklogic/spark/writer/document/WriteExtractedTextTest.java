@@ -8,7 +8,9 @@ import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.SaveMode;
 import org.apache.tika.Tika;
 import org.apache.tika.metadata.Metadata;
@@ -144,6 +146,23 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         perms = readDocumentPermissions("/extract-test/marklogic-getting-started.pdf");
         assertEquals(1, perms.getDocumentPermissions().size(), "Expecting only spark-user-role");
         perms.assertReadPermissionExists("spark-user-role");
+    }
+
+    @Test
+    void invalidPermission() {
+        DataFrameWriter writer = newSparkSession()
+            .read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/extraction-files")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_EXTRACTED_TEXT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS, DEFAULT_PERMISSIONS + ",qconsole-user,readdd")
+            .mode(SaveMode.Append);
+
+        ConnectorException ex = assertThrowsConnectorException(writer::save);
+        assertEquals("Unable to parse permissions string: spark-user-role,read,spark-user-role,update,qconsole-user,readdd; " +
+            "cause: Not a valid capability: READDD", ex.getMessage());
     }
 
     @Test
