@@ -122,7 +122,7 @@ public interface Util {
             final String confusingMessageForUser = "No enum constant com.marklogic.client.io.DocumentMetadataHandle.Capability.";
             if (message != null && message.contains(confusingMessageForUser)) {
                 message = message.replace(confusingMessageForUser, "Not a valid capability: ");
-                throw new IllegalArgumentException(message, ex);
+                throw new ConnectorException(message);
             }
             throw ex;
         }
