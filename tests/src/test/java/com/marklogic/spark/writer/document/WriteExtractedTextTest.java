@@ -120,7 +120,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void customCollectionsAndPermissions() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .option("pathGlobFilter", "*.pdf")
+            .option("pathGlobFilter", "marklogic*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -172,7 +172,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void dropSourceJson() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .option("pathGlobFilter", "*.pdf")
+            .option("pathGlobFilter", "marklogic*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -198,7 +198,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
     void dropSourceXml() {
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .option("pathGlobFilter", "*.pdf")
+            .option("pathGlobFilter", "marklogic*.pdf")
             .load("src/test/resources/extraction-files")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
