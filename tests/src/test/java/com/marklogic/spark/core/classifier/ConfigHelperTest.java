@@ -42,12 +42,11 @@ class ConfigHelperTest {
     void defaultValues() throws MalformedURLException {
         Map<String, String> properties = new HashMap<>() {{
             put(Options.WRITE_CLASSIFIER_HOST, "somehost");
-            put(Options.WRITE_CLASSIFIER_PATH, "/classifier");
         }};
 
         TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
         ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
-        assertEquals("https://somehost:443/classifier", config.getUrl());
+        assertEquals("https://somehost:443/", config.getUrl());
         assertEquals("https://somehost:443/token", helper.getTokenUrl().toString());
     }
 

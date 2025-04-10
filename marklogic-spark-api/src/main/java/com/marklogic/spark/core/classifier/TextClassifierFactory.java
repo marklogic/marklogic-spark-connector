@@ -81,7 +81,7 @@ public abstract class TextClassifierFactory {
             this.host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
             this.port = context.getIntOption(Options.WRITE_CLASSIFIER_PORT, 443, 0);
             this.protocol = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_CLASSIFIER_HTTP)) ? "http" : "https";
-            this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH));
+            this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH, "/"));
             this.tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
 
             context.getProperties().forEach((key, value) -> {
