@@ -132,6 +132,21 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
         }
     }
 
+    @Test
+    void binaryDocWithNoExtractedText() {
+        startReadAndWrite()
+            .option(Options.WRITE_EXTRACTED_TEXT, false)
+            .option(Options.WRITE_COLLECTIONS, "binary")
+            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extracted-text")
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("binary", 1);
+        assertCollectionSize("No extracted text document should have been written since the document passed to the " +
+            "classifier contains a binary with format=BINARY and has no extracted text.", "extracted-text", 0);
+    }
+
     private DataFrameWriter<Row> startReadAndWrite() {
         return newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)

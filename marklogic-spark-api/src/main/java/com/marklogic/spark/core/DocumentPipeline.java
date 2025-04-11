@@ -6,6 +6,7 @@ package com.marklogic.spark.core;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.ChunkSelector;
@@ -73,7 +74,11 @@ public class DocumentPipeline implements Closeable {
     private void classifyText(List<DocumentInputs> inputs) {
         List<TextClassifier.ClassifiableContent> contents = new ArrayList<>();
         for (DocumentInputs input : inputs) {
-            contents.add(new ClassifiableDocument(input));
+            if (!input.hasClassifiableText()) {
+                Util.MAIN_LOGGER.warn("Skipping classification for document with URI {} because it has no classifiable text", input.getInitialUri());
+            } else {
+                contents.add(new ClassifiableDocument(input));
+            }
             if (input.getChunks() != null) {
                 for (int i = 0; i < input.getChunks().size(); i++) {
                     contents.add(new ClassifiableChunk(input, i));

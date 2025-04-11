@@ -4,7 +4,9 @@
 package com.marklogic.spark.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.marklogic.client.document.ContentDescriptor;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 
 import java.util.ArrayList;
@@ -51,6 +53,28 @@ public class DocumentInputs {
     public void overrideContent(AbstractWriteHandle modifiedContent) {
         // For when chunks have been selected.
         this.content = modifiedContent;
+    }
+
+    /**
+     * For the 1.3 release, we don't yet support "single article" mode where a binary can be submitted to Semaphore.
+     * Everything is "multi article" which requires storing text from a document in an XML document that is sent to
+     * Semaphore. This method helps avoid errors where a raw binary could be inserted into the XML document and cause
+     * parse errors.
+     *
+     * @return
+     */
+    public boolean hasClassifiableText() {
+        if (extractedText != null && !extractedText.trim().isEmpty()) {
+            return true;
+        }
+
+        if (content instanceof ContentDescriptor) {
+            ContentDescriptor contentDescriptor = (ContentDescriptor) this.content;
+            Format format = contentDescriptor.getFormat();
+            return Format.XML.equals(format) || Format.JSON.equals(format) || Format.TEXT.equals(format);
+        }
+
+        return false;
     }
 
     public void addChunkClassification(byte[] classification) {
