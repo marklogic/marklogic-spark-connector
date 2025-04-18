@@ -51,7 +51,7 @@ To run the tests against the test application, run the following Gradle task:
 3. Click on "Edit configuration templates" and click on "JUnit".
 4. Click on "Modify options" and select "Add VM options" if it's not already selected. 
 5. In the VM options text input, add the following:
-   --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-opens=java.base/sun.util.calendar=ALL-UNNAMED --add-opens=java.base/sun.security.action=ALL-UNNAMED
+   --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-exports=java.base/sun.util.calendar=ALL-UNNAMED --add-exports=java.base/sun.security.action=ALL-UNNAMED
 6. Click "Apply".
 7. In the dropdown that has "Class" selected, change that to "Method" and hit "Apply" again.
 
