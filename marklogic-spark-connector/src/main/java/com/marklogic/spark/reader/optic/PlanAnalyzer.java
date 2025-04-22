@@ -75,7 +75,7 @@ class PlanAnalyzer {
         final long batchSize = userBatchSize > 0 ? userBatchSize : Long.parseLong("-1");
 
         long bucketsPerPartition = calculateBucketsPerPartition(rowCount, userPartitionCount, batchSize);
-        long partitionSize = Long.divideUnsigned(-1, userPartitionCount);
+        long partitionSize = Long.divideUnsigned(-1, userPartitionCount > 0 ? userPartitionCount : 1);
         long nextLowerBound = 0;
 
         List<PlanAnalysis.Partition> partitions = new ArrayList<>();

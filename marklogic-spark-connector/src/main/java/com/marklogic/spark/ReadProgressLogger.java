@@ -16,6 +16,7 @@ public class ReadProgressLogger implements Serializable {
     static final long serialVersionUID = 1L;
 
     private static final AtomicLong progressCounter = new AtomicLong(0);
+    private static final Object lock = new Object();
     private static long progressInterval;
     private static long nextProgressInterval;
     private static String message;
@@ -28,8 +29,9 @@ public class ReadProgressLogger implements Serializable {
     }
 
     public static void logProgressIfNecessary(long itemCount) {
-        if (progressInterval > 0 && progressCounter.addAndGet(itemCount) >= nextProgressInterval) {
-            synchronized (progressCounter) {
+        if (Util.MAIN_LOGGER.isInfoEnabled() && progressInterval > 0
+            && progressCounter.addAndGet(itemCount) >= nextProgressInterval) {
+            synchronized (lock) {
                 Util.MAIN_LOGGER.info(message, nextProgressInterval);
                 nextProgressInterval += progressInterval;
             }

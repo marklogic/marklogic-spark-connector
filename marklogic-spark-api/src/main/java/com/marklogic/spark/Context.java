@@ -47,7 +47,12 @@ public class Context implements Serializable {
     }
 
     public final boolean getBooleanOption(String option, boolean defaultValue) {
-        return hasOption(option) ? Boolean.parseBoolean(getStringOption(option)) : defaultValue;
+        if (hasOption(option)) {
+            String value = getStringOption(option);
+            assert value != null;
+            return Boolean.parseBoolean(value);
+        }
+        return defaultValue;
     }
 
     public final String getOptionNameForMessage(String option) {
