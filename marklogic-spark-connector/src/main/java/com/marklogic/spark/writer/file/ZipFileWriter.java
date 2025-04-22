@@ -60,6 +60,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         if (contentWriter == null) {
             createZipFileAndContentWriter();
         }
+        assert zipOutputStream != null;
+        assert contentWriter != null;
 
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);

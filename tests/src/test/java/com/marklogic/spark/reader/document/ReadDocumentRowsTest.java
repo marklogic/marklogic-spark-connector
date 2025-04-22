@@ -61,7 +61,7 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
             .option(Options.READ_DOCUMENTS_PARTITIONS_PER_FOREST, 1)
             .option(Options.READ_DOCUMENTS_COLLECTIONS, "write-test")
             .option(Options.READ_BATCH_SIZE, 10)
-            .option(Options.READ_LOG_PROGRESS, 50)
+            .option(Options.READ_LOG_PROGRESS, 25)
             .load();
 
         assertEquals(200, rows.count());
