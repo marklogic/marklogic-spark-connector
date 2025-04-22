@@ -153,6 +153,21 @@ public abstract class TextClassifierFactory {
         }
 
         @Override
+        public byte[] classifyDocument(byte[] content, String uri) {
+            String mockSingleArticleResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "            <response>\n" +
+                "              <STRUCTUREDDOCUMENT>\n" +
+                "              <URL>../tmp/ca002056-e3f6-4c81-8c9f-00ca218330c4/1739460469_43eb</URL>\n" +
+                "              <SYSTEM name=\"HASH\" value=\"2c3bcaf41fbabf8ff2e236c7580893ec\"/>\n" +
+                "              <META name=\"Type\" value=\"TEXT (4003)\"/>\n" +
+                "              <META name=\"title/document_title\" value=\"/some-uri.xml\"/>\n" +
+                "              <SYSTEM name=\"DeterminedLanguage\" value=\"default\"/>" +
+                "</STRUCTUREDDOCUMENT></response>\n";
+
+            return mockSingleArticleResponse.getBytes();
+        }
+
+        @Override
         public Document classifyArticles(byte[] multiArticleDocumentBytes) {
             timesInvoked++;
             return mockResponse;

@@ -3,6 +3,8 @@
  */
 package com.marklogic.spark.core.classifier;
 
+import com.marklogic.spark.core.DocumentInputs;
+
 import java.io.Closeable;
 import java.util.List;
 
@@ -11,12 +13,14 @@ import java.util.List;
  */
 public interface TextClassifier extends Closeable {
 
+    void classifyDocument(DocumentInputs inputs);
+
     /**
      * Classify the text in each object, with the classification being added to each associated object.
      *
      * @param classifiableContents
      */
-    void classifyText(List<ClassifiableContent> classifiableContents);
+    void classifyChunks(List<ClassifiableContent> classifiableContents);
 
     /**
      * Abstraction to hide whether a document is being classified or an individual chunk is being classified. For the

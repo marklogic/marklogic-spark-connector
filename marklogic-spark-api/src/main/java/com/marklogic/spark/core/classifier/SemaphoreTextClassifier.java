@@ -5,6 +5,7 @@ package com.marklogic.spark.core.classifier;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.dom.DOMHelper;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -50,7 +51,14 @@ class SemaphoreTextClassifier implements TextClassifier {
     }
 
     @Override
-    public void classifyText(List<ClassifiableContent> classifiableContents) {
+    public void classifyDocument(DocumentInputs inputs) {
+        byte[] content = inputs.getContentAsBytes();
+        byte[] classification = multiArticleClassifier.classifyDocument(content, inputs.getInitialUri());
+        inputs.setDocumentClassification(classification);
+    }
+
+    @Override
+    public void classifyChunks(List<ClassifiableContent> classifiableContents) {
         List<ClassifiableContent> batch = new ArrayList<>();
         for (ClassifiableContent content : classifiableContents) {
             batch.add(content);
@@ -68,7 +76,7 @@ class SemaphoreTextClassifier implements TextClassifier {
         if (SEMAPHORE_LOGGER.isDebugEnabled()) {
             SEMAPHORE_LOGGER.debug("Invoking classifier with content count: {}", contentBatch.size());
         }
-        
+
         Document doc = buildMultiArticleRequest(contentBatch);
         byte[] documentBytes = convertNodeIntoBytes(doc);
 
