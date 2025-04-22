@@ -4,10 +4,10 @@
 package com.marklogic.spark.core;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.marklogic.client.document.ContentDescriptor;
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.client.io.marker.BufferableHandle;
+import com.marklogic.spark.ConnectorException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,37 +44,33 @@ public class DocumentInputs {
     public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                           DocumentMetadataHandle initialMetadata, String graph) {
         this.initialUri = initialUri;
-        this.content = content;
+        setContent(content);
         this.columnValuesForUriTemplate = columnValuesForUriTemplate;
         this.initialMetadata = initialMetadata;
         this.graph = graph;
     }
 
-    public void overrideContent(AbstractWriteHandle modifiedContent) {
-        // For when chunks have been selected.
-        this.content = modifiedContent;
+    private void setContent(AbstractWriteHandle content) {
+        if (content != null && !(content instanceof BufferableHandle)) {
+            // This should only ever happen via a programming error. The intent is to ensure that getContentAsBytes
+            // will work for any content handle. Ideally, the Java Client would just have something like a
+            // BufferableWriteHandle to avoid this kind of stuff.
+            throw new ConnectorException("System error; content must be a BufferableHandle.");
+        }
+        this.content = content;
     }
 
-    /**
-     * For the 1.3 release, we don't yet support "single article" mode where a binary can be submitted to Semaphore.
-     * Everything is "multi article" which requires storing text from a document in an XML document that is sent to
-     * Semaphore. This method helps avoid errors where a raw binary could be inserted into the XML document and cause
-     * parse errors.
-     *
-     * @return
-     */
-    public boolean hasClassifiableText() {
-        if (extractedText != null && !extractedText.trim().isEmpty()) {
-            return true;
-        }
+    public void overrideContent(AbstractWriteHandle modifiedContent) {
+        // For when chunks have been selected.
+        setContent(modifiedContent);
+    }
 
-        if (content instanceof ContentDescriptor) {
-            ContentDescriptor contentDescriptor = (ContentDescriptor) this.content;
-            Format format = contentDescriptor.getFormat();
-            return Format.XML.equals(format) || Format.JSON.equals(format) || Format.TEXT.equals(format);
-        }
+    public byte[] getContentAsBytes() {
+        return content != null ? ((BufferableHandle) content).toBuffer() : null;
+    }
 
-        return false;
+    public AbstractWriteHandle getContent() {
+        return content;
     }
 
     public void addChunkClassification(byte[] classification) {
@@ -93,10 +89,6 @@ public class DocumentInputs {
 
     public String getInitialUri() {
         return initialUri;
-    }
-
-    public AbstractWriteHandle getContent() {
-        return content;
     }
 
     public JsonNode getColumnValuesForUriTemplate() {

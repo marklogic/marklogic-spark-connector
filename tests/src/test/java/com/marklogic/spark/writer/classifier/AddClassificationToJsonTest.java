@@ -29,7 +29,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
         assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("SYSTEM"));
+        assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
         assertTrue(doc.get("chunks").get(0).get("classification").has("SYSTEM"));
     }
 
@@ -50,7 +50,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
         assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("SYSTEM"));
+        assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
 
         doc = readJsonDocument("/split-test.json-chunks-1.json");
         assertTrue(doc.get("chunks").get(0).get("classification").has("SYSTEM"));
@@ -85,7 +85,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
         assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertTrue(doc.get("classification").has("SYSTEM"));
+        assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
         assertFalse(doc.has("chunks"));
     }
 

@@ -31,7 +31,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
         doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element",
             "/root/model:chunks/model:chunk[1]/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",
-            "/root/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
+            "/root/model:classification/model:STRUCTUREDDOCUMENT/model:SYSTEM[@name = 'DeterminedLanguage']");
     }
 
     @Test
@@ -48,7 +48,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",
-            "/root/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
+            "/root/model:classification/model:STRUCTUREDDOCUMENT/model:SYSTEM[@name = 'DeterminedLanguage']");
 
         doc = readXmlDocument("/split-test.xml-chunks-1.xml");
         doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element",
@@ -79,7 +79,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",
-            "/root/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
+            "/root/model:classification/model:STRUCTUREDDOCUMENT/model:SYSTEM[@name = 'DeterminedLanguage']");
     }
 
     private DataFrameWriter readAndStartWrite() {

@@ -3,7 +3,6 @@
  */
 package com.marklogic.spark.core.extraction;
 
-import com.marklogic.client.io.BytesHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
@@ -26,8 +25,11 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public Optional<ExtractionResult> extractText(DocumentInputs inputs) {
-        BytesHandle content = (BytesHandle) inputs.getContent();
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(content.get())) {
+        if (inputs.getContent() == null) {
+            return Optional.empty();
+        }
+
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(inputs.getContentAsBytes())) {
             Metadata metadata = new Metadata();
             String extractedText = tika.parseToString(stream, metadata);
             // Retain the order of these while dropping known keys that we know are just noise.

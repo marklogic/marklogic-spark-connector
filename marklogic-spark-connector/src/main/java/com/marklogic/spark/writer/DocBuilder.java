@@ -156,8 +156,8 @@ public class DocBuilder {
                 documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
             }
             Document classificationXml = documentBuilder.parse(new ByteArrayInputStream(classification));
-            NodeList articleChildNodes = classificationXml.getElementsByTagName("ARTICLE").item(0).getChildNodes();
             Node classificationNode = document.createElementNS(Util.DEFAULT_XML_NAMESPACE, "classification");
+            NodeList articleChildNodes = classificationXml.getDocumentElement().getChildNodes();
             for (int i = 0; i < articleChildNodes.getLength(); i++) {
                 Node importedChildNode = document.importNode(articleChildNodes.item(i), true);
                 classificationNode.appendChild(importedChildNode);

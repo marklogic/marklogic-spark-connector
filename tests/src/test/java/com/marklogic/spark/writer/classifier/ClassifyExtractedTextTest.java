@@ -93,7 +93,8 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             JsonNode doc = readJsonDocument(chunkUri);
             assertEquals(1, doc.get("chunks").size());
             JsonNode chunk = doc.get("chunks").get(0);
-            verifyJsonHasClassification(chunk);
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
         }
     }
 
@@ -137,14 +138,13 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
         startReadAndWrite()
             .option(Options.WRITE_EXTRACTED_TEXT, false)
             .option(Options.WRITE_COLLECTIONS, "binary")
-            .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extracted-text")
-            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
             .mode(SaveMode.Append)
             .save();
 
-        assertCollectionSize("binary", 1);
-        assertCollectionSize("No extracted text document should have been written since the document passed to the " +
-            "classifier contains a binary with format=BINARY and has no extracted text.", "extracted-text", 0);
+        assertCollectionSize("No error should be thrown when a binary document is classified but there's no where " +
+                "to store the response - i.e. the user didn't extract text and didn't split text either. A warning " +
+                "should be logged instead as the connector was not able to store the classification response.",
+            "binary", 1);
     }
 
     private DataFrameWriter<Row> startReadAndWrite() {
@@ -164,20 +164,15 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
         JsonNode doc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
         assertTrue(doc.has("extracted-metadata"));
         assertEquals("application/pdf", doc.get("extracted-metadata").get("Content-Type").asText());
-        verifyJsonHasClassification(doc);
+        assertTrue(doc.has("classification"));
+        assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
         return doc;
-    }
-
-    private void verifyJsonHasClassification(JsonNode node) {
-        assertTrue(node.has("classification"));
-        assertTrue(node.get("classification").has("SYSTEM"));
     }
 
     private XmlNode verifyExtractedXmlDocumentHasMetadataAndClassification() {
         XmlNode doc = readXmlDocument("/aaa/arch.pdf-extracted-text.xml");
         doc.assertElementValue("/model:root/model:extracted-metadata/model:Content-Type", "application/pdf");
-        doc.assertElementExists("/model:root/model:classification/model:SYSTEM[@name = 'DeterminedLanguage']");
-        doc.assertElementExists("/model:root/model:classification/model:SYSTEM[@name = 'LanguageGuessed']");
+        doc.assertElementExists("/model:root/model:classification/model:STRUCTUREDDOCUMENT/model:SYSTEM[@name = 'DeterminedLanguage']");
         return doc;
     }
 }

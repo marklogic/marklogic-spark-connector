@@ -3,10 +3,7 @@
  */
 package com.marklogic.spark.core;
 
-import com.marklogic.client.impl.HandleAccessor;
-import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.StringHandle;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.ChunkSelector;
@@ -55,7 +52,7 @@ public class DocumentPipeline implements Closeable {
      */
     public void processDocuments(List<DocumentInputs> inputs) {
         if (textExtractor != null) {
-            inputs.stream().filter(input -> input.getContent() instanceof BytesHandle).forEach(this::extractText);
+            inputs.stream().forEach(this::extractText);
         }
 
         if (textSplitter != null) {
@@ -74,10 +71,8 @@ public class DocumentPipeline implements Closeable {
     private void classifyText(List<DocumentInputs> inputs) {
         List<TextClassifier.ClassifiableContent> contents = new ArrayList<>();
         for (DocumentInputs input : inputs) {
-            if (!input.hasClassifiableText()) {
-                Util.MAIN_LOGGER.warn("Skipping classification for document with URI {} because it has no classifiable text", input.getInitialUri());
-            } else {
-                contents.add(new ClassifiableDocument(input));
+            if (input.getContent() != null) {
+                textClassifier.classifyDocument(input);
             }
             if (input.getChunks() != null) {
                 for (int i = 0; i < input.getChunks().size(); i++) {
@@ -86,7 +81,7 @@ public class DocumentPipeline implements Closeable {
             }
         }
 
-        textClassifier.classifyText(contents);
+        textClassifier.classifyChunks(contents);
     }
 
     private void addEmbeddings(List<DocumentInputs> inputs) {
@@ -131,24 +126,6 @@ public class DocumentPipeline implements Closeable {
         @Override
         public void addEmbedding(float[] embedding) {
             inputs.addEmbedding(embedding);
-        }
-    }
-
-    private static class ClassifiableDocument implements TextClassifier.ClassifiableContent {
-        private final DocumentInputs documentInputs;
-
-        private ClassifiableDocument(DocumentInputs documentInputs) {
-            this.documentInputs = documentInputs;
-        }
-
-        @Override
-        public String getTextToClassify() {
-            return documentInputs.getExtractedText() != null ? documentInputs.getExtractedText() : HandleAccessor.contentAsString(documentInputs.getContent());
-        }
-
-        @Override
-        public void addClassification(byte[] classification) {
-            documentInputs.setDocumentClassification(classification);
         }
     }
 
