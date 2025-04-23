@@ -23,7 +23,11 @@ dependencies {
   // Needed for classifying documents via Semaphore.
   api ("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
+    exclude module: "icu4j"
   }
+  // The S4 CS client depends on a very old version of icu4j - 4.0.1 - which has a critical security vulnerability.
+  // Bumping up to the latest version, which has worked correctly via manual testing.
+  implementation "com.ibm.icu:icu4j:77.1"
   api ("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
   }
