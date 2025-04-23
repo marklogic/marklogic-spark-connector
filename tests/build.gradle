@@ -35,9 +35,9 @@ dependencies {
     exclude module: "marklogic-client-api"
   }
 
-  testImplementation "ch.qos.logback:logback-classic:1.3.14"
-  testImplementation "org.slf4j:jcl-over-slf4j:2.0.13"
-  testImplementation "org.skyscreamer:jsonassert:1.5.1"
+  testImplementation "ch.qos.logback:logback-classic:1.5.18"
+  testImplementation "org.slf4j:jcl-over-slf4j:2.0.17"
+  testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
   testImplementation "org.apache.tika:tika-parser-pdf-module:${tikaVersion}"
