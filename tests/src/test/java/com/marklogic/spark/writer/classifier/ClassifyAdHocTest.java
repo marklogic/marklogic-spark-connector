@@ -20,8 +20,8 @@ class ClassifyAdHocTest extends AbstractIntegrationTest {
     )
     @Test
     void adHocTest() {
-        // Change this before running to a valid file that you wish to test with.
-        String path = "/path/to/your/file.pdf";
+        // Change this as needed.
+        String path = "src/test/resources/extraction-files/armstrong_neil.pdf";
 
         newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
