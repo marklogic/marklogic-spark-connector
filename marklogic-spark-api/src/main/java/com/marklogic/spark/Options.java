@@ -118,6 +118,17 @@ public abstract class Options {
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";
     public static final String WRITE_PERMISSIONS = "spark.marklogic.write.permissions";
     public static final String WRITE_JSON_ROOT_NAME = "spark.marklogic.write.jsonRootName";
+
+    /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_METADATA_VALUES_PREFIX = "spark.marklogic.write.metadataValues.";
+
+    /**
+     * @since 2.6.0
+     */
+    public static final String WRITE_DOCUMENT_PROPERTIES_PREFIX = "spark.marklogic.write.documentProperties.";
+
     public static final String WRITE_TEMPORAL_COLLECTION = "spark.marklogic.write.temporalCollection";
     public static final String WRITE_URI_PREFIX = "spark.marklogic.write.uriPrefix";
     public static final String WRITE_URI_REPLACE = "spark.marklogic.write.uriReplace";
