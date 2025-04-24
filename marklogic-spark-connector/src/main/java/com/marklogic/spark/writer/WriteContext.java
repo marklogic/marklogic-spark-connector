@@ -22,6 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -144,7 +145,25 @@ public class WriteContext extends ContextSupport {
             configureStandardUriMaker(factory);
         }
 
+        forEachOptionStartingWith(Options.WRITE_METADATA_VALUES_PREFIX, factory::withMetadataValue);
+        forEachOptionStartingWith(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX, factory::withDocumentProperty);
+
         return factory.newDocBuilder();
+    }
+
+    /**
+     * Convenience for finding and processing dynamic options that start with a certain prefix.
+     *
+     * @param prefix
+     * @param consumer processes the name (the option minus the prefix) and the option value
+     */
+    private void forEachOptionStartingWith(final String prefix, BiConsumer<String, String> consumer) {
+        getProperties().entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(prefix))
+            .forEach(entry -> {
+                String name = entry.getKey().substring(prefix.length());
+                consumer.accept(name, entry.getValue());
+            });
     }
 
     public Format getDocumentFormat() {

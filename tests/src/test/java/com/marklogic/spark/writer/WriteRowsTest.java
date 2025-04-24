@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.PermissionsTester;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
@@ -140,6 +141,34 @@ class WriteRowsTest extends AbstractWriteTest {
     }
 
     @Test
+    void metadataValues() {
+        newWriter()
+            .option(Options.WRITE_METADATA_VALUES_PREFIX + "color", "red")
+            .option(Options.WRITE_METADATA_VALUES_PREFIX + "size", "medium")
+            .save();
+
+        String firstUri = verifyTwoHundredDocsWereWritten();
+        DocumentMetadataHandle.DocumentMetadataValues values = readMetadata(firstUri).getMetadataValues();
+        assertEquals(2, values.size());
+        assertEquals("red", values.get("color"));
+        assertEquals("medium", values.get("size"));
+    }
+
+    @Test
+    void documentProperties() {
+        newWriter()
+            .option(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX + "color", "red")
+            .option(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX + "size", "medium")
+            .save();
+
+        String firstUri = verifyTwoHundredDocsWereWritten();
+        DocumentMetadataHandle.DocumentProperties props = readMetadata(firstUri).getProperties();
+        assertEquals(2, props.size());
+        assertEquals("red", props.get("color"));
+        assertEquals("medium", props.get("size"));
+    }
+
+    @Test
     void invalidThreadCount() {
         DataFrameWriter writer = newWriter().option(Options.WRITE_THREAD_COUNT, 0);
         ConnectorException ex = assertThrows(ConnectorException.class, writer::save);
@@ -257,7 +286,7 @@ class WriteRowsTest extends AbstractWriteTest {
         verifyNoDocsWereWritten();
     }
 
-    private void verifyTwoHundredDocsWereWritten() {
+    private String verifyTwoHundredDocsWereWritten() {
         final int expectedCollectionSize = 200;
         String uri = getUrisInCollection(COLLECTION, expectedCollectionSize).get(0);
         assertTrue(uri.startsWith("/test/"), "URI should start with '/test/' due to uriPrefix option: " + uri);
@@ -270,6 +299,7 @@ class WriteRowsTest extends AbstractWriteTest {
         PermissionsTester perms = readDocumentPermissions(uri);
         perms.assertReadPermissionExists("spark-user-role");
         perms.assertUpdatePermissionExists("spark-user-role");
+        return uri;
     }
 
     private void verifyNoDocsWereWritten() {

@@ -42,6 +42,16 @@ class DocBuilderFactory {
         return this;
     }
 
+    DocBuilderFactory withMetadataValue(String key, String value) {
+        metadata.withMetadataValue(key, value);
+        return this;
+    }
+
+    DocBuilderFactory withDocumentProperty(String name, Object value) {
+        metadata.withProperty(name, value);
+        return this;
+    }
+
     DocBuilderFactory withUriMaker(DocBuilder.UriMaker uriMaker) {
         this.uriMaker = uriMaker;
         return this;
