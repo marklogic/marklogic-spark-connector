@@ -1,4 +1,4 @@
-name: marklogic_spark
+name: docker-tests-marklogic-spark
 
 services:
 

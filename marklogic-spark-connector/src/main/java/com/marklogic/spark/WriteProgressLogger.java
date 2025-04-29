@@ -4,7 +4,6 @@
 package com.marklogic.spark;
 
 import java.io.Serializable;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Handles the progress counter for any operation involving writing to MarkLogic. A Spark job/application can only have
@@ -15,25 +14,17 @@ public class WriteProgressLogger implements Serializable {
 
     static final long serialVersionUID = 1L;
 
-    private static final AtomicLong progressCounter = new AtomicLong(0);
     private static final Object lock = new Object();
-    private static long progressInterval;
-    private static long nextProgressInterval;
-    private static String message;
+    private static ProgressLogger progressLogger;
 
     public static void initialize(long progressInterval, String message) {
-        progressCounter.set(0);
-        WriteProgressLogger.progressInterval = progressInterval;
-        nextProgressInterval = progressInterval;
-        WriteProgressLogger.message = message;
+        progressLogger = new ProgressLogger(progressInterval, message);
     }
 
     public static void logProgressIfNecessary(long itemCount) {
-        if (Util.MAIN_LOGGER.isInfoEnabled() && progressInterval > 0
-            && progressCounter.addAndGet(itemCount) >= nextProgressInterval) {
+        if (Util.MAIN_LOGGER.isInfoEnabled() && progressLogger != null) {
             synchronized (lock) {
-                Util.MAIN_LOGGER.info(message, nextProgressInterval);
-                nextProgressInterval += progressInterval;
+                progressLogger.logProgressIfNecessary(itemCount);
             }
         }
     }
