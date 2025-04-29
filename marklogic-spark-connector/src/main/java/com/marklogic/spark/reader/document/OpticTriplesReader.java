@@ -8,9 +8,11 @@ import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
+import com.marklogic.client.row.RowSet;
 import com.marklogic.client.type.PlanColumn;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -46,6 +48,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     private final long batchSize;
     private long progressCounter;
 
+    private RowSet<RowRecord> currentRowSet;
     private Iterator<RowRecord> currentRowIterator;
 
     public OpticTriplesReader(ForestPartition forestPartition, DocumentContext context) {
@@ -98,7 +101,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
 
     @Override
     public void close() {
-        // Nothing to close.
+        IOUtils.closeQuietly(this.currentRowSet);
     }
 
     private void readNextBatchOfTriples(List<String> uris) {
@@ -112,8 +115,8 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         }
 
         plan = bindDatatypeAndLang(plan);
-
-        currentRowIterator = rowManager.resultRows(plan).iterator();
+        this.currentRowSet = rowManager.resultRows(plan);
+        this.currentRowIterator = this.currentRowSet.iterator();
     }
 
     /**
