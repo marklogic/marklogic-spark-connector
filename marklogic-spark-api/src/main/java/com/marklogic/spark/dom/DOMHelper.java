@@ -26,6 +26,7 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
+import java.util.Objects;
 
 /**
  * Simplifies operations with the Java DOM API.
@@ -55,6 +56,7 @@ public class DOMHelper {
         }
 
         String xml = HandleAccessor.contentAsString(handle);
+        Objects.requireNonNull(xml);
         return parseXmlString(xml, sourceUri);
     }
 

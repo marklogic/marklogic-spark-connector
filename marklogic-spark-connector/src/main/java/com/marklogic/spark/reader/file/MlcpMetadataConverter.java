@@ -17,6 +17,7 @@ import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Handles converting an MLCP metadata document, generated when creating an MLCP archive, into a
@@ -54,6 +55,9 @@ class MlcpMetadataConverter {
         Element format = mlcpMetadata.getChild("format");
         if (format != null && format.getChild("name") != null) {
             String value = format.getChildText("name");
+            if (value == null) {
+                return null;
+            }
             // MLCP uses "text()" for an unknown reason.
             if (value.startsWith("text")) {
                 value = "text";
@@ -137,6 +141,7 @@ class MlcpMetadataConverter {
         Element perms = this.saxBuilder.build(new StringReader(permString.getText())).getRootElement();
         for (Element perm : perms.getChildren("permission", SECURITY_NAMESPACE)) {
             String capability = perm.getChildText("capability", SECURITY_NAMESPACE);
+            Objects.requireNonNull(capability);
             DocumentMetadataHandle.Capability cap = DocumentMetadataHandle.Capability.valueOf(capability.toUpperCase());
             String roleId = perm.getChildText("role-id", SECURITY_NAMESPACE);
             String roleName = roleIdsToNames.get(roleId);

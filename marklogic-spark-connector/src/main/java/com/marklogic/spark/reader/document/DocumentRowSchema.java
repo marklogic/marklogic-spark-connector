@@ -11,6 +11,8 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
+import java.util.Objects;
+
 public abstract class DocumentRowSchema {
 
     public static final StructType SCHEMA = new StructType()
@@ -71,9 +73,11 @@ public abstract class DocumentRowSchema {
     private static void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(3)) {
             ArrayData collections = row.getArray(3);
+            Objects.requireNonNull(collections);
             for (int i = 0; i < collections.numElements(); i++) {
-                String value = collections.get(i, DataTypes.StringType).toString();
-                metadata.getCollections().add(value);
+                Object value = collections.get(i, DataTypes.StringType);
+                Objects.requireNonNull(value);
+                metadata.getCollections().add(value.toString());
             }
         }
     }
@@ -81,6 +85,7 @@ public abstract class DocumentRowSchema {
     private static void addPermissionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(4)) {
             MapData permissions = row.getMap(4);
+            Objects.requireNonNull(permissions);
             ArrayData roles = permissions.keyArray();
             ArrayData capabilities = permissions.valueArray();
             for (int i = 0; i < roles.numElements(); i++) {
@@ -109,6 +114,7 @@ public abstract class DocumentRowSchema {
     private static void addMetadataValuesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(7)) {
             MapData properties = row.getMap(7);
+            Objects.requireNonNull(properties);
             ArrayData keys = properties.keyArray();
             ArrayData values = properties.valueArray();
             for (int i = 0; i < keys.numElements(); i++) {

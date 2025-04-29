@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Reads triples from a batch of document URIs via the Optic fromTriples data accessor.
@@ -105,6 +106,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     }
 
     private void readNextBatchOfTriples(List<String> uris) {
+        Objects.requireNonNull(uris);
         PlanBuilder.ModifyPlan plan = op
             .fromTriples(op.pattern(op.col("subject"), op.col("predicate"), op.col(OBJECT_COLUMN), op.graphCol(GRAPH_COLUMN)))
             .where(op.cts.documentQuery(op.xs.stringSeq(uris.toArray(new String[0]))));

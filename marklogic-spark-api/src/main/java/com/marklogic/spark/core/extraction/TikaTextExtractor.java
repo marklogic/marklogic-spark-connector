@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class TikaTextExtractor implements TextExtractor {
@@ -29,6 +30,7 @@ public class TikaTextExtractor implements TextExtractor {
             return Optional.empty();
         }
 
+        Objects.requireNonNull(inputs.getContentAsBytes());
         try (ByteArrayInputStream stream = new ByteArrayInputStream(inputs.getContentAsBytes())) {
             Metadata metadata = new Metadata();
             String extractedText = tika.parseToString(stream, metadata);

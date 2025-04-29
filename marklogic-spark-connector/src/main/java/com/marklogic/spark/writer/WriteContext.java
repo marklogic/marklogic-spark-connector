@@ -18,10 +18,7 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -174,6 +171,9 @@ public class WriteContext extends ContextSupport {
             } catch (IllegalArgumentException e) {
                 String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
                 String optionAlias = getOptionNameForMessage(Options.WRITE_DOCUMENT_TYPE);
+                if (optionAlias == null) {
+                    optionAlias = Options.WRITE_DOCUMENT_TYPE;
+                }
                 throw new ConnectorException(String.format(message, optionAlias, value));
             }
         }
@@ -190,6 +190,7 @@ public class WriteContext extends ContextSupport {
         final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
         if (hasOption(deprecatedOption)) {
             String value = getStringOption(deprecatedOption);
+            Objects.requireNonNull(value);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {
