@@ -71,7 +71,7 @@ class PlanAnalyzer {
         return new PlanAnalysis(plan, Arrays.asList(PlanAnalysis.Partition.singleCallPartition()), 0);
     }
 
-    static List<PlanAnalysis.Partition> calculatePartitions(long rowCount, long userPartitionCount, long userBatchSize) {
+    static List<PlanAnalysis.Partition> calculatePartitions(final long rowCount, final long userPartitionCount, final long userBatchSize) {
         final long batchSize = userBatchSize > 0 ? userBatchSize : Long.parseLong("-1");
 
         long bucketsPerPartition = calculateBucketsPerPartition(rowCount, userPartitionCount, batchSize);
@@ -91,8 +91,9 @@ class PlanAnalyzer {
      * The number of buckets per partition is always the same, as the random distribution of row IDs means we don't know
      * how rows will be distributed across buckets.
      */
-    private static long calculateBucketsPerPartition(long rowCount, long userPartitionCount, long batchSize) {
-        double rawBucketsPerPartition = ((double) rowCount / userPartitionCount) / batchSize;
+    private static long calculateBucketsPerPartition(final long rowCount, final long userPartitionCount, final long batchSize) {
+        final long divisor = userPartitionCount == 0 ? 1 : userPartitionCount;
+        double rawBucketsPerPartition = ((double) rowCount / divisor) / batchSize;
         // ceil is used here to ensure that given the batch size, a bucket typically will not have more rows in it
         // than the batch size. That's not guaranteed, as row IDs could have a distribution such that many rows are in
         // one particular bucket.

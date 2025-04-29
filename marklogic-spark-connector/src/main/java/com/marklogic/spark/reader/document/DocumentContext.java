@@ -11,6 +11,7 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 
 import java.util.Map;
+import java.util.Objects;
 
 class DocumentContext extends ContextSupport {
 
@@ -42,7 +43,9 @@ class DocumentContext extends ContextSupport {
         // REST API allows commas in URIs, but not newlines, so that's safe to use as a delimiter.
         String[] uris = null;
         if (hasOption(Options.READ_DOCUMENTS_URIS)) {
-            uris = getStringOption(Options.READ_DOCUMENTS_URIS).split("\n");
+            String value = getStringOption(Options.READ_DOCUMENTS_URIS);
+            Objects.requireNonNull(value);
+            uris = value.split("\n");
         }
         return new SearchQueryBuilder()
             .withStringQuery(props.get(Options.READ_DOCUMENTS_STRING_QUERY))
@@ -61,7 +64,9 @@ class DocumentContext extends ContextSupport {
         final Map<String, String> props = getProperties();
         String[] uris = null;
         if (hasOption(Options.READ_TRIPLES_URIS)) {
-            uris = getStringOption(Options.READ_TRIPLES_URIS).split("\n");
+            String value = getStringOption(Options.READ_TRIPLES_URIS);
+            Objects.requireNonNull(value);
+            uris = value.split("\n");
         }
         return new SearchQueryBuilder()
             .withStringQuery(props.get(Options.READ_TRIPLES_STRING_QUERY))

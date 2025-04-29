@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Knows how to write the value in the "content" column of a row conforming to our {@code DocumentRowSchema}. Supports
@@ -73,7 +74,9 @@ class ContentWriter {
         } else if (this.encoding != null) {
             // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
             // specified encoding (as opposed to new String(bytes, encoding)).
-            outputStream.write(new String(row.getBinary(1)).getBytes(this.encoding));
+            String content = new String(row.getBinary(1));
+            Objects.requireNonNull(content);
+            outputStream.write(content.getBytes(this.encoding));
         } else {
             outputStream.write(row.getBinary(1));
         }
@@ -146,6 +149,7 @@ class ContentWriter {
             if (this.encoding != null) {
                 outputStream.write(new String(content).getBytes(this.encoding));
             } else {
+                Objects.requireNonNull(content);
                 outputStream.write(content);
             }
         }

@@ -32,6 +32,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.GZIPOutputStream;
 
 class RdfFileWriter implements DataWriter<InternalRow> {
@@ -126,6 +127,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         }
 
         this.stream = StreamRDFWriter.getWriterStream(this.outputStream, langAndExtension.lang);
+        Objects.requireNonNull(this.stream);
         this.stream.start();
     }
 

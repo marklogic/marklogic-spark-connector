@@ -287,7 +287,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      */
     private synchronized void writeFailedDocumentToArchive(DocumentWriteOperation failedDoc) {
         AbstractWriteHandle contentHandle = failedDoc.getContent();
-        byte[] content = ByteArray.concat(HandleAccessor.contentAsString(contentHandle).getBytes());
+        final String stringContent = HandleAccessor.contentAsString(contentHandle);
+        Objects.requireNonNull(stringContent);
+        byte[] content = ByteArray.concat(stringContent.getBytes());
 
         GenericInternalRow row = new DocumentRowBuilder(new ArrayList<>())
             .withUri(failedDoc.getUri()).withContent(content)
