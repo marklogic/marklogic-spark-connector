@@ -26,7 +26,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -47,7 +47,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -82,7 +82,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -98,7 +98,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertEquals(4, doc.get("chunks").size(), "Expecting 4 chunks based on max chunk size of 500.");

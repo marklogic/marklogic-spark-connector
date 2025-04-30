@@ -73,7 +73,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertEquals(3, TextClassifierFactory.MockTextClassifier.getTimesInvoked(), "The mock classifier should " +
+        assertEquals(3, TextClassifierFactory.MockSemaphoreProxy.getTimesInvoked(), "The mock classifier should " +
             "have been invoked 3 times - with 10, 10, and then 8 articles.");
     }
 
