@@ -15,12 +15,12 @@ import java.io.IOException;
  * Not threadsafe, as the config of the underlying client is modified. This is fine in the context of the connector,
  * where it is only used by a single Spark data writer.
  */
-class SemaphoreMultiArticleClassifier implements MultiArticleClassifier {
+class SemaphoreProxyImpl implements SemaphoreProxy {
 
     private final ClassificationClient classificationClient;
     private long totalDurationOfCalls;
 
-    public SemaphoreMultiArticleClassifier(ClassificationConfiguration config) {
+    public SemaphoreProxyImpl(ClassificationConfiguration config) {
         this.classificationClient = new ClassificationClient();
         config.setMultiArticle(true);
         classificationClient.setClassificationConfiguration(config);

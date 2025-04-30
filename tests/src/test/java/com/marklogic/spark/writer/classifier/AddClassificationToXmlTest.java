@@ -25,7 +25,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element",
@@ -44,7 +44,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",
@@ -75,7 +75,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockTextClassifier.isClosed());
+        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",

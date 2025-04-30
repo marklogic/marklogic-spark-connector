@@ -34,15 +34,15 @@ class SemaphoreTextClassifier implements TextClassifier {
 
     static final Logger SEMAPHORE_LOGGER = LoggerFactory.getLogger("com.marklogic.semaphore.classifier");
 
-    private final MultiArticleClassifier multiArticleClassifier;
+    private final SemaphoreProxy semaphoreProxy;
     private final DOMHelper domHelper;
     private final Transformer transformer;
     private final String encoding;
     private final XPathExpression articleExpression;
     private final int batchSize;
 
-    SemaphoreTextClassifier(MultiArticleClassifier multiArticleClassifier, String encoding, int batchSize) {
-        this.multiArticleClassifier = multiArticleClassifier;
+    SemaphoreTextClassifier(SemaphoreProxy semaphoreProxy, String encoding, int batchSize) {
+        this.semaphoreProxy = semaphoreProxy;
         this.domHelper = new DOMHelper(null);
         this.transformer = newTransformer();
         this.encoding = encoding;
@@ -53,7 +53,7 @@ class SemaphoreTextClassifier implements TextClassifier {
     @Override
     public void classifyDocument(DocumentInputs inputs) {
         byte[] content = inputs.getContentAsBytes();
-        byte[] classification = multiArticleClassifier.classifyDocument(content, inputs.getInitialUri());
+        byte[] classification = semaphoreProxy.classifyDocument(content, inputs.getInitialUri());
         inputs.setDocumentClassification(classification);
     }
 
@@ -82,7 +82,7 @@ class SemaphoreTextClassifier implements TextClassifier {
 
         Document structuredDocument;
         try {
-            structuredDocument = multiArticleClassifier.classifyArticles(documentBytes);
+            structuredDocument = semaphoreProxy.classifyArticles(documentBytes);
         } catch (Exception e) {
             throw new ConnectorException(String.format("Unable to classify content, cause: %s", e.getMessage()), e);
         }
@@ -96,7 +96,7 @@ class SemaphoreTextClassifier implements TextClassifier {
 
     @Override
     public void close() throws IOException {
-        IOUtils.closeQuietly(multiArticleClassifier);
+        IOUtils.closeQuietly(semaphoreProxy);
     }
 
     private Document buildMultiArticleRequest(List<ClassifiableContent> classifiableContents) {

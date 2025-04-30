@@ -24,17 +24,17 @@ public abstract class TextClassifierFactory {
     private static final String MOCK_CLASSIFIER_OPTION = "spark.marklogic.testing.mockClassifierResponse";
 
     public static TextClassifier newTextClassifier(Context context) {
-        MultiArticleClassifier multiArticleClassifier = null;
+        SemaphoreProxy semaphoreProxy = null;
         final String host = context.getStringOption(Options.WRITE_CLASSIFIER_HOST);
 
         if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
             String mockResponse = context.getStringOption(MOCK_CLASSIFIER_OPTION);
             assert mockResponse != null;
-            multiArticleClassifier = new MockTextClassifier(mockResponse);
+            semaphoreProxy = new MockSemaphoreProxy(mockResponse);
         } else if (host != null && !host.trim().isEmpty()) {
             try {
                 ClassificationConfiguration config = buildClassificationConfiguration(context);
-                multiArticleClassifier = new SemaphoreMultiArticleClassifier(config);
+                semaphoreProxy = new SemaphoreProxyImpl(config);
             } catch (ConnectorException ex) {
                 throw ex;
             } catch (Exception e) {
@@ -43,11 +43,11 @@ public abstract class TextClassifierFactory {
             }
         }
 
-        if (multiArticleClassifier != null) {
+        if (semaphoreProxy != null) {
             // We may need a dedicated encoding for this
             String encoding = context.getStringOption(Options.READ_FILES_ENCODING, "UTF-8");
             int batchSize = context.getIntOption(Options.WRITE_CLASSIFIER_BATCH_SIZE, 20, 1);
-            return new SemaphoreTextClassifier(multiArticleClassifier, encoding, batchSize);
+            return new SemaphoreTextClassifier(semaphoreProxy, encoding, batchSize);
         }
         return null;
     }
@@ -133,7 +133,7 @@ public abstract class TextClassifierFactory {
 
     // Sonar doesn't like static assignments in this class, but this class is only used as a mock for testing.
     @SuppressWarnings("java:S2696")
-    public static class MockTextClassifier implements MultiArticleClassifier {
+    public static class MockSemaphoreProxy implements SemaphoreProxy {
 
         private final Document mockResponse;
         private static int timesInvoked;
@@ -141,7 +141,7 @@ public abstract class TextClassifierFactory {
 
         // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
         @SuppressWarnings("java:S3010")
-        private MockTextClassifier(String mockResponse) {
+        private MockSemaphoreProxy(String mockResponse) {
             this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
             timesInvoked = 0;
         }

@@ -9,11 +9,10 @@ import java.io.Closeable;
 
 /**
  * Provides an abstraction over the call to Semaphore that sends a document containing multiple articles and
- * then receives a document containing a classification for each article.
- *
- * This will get a new name soon now that its scope is more than just classifying a set of articles.
+ * then receives a document containing a classification for each article. Main use case is to enable easy mocking of
+ * the calls to Semaphore for testing purposes.
  */
-public interface MultiArticleClassifier extends Closeable {
+public interface SemaphoreProxy extends Closeable {
 
     byte[] classifyDocument(byte[] content, String uri);
 
