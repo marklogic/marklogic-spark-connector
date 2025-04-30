@@ -166,6 +166,7 @@ public class WriteContext extends ContextSupport {
     public Format getDocumentFormat() {
         if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
             String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
+            Objects.requireNonNull(value);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {

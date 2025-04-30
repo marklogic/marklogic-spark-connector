@@ -26,6 +26,7 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public Optional<ExtractionResult> extractText(DocumentInputs inputs) {
+        Objects.requireNonNull(inputs);
         if (inputs.getContent() == null) {
             return Optional.empty();
         }
