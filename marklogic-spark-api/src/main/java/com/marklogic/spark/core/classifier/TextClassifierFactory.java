@@ -14,11 +14,11 @@ import com.smartlogic.cloud.CloudException;
 import com.smartlogic.cloud.TokenFetcher;
 import org.w3c.dom.Document;
 
+import javax.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 public abstract class TextClassifierFactory {
 
@@ -141,8 +141,7 @@ public abstract class TextClassifierFactory {
 
         // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
         @SuppressWarnings("java:S3010")
-        private MockSemaphoreProxy(String mockResponse) {
-            Objects.requireNonNull(mockResponse);
+        private MockSemaphoreProxy(@NotNull String mockResponse) {
             this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
             timesInvoked = 0;
         }

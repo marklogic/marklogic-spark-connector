@@ -20,12 +20,12 @@ import org.apache.spark.unsafe.types.UTF8String;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Reads triples from a batch of document URIs via the Optic fromTriples data accessor.
@@ -105,15 +105,13 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         IOUtils.closeQuietly(this.currentRowSet);
     }
 
-    private void readNextBatchOfTriples(List<String> uris) {
-        Objects.requireNonNull(uris);
+    private void readNextBatchOfTriples(@NotNull List<String> uris) {
         PlanBuilder.ModifyPlan plan = op
             .fromTriples(op.pattern(op.col("subject"), op.col("predicate"), op.col(OBJECT_COLUMN), op.graphCol(GRAPH_COLUMN)))
             .where(op.cts.documentQuery(op.xs.stringSeq(uris.toArray(new String[0]))));
 
         if (documentContext.hasOption(Options.READ_TRIPLES_GRAPHS)) {
-            String value = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS);
-            Objects.requireNonNull(value);
+            @NotNull String value = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS);
             String[] graphs = value.split(",");
             plan = plan.where(op.in(op.col(GRAPH_COLUMN), op.xs.stringSeq(graphs)));
         }

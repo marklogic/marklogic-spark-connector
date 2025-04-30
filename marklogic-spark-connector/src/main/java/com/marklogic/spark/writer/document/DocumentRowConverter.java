@@ -23,11 +23,11 @@ import com.marklogic.spark.writer.file.GzipFileIterator;
 import com.marklogic.spark.writer.file.ZipFileIterator;
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import javax.validation.constraints.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Iterator;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -98,8 +98,7 @@ public class DocumentRowConverter implements RowConverter {
      * instance of {@code FileContext}, which is used to stream the file into a {@code InputStreamHandle}.
      */
     private Iterator<DocumentInputs> streamContentFromFile(String filePath, InternalRow row) {
-        byte[] bytes = row.getBinary(1);
-        Objects.requireNonNull(bytes);
+        @NotNull byte[] bytes = row.getBinary(1);
         FileContext fileContext;
         try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             fileContext = (FileContext) ois.readObject();

@@ -13,10 +13,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -173,8 +173,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
         metadata.fromBuffer(metadataBytes);
 
         // We still do this to get the stream ready to read the next entry.
-        ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
-        Objects.requireNonNull(contentZipEntry);
+        @NotNull ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
         DocumentRowBuilder rowBuilder = new DocumentRowBuilder(this.metadataCategories)
             .withUri(contentZipEntry.getName())
             .withMetadata(metadata);

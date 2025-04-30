@@ -12,6 +12,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
+import javax.validation.constraints.NotNull;
 import javax.xml.XMLConstants;
 import javax.xml.namespace.NamespaceContext;
 import javax.xml.parsers.DocumentBuilder;
@@ -26,7 +27,6 @@ import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
-import java.util.Objects;
 
 /**
  * Simplifies operations with the Java DOM API.
@@ -55,8 +55,7 @@ public class DOMHelper {
             return ((DOMHandle) handle).get();
         }
 
-        String xml = HandleAccessor.contentAsString(handle);
-        Objects.requireNonNull(xml);
+        @NotNull String xml = HandleAccessor.contentAsString(handle);
         return parseXmlString(xml, sourceUri);
     }
 

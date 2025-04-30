@@ -26,7 +26,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Knows how to write the value in the "content" column of a row conforming to our {@code DocumentRowSchema}. Supports
@@ -72,14 +71,15 @@ class ContentWriter {
             streamDocumentToFile(row, outputStream);
         } else if (this.prettyPrint) {
             prettyPrintContent(row, outputStream);
-        } else if (this.encoding != null) {
-            // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
-            // specified encoding (as opposed to new String(bytes, encoding)).
-            byte[] binary = row.getBinary(1);
-            Objects.requireNonNull(binary);
-            outputStream.write(new String(binary).getBytes(this.encoding));
         } else {
-            outputStream.write(row.getBinary(1));
+            @NotNull byte[] binary = row.getBinary(1);
+            if (this.encoding != null) {
+                // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
+                // specified encoding (as opposed to new String(bytes, encoding)).
+                outputStream.write(new String(binary).getBytes(this.encoding));
+            } else {
+                outputStream.write(row.getBinary(1));
+            }
         }
     }
 
@@ -140,8 +140,7 @@ class ContentWriter {
     }
 
     private void prettyPrintContent(InternalRow row, @NotNull OutputStream outputStream) throws IOException {
-        final byte[] content = row.getBinary(1);
-        Objects.requireNonNull(content);
+        @NotNull final byte[] content = row.getBinary(1);
         final String format = row.isNullAt(2) ? null : row.getString(2);
         if ("JSON".equalsIgnoreCase(format)) {
             prettyPrintJson(content, outputStream);

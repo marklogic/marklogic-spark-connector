@@ -11,7 +11,7 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public abstract class DocumentRowSchema {
 
@@ -72,11 +72,9 @@ public abstract class DocumentRowSchema {
 
     private static void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(3)) {
-            ArrayData collections = row.getArray(3);
-            Objects.requireNonNull(collections);
+            @NotNull ArrayData collections = row.getArray(3);
             for (int i = 0; i < collections.numElements(); i++) {
-                Object value = collections.get(i, DataTypes.StringType);
-                Objects.requireNonNull(value);
+                @NotNull Object value = collections.get(i, DataTypes.StringType);
                 metadata.getCollections().add(value.toString());
             }
         }
@@ -84,18 +82,15 @@ public abstract class DocumentRowSchema {
 
     private static void addPermissionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(4)) {
-            MapData permissions = row.getMap(4);
-            Objects.requireNonNull(permissions);
+            @NotNull MapData permissions = row.getMap(4);
             ArrayData roles = permissions.keyArray();
             ArrayData capabilities = permissions.valueArray();
             for (int i = 0; i < roles.numElements(); i++) {
-                Object role = roles.get(i, DataTypes.StringType);
-                Objects.requireNonNull(role);
+                @NotNull Object role = roles.get(i, DataTypes.StringType);
                 ArrayData caps = capabilities.getArray(i);
                 DocumentMetadataHandle.Capability[] capArray = new DocumentMetadataHandle.Capability[caps.numElements()];
                 for (int j = 0; j < caps.numElements(); j++) {
-                    Object value = caps.get(j, DataTypes.StringType);
-                    Objects.requireNonNull(value);
+                    @NotNull Object value = caps.get(j, DataTypes.StringType);
                     capArray[j] = DocumentMetadataHandle.Capability.valueOf(value.toString().toUpperCase());
                 }
                 metadata.getPermissions().add(role.toString(), capArray);
@@ -115,8 +110,7 @@ public abstract class DocumentRowSchema {
 
     private static void addMetadataValuesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(7)) {
-            MapData properties = row.getMap(7);
-            Objects.requireNonNull(properties);
+            @NotNull MapData properties = row.getMap(7);
             ArrayData keys = properties.keyArray();
             ArrayData values = properties.valueArray();
             for (int i = 0; i < keys.numElements(); i++) {

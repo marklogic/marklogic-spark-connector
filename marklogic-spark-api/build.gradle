@@ -11,8 +11,12 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  // This is compileOnly as Spark will provide its own copy.
+  // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+
+  // Used for null-checks; Spark should provide its own copy at runtime as well, but this is included just in case
+  // a particular Spark runtime doesn't include this.
+  implementation "jakarta.validation:jakarta.validation-api:2.0.2"
 
   // For logging.
   implementation "org.slf4j:jcl-over-slf4j:2.0.13"

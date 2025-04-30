@@ -23,8 +23,8 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -117,8 +117,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         DocumentRecord document = this.currentDocumentPage.next();
         DocumentRowBuilder builder = new DocumentRowBuilder(requestedMetadata).withUri(document.getUri());
         if (this.contentWasRequested) {
-            BytesHandle content = document.getContent(new BytesHandle());
-            Objects.requireNonNull(content);
+            @NotNull BytesHandle content = document.getContent(new BytesHandle());
             builder.withContent(content.get());
             builder.withFormat(document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString());
         }

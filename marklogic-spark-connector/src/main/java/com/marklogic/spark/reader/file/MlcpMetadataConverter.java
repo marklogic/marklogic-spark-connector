@@ -11,13 +11,13 @@ import org.jdom2.JDOMException;
 import org.jdom2.Namespace;
 import org.jdom2.input.SAXBuilder;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Handles converting an MLCP metadata document, generated when creating an MLCP archive, into a
@@ -140,8 +140,7 @@ class MlcpMetadataConverter {
 
         Element perms = this.saxBuilder.build(new StringReader(permString.getText())).getRootElement();
         for (Element perm : perms.getChildren("permission", SECURITY_NAMESPACE)) {
-            String capability = perm.getChildText("capability", SECURITY_NAMESPACE);
-            Objects.requireNonNull(capability);
+            @NotNull String capability = perm.getChildText("capability", SECURITY_NAMESPACE);
             DocumentMetadataHandle.Capability cap = DocumentMetadataHandle.Capability.valueOf(capability.toUpperCase());
             String roleId = perm.getChildText("role-id", SECURITY_NAMESPACE);
             String roleName = roleIdsToNames.get(roleId);

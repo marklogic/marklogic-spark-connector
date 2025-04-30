@@ -18,7 +18,11 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.*;
+import javax.validation.constraints.NotNull;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
@@ -165,8 +169,7 @@ public class WriteContext extends ContextSupport {
 
     public Format getDocumentFormat() {
         if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
-            String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
-            Objects.requireNonNull(value);
+            @NotNull String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -190,8 +193,7 @@ public class WriteContext extends ContextSupport {
     Format getDeprecatedFileRowsDocumentFormat() {
         final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
         if (hasOption(deprecatedOption)) {
-            String value = getStringOption(deprecatedOption);
-            Objects.requireNonNull(value);
+            @NotNull String value = getStringOption(deprecatedOption);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {

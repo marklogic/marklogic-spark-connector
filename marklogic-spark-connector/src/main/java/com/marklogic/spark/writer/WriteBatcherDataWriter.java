@@ -35,6 +35,7 @@ import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.Closeable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -287,8 +288,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      */
     private synchronized void writeFailedDocumentToArchive(DocumentWriteOperation failedDoc) {
         AbstractWriteHandle contentHandle = failedDoc.getContent();
-        final String stringContent = HandleAccessor.contentAsString(contentHandle);
-        Objects.requireNonNull(stringContent);
+        @NotNull final String stringContent = HandleAccessor.contentAsString(contentHandle);
         byte[] content = ByteArray.concat(stringContent.getBytes());
 
         GenericInternalRow row = new DocumentRowBuilder(new ArrayList<>())
