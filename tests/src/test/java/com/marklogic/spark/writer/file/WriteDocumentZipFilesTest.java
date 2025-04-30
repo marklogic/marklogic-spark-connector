@@ -12,7 +12,6 @@ import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -46,7 +45,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void customPartitionCount(@TempDir @NotNull Path tempDir) throws IOException {
+    void customPartitionCount(@TempDir Path tempDir) throws IOException {
         readAuthorCollection()
             .repartition(5)
             .write()
@@ -64,7 +63,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void opaqueURI(@TempDir @NotNull Path tempDir) throws IOException {
+    void opaqueURI(@TempDir Path tempDir) throws IOException {
         final String uri = "org:example/123.xml";
 
         getDatabaseClient().newXMLDocumentManager().write(uri,

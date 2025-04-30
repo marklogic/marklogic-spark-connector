@@ -72,14 +72,16 @@ class ContentWriter {
             streamDocumentToFile(row, outputStream);
         } else if (this.prettyPrint) {
             prettyPrintContent(row, outputStream);
-        } else if (this.encoding != null) {
-            // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
-            // specified encoding (as opposed to new String(bytes, encoding)).
+        } else {
             byte[] binary = row.getBinary(1);
             Objects.requireNonNull(binary);
-            outputStream.write(new String(binary).getBytes(this.encoding));
-        } else {
-            outputStream.write(row.getBinary(1));
+            if (this.encoding != null) {
+                // We know the string from MarkLogic is UTF-8, so we use getBytes to convert it to the user's
+                // specified encoding (as opposed to new String(bytes, encoding)).
+                outputStream.write(new String(binary).getBytes(this.encoding));
+            } else {
+                outputStream.write(binary);
+            }
         }
     }
 
