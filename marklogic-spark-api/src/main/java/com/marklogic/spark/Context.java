@@ -5,6 +5,7 @@ package com.marklogic.spark;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 public class Context implements Serializable {
@@ -49,7 +50,7 @@ public class Context implements Serializable {
     public final boolean getBooleanOption(String option, boolean defaultValue) {
         if (hasOption(option)) {
             String value = getStringOption(option);
-            assert value != null;
+            Objects.requireNonNull(value);
             return Boolean.parseBoolean(value);
         }
         return defaultValue;

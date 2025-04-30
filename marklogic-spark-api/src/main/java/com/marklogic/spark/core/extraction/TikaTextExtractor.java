@@ -15,7 +15,6 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public class TikaTextExtractor implements TextExtractor {
@@ -26,13 +25,12 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public Optional<ExtractionResult> extractText(DocumentInputs inputs) {
-        Objects.requireNonNull(inputs);
-        if (inputs.getContent() == null) {
+        byte[] contentAsBytes = inputs.getContentAsBytes();
+        if (contentAsBytes == null) {
             return Optional.empty();
         }
 
-        Objects.requireNonNull(inputs.getContentAsBytes());
-        try (ByteArrayInputStream stream = new ByteArrayInputStream(inputs.getContentAsBytes())) {
+        try (ByteArrayInputStream stream = new ByteArrayInputStream(contentAsBytes)) {
             Metadata metadata = new Metadata();
             String extractedText = tika.parseToString(stream, metadata);
             // Retain the order of these while dropping known keys that we know are just noise.
