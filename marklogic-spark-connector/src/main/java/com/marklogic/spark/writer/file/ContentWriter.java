@@ -67,6 +67,7 @@ class ContentWriter {
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
+        Objects.requireNonNull(outputStream);
         if (this.isStreamingFiles) {
             streamDocumentToFile(row, outputStream);
         } else if (this.prettyPrint) {
@@ -146,10 +147,10 @@ class ContentWriter {
         } else if ("XML".equalsIgnoreCase(format)) {
             prettyPrintXml(content, outputStream);
         } else {
+            Objects.requireNonNull(content);
             if (this.encoding != null) {
                 outputStream.write(new String(content).getBytes(this.encoding));
             } else {
-                Objects.requireNonNull(content);
                 outputStream.write(content);
             }
         }

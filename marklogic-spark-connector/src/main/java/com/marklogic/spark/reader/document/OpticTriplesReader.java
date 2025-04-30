@@ -112,7 +112,9 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
             .where(op.cts.documentQuery(op.xs.stringSeq(uris.toArray(new String[0]))));
 
         if (documentContext.hasOption(Options.READ_TRIPLES_GRAPHS)) {
-            String[] graphs = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS).split(",");
+            String value = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS);
+            Objects.requireNonNull(value);
+            String[] graphs = value.split(",");
             plan = plan.where(op.in(op.col(GRAPH_COLUMN), op.xs.stringSeq(graphs)));
         }
 

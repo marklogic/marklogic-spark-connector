@@ -93,8 +93,9 @@ public abstract class DocumentRowSchema {
                 ArrayData caps = capabilities.getArray(i);
                 DocumentMetadataHandle.Capability[] capArray = new DocumentMetadataHandle.Capability[caps.numElements()];
                 for (int j = 0; j < caps.numElements(); j++) {
-                    String value = caps.get(j, DataTypes.StringType).toString();
-                    capArray[j] = DocumentMetadataHandle.Capability.valueOf(value.toUpperCase());
+                    Object value = caps.get(j, DataTypes.StringType);
+                    Objects.requireNonNull(value);
+                    capArray[j] = DocumentMetadataHandle.Capability.valueOf(value.toString().toUpperCase());
                 }
                 metadata.getPermissions().add(role, capArray);
             }
@@ -118,9 +119,11 @@ public abstract class DocumentRowSchema {
             ArrayData keys = properties.keyArray();
             ArrayData values = properties.valueArray();
             for (int i = 0; i < keys.numElements(); i++) {
-                String key = keys.get(i, DataTypes.StringType).toString();
-                String value = values.get(i, DataTypes.StringType).toString();
-                metadata.getMetadataValues().put(key, value);
+                Object key = keys.get(i, DataTypes.StringType);
+                Object value = values.get(i, DataTypes.StringType);
+                if (key != null && value != null) {
+                    metadata.getMetadataValues().put(key.toString(), value.toString());
+                }
             }
         }
     }
