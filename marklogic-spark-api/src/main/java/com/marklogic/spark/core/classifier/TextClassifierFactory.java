@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class TextClassifierFactory {
 
@@ -29,7 +30,6 @@ public abstract class TextClassifierFactory {
 
         if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
             String mockResponse = context.getStringOption(MOCK_CLASSIFIER_OPTION);
-            assert mockResponse != null;
             semaphoreProxy = new MockSemaphoreProxy(mockResponse);
         } else if (host != null && !host.trim().isEmpty()) {
             try {
@@ -39,7 +39,7 @@ public abstract class TextClassifierFactory {
                 throw ex;
             } catch (Exception e) {
                 throw new ConnectorException(String.format("Unable to configure a connection for classifying text; cause: %s",
-                        e.getMessage()), e);
+                    e.getMessage()), e);
             }
         }
 
@@ -116,7 +116,7 @@ public abstract class TextClassifierFactory {
                 return new URL(protocol, host, port, tokenEndpoint);
             } catch (MalformedURLException e) {
                 throw new ConnectorException(String.format("Unable to construct token URL with endpoint: %s; cause: %s",
-                        tokenEndpoint, e.getMessage()), e);
+                    tokenEndpoint, e.getMessage()), e);
             }
         }
 
@@ -142,6 +142,7 @@ public abstract class TextClassifierFactory {
         // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
         @SuppressWarnings("java:S3010")
         private MockSemaphoreProxy(String mockResponse) {
+            Objects.requireNonNull(mockResponse);
             this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
             timesInvoked = 0;
         }
@@ -157,14 +158,14 @@ public abstract class TextClassifierFactory {
         @Override
         public byte[] classifyDocument(byte[] content, String uri) {
             String mockSingleArticleResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                    "            <response>\n" +
-                    "              <STRUCTUREDDOCUMENT>\n" +
-                    "              <URL>../tmp/ca002056-e3f6-4c81-8c9f-00ca218330c4/1739460469_43eb</URL>\n" +
-                    "              <SYSTEM name=\"HASH\" value=\"2c3bcaf41fbabf8ff2e236c7580893ec\"/>\n" +
-                    "              <META name=\"Type\" value=\"TEXT (4003)\"/>\n" +
-                    "              <META name=\"title/document_title\" value=\"/some-uri.xml\"/>\n" +
-                    "              <SYSTEM name=\"DeterminedLanguage\" value=\"default\"/>" +
-                    "</STRUCTUREDDOCUMENT></response>\n";
+                "            <response>\n" +
+                "              <STRUCTUREDDOCUMENT>\n" +
+                "              <URL>../tmp/ca002056-e3f6-4c81-8c9f-00ca218330c4/1739460469_43eb</URL>\n" +
+                "              <SYSTEM name=\"HASH\" value=\"2c3bcaf41fbabf8ff2e236c7580893ec\"/>\n" +
+                "              <META name=\"Type\" value=\"TEXT (4003)\"/>\n" +
+                "              <META name=\"title/document_title\" value=\"/some-uri.xml\"/>\n" +
+                "              <SYSTEM name=\"DeterminedLanguage\" value=\"default\"/>" +
+                "</STRUCTUREDDOCUMENT></response>\n";
 
             return mockSingleArticleResponse.getBytes();
         }

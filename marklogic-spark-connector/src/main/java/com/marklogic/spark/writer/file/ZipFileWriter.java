@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -60,8 +61,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         if (contentWriter == null) {
             createZipFileAndContentWriter();
         }
-        assert zipOutputStream != null;
-        assert contentWriter != null;
+        Objects.requireNonNull(zipOutputStream);
+        Objects.requireNonNull(contentWriter);
 
         final String uri = row.getString(0);
         final String entryName = FileUtil.makePathFromDocumentURI(uri);
