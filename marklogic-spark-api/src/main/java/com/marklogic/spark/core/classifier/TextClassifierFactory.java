@@ -11,6 +11,7 @@ import com.marklogic.spark.Util;
 import com.marklogic.spark.dom.DOMHelper;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
 import com.smartlogic.cloud.CloudException;
+import com.smartlogic.cloud.Token;
 import com.smartlogic.cloud.TokenFetcher;
 import org.w3c.dom.Document;
 
@@ -19,6 +20,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public abstract class TextClassifierFactory {
 
@@ -65,7 +67,9 @@ public abstract class TextClassifierFactory {
     private static String generateApiToken(ConfigHelper configHelper, String apiKey) {
         TokenFetcher tokenFetcher = new TokenFetcher(configHelper.getTokenUrl().toString(), apiKey);
         try {
-            return tokenFetcher.getAccessToken().getAccess_token();
+            Token token = tokenFetcher.getAccessToken();
+            Objects.requireNonNull(token);
+            return token.getAccess_token();
         } catch (CloudException e) {
             throw new ConnectorException(String.format("Unable to generate token for classifying text; cause: %s", e.getMessage()), e);
         }
