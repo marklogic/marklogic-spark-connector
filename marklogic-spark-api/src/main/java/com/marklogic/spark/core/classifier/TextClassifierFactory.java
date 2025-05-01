@@ -32,6 +32,7 @@ public abstract class TextClassifierFactory {
 
         if (context.hasOption(MOCK_CLASSIFIER_OPTION)) {
             String mockResponse = context.getStringOption(MOCK_CLASSIFIER_OPTION);
+            Objects.requireNonNull(mockResponse);
             semaphoreProxy = new MockSemaphoreProxy(mockResponse);
         } else if (host != null && !host.trim().isEmpty()) {
             try {
