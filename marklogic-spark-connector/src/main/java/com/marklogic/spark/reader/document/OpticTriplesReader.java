@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -8,9 +8,11 @@ import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
+import com.marklogic.client.row.RowSet;
 import com.marklogic.client.type.PlanColumn;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -18,11 +20,13 @@ import org.apache.spark.unsafe.types.UTF8String;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Reads triples from a batch of document URIs via the Optic fromTriples data accessor.
@@ -46,6 +50,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     private final long batchSize;
     private long progressCounter;
 
+    private RowSet<RowRecord> currentRowSet;
     private Iterator<RowRecord> currentRowIterator;
 
     public OpticTriplesReader(ForestPartition forestPartition, DocumentContext context) {
@@ -98,22 +103,24 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
 
     @Override
     public void close() {
-        // Nothing to close.
+        IOUtils.closeQuietly(this.currentRowSet);
     }
 
-    private void readNextBatchOfTriples(List<String> uris) {
+    private void readNextBatchOfTriples(@NotNull List<String> uris) {
         PlanBuilder.ModifyPlan plan = op
             .fromTriples(op.pattern(op.col("subject"), op.col("predicate"), op.col(OBJECT_COLUMN), op.graphCol(GRAPH_COLUMN)))
             .where(op.cts.documentQuery(op.xs.stringSeq(uris.toArray(new String[0]))));
 
         if (documentContext.hasOption(Options.READ_TRIPLES_GRAPHS)) {
-            String[] graphs = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS).split(",");
+            String value = documentContext.getStringOption(Options.READ_TRIPLES_GRAPHS);
+            Objects.requireNonNull(value);
+            String[] graphs = value.split(",");
             plan = plan.where(op.in(op.col(GRAPH_COLUMN), op.xs.stringSeq(graphs)));
         }
 
         plan = bindDatatypeAndLang(plan);
-
-        currentRowIterator = rowManager.resultRows(plan).iterator();
+        this.currentRowSet = rowManager.resultRows(plan);
+        this.currentRowIterator = this.currentRowSet.iterator();
     }
 
     /**
@@ -148,7 +155,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         if (this.graphBaseIri != null && isGraphRelative(value)) {
             value = this.graphBaseIri + value;
         }
-        return value != null && value.trim().length() > 0 ? UTF8String.fromString(value) : null;
+        return value != null && !value.trim().isEmpty() ? UTF8String.fromString(value) : null;
     }
 
     private boolean isGraphRelative(String value) {
@@ -162,6 +169,6 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
 
     private UTF8String getString(RowRecord row, String column) {
         String value = row.getString(column);
-        return value != null && value.trim().length() > 0 ? UTF8String.fromString(value) : null;
+        return value != null && !value.trim().isEmpty() ? UTF8String.fromString(value) : null;
     }
 }

@@ -1,10 +1,10 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.rdf;
 
 import com.marklogic.client.extra.jdom.JDOMHandle;
-import com.marklogic.spark.writer.DocBuilder;
+import com.marklogic.spark.core.DocumentInputs;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.jdom2.Document;
 import org.jdom2.Element;
@@ -52,9 +52,9 @@ class TriplesDocument {
         return tripleCount >= TRIPLES_PER_DOCUMENT;
     }
 
-    DocBuilder.DocumentInputs buildDocument() {
+    DocumentInputs buildDocument() {
         JDOMHandle content = new JDOMHandle(document);
         String uri = String.format("/triplestore/%s.xml", UUID.randomUUID());
-        return new DocBuilder.DocumentInputs(uri, content, null, null, graph);
+        return new DocumentInputs(uri, content, null, null, graph);
     }
 }

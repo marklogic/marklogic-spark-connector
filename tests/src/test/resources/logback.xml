@@ -1,0 +1,44 @@
+<configuration>
+
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
+
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <root level="WARN">
+    <appender-ref ref="STDOUT"/>
+  </root>
+
+  <logger name="com.marklogic.client" level="WARN" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <!-- Set to ERROR so that the somewhat-ugly WARN level messages are suppressed. Users will still see them unless
+  they do likewise. Our connector then logs more-pleasant ERROR messages when a batch fails. -->
+  <logger name="com.marklogic.client.datamovement.impl.WriteBatcherImpl" level="ERROR" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <logger name="com.marklogic.spark" level="DEBUG" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <logger name="com.marklogic.semaphore.classifier" level="DEBUG" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <logger name="org.apache.hadoop" level="ERROR" additivity="false">
+    <appender-ref ref="STDOUT"/>
+  </logger>
+
+  <!--
+  Jena has a fix to ignore "Unrecognized property - 'http://javax.xml.XMLConstants/property/accessExternalDTD'" errors
+  from Woodstox, but Hadoop has its own version of Woodstox that Jena isn't aware of. The error is not relevant for
+  a user, so it's suppressed here by not giving the specific Jena question an appender.
+  -->
+  <logger name="org.apache.jena.util.JenaXMLInput" level="ERROR" additivity="false"/>
+
+</configuration>

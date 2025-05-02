@@ -1,4 +1,5 @@
 plugins {
+  id 'net.saliman.properties' version '1.5.2'
   id "java-library"
   id "org.sonarqube" version "6.0.1.5171"
 }
@@ -12,15 +13,25 @@ sonar {
 }
 
 subprojects {
+  apply plugin: "net.saliman.properties"
   apply plugin: "java-library"
   apply plugin: "jacoco"
 
   group = "com.marklogic"
-  version "2.5.1"
+  version "2.6.0"
 
+  // Defaults to the Java 11 toolchain. Overridden by subprojects that require Java 17.
+  // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
-    sourceCompatibility = 11
-    targetCompatibility = 11
+    toolchain {
+      languageVersion = JavaLanguageVersion.of(11)
+    }
+  }
+
+  // Allows for quickly identifying compiler warnings.
+  tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+    options.deprecation = true
   }
 
   repositories {
@@ -32,11 +43,36 @@ subprojects {
   }
 
   configurations.all {
-    // Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can lead to this
-    // issue - https://www.slf4j.org/codes.html#StaticLoggerBinder .
-    resolutionStrategy {
-      force "org.slf4j:slf4j-api:2.0.13"
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      // Added after upgrading langchain4j to 1.0.0-beta2, which brought Jackson 2.18.2 in.
+      if (details.requested.group.startsWith('com.fasterxml.jackson')) {
+        details.useVersion '2.15.2'
+        details.because 'Need to match the version used by Spark.'
+      }
+      if (details.requested.group.equals("org.slf4j")) {
+        details.useVersion "2.0.16"
+        details.because "Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can " +
+          "lead to this issue - https://www.slf4j.org/codes.html#StaticLoggerBinder."
+      }
+      if (details.requested.group.equals("org.apache.logging.log4j")) {
+        details.useVersion "2.24.3"
+        details.because "Need to match the version used by Apache Tika. Spark uses 2.20.0 but automated tests confirm " +
+          "that Spark seems fine with 2.24.3."
+      }
     }
+
+    resolutionStrategy {
+      // Avoids a classpath conflict between Spark and the tika-parser-microsoft-module. Tika needs a
+      // more recent version and Spark (and Jena as well) both seems fine with this (as they should be per semver).
+      force "org.apache.commons:commons-compress:1.27.1"
+    }
+
+    // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
+    exclude module: "rocksdbjni"
+  }
+
+  task allDeps(type: DependencyReportTask) {
+    description = "Allows for generating dependency reports for every subproject in a single task."
   }
 
   test {
@@ -46,6 +82,9 @@ subprojects {
       events 'started', 'passed', 'skipped', 'failed'
       exceptionFormat 'full'
     }
+    environment "SEMAPHORE_API_KEY", semaphoreApiKey
+    environment "SEMAPHORE_HOST", semaphoreHost
+    environment "SEMAPHORE_PATH", semaphorePath
   }
 
   // See https://docs.gradle.org/current/userguide/jacoco_plugin.html .
@@ -53,6 +92,19 @@ subprojects {
     dependsOn test
     reports {
       xml.required = true
+    }
+  }
+
+  // Turning off coverage verification, as we haven't figured out how to configure Sonar correctly to pick up the jacoco
+  // report from the "code-coverage-report" subproject and accurately capture coverage.
+  // See https://docs.gradle.org/current/userguide/jacoco_plugin.html#sec:jacoco_report_violation_rules
+  jacocoTestCoverageVerification {
+    violationRules {
+      rule {
+        limit {
+          minimum = 0.0
+        }
+      }
     }
   }
 }

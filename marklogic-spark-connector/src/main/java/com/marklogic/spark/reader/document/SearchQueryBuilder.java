@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -97,7 +97,7 @@ public class SearchQueryBuilder {
 
         if (uris != null && uris.length > 0) {
             StructuredQueryDefinition urisQuery = queryManager.newStructuredQueryBuilder().document(this.uris);
-            if (stringQuery != null && stringQuery.length() > 0) {
+            if (stringQuery != null && !stringQuery.isEmpty()) {
                 urisQuery.withCriteria(stringQuery);
             }
             if (this.query != null) {
@@ -116,14 +116,14 @@ public class SearchQueryBuilder {
             // serialized CTS, and combined - but the REST API does not. Thus, a RawStructuredQueryDefinition will work
             // for any of the 3 query types.
             RawStructuredQueryDefinition queryDefinition = queryManager.newRawStructuredQueryDefinition(queryHandle);
-            if (stringQuery != null && stringQuery.length() > 0) {
+            if (stringQuery != null && !stringQuery.isEmpty()) {
                 queryDefinition.setCriteria(stringQuery);
             }
             return queryDefinition;
         }
 
         StringQueryDefinition queryDefinition = queryManager.newStringDefinition();
-        if (this.stringQuery != null && stringQuery.length() > 0) {
+        if (this.stringQuery != null && !stringQuery.isEmpty()) {
             queryDefinition.setCriteria(this.stringQuery);
         }
 
@@ -135,24 +135,24 @@ public class SearchQueryBuilder {
     }
 
     private void applyCommonQueryConfig(QueryDefinition queryDefinition) {
-        if (optionsName != null && optionsName.trim().length() > 0) {
+        if (optionsName != null && !optionsName.trim().isEmpty()) {
             queryDefinition.setOptionsName(optionsName);
         }
         if (collections != null && collections.length > 0) {
             queryDefinition.setCollections(this.collections);
         }
-        if (directory != null && directory.trim().length() > 0) {
+        if (directory != null && !directory.trim().isEmpty()) {
             queryDefinition.setDirectory(directory);
         }
-        if (transformName != null && transformName.trim().length() > 0) {
+        if (transformName != null && !transformName.trim().isEmpty()) {
             queryDefinition.setResponseTransform(buildServerTransform());
         }
     }
 
     private ServerTransform buildServerTransform() {
         ServerTransform transform = new ServerTransform(transformName);
-        if (transformParams != null && transformParams.trim().length() > 0) {
-            String delimiter = transformParamsDelimiter != null && transformParamsDelimiter.trim().length() > 0 ? transformParamsDelimiter : ",";
+        if (transformParams != null && !transformParams.trim().isEmpty()) {
+            String delimiter = transformParamsDelimiter != null && !transformParamsDelimiter.trim().isEmpty() ? transformParamsDelimiter : ",";
             String[] params = transformParams.split(delimiter);
             if (params.length % 2 != 0) {
                 throw new IllegalArgumentException("Transform parameters must have an equal number of parameter names and values: " + transformParams);

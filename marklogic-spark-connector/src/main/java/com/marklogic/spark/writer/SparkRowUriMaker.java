@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -100,7 +100,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         }
 
         String text = node.asText();
-        if (text.trim().length() == 0) {
+        if (text.trim().isEmpty()) {
             throw new ConnectorException(
                 String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
                     expression, uriTemplateValues, uriTemplate

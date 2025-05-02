@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
@@ -121,7 +121,7 @@ public abstract class SchemaInferrer {
     private static void appendIfNotEmpty(JsonNode column, String columnName, StringBuilder builder) {
         if (column.has(columnName)) {
             String value = column.get(columnName).asText();
-            if (value != null && value.trim().length() > 0) {
+            if (value != null && !value.trim().isEmpty()) {
                 builder.append(value).append(".");
             }
         }

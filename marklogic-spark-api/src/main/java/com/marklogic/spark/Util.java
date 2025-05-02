@@ -1,8 +1,15 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.client.extra.jdom.JDOMHandle;
+import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.*;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,9 +24,11 @@ public interface Util {
      */
     Logger MAIN_LOGGER = LoggerFactory.getLogger("com.marklogic.spark");
 
+    String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
+
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
-            .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
+            .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
     }
 
     /**
@@ -70,6 +79,52 @@ public interface Util {
     static String getOptionNameForErrorMessage(String option) {
         ResourceBundle bundle = ResourceBundle.getBundle("marklogic-spark-messages", Locale.getDefault());
         String optionName = bundle.getString(option);
-        return optionName != null && optionName.trim().length() > 0 ? optionName.trim() : option;
+        return optionName != null && !optionName.trim().isEmpty() ? optionName.trim() : option;
+    }
+
+    static Format determineSourceDocumentFormat(AbstractWriteHandle content, String sourceUri) {
+        final String uri = sourceUri != null ? sourceUri : "";
+        if (content instanceof JacksonHandle || uri.endsWith(".json")) {
+            return Format.JSON;
+        }
+        if (content instanceof DOMHandle || content instanceof JDOMHandle || uri.endsWith(".xml")) {
+            return Format.XML;
+        }
+        if (content instanceof BaseHandle) {
+            return ((BaseHandle) content).getFormat();
+        }
+        return null;
+    }
+
+    static JsonNode getJsonFromHandle(AbstractWriteHandle writeHandle) {
+        if (writeHandle instanceof JacksonHandle) {
+            return ((JacksonHandle) writeHandle).get();
+        } else {
+            String json = HandleAccessor.contentAsString(writeHandle);
+            try {
+                return new ObjectMapper().readTree(json);
+            } catch (JsonProcessingException e) {
+                throw new ConnectorException(String.format(
+                    "Unable to read JSON from content handle; cause: %s", e.getMessage()), e);
+            }
+        }
+    }
+
+    static void addPermissionsFromDelimitedString(DocumentMetadataHandle.DocumentPermissions permissions,
+                                                  String rolesAndCapabilities) {
+        // This isn't likely the best home for this class, but it's needed by this module and by the connector to
+        // massage an error message that is meaningful for a Java Client user but not meaningful for a connector
+        // or Flux user.
+        try {
+            permissions.addFromDelimitedString(rolesAndCapabilities);
+        } catch (IllegalArgumentException ex) {
+            String message = ex.getMessage();
+            final String confusingMessageForUser = "No enum constant com.marklogic.client.io.DocumentMetadataHandle.Capability.";
+            if (message != null && message.contains(confusingMessageForUser)) {
+                message = message.replace(confusingMessageForUser, "Not a valid capability: ");
+                throw new ConnectorException(message);
+            }
+            throw ex;
+        }
     }
 }

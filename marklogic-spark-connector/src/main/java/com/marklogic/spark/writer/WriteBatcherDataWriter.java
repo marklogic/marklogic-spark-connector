@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -15,9 +15,13 @@ import com.marklogic.client.io.marker.GenericWriteHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
+import com.marklogic.spark.core.DocumentPipeline;
+import com.marklogic.spark.core.DocumentPipelineFactory;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
+import com.marklogic.spark.writer.document.DocumentRowConverter;
 import com.marklogic.spark.writer.file.ZipFileWriter;
 import com.marklogic.spark.writer.rdf.RdfRowConverter;
 import org.apache.commons.io.IOUtils;
@@ -25,19 +29,16 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.ByteArray;
 import org.apache.spark.util.SerializableConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -64,11 +65,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Only initialized if streaming files.
     private final GenericDocumentManager documentManager;
 
-    private final Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> documentProcessor;
+    private final DocumentPipeline documentPipeline;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
+
+    private final List<DocumentInputs> documentInputsBatch = new ArrayList<>();
+    private final int pipelineBatchSize;
 
     WriteBatcherDataWriter(WriteContext writeContext, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this.writeContext = writeContext;
@@ -78,10 +82,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.rowConverter = determineRowConverter();
         this.isStreamingFiles = writeContext.isStreamingFiles();
         this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
-        this.documentProcessor = DocumentProcessorFactory.buildDocumentProcessor(writeContext);
-        if (this.documentProcessor != null && Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Will use document processor: {}", this.documentProcessor.getClass().getName());
-        }
+        this.documentPipeline = DocumentPipelineFactory.newDocumentPipeline(writeContext);
+        this.pipelineBatchSize = writeContext.getIntOption(Options.WRITE_PIPELINE_BATCH_SIZE, 1, 1);
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -101,17 +103,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     @Override
     public void write(InternalRow row) {
         throwWriteFailureIfExists();
-        buildAndWriteDocuments(rowConverter.convertRow(row));
+        Iterator<DocumentInputs> inputs = rowConverter.convertRow(row);
+        buildDocumentsAndFlushAsNeeded(inputs);
     }
 
     @Override
     public WriterCommitMessage commit() {
         // The RDF row converter may have "pending" rows as it has not yet reached the max number of triples to include
         // in a document. Those are retrieved here.
-        buildAndWriteDocuments(rowConverter.getRemainingDocumentInputs());
+        buildDocumentsAndFlushAsNeeded(rowConverter.getRemainingDocumentInputs());
 
-        flushDocumentProcessor();
+        // May have a batch of documentInputs less than the pipeline batch size, so flush these.
+        processDocumentInputsBatch();
 
+        // Wait for the writeBatcher to finish all writes to MarkLogic.
         this.writeBatcher.flushAndWait();
 
         throwWriteFailureIfExists();
@@ -135,23 +140,38 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
         stopJobAndRelease();
         closeArchiveWriter();
+        IOUtils.closeQuietly(documentPipeline);
     }
 
     /**
-     * Processes the document inputs returned by the RowConverter for a single row. A row can return multiple instances
-     * of document inputs. Each instance is run through the document processor if it's not null, which can produce
-     * additional documents.
+     * "process" = run each set of inputs through the optional document pipeline if necessary. Then convert each
+     * set of inputs into a set of documents and write those to MarkLogic.
+     */
+    private void processDocumentInputsBatch() {
+        if (Util.MAIN_LOGGER.isDebugEnabled() && pipelineBatchSize > 1) {
+            Util.MAIN_LOGGER.debug("Processing batch of documents, count: {}", documentInputsBatch.size());
+        }
+        if (documentPipeline != null) {
+            documentPipeline.processDocuments(documentInputsBatch);
+        }
+        buildAndWriteDocuments(documentInputsBatch);
+        documentInputsBatch.clear();
+    }
+
+    /**
+     * Builds up a batch of document inputs based in the given iterator, which produces inputs based on a single row.
+     * A row can return multiple instances of document inputs. If the size of the inputs batch is that of the pipeline
+     * batch size or greater, flush the batch, which forces the inputs to be converted into real documents and written
+     * to MarkLogic.
      *
      * @param iterator
      */
-    private void buildAndWriteDocuments(Iterator<DocBuilder.DocumentInputs> iterator) {
+    private void buildDocumentsAndFlushAsNeeded(Iterator<DocumentInputs> iterator) {
         try {
             iterator.forEachRemaining(documentInputs -> {
-                DocumentWriteOperation sourceDocument = this.docBuilder.build(documentInputs);
-                if (this.documentProcessor != null) {
-                    this.documentProcessor.apply(sourceDocument).forEachRemaining(this::writeDocument);
-                } else {
-                    writeDocument(sourceDocument);
+                documentInputsBatch.add(documentInputs);
+                if (documentInputsBatch.size() >= pipelineBatchSize) {
+                    processDocumentInputsBatch();
                 }
             });
         } finally {
@@ -163,11 +183,21 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
     }
 
-    private void writeDocument(DocumentWriteOperation writeOp) {
-        if (this.isStreamingFiles) {
-            writeDocumentViaPutOperation(writeOp);
-        } else {
-            this.writeBatcher.add(writeOp);
+    /**
+     * Each {@code DocumentInputs} object can produce many documents to write to MarkLogic.
+     *
+     * @param list
+     */
+    private void buildAndWriteDocuments(List<DocumentInputs> list) {
+        for (DocumentInputs inputs : list) {
+            Collection<DocumentWriteOperation> documents = this.docBuilder.buildDocuments(inputs);
+            for (DocumentWriteOperation document : documents) {
+                if (this.isStreamingFiles) {
+                    writeDocumentViaPutOperation(document);
+                } else {
+                    this.writeBatcher.add(document);
+                }
+            }
         }
     }
 
@@ -181,18 +211,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return this.rowConverter instanceof RdfRowConverter ?
             ((RdfRowConverter) rowConverter).getGraphs() :
             null;
-    }
-
-    /**
-     * A document processor can implement Supplier so that it can batch up documents to be written and then return
-     * any pending documents during the commit operation. This allows for the embedder processor to batch calls to the
-     * embedding model.
-     */
-    private void flushDocumentProcessor() {
-        if (this.documentProcessor instanceof Supplier) {
-            Iterator<DocumentWriteOperation> remainingDocuments = ((Supplier<Iterator<DocumentWriteOperation>>) this.documentProcessor).get();
-            remainingDocuments.forEachRemaining(this::writeDocument);
-        }
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {
@@ -213,9 +231,11 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private RowConverter determineRowConverter() {
         if (writeContext.isUsingFileSchema()) {
             return new FileRowConverter(writeContext);
-        } else if (DocumentRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+        }
+        final StructType schema = writeContext.getSchema();
+        if (DocumentRowSchema.hasDocumentFields(schema)) {
             return new DocumentRowConverter(writeContext);
-        } else if (TripleRowSchema.SCHEMA.equals(writeContext.getSchema())) {
+        } else if (TripleRowSchema.SCHEMA.equals(schema)) {
             return new RdfRowConverter(writeContext);
         }
         return new ArbitraryRowConverter(writeContext);
@@ -267,7 +287,9 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
      */
     private synchronized void writeFailedDocumentToArchive(DocumentWriteOperation failedDoc) {
         AbstractWriteHandle contentHandle = failedDoc.getContent();
-        byte[] content = ByteArray.concat(HandleAccessor.contentAsString(contentHandle).getBytes());
+        final String stringContent = HandleAccessor.contentAsString(contentHandle);
+        Objects.requireNonNull(stringContent);
+        byte[] content = ByteArray.concat(stringContent.getBytes());
 
         GenericInternalRow row = new DocumentRowBuilder(new ArrayList<>())
             .withUri(failedDoc.getUri()).withContent(content)

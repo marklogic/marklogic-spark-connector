@@ -1,23 +1,24 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark;
 
 import java.io.Serializable;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Stream;
 
-public abstract class Context implements Serializable {
+public class Context implements Serializable {
 
     private final Map<String, String> properties;
 
-    protected Context(Map<String, String> properties) {
+    public Context(Map<String, String> properties) {
         this.properties = properties;
     }
 
     public final boolean hasOption(String... options) {
         return Stream.of(options)
-            .anyMatch(option -> properties.get(option) != null && properties.get(option).trim().length() > 0);
+            .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
     }
 
     public final String getStringOption(String option) {
@@ -47,7 +48,12 @@ public abstract class Context implements Serializable {
     }
 
     public final boolean getBooleanOption(String option, boolean defaultValue) {
-        return hasOption(option) ? Boolean.parseBoolean(getStringOption(option)) : defaultValue;
+        if (hasOption(option)) {
+            String value = getStringOption(option);
+            Objects.requireNonNull(value);
+            return Boolean.parseBoolean(value);
+        }
+        return defaultValue;
     }
 
     public final String getOptionNameForMessage(String option) {

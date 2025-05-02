@@ -1,50 +1,48 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.langchain4j.splitter;
 
-import com.marklogic.client.document.DocumentWriteOperation;
-import com.marklogic.langchain4j.MarkLogicLangchainException;
-import dev.langchain4j.data.document.Document;
+import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.core.splitter.TextSelector;
+import com.marklogic.spark.core.splitter.TextSplitter;
+import dev.langchain4j.data.document.DefaultDocument;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 
-import java.util.Iterator;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.Stream;
 
 /**
  * Implements the "splitter" capability by delegating to different objects for selecting text to split; splitting
  * the selected text; and then processing the given chunks
  */
-public class DocumentTextSplitter implements Function<DocumentWriteOperation, Iterator<DocumentWriteOperation>> {
+public class DocumentTextSplitter implements TextSplitter {
 
     private final TextSelector textSelector;
     private final DocumentSplitter documentSplitter;
-    private final ChunkAssembler chunkAssembler;
 
-    public DocumentTextSplitter(TextSelector textSelector, DocumentSplitter documentSplitter, ChunkAssembler chunkAssembler) {
+    public DocumentTextSplitter(TextSelector textSelector, DocumentSplitter documentSplitter) {
         this.textSelector = textSelector;
         this.documentSplitter = documentSplitter;
-        this.chunkAssembler = chunkAssembler;
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> apply(DocumentWriteOperation sourceDocument) {
-        String text = textSelector.selectTextToSplit(sourceDocument);
+    public List<String> split(String sourceUri, AbstractWriteHandle content) {
+        String text = textSelector.selectTextToSplit(content);
         if (text == null || text.trim().isEmpty()) {
-            return Stream.of(sourceDocument).iterator();
+            return new ArrayList<>();
         }
 
         List<TextSegment> textSegments;
         try {
-            textSegments = documentSplitter.split(new Document(text));
+            textSegments = documentSplitter.split(new DefaultDocument(text));
         } catch (Exception e) {
-            throw new MarkLogicLangchainException(String.format("Unable to split document with URI: %s; cause: %s",
-                sourceDocument.getUri(), e.getMessage()), e);
+            throw new ConnectorException(String.format("Unable to split document with URI: %s; cause: %s",
+                sourceUri, e.getMessage()), e);
         }
 
-        return chunkAssembler.assembleChunks(sourceDocument, textSegments);
+        return textSegments.stream().map(TextSegment::text).toList();
     }
 }

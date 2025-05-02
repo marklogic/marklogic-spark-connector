@@ -1,0 +1,8 @@
+<root>
+  <url>https://docs.marklogic.com/guide/java/intro</url>
+  <text>The Java API provides a handle (a kind of adapter) as a uniform interface for content representation. As a result,
+    you can use APIs as different as InputStream and DOM to provide content for one read() or write() method. In
+    addition, you can extend the Java API so you can use the existing read() or write() methods with new APIs that
+    provide useful representations for your content.
+  </text>
+</root>

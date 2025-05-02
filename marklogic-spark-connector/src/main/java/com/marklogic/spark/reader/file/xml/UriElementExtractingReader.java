@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file.xml;
 
@@ -13,7 +13,7 @@ import javax.xml.stream.util.StreamReaderDelegate;
  */
 class UriElementExtractingReader extends StreamReaderDelegate {
 
-    private XMLStreamReader source;
+    private XMLStreamReader reader;
     private final String uriNamespace;
     private final String uriElement;
 
@@ -21,16 +21,16 @@ class UriElementExtractingReader extends StreamReaderDelegate {
     private boolean isReadingUriElement;
     private String uriValue;
 
-    UriElementExtractingReader(XMLStreamReader source, String uriNamespace, String uriElement) {
-        super(source);
-        this.source = source;
+    UriElementExtractingReader(XMLStreamReader reader, String uriNamespace, String uriElement) {
+        super(reader);
+        this.reader = reader;
         this.uriNamespace = uriNamespace;
         this.uriElement = uriElement;
     }
 
     @Override
     public int next() throws XMLStreamException {
-        int value = source.next();
+        int value = super.next();
         if (value == XMLStreamConstants.START_ELEMENT) {
             // Only use the first instance of the URI element that is found.
             if (matchesUriElement() && this.uriValue == null) {
@@ -39,7 +39,7 @@ class UriElementExtractingReader extends StreamReaderDelegate {
             }
         } else if (value == XMLStreamConstants.CHARACTERS) {
             if (this.isReadingUriElement) {
-                this.uriValue += source.getText();
+                this.uriValue += reader.getText();
             }
         } else if (value == XMLStreamConstants.END_ELEMENT && this.isReadingUriElement && matchesUriElement()) {
             this.isReadingUriElement = false;
@@ -48,8 +48,8 @@ class UriElementExtractingReader extends StreamReaderDelegate {
     }
 
     private boolean matchesUriElement() {
-        return source.getLocalName().equals(uriElement) &&
-            (this.uriNamespace == null || this.uriNamespace.equals(source.getNamespaceURI()));
+        return reader.getLocalName().equals(uriElement) &&
+            (this.uriNamespace == null || this.uriNamespace.equals(reader.getNamespaceURI()));
     }
 
     String getUriValue() {

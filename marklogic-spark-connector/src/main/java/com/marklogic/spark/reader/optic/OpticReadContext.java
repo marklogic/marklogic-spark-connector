@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
@@ -50,7 +50,7 @@ public class OpticReadContext extends ContextSupport {
         super(properties);
 
         final String dslQuery = properties.get(Options.READ_OPTIC_QUERY);
-        if (dslQuery == null || dslQuery.trim().length() < 1) {
+        if (dslQuery == null || dslQuery.trim().isEmpty()) {
             throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
 

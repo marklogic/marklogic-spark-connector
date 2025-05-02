@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -50,6 +50,8 @@ public class DocumentTable implements SupportsRead, SupportsWrite {
     }
 
     @Override
+    // Spark has deprecated this, but it must still be implemented.
+    @SuppressWarnings("deprecation")
     public StructType schema() {
         return this.schema;
     }

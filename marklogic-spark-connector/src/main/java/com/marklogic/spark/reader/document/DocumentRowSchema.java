@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -8,7 +8,10 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.util.ArrayData;
 import org.apache.spark.sql.catalyst.util.MapData;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
+
+import java.util.Objects;
 
 public abstract class DocumentRowSchema {
 
@@ -26,6 +29,26 @@ public abstract class DocumentRowSchema {
         .add("metadataValues", DataTypes.createMapType(DataTypes.StringType, DataTypes.StringType));
 
     private DocumentRowSchema() {
+    }
+
+    /**
+     * @param schema
+     * @return true if the given schema has the same set of fields as this class's schema, while allowing for the
+     * given schema to have additional fields as well, such as in the case of extracted text being added to the row.
+     */
+    public static boolean hasDocumentFields(StructType schema) {
+        StructField[] otherFields = schema.fields();
+        final int thisSchemaLength = SCHEMA.length();
+        if (otherFields.length < thisSchemaLength) {
+            return false;
+        }
+        StructField[] myFields = SCHEMA.fields();
+        for (int i = 0; i < thisSchemaLength; i++) {
+            if (!myFields[i].name().equals(otherFields[i].name())) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -50,9 +73,11 @@ public abstract class DocumentRowSchema {
     private static void addCollectionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(3)) {
             ArrayData collections = row.getArray(3);
+            Objects.requireNonNull(collections);
             for (int i = 0; i < collections.numElements(); i++) {
-                String value = collections.get(i, DataTypes.StringType).toString();
-                metadata.getCollections().add(value);
+                Object value = collections.get(i, DataTypes.StringType);
+                Objects.requireNonNull(value);
+                metadata.getCollections().add(value.toString());
             }
         }
     }
@@ -60,17 +85,20 @@ public abstract class DocumentRowSchema {
     private static void addPermissionsToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(4)) {
             MapData permissions = row.getMap(4);
+            Objects.requireNonNull(permissions);
             ArrayData roles = permissions.keyArray();
             ArrayData capabilities = permissions.valueArray();
             for (int i = 0; i < roles.numElements(); i++) {
-                String role = roles.get(i, DataTypes.StringType).toString();
+                Object role = roles.get(i, DataTypes.StringType);
+                Objects.requireNonNull(role);
                 ArrayData caps = capabilities.getArray(i);
                 DocumentMetadataHandle.Capability[] capArray = new DocumentMetadataHandle.Capability[caps.numElements()];
                 for (int j = 0; j < caps.numElements(); j++) {
-                    String value = caps.get(j, DataTypes.StringType).toString();
-                    capArray[j] = DocumentMetadataHandle.Capability.valueOf(value.toUpperCase());
+                    Object value = caps.get(j, DataTypes.StringType);
+                    Objects.requireNonNull(value);
+                    capArray[j] = DocumentMetadataHandle.Capability.valueOf(value.toString().toUpperCase());
                 }
-                metadata.getPermissions().add(role, capArray);
+                metadata.getPermissions().add(role.toString(), capArray);
             }
         }
     }
@@ -88,12 +116,15 @@ public abstract class DocumentRowSchema {
     private static void addMetadataValuesToMetadata(InternalRow row, DocumentMetadataHandle metadata) {
         if (!row.isNullAt(7)) {
             MapData properties = row.getMap(7);
+            Objects.requireNonNull(properties);
             ArrayData keys = properties.keyArray();
             ArrayData values = properties.valueArray();
             for (int i = 0; i < keys.numElements(); i++) {
-                String key = keys.get(i, DataTypes.StringType).toString();
-                String value = values.get(i, DataTypes.StringType).toString();
-                metadata.getMetadataValues().put(key, value);
+                Object key = keys.get(i, DataTypes.StringType);
+                Object value = values.get(i, DataTypes.StringType);
+                if (key != null && value != null) {
+                    metadata.getMetadataValues().put(key.toString(), value.toString());
+                }
             }
         }
     }

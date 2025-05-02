@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
@@ -16,6 +16,7 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -173,7 +174,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
 
         // We still do this to get the stream ready to read the next entry.
         ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
-
+        Objects.requireNonNull(contentZipEntry);
         DocumentRowBuilder rowBuilder = new DocumentRowBuilder(this.metadataCategories)
             .withUri(contentZipEntry.getName())
             .withMetadata(metadata);

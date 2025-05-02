@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -116,7 +117,9 @@ class ForestReader implements PartitionReader<InternalRow> {
         DocumentRecord document = this.currentDocumentPage.next();
         DocumentRowBuilder builder = new DocumentRowBuilder(requestedMetadata).withUri(document.getUri());
         if (this.contentWasRequested) {
-            builder.withContent(document.getContent(new BytesHandle()).get());
+            BytesHandle content = document.getContent(new BytesHandle());
+            Objects.requireNonNull(content);
+            builder.withContent(content.get());
             builder.withFormat(document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString());
         }
         if (!requestedMetadata.isEmpty()) {

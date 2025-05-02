@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -34,12 +34,12 @@ class DocumentFileWriterFactory implements DataWriterFactory {
         }
 
         String compression = this.properties.get(Options.WRITE_FILES_COMPRESSION);
-        if (compression != null && compression.length() > 0) {
+        if (compression != null && !compression.isEmpty()) {
             return "zip".equalsIgnoreCase(compression) ?
                 new ZipFileWriter(properties, hadoopConfiguration, partitionId) :
                 new GzipFileWriter(properties, hadoopConfiguration);
         }
-        
+
         return new DocumentFileWriter(properties, hadoopConfiguration);
     }
 }

@@ -1,0 +1,54 @@
+java {
+  // Must use Java 17 as langchain4j depends on 17+.
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(17)
+  }
+}
+
+dependencies {
+  testImplementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+  testImplementation project(":marklogic-spark-api")
+  testImplementation project(":marklogic-spark-connector")
+
+  // This forces this subproject onto Java 17.
+  testImplementation (project(":marklogic-langchain4j")) {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  // Supports testing the embedder feature.
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.0.0-beta2"
+
+  testImplementation('com.marklogic:ml-app-deployer:5.0.0') {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared by marklogic-spark-connector.
+    exclude module: "marklogic-client-api"
+  }
+
+  testImplementation('com.marklogic:marklogic-junit5:1.5.0') {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+
+    // Use the Java Client declared by marklogic-spark-connector.
+    exclude module: "marklogic-client-api"
+  }
+
+  testImplementation "ch.qos.logback:logback-classic:1.5.18"
+  testImplementation "org.slf4j:jcl-over-slf4j:2.0.17"
+  testImplementation "org.skyscreamer:jsonassert:1.5.3"
+
+  testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
+  testImplementation "org.apache.tika:tika-parser-pdf-module:${tikaVersion}"
+}
+
+test {
+  // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
+  // for an explanation of why these are needed when running the tests on Java 17.
+  jvmArgs = [
+    '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-exports=java.base/sun.util.calendar=ALL-UNNAMED',
+    '--add-exports=java.base/sun.security.action=ALL-UNNAMED'
+  ]
+}

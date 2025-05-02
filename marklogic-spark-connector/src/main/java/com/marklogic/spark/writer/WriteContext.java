@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -13,14 +13,13 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
+import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -127,9 +126,15 @@ public class WriteContext extends ContextSupport {
     }
 
     DocBuilder newDocBuilder() {
+        final String permissions = getStringOption(Options.WRITE_PERMISSIONS);
         DocBuilderFactory factory = new DocBuilderFactory()
-            .withCollections(getProperties().get(Options.WRITE_COLLECTIONS))
-            .withPermissions(getProperties().get(Options.WRITE_PERMISSIONS));
+            .withCollections(getStringOption(Options.WRITE_COLLECTIONS))
+            .withPermissions(permissions)
+            .withExtractedTextDocumentType(getStringOption(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "json"))
+            .withExtractedTextCollections(getStringOption(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS))
+            .withExtractedTextPermissions(getStringOption(Options.WRITE_EXTRACTED_TEXT_PERMISSIONS, permissions))
+            .withExtractedTextDropSource(getBooleanOption(Options.WRITE_EXTRACTED_TEXT_DROP_SOURCE, false))
+            .withChunkAssembler(ChunkAssemblerFactory.makeChunkAssembler(this));
 
         if (hasOption(Options.WRITE_URI_TEMPLATE)) {
             configureTemplateUriMaker(factory);
@@ -137,17 +142,39 @@ public class WriteContext extends ContextSupport {
             configureStandardUriMaker(factory);
         }
 
+        forEachOptionStartingWith(Options.WRITE_METADATA_VALUES_PREFIX, factory::withMetadataValue);
+        forEachOptionStartingWith(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX, factory::withDocumentProperty);
+
         return factory.newDocBuilder();
     }
 
-    Format getDocumentFormat() {
+    /**
+     * Convenience for finding and processing dynamic options that start with a certain prefix.
+     *
+     * @param prefix
+     * @param consumer processes the name (the option minus the prefix) and the option value
+     */
+    private void forEachOptionStartingWith(final String prefix, BiConsumer<String, String> consumer) {
+        getProperties().entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(prefix))
+            .forEach(entry -> {
+                String name = entry.getKey().substring(prefix.length());
+                consumer.accept(name, entry.getValue());
+            });
+    }
+
+    public Format getDocumentFormat() {
         if (hasOption(Options.WRITE_DOCUMENT_TYPE)) {
             String value = getStringOption(Options.WRITE_DOCUMENT_TYPE);
+            Objects.requireNonNull(value);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {
                 String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
                 String optionAlias = getOptionNameForMessage(Options.WRITE_DOCUMENT_TYPE);
+                if (optionAlias == null) {
+                    optionAlias = Options.WRITE_DOCUMENT_TYPE;
+                }
                 throw new ConnectorException(String.format(message, optionAlias, value));
             }
         }
@@ -159,11 +186,12 @@ public class WriteContext extends ContextSupport {
      */
     @Deprecated(since = "2.3.0")
     // We don't need Sonar to remind us of this deprecation.
-    @SuppressWarnings("java:S1133")
+    @SuppressWarnings({"java:S1133", "removal"})
     Format getDeprecatedFileRowsDocumentFormat() {
         final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
         if (hasOption(deprecatedOption)) {
             String value = getStringOption(deprecatedOption);
+            Objects.requireNonNull(value);
             try {
                 return Format.valueOf(value.toUpperCase());
             } catch (IllegalArgumentException e) {
@@ -187,7 +215,7 @@ public class WriteContext extends ContextSupport {
         factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias));
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);
-            if (value != null && value.trim().length() > 0) {
+            if (value != null && !value.trim().isEmpty()) {
                 Util.MAIN_LOGGER.warn("Option {} will be ignored since option {} was specified.", option, Options.WRITE_URI_TEMPLATE);
             }
         });
@@ -203,7 +231,7 @@ public class WriteContext extends ContextSupport {
         String uriSuffix = null;
         if (hasOption(Options.WRITE_URI_SUFFIX)) {
             uriSuffix = getProperties().get(Options.WRITE_URI_SUFFIX);
-        } else if (!isUsingFileSchema() && !DocumentRowSchema.SCHEMA.equals(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
+        } else if (!isUsingFileSchema() && !DocumentRowSchema.hasDocumentFields(this.schema) && !TripleRowSchema.SCHEMA.equals(this.schema)) {
             String xmlRootName = getStringOption(Options.WRITE_XML_ROOT_NAME);
             if (xmlRootName != null && getStringOption(Options.WRITE_JSON_ROOT_NAME) != null) {
                 throw new ConnectorException(String.format("Cannot specify both %s and %s",
@@ -219,10 +247,10 @@ public class WriteContext extends ContextSupport {
 
     private Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
-        if (transformName != null && transformName.trim().length() > 0) {
+        if (transformName != null && !transformName.trim().isEmpty()) {
             ServerTransform transform = new ServerTransform(transformName);
             String paramsValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS);
-            if (paramsValue != null && paramsValue.trim().length() > 0) {
+            if (paramsValue != null && !paramsValue.trim().isEmpty()) {
                 addRestTransformParams(transform, paramsValue);
             }
             return Optional.of(transform);
@@ -232,7 +260,7 @@ public class WriteContext extends ContextSupport {
 
     private void addRestTransformParams(ServerTransform transform, String paramsValue) {
         String delimiterValue = getProperties().get(Options.WRITE_TRANSFORM_PARAMS_DELIMITER);
-        String delimiter = delimiterValue != null && delimiterValue.trim().length() > 0 ? delimiterValue : ",";
+        String delimiter = delimiterValue != null && !delimiterValue.trim().isEmpty() ? delimiterValue : ",";
         String[] params = paramsValue.split(delimiter);
         if (params.length % 2 != 0) {
             throw new ConnectorException(

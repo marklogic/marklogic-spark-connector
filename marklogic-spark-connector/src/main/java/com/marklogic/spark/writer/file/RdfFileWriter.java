@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -32,6 +32,7 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 import java.util.zip.GZIPOutputStream;
 
 class RdfFileWriter implements DataWriter<InternalRow> {
@@ -60,7 +61,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         String value = rdfContext.getStringOption(Options.WRITE_FILES_COMPRESSION);
         if ("gzip".equals(value)) {
             this.isGZIP = true;
-        } else if (value != null && value.trim().length() > 0) {
+        } else if (value != null && !value.trim().isEmpty()) {
             throw new ConnectorException(String.format("Unsupported compression value; only 'gzip' is supported: %s", value));
         } else {
             this.isGZIP = false;
@@ -126,6 +127,7 @@ class RdfFileWriter implements DataWriter<InternalRow> {
         }
 
         this.stream = StreamRDFWriter.getWriterStream(this.outputStream, langAndExtension.lang);
+        Objects.requireNonNull(this.stream);
         this.stream.start();
     }
 

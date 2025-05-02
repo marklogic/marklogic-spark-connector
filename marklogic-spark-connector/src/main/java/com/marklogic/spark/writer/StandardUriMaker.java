@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -23,13 +23,13 @@ class StandardUriMaker implements DocBuilder.UriMaker {
     @Override
     public String makeURI(String initialUri, JsonNode uriTemplateValues) {
         String uri = initialUri != null ? initialUri : "";
-        if (uriReplace != null && uriReplace.trim().length() > 0) {
+        if (uriReplace != null && !uriReplace.trim().isEmpty()) {
             uri = applyUriReplace(uri);
         }
         if (uriPrefix != null) {
             uri = uriPrefix + uri;
         }
-        if (initialUri == null || initialUri.trim().length() == 0) {
+        if (initialUri == null || initialUri.trim().isEmpty()) {
             uri += UUID.randomUUID().toString();
         }
         return uriSuffix != null ? uri + uriSuffix : uri;

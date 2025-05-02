@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.core.DocumentInputs;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.types.DataTypes;
 
@@ -33,21 +34,20 @@ class FileRowConverter implements RowConverter {
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> convertRow(InternalRow row) {
+    public Iterator<DocumentInputs> convertRow(InternalRow row) {
         final String path = row.getString(writeContext.getFileSchemaPathPosition());
         BytesHandle contentHandle = new BytesHandle(row.getBinary(writeContext.getFileSchemaContentPosition()));
         forceFormatIfNecessary(contentHandle);
         Optional<JsonNode> uriTemplateValues = deserializeContentToJson(path, contentHandle, row);
-        return Stream.of(new DocBuilder.DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null)).iterator();
+        return Stream.of(new DocumentInputs(path, contentHandle, uriTemplateValues.orElse(null), null)).iterator();
     }
 
     @Override
-    public Iterator<DocBuilder.DocumentInputs> getRemainingDocumentInputs() {
-        return Stream.<DocBuilder.DocumentInputs>empty().iterator();
+    public Iterator<DocumentInputs> getRemainingDocumentInputs() {
+        return Stream.<DocumentInputs>empty().iterator();
     }
 
-    // Telling Sonar to not tell us to remove this code, since we can't until 3.0.
-    @SuppressWarnings("java:S1874")
+    @SuppressWarnings({"deprecation", "removal"})
     private void forceFormatIfNecessary(BytesHandle content) {
         Format format = writeContext.getDocumentFormat();
         if (format != null) {
@@ -61,7 +61,7 @@ class FileRowConverter implements RowConverter {
     }
 
     private Optional<JsonNode> deserializeContentToJson(String path, BytesHandle contentHandle, InternalRow row) {
-        if (this.uriTemplate == null || this.uriTemplate.trim().length() == 0) {
+        if (this.uriTemplate == null || this.uriTemplate.trim().isEmpty()) {
             return Optional.empty();
         }
         try {

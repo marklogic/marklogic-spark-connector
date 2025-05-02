@@ -1,8 +1,12 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-You must use Java 11 or higher for developing, testing, and building this project. If you wish to use Sonar as 
-described below, you must use Java 17 or higher.
+**You must use Java 17 for developing, testing, and building this project**, even though the connector supports
+running on Java 11. For users, Java 17 is only required if using the splitting and embedding features, as those
+depend on a third party module that requires Java 17.
+
+**You also need Java 11 installed** so that the subprojects in this repository that require Java 11 have access to a 
+Java 11 SDK. [sdkman](https://sdkman.io/) is highly recommend for installing multiple JDKs.
 
 # Setup
 
@@ -40,49 +44,37 @@ To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
 
+**To run the tests in Intellij**, you must configure your JUnit template to include a few JVM args:
+
+1. Go to Run -> Edit Configurations.
+2. Delete any JUnit configurations you already have.
+3. Click on "Edit configuration templates" and click on "JUnit".
+4. Click on "Modify options" and select "Add VM options" if it's not already selected. 
+5. In the VM options text input, add the following:
+   --add-exports=java.base/sun.nio.ch=ALL-UNNAMED --add-exports=java.base/sun.util.calendar=ALL-UNNAMED --add-exports=java.base/sun.security.action=ALL-UNNAMED
+6. Click "Apply".
+7. In the dropdown that has "Class" selected, change that to "Method" and hit "Apply" again.
+
+You may need to repeat steps 6 and 7. I've found Intellij to be a little finicky with actually applying these changes.
+
+The net effect should be that when you run a JUnit class or method or suite of tests, those VM options are automatically
+added to the run configuration that Intellij creates for the class/method/suite. Those VM options are required to give
+Spark access to certain JVM modules. They are applied automatically when running the tests via Gradle.
+
+**Alternatively**, you can open Preferences in Intellij and go to 
+"Build, Execution, and Deployment" -> "Build Tools" -> "Gradle". Then change "Build and run using" and "Run tests using"
+to "Gradle". This should result in Intellij using the `test` configuration in the `marklogic-spark-connector/build.gradle`
+file that registers the required JVM options, allowing for tests to run on Java 17.
+
+## Testing text classification
+
+See the `ClassifyAdHocTest` class for instructions on how to test the text classification feature with a 
+valid connection to Semaphore.
+
 ## Generating code quality reports with SonarQube
 
-In order to use SonarQube, you must have used Docker to run this project's `docker-compose.yml` file, and you must
-have the services in that file running and you must use Java 17 to run the Gradle `sonar` task.
-
-To configure the SonarQube service, perform the following steps:
-
-1. Go to http://localhost:9000 .
-2. Login as admin/admin. SonarQube will ask you to change this password; you can choose whatever you want ("password" works).
-3. Click on "Create project manually".
-4. Enter "marklogic-spark" for the Project Name; use that as the Project Key too.
-5. Enter "develop" as the main branch name.
-6. Click on "Next".
-7. Click on "Use the global setting" and then "Create project".
-8. On the "Analysis Method" page, click on "Locally".
-9. In the "Provide a token" panel, click on "Generate". Copy the token.
-10. Add `systemProp.sonar.login=your token pasted here` to `gradle-local.properties` in the root of your project, creating
-that file if it does not exist yet.
-
-To run SonarQube, run the following Gradle tasks using Java 17, which will run all the tests with code coverage and 
-then generate a quality report with SonarQube:
-
-    ./gradlew test sonar
-
-If you do not add `systemProp.sonar.login` to your `gradle-local.properties` file, you can specify the token via the
-following:
-
-    ./gradlew test sonar -Dsonar.login=paste your token here
-
-When that completes, you will see a line like this near the end of the logging:
-
-    ANALYSIS SUCCESSFUL, you can find the results at: http://localhost:9000/dashboard?id=marklogic-spark
-
-Click on that link. If it's the first time you've run the report, you'll see all issues. If you've run the report
-before, then SonarQube will show "New Code" by default. That's handy, as you can use that to quickly see any issues
-you've introduced on the feature branch you're working on. You can then click on "Overall Code" to see all issues.
-
-Note that if you only need results on code smells and vulnerabilities, you can repeatedly run `./gradlew sonar`
-without having to re-run the tests.
-
-You can also force Gradle to run `sonar` if any tests fail:
-
-    ./gradlew clean test sonar --continue
+Please see our internal Wiki page - search for "Developer Experience SonarQube" - 
+for information on setting up SonarQube and using it with this repository.
 
 # Testing with PySpark
 
@@ -98,7 +90,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+    pyspark --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.6-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -158,8 +150,8 @@ spark.read.option("header", True).csv("marklogic-spark-connector/src/test/resour
 When you run PySpark, it will create its own Spark cluster. If you'd like to try against a separate Spark cluster
 that still runs on your local machine, perform the following steps:
 
-1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark 3.4.3` since we are currently
-building against Spark 3.4.3.
+1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark 3.5.5` since we are currently
+building against Spark 3.5.5.
 2. `cd ~/.sdkman/candidates/spark/current/sbin`, which is where sdkman will install Spark.
 3. Run `./start-master.sh` to start a master Spark node.
 4. `cd ../logs` and open the master log file that was created to find the address for the master node. It will be in a
@@ -174,7 +166,7 @@ The Spark master GUI is at <http://localhost:8080>. You can use this to view det
 
 Now that you have a Spark cluster running, you just need to tell PySpark to connect to it:
 
-    pyspark --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+    pyspark --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.6-SNAPSHOT.jar
 
 You can then run the same commands as shown in the PySpark section above. The Spark master GUI will allow you to 
 examine details of each of the commands that you run.
@@ -193,7 +185,7 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.6-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
 to `src/main/java`. Then run the following:
@@ -201,7 +193,7 @@ to `src/main/java`. Then run the following:
 ```
 ./gradlew clean shadowJar
 cd marklogic-spark-connector
-spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.5-SNAPSHOT.jar
+spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.6-SNAPSHOT.jar
 ```
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 

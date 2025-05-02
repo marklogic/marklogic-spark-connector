@@ -1,3 +1,57 @@
+/**
+ * This has a number of "api" dependencies so that the libraries are available on the compile classpath for the
+ * marklogic-langchain4j and marklogic-spark-connector projects.
+ */
 dependencies {
+  api("com.marklogic:marklogic-client-api:7.1.0") {
+    // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
+    // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
+    // So the 4 Jackson modules are excluded to allow for Spark's to be used.
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  // This is compileOnly as Spark will provide its own copy at runtime.
+  compileOnly "com.fasterxml.jackson.core:jackson-databind:2.15.2"
+
+  // Used for null-checks; Spark should provide its own copy at runtime as well, but this is included just in case
+  // a particular Spark runtime doesn't include this.
+  implementation "jakarta.validation:jakarta.validation-api:2.0.2"
+
+  // For logging.
   implementation "org.slf4j:jcl-over-slf4j:2.0.13"
+
+  // Needed for splitting XML documents via XPath.
+  implementation "jaxen:jaxen:2.0.0"
+
+  // Needed for classifying documents via Semaphore.
+  api ("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude module: "icu4j"
+  }
+  // The S4 CS client depends on a very old version of icu4j - 4.0.1 - which has a critical security vulnerability.
+  // Bumping up to the latest version, which has worked correctly via manual testing.
+  implementation "com.ibm.icu:icu4j:77.1"
+  api ("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
+
+  // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
+  // include the necessary parsers.
+  api "org.apache.tika:tika-core:${tikaVersion}"
+
+  // Needed for using XmlMapper.
+  api("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.15.2") {
+    // Not needed, as the modules in this group that this dependency depends on are all provided by Spark.
+    exclude group: "com.fasterxml.jackson.core"
+  }
+
+  // Supports reading and writing RDF data. Including this here so it's available to the tests as well.
+  api("org.apache.jena:jena-arq:4.10.0") {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
+  api "org.jdom:jdom2:2.0.6.1"
 }

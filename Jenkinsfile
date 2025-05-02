@@ -8,6 +8,7 @@ def runtests(String javaVersion){
     cd marklogic-spark-connector
     echo "Waiting for MarkLogic server to initialize."
     sleep 30s
+    ./gradlew clean
    ./gradlew -i mlDeploy
    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
    ./gradlew -i mlLoadData
@@ -85,8 +86,9 @@ pipeline{
           export JAVA_HOME=$JAVA17_HOME_DIR
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
           export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
-          cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
           cd marklogic-spark-connector
+          ./gradlew clean
+          cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
            ./gradlew publish
         '''
       }

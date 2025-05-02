@@ -1,12 +1,12 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer.rdf;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.DocumentMetadataHandle;
-import com.marklogic.langchain4j.Util;
+import com.marklogic.spark.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class GraphWriter {
 
     public GraphWriter(DatabaseClient databaseClient, String rolesAndCapabilities) {
         this.databaseClient = databaseClient;
-        this.permissions = rolesAndCapabilities != null && rolesAndCapabilities.trim().length() > 0 ?
+        this.permissions = rolesAndCapabilities != null && !rolesAndCapabilities.trim().isEmpty() ?
             parsePermissions(rolesAndCapabilities) :
             "xdmp:default-permissions()";
     }

@@ -1,125 +1,209 @@
 /*
- * Copyright © 2024 MarkLogic Corporation. All Rights Reserved.
+ * Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
+import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.core.DocumentInputs;
+import com.marklogic.spark.core.extraction.ExtractionUtil;
+import com.marklogic.spark.core.splitter.ChunkAssembler;
+import com.marklogic.spark.dom.DOMHelper;
+import com.marklogic.spark.dom.NamespaceContextFactory;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.*;
+
+/**
+ * Knows how to build instances of {@code DocumentWriteOperation} based on the data in {@code DocBuilder.DocumentInputs}.
+ * The latter is expected to contain data read from a Spark row, normalized into a standard set of inputs regardless
+ * of the schema of the Spark row.
+ */
 public class DocBuilder {
 
     public interface UriMaker {
         String makeURI(String initialUri, JsonNode uriTemplateValues);
     }
 
-    /**
-     * Captures the various inputs used for constructing a document to be written to MarkLogic. {@code graph} refers
-     * to an optional MarkLogic semantics graph, which must be added to the final set of collections for the
-     * document.
-     */
-    public static class DocumentInputs {
-        private final String initialUri;
-        private final AbstractWriteHandle content;
-        private final JsonNode columnValuesForUriTemplate;
-        private final DocumentMetadataHandle initialMetadata;
-        private final String graph;
+    public static class ExtractedTextConfig {
+        private final Format format;
+        private final DocumentMetadataHandle metadata;
+        private final boolean dropSource;
 
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
-                              DocumentMetadataHandle initialMetadata) {
-            this(initialUri, content, columnValuesForUriTemplate, initialMetadata, null);
-        }
-
-        public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
-                              DocumentMetadataHandle initialMetadata, String graph) {
-            this.initialUri = initialUri;
-            this.content = content;
-            this.columnValuesForUriTemplate = columnValuesForUriTemplate;
-            this.initialMetadata = initialMetadata;
-            this.graph = graph;
-        }
-
-        String getInitialUri() {
-            return initialUri;
-        }
-
-        AbstractWriteHandle getContent() {
-            return content;
-        }
-
-        JsonNode getColumnValuesForUriTemplate() {
-            return columnValuesForUriTemplate;
-        }
-
-        DocumentMetadataHandle getInitialMetadata() {
-            return initialMetadata;
-        }
-
-        String getGraph() {
-            return graph;
+        public ExtractedTextConfig(Format format, DocumentMetadataHandle metadata, boolean dropSource) {
+            this.format = format;
+            this.metadata = metadata;
+            this.dropSource = dropSource;
         }
     }
 
     private final UriMaker uriMaker;
-    private final DocumentMetadataHandle metadata;
+    private final DocumentMetadataHandle metadataFromOptions;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final DOMHelper domHelper = new DOMHelper(NamespaceContextFactory.makeDefaultNamespaceContext());
+    private final ExtractedTextConfig extractedTextConfig;
+    private final ChunkAssembler chunkAssembler;
+    private DocumentBuilder documentBuilder;
+    private final XmlMapper xmlMapper;
 
-    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata) {
+    DocBuilder(UriMaker uriMaker, DocumentMetadataHandle metadata, ExtractedTextConfig extractedTextConfig, ChunkAssembler chunkAssembler) {
         this.uriMaker = uriMaker;
-        this.metadata = metadata;
-    }
-
-    DocumentWriteOperation build(DocumentInputs inputs) {
-        final String uri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
-        final String graph = inputs.getGraph();
-        final DocumentMetadataHandle initialMetadata = inputs.getInitialMetadata();
-
-        final boolean isNakedProperties = inputs.getContent() == null;
-        if (isNakedProperties) {
-            if (initialMetadata != null) {
-                overrideInitialMetadata(initialMetadata);
-            }
-            return new DocumentWriteOperationImpl(uri, initialMetadata, null);
-        }
-
-        if (initialMetadata != null) {
-            overrideInitialMetadata(initialMetadata);
-            if (graph != null) {
-                initialMetadata.getCollections().add(graph);
-            }
-            return new DocumentWriteOperationImpl(uri, initialMetadata, inputs.getContent());
-        }
-
-        if (graph != null && !metadata.getCollections().contains(graph)) {
-            DocumentMetadataHandle newMetadata = newMetadataWithGraph(graph);
-            return new DocumentWriteOperationImpl(uri, newMetadata, inputs.getContent());
-        }
-
-        return new DocumentWriteOperationImpl(uri, metadata, inputs.getContent());
+        this.metadataFromOptions = metadata;
+        this.extractedTextConfig = extractedTextConfig;
+        this.chunkAssembler = chunkAssembler;
+        xmlMapper = new XmlMapper();
     }
 
     /**
-     * If an instance of {@code DocumentInputs} has metadata specified, override it with anything in the metadata
-     * instance that was used to construct this class. We could later support an additive approach as well here.
-     *
-     * @param initialMetadata
+     * @param inputs set of inputs constructed from a single Spark row.
+     * @return one or more documents to write to MarkLogic, based on the inputs object.
      */
-    private void overrideInitialMetadata(DocumentMetadataHandle initialMetadata) {
-        if (!metadata.getCollections().isEmpty()) {
-            initialMetadata.setCollections(metadata.getCollections());
+    Collection<DocumentWriteOperation> buildDocuments(DocumentInputs inputs) {
+        // Using a map to ensure we don't have 2+ documents with the same URI. Some operations below will want to
+        // overwrite an entry in a map, which is perfectly fine.
+        final Map<String, DocumentWriteOperation> documents = new LinkedHashMap<>();
+        DocumentWriteOperation mainDocument = buildMainDocument(inputs);
+        documents.put(mainDocument.getUri(), mainDocument);
+
+        DocumentWriteOperation extractedTextDoc = buildExtractedTextDocument(inputs, mainDocument);
+        if (extractedTextDoc != null) {
+            documents.put(extractedTextDoc.getUri(), extractedTextDoc);
         }
-        if (!metadata.getPermissions().isEmpty()) {
-            initialMetadata.setPermissions(metadata.getPermissions());
+
+        buildChunkDocuments(inputs, mainDocument, extractedTextDoc).forEach(doc -> documents.put(doc.getUri(), doc));
+
+        if (extractedTextDoc != null && extractedTextConfig.dropSource) {
+            documents.remove(mainDocument.getUri());
         }
-        if (metadata.getQuality() != 0) {
-            initialMetadata.setQuality(metadata.getQuality());
+        return documents.values();
+    }
+
+    private DocumentWriteOperation buildMainDocument(DocumentInputs inputs) {
+        final String sourceUri = uriMaker.makeURI(inputs.getInitialUri(), inputs.getColumnValuesForUriTemplate());
+        final String graph = inputs.getGraph();
+        final DocumentMetadataHandle metadataFromRow = inputs.getInitialMetadata();
+
+        AbstractWriteHandle content = inputs.getContent();
+        if (inputs.getDocumentClassification() != null && inputs.getExtractedText() == null) {
+            content = addClassificationToMainDocument(inputs, sourceUri);
         }
-        if (!metadata.getProperties().isEmpty()) {
-            initialMetadata.setProperties(metadata.getProperties());
+
+        DocumentMetadataHandle sourceMetadata = metadataFromRow;
+        if (sourceMetadata != null) {
+            // If the row contains metadata, use it, but first override it based on the metadata specified by user options.
+            overrideMetadataFromRowWithMetadataFromOptions(sourceMetadata);
+            if (graph != null) {
+                sourceMetadata.getCollections().add(graph);
+            }
+            return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, content);
         }
-        if (!metadata.getMetadataValues().isEmpty()) {
-            initialMetadata.setMetadataValues(metadata.getMetadataValues());
+        // If the row doesn't contain metadata, use the metadata specified by user options. We need to be careful
+        // not to modify that object though, as it will be reused on subsequent calls.
+        sourceMetadata = metadataFromOptions;
+        if (graph != null && !sourceMetadata.getCollections().contains(graph)) {
+            sourceMetadata = newMetadataWithGraph(graph);
+        }
+        return new DocumentWriteOperationImpl(sourceUri, sourceMetadata, content);
+    }
+
+    private AbstractWriteHandle addClassificationToMainDocument(DocumentInputs inputs, String sourceUri) {
+        AbstractWriteHandle content = inputs.getContent();
+        final Format sourceDocumentFormat = Util.determineSourceDocumentFormat(content, sourceUri);
+        final byte[] classification = inputs.getDocumentClassification();
+        if (Format.XML.equals(sourceDocumentFormat)) {
+            Document originalDoc = domHelper.extractDocument(content, inputs.getInitialUri());
+            addClassificationToXmlDocument(originalDoc, inputs.getInitialUri(), classification);
+            return new DOMHandle(originalDoc);
+        } else if (Format.JSON.equals(sourceDocumentFormat)) {
+            JsonNode doc = Util.getJsonFromHandle(content);
+            addClassificationToJsonDocument((ObjectNode) doc, inputs.getInitialUri(), classification);
+            return new JacksonHandle(doc);
+        }
+        Util.MAIN_LOGGER.warn("Cannot add classification to document with URI {}; document is neither JSON nor XML.", sourceUri);
+        return content;
+    }
+
+    private void addClassificationToJsonDocument(ObjectNode jsonDocument, String uri, byte[] classification) {
+        try {
+            JsonNode classificationData = xmlMapper.readTree(classification);
+            jsonDocument.set("classification", classificationData);
+        } catch (IOException e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+        }
+    }
+
+    public void addClassificationToXmlDocument(Document document, String uri, byte[] classification) {
+        try {
+            if (documentBuilder == null) {
+                documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            }
+            Document classificationXml = documentBuilder.parse(new ByteArrayInputStream(classification));
+            Node classificationNode = document.createElementNS(Util.DEFAULT_XML_NAMESPACE, "classification");
+            NodeList articleChildNodes = classificationXml.getDocumentElement().getChildNodes();
+            for (int i = 0; i < articleChildNodes.getLength(); i++) {
+                Node importedChildNode = document.importNode(articleChildNodes.item(i), true);
+                classificationNode.appendChild(importedChildNode);
+            }
+            document.getFirstChild().appendChild(classificationNode);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
+        }
+    }
+
+    private DocumentWriteOperation buildExtractedTextDocument(DocumentInputs inputs, DocumentWriteOperation mainDocument) {
+        if (inputs.getExtractedText() != null) {
+            String sourceUri = mainDocument.getUri();
+
+            DocumentMetadataHandle metadataToUse = this.extractedTextConfig.metadata != null ?
+                this.extractedTextConfig.metadata :
+                (DocumentMetadataHandle) mainDocument.getMetadata();
+
+            return Format.XML.equals(this.extractedTextConfig.format) ?
+                buildExtractedXmlDocument(sourceUri, inputs, metadataToUse) :
+                buildExtractedJsonDocument(sourceUri, inputs, metadataToUse);
+        }
+        return null;
+    }
+
+    /**
+     * If an instance of {@code DocumentInputs} has metadata specified (i.e. metadata from the Spark row), override it
+     * with any metadata specified by the user via options.
+     *
+     * @param metadataFromRow
+     */
+    private void overrideMetadataFromRowWithMetadataFromOptions(DocumentMetadataHandle metadataFromRow) {
+        if (!metadataFromOptions.getCollections().isEmpty()) {
+            metadataFromRow.setCollections(metadataFromOptions.getCollections());
+        }
+        if (!metadataFromOptions.getPermissions().isEmpty()) {
+            metadataFromRow.setPermissions(metadataFromOptions.getPermissions());
+        }
+        if (metadataFromOptions.getQuality() != 0) {
+            metadataFromRow.setQuality(metadataFromOptions.getQuality());
+        }
+        if (!metadataFromOptions.getProperties().isEmpty()) {
+            metadataFromRow.setProperties(metadataFromOptions.getProperties());
+        }
+        if (!metadataFromOptions.getMetadataValues().isEmpty()) {
+            metadataFromRow.setMetadataValues(metadataFromOptions.getMetadataValues());
         }
     }
 
@@ -134,12 +218,110 @@ public class DocBuilder {
      */
     private DocumentMetadataHandle newMetadataWithGraph(String graph) {
         DocumentMetadataHandle newMetadata = new DocumentMetadataHandle();
-        newMetadata.getCollections().addAll(metadata.getCollections());
-        newMetadata.getPermissions().putAll(metadata.getPermissions());
-        newMetadata.setQuality(metadata.getQuality());
-        newMetadata.setProperties(metadata.getProperties());
-        newMetadata.setMetadataValues(metadata.getMetadataValues());
+        newMetadata.getCollections().addAll(metadataFromOptions.getCollections());
+        newMetadata.getPermissions().putAll(metadataFromOptions.getPermissions());
+        newMetadata.setQuality(metadataFromOptions.getQuality());
+        newMetadata.setProperties(metadataFromOptions.getProperties());
+        newMetadata.setMetadataValues(metadataFromOptions.getMetadataValues());
         newMetadata.getCollections().add(graph);
         return newMetadata;
+    }
+
+    private DocumentWriteOperation buildExtractedJsonDocument(String sourceUri, DocumentInputs inputs, DocumentMetadataHandle sourceMetadata) {
+        ObjectNode doc = objectMapper.createObjectNode();
+        if (!extractedTextConfig.dropSource) {
+            doc.put("source-uri", sourceUri);
+        }
+        doc.put("content", inputs.getExtractedText());
+        if (inputs.getExtractedMetadata() != null) {
+            ObjectNode node = doc.putObject("extracted-metadata");
+            inputs.getExtractedMetadata().entrySet().forEach(entry -> {
+                // Replacing the colon, which is not allowable in an index declaration.
+                String key = entry.getKey().replace(":", "-");
+                node.put(key, entry.getValue());
+            });
+        }
+        if (inputs.getDocumentClassification() != null) {
+            addClassificationToJsonDocument(doc, sourceUri, inputs.getDocumentClassification());
+        }
+        String uri = sourceUri + "-extracted-text.json";
+        return new DocumentWriteOperationImpl(uri, sourceMetadata, new JacksonHandle(doc));
+    }
+
+    private DocumentWriteOperation buildExtractedXmlDocument(String sourceUri, DocumentInputs inputs, DocumentMetadataHandle sourceMetadata) {
+        Document doc = domHelper.newDocument();
+        Element root = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "root");
+        doc.appendChild(root);
+
+        if (!extractedTextConfig.dropSource) {
+            Element sourceElement = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "source-uri");
+            sourceElement.appendChild(doc.createTextNode(sourceUri));
+            root.appendChild(sourceElement);
+        }
+
+        Element content = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "content");
+        content.appendChild(doc.createTextNode(inputs.getExtractedText()));
+        root.appendChild(content);
+
+        if (inputs.getExtractedMetadata() != null && !inputs.getExtractedMetadata().isEmpty()) {
+            Element metadata = doc.createElementNS(Util.DEFAULT_XML_NAMESPACE, "extracted-metadata");
+            root.appendChild(metadata);
+            inputs.getExtractedMetadata().entrySet().forEach(entry -> {
+                try {
+                    Element metadataElement = createXmlMetadataElement(doc, entry);
+                    metadata.appendChild(metadataElement);
+                } catch (Exception e) {
+                    Util.MAIN_LOGGER.warn("Unable to convert extracted metadata into XML: {}; cause: {}", entry, e.getMessage());
+                }
+            });
+        }
+
+        if (inputs.getDocumentClassification() != null) {
+            addClassificationToXmlDocument(doc, sourceUri, inputs.getDocumentClassification());
+        }
+        String uri = sourceUri + "-extracted-text.xml";
+        return new DocumentWriteOperationImpl(uri, sourceMetadata, new DOMHandle(doc));
+    }
+
+    private Element createXmlMetadataElement(Document doc, Map.Entry<String, String> metadataEntry) {
+        final String key = metadataEntry.getKey();
+
+        // Ideally, the metadata entry has a recognized XML prefix that can be mapped to a useful namespace.
+        // If not, we default to this local name to avoid creating an element with a colon in its name, which is not
+        // allowed.
+        String localName = metadataEntry.getKey().replace(":", "-");
+        String namespace = Util.DEFAULT_XML_NAMESPACE;
+        final int pos = key.indexOf(":");
+        if (pos > -1) {
+            final String prefix = key.substring(0, pos);
+            String associatedNamespace = ExtractionUtil.getNamespace(prefix);
+            if (associatedNamespace != null) {
+                namespace = associatedNamespace;
+                localName = key.substring(pos + 1).replace(":", "-");
+            }
+        }
+
+        Element metadataElement = doc.createElementNS(namespace, localName);
+        metadataElement.appendChild(doc.createTextNode(metadataEntry.getValue()));
+        return metadataElement;
+    }
+
+    private List<DocumentWriteOperation> buildChunkDocuments(DocumentInputs inputs, DocumentWriteOperation mainDocument, DocumentWriteOperation extractedTextDocument) {
+        List<DocumentWriteOperation> chunkDocuments = new ArrayList<>();
+        if (inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
+            // If there's an extracted doc, we want to use that as the source document so that the user has the option
+            // of adding chunks to it.
+            DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
+            Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(
+                sourceDocument,
+                inputs.getChunks(),
+                inputs.getClassifications(),
+                inputs.getEmbeddings());
+            while (iterator.hasNext()) {
+                DocumentWriteOperation doc = iterator.next();
+                chunkDocuments.add(doc);
+            }
+        }
+        return chunkDocuments;
     }
 }
