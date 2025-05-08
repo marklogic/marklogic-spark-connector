@@ -55,7 +55,7 @@ public class Langchain4jFactory implements TextSplitterFactory, EmbeddingProduce
         if (Util.MAIN_LOGGER.isInfoEnabled()) {
             Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
         }
-        return new EmbeddingGenerator(model, batchSize);
+        return new EmbeddingGenerator(model, batchSize, context.getStringOption(Options.WRITE_EMBEDDER_PROMPT));
     }
 
     static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {

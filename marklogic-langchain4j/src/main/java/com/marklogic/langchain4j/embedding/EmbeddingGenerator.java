@@ -27,14 +27,16 @@ public class EmbeddingGenerator implements EmbeddingProducer {
 
     private final EmbeddingModel embeddingModel;
     private final int batchSize;
+    private final String prompt;
 
     // Only used for debug logging.
     private static final AtomicLong tokenCount = new AtomicLong(0);
     private static final AtomicLong requestCount = new AtomicLong(0);
 
-    public EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize) {
+    public EmbeddingGenerator(EmbeddingModel embeddingModel, int batchSize, String prompt) {
         this.embeddingModel = embeddingModel;
         this.batchSize = batchSize;
+        this.prompt = prompt;
     }
 
     @Override
@@ -42,7 +44,8 @@ public class EmbeddingGenerator implements EmbeddingProducer {
         List<TextSegment> segments = new ArrayList<>();
         int chunkCounter = 0;
         for (Chunk chunk : chunks) {
-            segments.add(new TextSegment(chunk.getEmbeddingText(), TEXT_SEGMENT_METADATA));
+            final String text = prompt != null ? prompt + chunk.getEmbeddingText() : chunk.getEmbeddingText();
+            segments.add(new TextSegment(text, TEXT_SEGMENT_METADATA));
             if (segments.size() >= batchSize) {
                 chunkCounter = generateAndAddEmbeddings(segments, chunks, chunkCounter);
                 segments.clear();

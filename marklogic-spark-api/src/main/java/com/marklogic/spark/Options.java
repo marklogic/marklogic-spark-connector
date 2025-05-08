@@ -362,6 +362,8 @@ public abstract class Options {
 
     public static final String WRITE_EMBEDDER_PREFIX = "spark.marklogic.write.embedder.";
 
+    public static final String WRITE_EMBEDDER_PROMPT = WRITE_EMBEDDER_PREFIX + "prompt";
+
     /**
      * Enables the embedder feature; name of a class on the classpath that implements the interface
      * {@code Function<Map<String, String>, EmbeddingModel>}.
