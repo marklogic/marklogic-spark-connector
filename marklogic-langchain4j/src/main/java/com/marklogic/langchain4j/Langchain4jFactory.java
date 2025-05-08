@@ -55,7 +55,11 @@ public class Langchain4jFactory implements TextSplitterFactory, EmbeddingProduce
         if (Util.MAIN_LOGGER.isInfoEnabled()) {
             Util.MAIN_LOGGER.info("Using embedding model with dimension: {}", model.dimension());
         }
-        return new EmbeddingGenerator(model, batchSize);
+
+        // Need to retain whitespace in the prompt, which getStringOption does not do.
+        String prompt = context.getProperties().get(Options.WRITE_EMBEDDER_PROMPT);
+
+        return new EmbeddingGenerator(model, batchSize, prompt);
     }
 
     static Optional<EmbeddingModel> makeEmbeddingModel(Context context) {

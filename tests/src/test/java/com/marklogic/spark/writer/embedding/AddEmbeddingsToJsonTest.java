@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
-    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction" ;
+    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
 
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
@@ -243,6 +243,31 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void prompt() {
+        TestEmbeddingModel.reset();
+
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            // Include whitespace in the prompt to ensure it's not dropped.
+            .option(Options.WRITE_EMBEDDER_PROMPT, "MY PROMPT: ")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(2, TestEmbeddingModel.chunkTexts.size());
+
+        for (String chunkText : TestEmbeddingModel.chunkTexts) {
+            assertTrue(chunkText.startsWith("MY PROMPT: "), "Each chunk text - i.e. each text segment that has an " +
+                "embedding generated for it - should start with the user-defined prompt text. Actual chunk text: " + chunkText);
+        }
+    }
+
+    @Test
     void batchSizeIsHigherThanChunkCount() {
         TestEmbeddingModel.reset();
 
@@ -311,7 +336,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
                 "temporary initial URI - avoids this bug, with the real URI being set after the embedding " +
                 "generation process.");
     }
-    
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
