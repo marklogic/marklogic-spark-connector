@@ -13,6 +13,7 @@ import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.*;
+import com.marklogic.spark.core.ServerEvaluationCallFactory;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.CommitMessage;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -30,6 +31,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private static final Logger logger = LoggerFactory.getLogger(CustomCodeWriter.class);
 
     private final DatabaseClient databaseClient;
+    private final ServerEvaluationCallFactory serverEvaluationCallFactory;
     private final CustomCodeContext customCodeContext;
     private final JsonRowSerializer jsonRowSerializer;
     private final int batchSize;
@@ -46,7 +48,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     private int successItemCount;
     private int failedItemCount;
 
-    CustomCodeWriter(CustomCodeContext customCodeContext, int partitionId, long taskId) {
+    CustomCodeWriter(final CustomCodeContext customCodeContext, final int partitionId, final long taskId) {
         this.customCodeContext = customCodeContext;
         this.partitionId = partitionId;
         this.taskId = taskId;
@@ -55,12 +57,21 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
 
         this.batchSize = customCodeContext.getIntOption(Options.WRITE_BATCH_SIZE, 1, 1);
 
-        this.externalVariableDelimiter = customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
+        this.externalVariableDelimiter = customCodeContext.hasOption(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_DELIMITER) : ",";
 
-        if (this.customCodeContext.isCustomSchema() && this.batchSize > 1) {
+        if (customCodeContext.isCustomSchema() && this.batchSize > 1) {
             this.objectMapper = new ObjectMapper();
         }
+
+        this.serverEvaluationCallFactory = new ServerEvaluationCallFactory.Builder()
+            .withInvokeOptionName(Options.WRITE_INVOKE)
+            .withJavascriptOptionName(Options.WRITE_JAVASCRIPT)
+            .withXqueryOptionName(Options.WRITE_XQUERY)
+            .withJavascriptFileOptionName(Options.WRITE_JAVASCRIPT_FILE)
+            .withXqueryFileOptionName(Options.WRITE_XQUERY_FILE)
+            .withVarsPrefix(Options.WRITE_VARS_PREFIX)
+            .mustBuild(customCodeContext);
     }
 
     @Override
@@ -110,18 +121,14 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
         }
 
         final int itemCount = currentBatch.size();
-        ServerEvaluationCall call = customCodeContext.buildCall(
-            this.databaseClient,
-            new CustomCodeContext.CallOptions(Options.WRITE_INVOKE, Options.WRITE_JAVASCRIPT, Options.WRITE_XQUERY,
-                Options.WRITE_JAVASCRIPT_FILE, Options.WRITE_XQUERY_FILE)
-        );
+        ServerEvaluationCall call = this.serverEvaluationCallFactory.newCall(databaseClient);
         call.addVariable(determineExternalVariableName(), makeVariableValue());
         currentBatch.clear();
         executeCall(call, itemCount);
     }
 
     private String determineExternalVariableName() {
-        return customCodeContext.optionExists(Options.WRITE_EXTERNAL_VARIABLE_NAME) ?
+        return customCodeContext.hasOption(Options.WRITE_EXTERNAL_VARIABLE_NAME) ?
             customCodeContext.getProperties().get(Options.WRITE_EXTERNAL_VARIABLE_NAME) :
             "URI";
     }
