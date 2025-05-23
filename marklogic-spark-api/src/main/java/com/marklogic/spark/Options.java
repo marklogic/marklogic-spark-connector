@@ -56,6 +56,36 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_INVOKE = "spark.marklogic.read.secondaryUris.invoke";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_JAVASCRIPT = "spark.marklogic.read.secondaryUris.javascript";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_JAVASCRIPT_FILE = "spark.marklogic.read.secondaryUris.javascriptFile";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_XQUERY = "spark.marklogic.read.secondaryUris.xquery";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_XQUERY_FILE = "spark.marklogic.read.secondaryUris.xqueryFile";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_VARS_PREFIX = "spark.marklogic.read.secondaryUris.vars.";
+
     public static final String READ_TRIPLES_GRAPHS = "spark.marklogic.read.triples.graphs";
     public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
     public static final String READ_TRIPLES_QUERY = "spark.marklogic.read.triples.query";

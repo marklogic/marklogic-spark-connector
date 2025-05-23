@@ -3,20 +3,27 @@
  */
 package com.marklogic.spark.reader.document;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.document.DocumentPage;
 import com.marklogic.client.document.DocumentRecord;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.eval.EvalResultIterator;
+import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import com.marklogic.spark.Util;
+import com.marklogic.spark.core.ServerEvaluationCallFactory;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -25,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -37,6 +45,7 @@ class ForestReader implements PartitionReader<InternalRow> {
 
     private static final Logger logger = LoggerFactory.getLogger(ForestReader.class);
 
+    private final DatabaseClient databaseClient;
     private final UriBatcher uriBatcher;
     private final GenericDocumentManager documentManager;
     private final StructuredQueryBuilder queryBuilder;
@@ -44,6 +53,8 @@ class ForestReader implements PartitionReader<InternalRow> {
     private final boolean contentWasRequested;
     private final Integer limit;
     private final boolean isStreamingFiles;
+    private final Optional<ServerEvaluationCallFactory> callFactory;
+    private final ObjectMapper objectMapper;
 
     // Only used for logging.
     private final ForestPartition forestPartition;
@@ -59,7 +70,7 @@ class ForestReader implements PartitionReader<InternalRow> {
         this.limit = context.getLimit();
         this.isStreamingFiles = context.isStreamingFiles();
 
-        DatabaseClient client = context.isDirectConnection() ?
+        this.databaseClient = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
             context.connectToMarkLogic();
 
@@ -68,18 +79,29 @@ class ForestReader implements PartitionReader<InternalRow> {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Will read from host {} for partition: {}; filtered: {}; consistent snapshot: {}",
-                client.getHost(), forestPartition, filtered, consistentSnapshot);
+                databaseClient.getHost(), forestPartition, filtered, consistentSnapshot);
         }
 
-        SearchQueryDefinition query = context.buildSearchQuery(client);
-        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
+        SearchQueryDefinition query = context.buildSearchQuery(databaseClient);
+        this.uriBatcher = new UriBatcher(databaseClient, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
 
-        this.documentManager = client.newDocumentManager();
+        this.documentManager = databaseClient.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
         this.contentWasRequested = context.contentWasRequested();
         this.requestedMetadata = ContextSupport.getRequestedMetadata(context);
         this.documentManager.setMetadataCategories(this.requestedMetadata);
-        this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
+        this.queryBuilder = databaseClient.newQueryManager().newStructuredQueryBuilder();
+
+        this.callFactory = new ServerEvaluationCallFactory.Builder()
+            .withInvokeOptionName(Options.READ_SECONDARY_URIS_INVOKE)
+            .withJavascriptOptionName(Options.READ_SECONDARY_URIS_JAVASCRIPT)
+            .withXqueryOptionName(Options.READ_SECONDARY_URIS_XQUERY)
+            .withJavascriptFileOptionName(Options.READ_SECONDARY_URIS_JAVASCRIPT_FILE)
+            .withXqueryFileOptionName(Options.READ_SECONDARY_URIS_XQUERY_FILE)
+            .withVarsPrefix(Options.READ_SECONDARY_URIS_VARS_PREFIX)
+            .build(context);
+
+        this.objectMapper = this.callFactory.isPresent() ? new ObjectMapper() : null;
     }
 
     @Override
@@ -103,6 +125,10 @@ class ForestReader implements PartitionReader<InternalRow> {
                     logger.debug("Read {} documents from partition {} in {}ms", docCount, forestPartition, duration);
                 }
                 return false;
+            }
+
+            if (this.callFactory.isPresent()) {
+                addUrisToBatchViaSecondaryQuery(uris);
             }
 
             // When streaming, we don't want to retrieve the documents yet - they'll be retrieved in the writer phase.
@@ -132,6 +158,9 @@ class ForestReader implements PartitionReader<InternalRow> {
     @Override
     public void close() {
         closeCurrentDocumentPage();
+        if (databaseClient != null) {
+            databaseClient.release();
+        }
     }
 
     private List<String> getNextBatchOfUris() {
@@ -160,6 +189,26 @@ class ForestReader implements PartitionReader<InternalRow> {
         }
         ReadProgressLogger.logProgressIfNecessary(page.getPageSize());
         return page;
+    }
+
+    private void addUrisToBatchViaSecondaryQuery(List<String> uris) {
+        ServerEvaluationCall call = this.callFactory.get().newCall(databaseClient);
+        ArrayNode urisArray = this.objectMapper.createArrayNode();
+        for (String uri : uris) {
+            urisArray.add(uri);
+        }
+        call.addVariable("URIs", new JacksonHandle(urisArray).withFormat(Format.JSON));
+        int countOfAdditionalUris = 0;
+        try (EvalResultIterator iterator = call.eval()) {
+            while (iterator.hasNext()) {
+                String uri = iterator.next().getAs(String.class);
+                countOfAdditionalUris++;
+                uris.add(uri);
+            }
+        }
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Added {} URIs; new batch size: {}", countOfAdditionalUris, uris.size());
+        }
     }
 
     private void closeCurrentDocumentPage() {
