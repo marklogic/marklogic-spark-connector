@@ -8,6 +8,7 @@ import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import com.marklogic.spark.reader.CustomCodeCallBuilder;
 import com.marklogic.spark.reader.JsonRowDeserializer;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.expressions.GenericInternalRow;
@@ -29,11 +30,10 @@ class CustomCodePartitionReader implements PartitionReader<InternalRow> {
 
     public CustomCodePartitionReader(CustomCodeContext customCodeContext, String partition) {
         this.databaseClient = customCodeContext.connectToMarkLogic();
-        this.serverEvaluationCall = customCodeContext.buildCall(
-            this.databaseClient,
-            new CustomCodeContext.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY,
-                Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE)
-        );
+        this.serverEvaluationCall = CustomCodeCallBuilder.build(customCodeContext,
+            new CustomCodeCallBuilder.CallOptions(Options.READ_INVOKE, Options.READ_JAVASCRIPT, Options.READ_XQUERY,
+                Options.READ_JAVASCRIPT_FILE, Options.READ_XQUERY_FILE),
+            Options.READ_VARS_PREFIX, true).get().buildCall(this.databaseClient);
 
         if (partition != null) {
             this.serverEvaluationCall.addVariable("PARTITION", partition);

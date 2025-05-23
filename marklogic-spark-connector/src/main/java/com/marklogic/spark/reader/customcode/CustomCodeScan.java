@@ -8,6 +8,7 @@ import com.marklogic.client.eval.EvalResultIterator;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.reader.CustomCodeCallBuilder;
 import org.apache.spark.sql.connector.read.Batch;
 import org.apache.spark.sql.connector.read.Scan;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
@@ -26,21 +27,20 @@ class CustomCodeScan implements Scan {
         this.customCodeContext = customCodeContext;
         this.partitions = new ArrayList<>();
 
-        if (this.customCodeContext.hasPartitionCode()) {
-            DatabaseClient client = this.customCodeContext.connectToMarkLogic();
-            ServerEvaluationCall call = this.customCodeContext
-                .buildCall(client, new CustomCodeContext.CallOptions(
-                    Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY,
-                    Options.READ_PARTITIONS_JAVASCRIPT_FILE, Options.READ_PARTITIONS_XQUERY_FILE
-                ));
-            try (EvalResultIterator iter = call.eval()) {
-                iter.forEach(result -> this.partitions.add(result.getString()));
-            } catch (Exception ex) {
-                throw new ConnectorException(String.format("Unable to retrieve partitions; cause: %s", ex.getMessage()), ex);
-            } finally {
-                client.release();
-            }
-        }
+        CustomCodeCallBuilder.build(this.customCodeContext, new CustomCodeCallBuilder.CallOptions(
+                Options.READ_PARTITIONS_INVOKE, Options.READ_PARTITIONS_JAVASCRIPT, Options.READ_PARTITIONS_XQUERY,
+                Options.READ_PARTITIONS_JAVASCRIPT_FILE, Options.READ_PARTITIONS_XQUERY_FILE
+            ), Options.READ_VARS_PREFIX, false)
+            .ifPresent(callBuilder -> {
+                try (DatabaseClient client = this.customCodeContext.connectToMarkLogic()) {
+                    ServerEvaluationCall call = callBuilder.buildCall(client);
+                    try (EvalResultIterator iter = call.eval()) {
+                        iter.forEach(result -> this.partitions.add(result.getString()));
+                    } catch (Exception ex) {
+                        throw new ConnectorException(String.format("Unable to retrieve partitions; cause: %s", ex.getMessage()), ex);
+                    }
+                }
+            });
 
         batch = new CustomCodeBatch(customCodeContext, partitions);
     }

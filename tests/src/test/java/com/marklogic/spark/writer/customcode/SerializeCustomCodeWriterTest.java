@@ -22,7 +22,8 @@ class SerializeCustomCodeWriterTest extends AbstractIntegrationTest {
     void test() {
         Map<String, String> options = new HashMap<>();
         options.put(Options.CLIENT_URI, makeClientUri());
-        CustomCodeContext context = new CustomCodeContext(options, new StructType().add("myType", DataTypes.StringType), "prefix");
+        options.put(Options.WRITE_JAVASCRIPT, "{}");
+        CustomCodeContext context = new CustomCodeContext(options, new StructType().add("myType", DataTypes.StringType));
         CustomCodeWriterFactory factory = new CustomCodeWriterFactory(context);
 
         factory = (CustomCodeWriterFactory) SerializeUtil.serialize(factory);

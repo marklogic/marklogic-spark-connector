@@ -21,6 +21,11 @@ public class Context implements Serializable {
             .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
     }
 
+    public final boolean optionExists(String option) {
+        String value = getProperties().get(option);
+        return value != null && !value.trim().isEmpty();
+    }
+
     public final String getStringOption(String option) {
         return getStringOption(option, null);
     }

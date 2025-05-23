@@ -3,20 +3,26 @@
  */
 package com.marklogic.spark.reader.document;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.document.DocumentPage;
 import com.marklogic.client.document.DocumentRecord;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.eval.EvalResultIterator;
+import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.BytesHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
+import com.marklogic.spark.reader.CustomCodeCallBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -25,6 +31,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -54,12 +61,16 @@ class ForestReader implements PartitionReader<InternalRow> {
     // Used for logging and for ensuring a non-null limit is not exceeded.
     private int docCount;
 
+    private final DatabaseClient databaseClient;
+    private final Optional<CustomCodeCallBuilder> callBuilder;
+    private final ObjectMapper objectMapper;
+
     ForestReader(ForestPartition forestPartition, DocumentContext context) {
         this.forestPartition = forestPartition;
         this.limit = context.getLimit();
         this.isStreamingFiles = context.isStreamingFiles();
 
-        DatabaseClient client = context.isDirectConnection() ?
+        this.databaseClient = context.isDirectConnection() ?
             context.connectToMarkLogic(forestPartition.getHost()) :
             context.connectToMarkLogic();
 
@@ -68,18 +79,24 @@ class ForestReader implements PartitionReader<InternalRow> {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Will read from host {} for partition: {}; filtered: {}; consistent snapshot: {}",
-                client.getHost(), forestPartition, filtered, consistentSnapshot);
+                databaseClient.getHost(), forestPartition, filtered, consistentSnapshot);
         }
 
-        SearchQueryDefinition query = context.buildSearchQuery(client);
-        this.uriBatcher = new UriBatcher(client, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
+        SearchQueryDefinition query = context.buildSearchQuery(databaseClient);
+        this.uriBatcher = new UriBatcher(databaseClient, query, forestPartition, context.getBatchSize(), filtered, consistentSnapshot);
 
-        this.documentManager = client.newDocumentManager();
+        this.documentManager = databaseClient.newDocumentManager();
         this.documentManager.setReadTransform(query.getResponseTransform());
         this.contentWasRequested = context.contentWasRequested();
         this.requestedMetadata = ContextSupport.getRequestedMetadata(context);
         this.documentManager.setMetadataCategories(this.requestedMetadata);
-        this.queryBuilder = client.newQueryManager().newStructuredQueryBuilder();
+        this.queryBuilder = databaseClient.newQueryManager().newStructuredQueryBuilder();
+
+        this.callBuilder = CustomCodeCallBuilder.build(context, new CustomCodeCallBuilder.CallOptions(
+            Options.READ_EXPAND_URIS_INVOKE, Options.READ_EXPAND_URIS_JAVASCRIPT, Options.READ_EXPAND_URIS_XQUERY,
+            Options.READ_EXPAND_URIS_JAVASCRIPT_FILE, Options.READ_EXPAND_URIS_XQUERY_FILE
+        ), Options.READ_VARS_PREFIX, false);
+        this.objectMapper = this.callBuilder.isPresent() ? new ObjectMapper() : null;
     }
 
     @Override
@@ -105,6 +122,27 @@ class ForestReader implements PartitionReader<InternalRow> {
                 return false;
             }
 
+            /**
+             * Hmm - perhaps this is where we make the call to fetch additional URIs? We can pass in the whole batch
+             * to the user's custom code. The custom code can then return an additional sequence of URIs, which we
+             * can then add to this List. That keeps the rest of the reader from knowing what's going on.
+             */
+            if (this.callBuilder.isPresent()) {
+                ServerEvaluationCall call = this.callBuilder.get().buildCall(databaseClient);
+                ArrayNode urisArray = this.objectMapper.createArrayNode();
+                for (String uri : uris) {
+                    urisArray.add(uri);
+                }
+                call.addVariable("URIs", new JacksonHandle(urisArray).withFormat(Format.JSON));
+                try (EvalResultIterator iterator = call.eval()) {
+                    while (iterator.hasNext()) {
+                        String uri = iterator.next().getAs(String.class);
+                        logger.info("Adding URI: {}", uri);
+                        uris.add(uri);
+                    }
+                }
+            }
+
             // When streaming, we don't want to retrieve the documents yet - they'll be retrieved in the writer phase.
             this.currentDocumentPage = this.isStreamingFiles ? new UrisPage(uris.iterator()) : readPage(uris);
         }
@@ -126,12 +164,17 @@ class ForestReader implements PartitionReader<InternalRow> {
             builder.withMetadata(document.getMetadata(new DocumentMetadataHandle()));
         }
         docCount++;
+
         return builder.buildRow();
     }
 
     @Override
     public void close() {
         closeCurrentDocumentPage();
+
+        if (databaseClient != null) {
+            databaseClient.release();
+        }
     }
 
     private List<String> getNextBatchOfUris() {

@@ -19,6 +19,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ReadDocumentRowsByUrisTest extends AbstractIntegrationTest {
 
     @Test
+    void expandUris() {
+        List<Row> rows = startRead()
+            .option(Options.READ_DOCUMENTS_URIS, """
+                /author/author1.json
+                /author/author2.json""")
+            .option(Options.READ_EXPAND_URIS_JAVASCRIPT, """
+                var URIs;
+                const citationIds = cts.elementValues(xs.QName("CitationID"), null, null, cts.documentQuery(URIs));
+                cts.uris(null, null, cts.andQuery([
+                    cts.notQuery(cts.documentQuery(URIs)),
+                    cts.collectionQuery('author'),
+                    cts.jsonPropertyValueQuery('CitationID', citationIds)
+                ]))
+                """)
+            .load()
+            .select("uri")
+            .collectAsList();
+
+        rows.forEach(row -> System.out.println(row.prettyJson()));
+    }
+
+    @Test
     void readByUris() {
         List<Row> rows = startRead()
             .option(Options.READ_DOCUMENTS_URIS, """

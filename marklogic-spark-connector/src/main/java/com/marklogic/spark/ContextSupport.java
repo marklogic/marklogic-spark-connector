@@ -86,11 +86,6 @@ public class ContextSupport extends Context implements Serializable {
         return connectionProps;
     }
 
-    public final boolean optionExists(String option) {
-        String value = getProperties().get(option);
-        return value != null && !value.trim().isEmpty();
-    }
-
     /**
      * Only intended for "write" use cases; an error on "read" is always expected to be propagated to the user.
      *
