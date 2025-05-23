@@ -22,7 +22,7 @@ class SerializeCustomCodeReaderTest extends AbstractIntegrationTest {
         Map<String, String> options = new HashMap<>();
         options.put(Options.READ_JAVASCRIPT, "console.log()");
         options.put(Options.CLIENT_URI, makeClientUri());
-        CustomCodeContext context = new CustomCodeContext(options, new StructType().add("myType", DataTypes.StringType), "prefix");
+        CustomCodeContext context = new CustomCodeContext(options, new StructType().add("myType", DataTypes.StringType));
         CustomCodePartitionReaderFactory factory = new CustomCodePartitionReaderFactory(context);
 
         factory = (CustomCodePartitionReaderFactory) SerializeUtil.serialize(factory);
