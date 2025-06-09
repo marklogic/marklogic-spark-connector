@@ -150,8 +150,8 @@ spark.read.option("header", True).csv("marklogic-spark-connector/src/test/resour
 When you run PySpark, it will create its own Spark cluster. If you'd like to try against a separate Spark cluster
 that still runs on your local machine, perform the following steps:
 
-1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark 3.5.5` since we are currently
-building against Spark 3.5.5.
+1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark 3.5.6` since we are currently
+building against Spark 3.5.6.
 2. `cd ~/.sdkman/candidates/spark/current/sbin`, which is where sdkman will install Spark.
 3. Run `./start-master.sh` to start a master Spark node.
 4. `cd ../logs` and open the master log file that was created to find the address for the master node. It will be in a
