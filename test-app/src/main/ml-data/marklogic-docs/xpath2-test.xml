@@ -1,0 +1,20 @@
+<root>
+  <documents>
+    <document type="article" date="2023-01-15">
+      <title>Introduction to XML Processing</title>
+      <content>This article covers the basics of XML processing and parsing techniques.</content>
+    </document>
+    <document type="tutorial" date="2023-02-20">
+      <title>Advanced XPath Techniques</title>
+      <content>Learn how to use XPath 2.0 features like conditional expressions and regex functions.</content>
+    </document>
+    <document type="article" date="2023-03-10">
+      <title>Database Integration Patterns</title>
+      <content>Exploring various patterns for integrating databases with XML processing systems.</content>
+    </document>
+    <document type="reference" date="2023-04-05">
+      <title>API Documentation Guide</title>
+      <content>Comprehensive guide to writing effective API documentation for developers.</content>
+    </document>
+  </documents>
+</root>
