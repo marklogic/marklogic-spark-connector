@@ -9,14 +9,14 @@ import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class SplitXmlDocumentTest extends AbstractIntegrationTest {
 
@@ -42,6 +42,31 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void xpath2Expression() {
+        // This test uses an XPath 2.0 conditional expression which requires Saxon XPath processor.
+        readDocument("/marklogic-docs/xpath2-test.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH,
+                "//document[if (@type = 'tutorial') then true() else (@type = 'article' and @date > '2023-02-01')]/content/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementCount("The two 'content' elements should have text that less than 1000 chars, and thus " +
+            "there should be a single chunk.", "/root/model:chunks/model:chunk", 1);
+
+        String expectedText = "Learn how to use XPath 2.0 features like conditional expressions and regex functions. " +
+            "Exploring various patterns for integrating databases with XML processing systems." ;
+        String actualText = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
+        assertEquals(expectedText, actualText, "The XPath 2.0 expression should have selected only 2 of the " +
+            "4 'content' elements in the document. The text of the two elements should have been concatenated " +
+            "together to create a single chunk.");
+    }
+
+    @Test
     void withNamespace() {
         readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -60,18 +85,20 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void undeclaredNamespace() {
+    void invalidXPathExpression() {
         DataFrameWriter writer = readDocument("/marklogic-docs/namespaced-java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
+            .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text(")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .mode(SaveMode.Append);
 
-        ConnectorException ex = assertThrowsConnectorException(writer::save);
-        assertEquals(
-            "Unable to compile XPath expression for selecting text: /ex:root/ex:text/text(); cause: Prefix must resolve to a namespace: ex",
-            ex.getMessage()
-        );
+        SparkException ex = assertThrows(SparkException.class, writer::save);
+        assertTrue(ex.getMessage().contains("Expected ')': no arguments are allowed in text()"),
+            "After shifting to the Saxon-HE XPath processor, unrecognized namespaces no longer cause an error, " +
+                "which is what this test originally verified. This test now verifies that an invalid XPath " +
+                "expression will cause an error. Actual error: " + ex.getMessage());
     }
 
     @Test
