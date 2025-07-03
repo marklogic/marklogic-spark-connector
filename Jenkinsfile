@@ -70,10 +70,10 @@ pipeline{
       }
       post{
         always{
+          updateWorkspacePermissions()
           sh label:'mlcleanup', script: '''#!/bin/bash
             cd marklogic-spark-connector
             docker-compose down -v || true
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
           '''
         }
       }
@@ -117,11 +117,10 @@ pipeline{
       }
       post{
         always{
+          updateWorkspacePermissions()
           sh label:'mlcleanup', script: '''#!/bin/bash
             cd marklogic-spark-connector
             docker-compose down -v || true
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/caddy/
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
           '''
         }
       }
