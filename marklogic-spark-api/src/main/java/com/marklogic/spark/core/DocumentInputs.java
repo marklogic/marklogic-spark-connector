@@ -43,6 +43,10 @@ public class DocumentInputs {
 
     public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                           DocumentMetadataHandle initialMetadata, String graph) {
+        if (initialUri == null) {
+            // This should only ever happen via a programming error.
+            throw new IllegalArgumentException("initialUri cannot be null");
+        }
         this.initialUri = initialUri;
         setContent(content);
         this.columnValuesForUriTemplate = columnValuesForUriTemplate;

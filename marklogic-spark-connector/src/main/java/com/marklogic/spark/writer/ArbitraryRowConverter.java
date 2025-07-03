@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  */
 class ArbitraryRowConverter implements RowConverter {
 
-    private static final String MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME = "marklogic_spark_file_path";
+    private static final String MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME = "marklogic_spark_file_path" ;
 
     private final ObjectMapper objectMapper;
     private final XmlMapper xmlMapper;
@@ -54,12 +54,7 @@ class ArbitraryRowConverter implements RowConverter {
 
     @Override
     public Iterator<DocumentInputs> convertRow(InternalRow row) {
-        String initialUri = null;
-        if (this.filePathIndex > -1) {
-            initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
-            row.setNullAt(this.filePathIndex);
-        }
-
+        final String initialUri = determineInitialUri(row);
         final String json = this.jsonRowSerializer.serializeRowToJson(row);
 
         AbstractWriteHandle contentHandle = null;
@@ -104,6 +99,20 @@ class ArbitraryRowConverter implements RowConverter {
         }
 
         return Stream.of(new DocumentInputs(initialUri, contentHandle, uriTemplateValues, null)).iterator();
+    }
+
+    private String determineInitialUri(InternalRow row) {
+        String initialUri;
+        if (this.filePathIndex > -1) {
+            initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
+            row.setNullAt(this.filePathIndex);
+        } else {
+            // Temporary URI to avoid issues during the document pipeline, where the lack of a URI can cause an error
+            // when constructing a DocumentWriteOperationImpl. This temporary URI will be replaced in all cases based
+            // on other inputs provided by the user.
+            initialUri = String.format("/temporary/%s.json", UUID.randomUUID());
+        }
+        return initialUri;
     }
 
     @Override

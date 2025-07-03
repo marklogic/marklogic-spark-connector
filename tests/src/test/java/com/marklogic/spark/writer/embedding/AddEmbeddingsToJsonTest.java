@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
-    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
+    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction" ;
 
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
@@ -282,6 +282,36 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         assertEquals("The value of 'spark.marklogic.write.embedder.batchSize' must be numeric.", ex.getMessage());
     }
 
+    @Test
+    void arbitraryRowWithNoInitialUri() {
+        newSparkSession().read()
+            .option("header", true)
+            .csv("src/test/resources/inputForStream/Hogwarts.csv")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/aaa/{Name}.json")
+            .option(Options.WRITE_COLLECTIONS, "hogwarts")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/House")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("hogwarts", 9);
+
+        JsonNode doc = readJsonDocument("/aaa/Harry Potter.json");
+        assertEquals("Harry Potter", doc.get("Name").asText());
+        assertEquals("Gryffindor", doc.get("House").asText());
+        assertTrue(doc.has("embedding"));
+        assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType(),
+            "Verifies that an embedding is generated, which addresses bug MLE-22784. This bug was caused by " +
+                "'arbitrary' rows (i.e. from Spark data sources) not having an internal initial URI. The lack of " +
+                "that URI caused the construction of a DocumentWriteOperationImpl to fail. The fix - providing a " +
+                "temporary initial URI - avoids this bug, with the real URI being set after the embedding " +
+                "generation process.");
+    }
+    
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
