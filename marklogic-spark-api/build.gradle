@@ -54,4 +54,7 @@ dependencies {
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   api "org.jdom:jdom2:2.0.6.1"
+
+  // Provides support for XPath 2.0 expressions.
+  implementation "net.sf.saxon:Saxon-HE:12.7"
 }
