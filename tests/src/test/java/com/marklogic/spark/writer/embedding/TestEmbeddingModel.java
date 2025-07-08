@@ -22,12 +22,13 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
 
     public static int batchCounter;
     public static int chunkCounter;
-
+    public static List<String> chunkTexts = new ArrayList<>();
     public static List<Integer> batchSizes = new ArrayList<>();
 
     public static void reset() {
         batchCounter = 0;
         chunkCounter = 0;
+        chunkTexts.clear();
         batchSizes.clear();
     }
 
@@ -48,6 +49,7 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         batchCounter++;
         batchSizes.add(textSegments.size());
         chunkCounter += textSegments.size();
+        textSegments.forEach(segment -> chunkTexts.add(segment.text()));
         return realEmbeddingModel.embedAll(textSegments);
     }
 
