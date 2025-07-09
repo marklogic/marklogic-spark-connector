@@ -8,7 +8,6 @@ import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
-import net.sf.saxon.xpath.XPathFactoryImpl;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -23,6 +22,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
@@ -34,8 +34,7 @@ import java.util.Objects;
 public class DOMHelper {
 
     private final DocumentBuilderFactory documentBuilderFactory;
-    // Use Saxon XPath processor for XPath 2.0+ support
-    private final XPathFactory xPathFactory = new XPathFactoryImpl();
+    private final XPathFactory xPathFactory = XPathFactory.newInstance();
     private final NamespaceContext namespaceContext;
     private DocumentBuilder documentBuilder;
 
@@ -77,18 +76,21 @@ public class DOMHelper {
     }
 
     public XPathExpression compileXPath(String xpathExpression, String purposeForErrorMessage) {
-        XPath xpath = xPathFactory.newXPath();
+        XPath xpath = this.xPathFactory.newXPath();
         if (namespaceContext != null) {
             xpath.setNamespaceContext(namespaceContext);
         }
+
         try {
             return xpath.compile(xpathExpression);
-        } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to compile XPath expression for %s: %s; cause: %s",
-                purposeForErrorMessage, xpathExpression, ex.getMessage()), ex);
+        } catch (XPathExpressionException e) {
+            String message = massageXPathCompilationError(e.getMessage());
+            throw new ConnectorException(String.format(
+                "Unable to compile XPath expression for %s: %s; cause: %s",
+                purposeForErrorMessage, xpathExpression, message), e
+            );
         }
     }
-
 
     public static TransformerFactory newTransformerFactory() throws TransformerConfigurationException {
         TransformerFactory factory = TransformerFactory.newInstance();
@@ -114,6 +116,14 @@ public class DOMHelper {
         } catch (Exception ex) {
             throw new ConnectorException(ex.getMessage(), ex);
         }
+    }
+
+    private String massageXPathCompilationError(String message) {
+        String unnecessaryPart = "javax.xml.transform.TransformerException: ";
+        if (message.startsWith(unnecessaryPart)) {
+            return message.substring(unnecessaryPart.length());
+        }
+        return message;
     }
 
     private DocumentBuilder getDocumentBuilder() {
