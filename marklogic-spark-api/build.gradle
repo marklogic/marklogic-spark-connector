@@ -25,14 +25,14 @@ dependencies {
   implementation "jaxen:jaxen:2.0.0"
 
   // Needed for classifying documents via Semaphore.
-  api ("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
+  api("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
     exclude module: "icu4j"
   }
   // The S4 CS client depends on a very old version of icu4j - 4.0.1 - which has a critical security vulnerability.
   // Bumping up to the latest version, which has worked correctly via manual testing.
   implementation "com.ibm.icu:icu4j:77.1"
-  api ("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
+  api("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
   }
 
@@ -54,7 +54,4 @@ dependencies {
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   api "org.jdom:jdom2:2.0.6.1"
-
-  // Provides support for XPath 2.0 expressions.
-  implementation "net.sf.saxon:Saxon-HE:12.7"
 }
