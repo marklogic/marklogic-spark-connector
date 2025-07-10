@@ -24,6 +24,7 @@ public interface ChunkSelectorFactory {
             .withChunksPointer(context.getProperties().get(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER))
             .withTextPointer(context.getStringOption(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER))
             .withEmbeddingArrayName(context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME))
+            .withBase64EncodeVectors(context.getBooleanOption(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, false))
             .build();
     }
 
@@ -32,7 +33,8 @@ public interface ChunkSelectorFactory {
             context.getStringOption(Options.WRITE_EMBEDDER_TEXT_XPATH),
             context.getStringOption(Options.WRITE_EMBEDDER_EMBEDDING_NAME),
             context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE),
-            NamespaceContextFactory.makeNamespaceContext(context.getProperties())
+            NamespaceContextFactory.makeNamespaceContext(context.getProperties()),
+            context.getBooleanOption(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, false)
         );
         return new DOMChunkSelector(
             context.getStringOption(Options.WRITE_EMBEDDER_CHUNKS_XPATH),

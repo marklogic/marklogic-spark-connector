@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.core.embedding;
 
+import com.marklogic.client.util.VectorUtil;
 import com.marklogic.spark.ConnectorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,11 +66,21 @@ public class DOMChunk implements Chunk {
     public void addEmbedding(float[] embedding) {
         // DOM is fine with null as a value for the namespace.
         Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
-        List<Float> values = new ArrayList<>(embedding.length);
-        for (float val : embedding) {
-            values.add(val);
+
+        if (xmlChunkConfig.isBase64EncodeVectors()) {
+            String base64Vector = VectorUtil.base64Encode(embedding);
+            embeddingElement.setTextContent(base64Vector);
+            // Disable stemming.
+            embeddingElement.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", "zxx");
+        } else {
+            // Original behavior: store as array string
+            List<Float> values = new ArrayList<>(embedding.length);
+            for (float val : embedding) {
+                values.add(val);
+            }
+            embeddingElement.setTextContent(values.toString());
         }
-        embeddingElement.setTextContent(values.toString());
+
         chunkElement.appendChild(embeddingElement);
     }
 
