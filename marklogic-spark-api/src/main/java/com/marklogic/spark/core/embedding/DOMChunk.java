@@ -58,15 +58,15 @@ public class DOMChunk implements Chunk {
     @Override
     public void addEmbedding(float[] embedding) {
         // DOM is fine with null as a value for the namespace.
-        Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
+        final Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
+
+        // Disable stemming.
+        embeddingElement.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", "zxx");
 
         if (xmlChunkConfig.isBase64EncodeVectors()) {
             String base64Vector = VectorUtil.base64Encode(embedding);
             embeddingElement.setTextContent(base64Vector);
-            // Disable stemming.
-            embeddingElement.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", "zxx");
         } else {
-            // Original behavior: store as array string
             List<Float> values = new ArrayList<>(embedding.length);
             for (float val : embedding) {
                 values.add(val);
