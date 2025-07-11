@@ -18,23 +18,16 @@ import java.util.List;
 
 public class DOMChunk implements Chunk {
 
-    private final String documentUri;
     private final Document document;
     private final Element chunkElement;
     private final XmlChunkConfig xmlChunkConfig;
     private final XPathFactory xpathFactory;
 
-    public DOMChunk(String documentUri, Document document, Element chunkElement, XmlChunkConfig xmlChunkConfig, XPathFactory xpathFactory) {
-        this.documentUri = documentUri;
+    public DOMChunk(Document document, Element chunkElement, XmlChunkConfig xmlChunkConfig, XPathFactory xpathFactory) {
         this.document = document;
         this.chunkElement = chunkElement;
         this.xmlChunkConfig = xmlChunkConfig;
         this.xpathFactory = xpathFactory;
-    }
-
-    @Override
-    public String getDocumentUri() {
-        return documentUri;
     }
 
     public boolean hasEmbeddingText() {

@@ -129,7 +129,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
         }
 
-        var domChunk = new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory);
+        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
         if (embedding != null) {
             domChunk.addEmbedding(embedding);
         }
