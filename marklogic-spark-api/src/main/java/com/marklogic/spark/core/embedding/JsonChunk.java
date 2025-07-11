@@ -10,14 +10,12 @@ import com.marklogic.client.util.VectorUtil;
 
 public class JsonChunk implements Chunk {
 
-    private final String documentUri;
     private final ObjectNode chunk;
     private final JsonPointer textPointer;
     private final String embeddingArrayName;
     private final boolean base64EncodeVectors;
 
-    public JsonChunk(String documentUri, ObjectNode chunk, String textPointer, String embeddingArrayName, boolean base64EncodeVectors) {
-        this.documentUri = documentUri;
+    public JsonChunk(ObjectNode chunk, String textPointer, String embeddingArrayName, boolean base64EncodeVectors) {
         this.chunk = chunk;
         this.textPointer = JsonPointer.compile(textPointer != null ? textPointer : "/text");
         this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "embedding";
@@ -27,11 +25,6 @@ public class JsonChunk implements Chunk {
     public boolean hasEmbeddingText() {
         String text = getEmbeddingText();
         return text != null && !text.trim().isEmpty();
-    }
-
-    @Override
-    public String getDocumentUri() {
-        return documentUri;
     }
 
     @Override
