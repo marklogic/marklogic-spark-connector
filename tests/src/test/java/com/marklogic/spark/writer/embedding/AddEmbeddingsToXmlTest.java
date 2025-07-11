@@ -296,9 +296,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
     private void verifyEachChunkOnDocumentHasAnEmbedding(String uri) {
         XmlNode doc = readXmlDocument(uri);
-        doc.getXmlNodes("/node()/chunks/chunk").forEach(chunk -> {
-            chunk.assertElementExists("/chunk/text");
-            chunk.assertElementExists("/chunk/model:embedding");
+        doc.getXmlNodes("/node()/model:chunks/model:chunk").forEach(chunk -> {
+            chunk.assertElementExists("/model:chunk/model:text");
+            chunk.assertElementExists(
+                "As of the 2.7.0 release, the embedding should have the zxx lang to disable stemming by MarkLogic.",
+                "/model:chunk/model:embedding[@xml:lang='zxx']"
+            );
         });
     }
 
