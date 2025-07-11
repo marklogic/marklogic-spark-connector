@@ -347,7 +347,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
-            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
             .mode(SaveMode.Append)
             .save();
 
@@ -377,7 +377,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
             .option(Options.XPATH_NAMESPACE_PREFIX + "model", "http://marklogic.com/appservices/model")
             .option(Options.WRITE_EMBEDDER_CHUNKS_XPATH, "/root/model:chunks/model:chunk")
-            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
             .mode(SaveMode.Append)
             .save();
 

@@ -34,7 +34,7 @@ public interface ChunkAssemblerFactory {
             .withUriSuffix(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_URI_SUFFIX))
             .withXmlNamespace(context.getProperties().get(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE))
             .withEmbeddingXmlNamespace(context.getProperties().get(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE))
-            .withBase64EncodeVectors(context.getBooleanOption(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, false))
+            .withBase64EncodeVectors(context.getBooleanOption(Options.WRITE_EMBEDDER_BASE64_ENCODE, false))
             .build()
         );
     }
