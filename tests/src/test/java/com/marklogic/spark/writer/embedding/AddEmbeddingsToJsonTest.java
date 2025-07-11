@@ -32,7 +32,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     void teardown() {
         TestEmbeddingModel.reset();
     }
-    
+
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
      * as part of one write process.
@@ -356,7 +356,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
-            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
             .mode(SaveMode.Append)
             .save();
 
@@ -385,7 +385,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
             .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
-            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
             .mode(SaveMode.Append)
             .save();
 

@@ -468,7 +468,7 @@ public abstract class Options {
      *
      * @since 2.7.0
      */
-    public static final String WRITE_EMBEDDER_BASE64_ENCODE_VECTORS = WRITE_EMBEDDER_PREFIX + "base64EncodeVectors";
+    public static final String WRITE_EMBEDDER_BASE64_ENCODE = WRITE_EMBEDDER_PREFIX + "base64Encode";
 
     /**
      * Defines the host for classification requests
