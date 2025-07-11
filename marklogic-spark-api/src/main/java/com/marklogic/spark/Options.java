@@ -464,6 +464,13 @@ public abstract class Options {
     public static final String WRITE_EMBEDDER_BATCH_SIZE = WRITE_EMBEDDER_PREFIX + "batchSize";
 
     /**
+     * Enables base64 encoding of vector embeddings in a format supported by the MarkLogic server.
+     *
+     * @since 2.7.0
+     */
+    public static final String WRITE_EMBEDDER_BASE64_ENCODE_VECTORS = WRITE_EMBEDDER_PREFIX + "base64EncodeVectors";
+
+    /**
      * Defines the host for classification requests
      *
      * @since 2.6.0

@@ -18,6 +18,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -27,6 +28,11 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
     private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
 
+    @AfterEach
+    void teardown() {
+        TestEmbeddingModel.reset();
+    }
+    
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
      * as part of one write process.
@@ -337,6 +343,55 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
                 "generation process.");
     }
 
+    @Test
+    void base64EncodeVectors() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readJsonDocument("/split-test.json"));
+    }
+
+    @Test
+    void base64EncodeVectorsWithExistingChunks() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        // First create chunks without embeddings
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .mode(SaveMode.Append)
+            .save();
+
+        // Now add base64-encoded embeddings to existing chunks
+        readDocument("/split-test.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE_VECTORS, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readJsonDocument("/split-test.json"));
+    }
+
     private Dataset<Row> readDocument(String uri) {
         return newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -375,5 +430,20 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         }
 
         assertEquals(4, counter, "Each test is expected to produce 4 chunks based on the max chunk size of 500.");
+    }
+
+    private void verifyDocumentHasTwoChunksWithEncodedVectors(JsonNode doc) {
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(2, chunks.size());
+
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("embedding"), "Chunk should have an embedding field");
+            assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", chunk.get("embedding").asText(),
+                "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
+
+            assertTrue(chunk.has("language"), "Chunk should have a language field");
+            assertEquals("zxx", chunk.get("language").asText(), "Language should be 'zxx' to disable stemming");
+        }
     }
 }

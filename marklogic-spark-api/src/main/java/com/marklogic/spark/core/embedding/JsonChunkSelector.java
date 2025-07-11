@@ -21,11 +21,13 @@ public class JsonChunkSelector implements ChunkSelector {
     private final JsonPointer chunksPointer;
     private final String textPointer;
     private final String embeddingArrayName;
+    private final boolean base64EncodeVectors;
 
     public static class Builder {
         private String chunksPointer = "/chunks";
         private String textPointer;
         private String embeddingArrayName;
+        private boolean base64EncodeVectors = false;
 
         public Builder withChunksPointer(String chunksPointer) {
             if (chunksPointer != null) {
@@ -48,15 +50,21 @@ public class JsonChunkSelector implements ChunkSelector {
             return this;
         }
 
+        public Builder withBase64EncodeVectors(boolean base64EncodeVectors) {
+            this.base64EncodeVectors = base64EncodeVectors;
+            return this;
+        }
+
         public JsonChunkSelector build() {
-            return new JsonChunkSelector(chunksPointer, textPointer, embeddingArrayName);
+            return new JsonChunkSelector(chunksPointer, textPointer, embeddingArrayName, base64EncodeVectors);
         }
     }
 
-    private JsonChunkSelector(String chunksPointerExpression, String textPointer, String embeddingArrayName) {
+    private JsonChunkSelector(String chunksPointerExpression, String textPointer, String embeddingArrayName, boolean base64EncodeVectors) {
         this.chunksPointer = JsonPointer.compile(chunksPointerExpression);
         this.textPointer = textPointer;
         this.embeddingArrayName = embeddingArrayName;
+        this.base64EncodeVectors = base64EncodeVectors;
     }
 
     @Override
@@ -70,13 +78,13 @@ public class JsonChunkSelector implements ChunkSelector {
         List<Chunk> chunks = new ArrayList<>();
         if (chunksNode instanceof ArrayNode) {
             chunksNode.forEach(obj -> {
-                JsonChunk chunk = new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName);
+                JsonChunk chunk = new JsonChunk(uri, (ObjectNode) obj, textPointer, embeddingArrayName, base64EncodeVectors);
                 if (chunk.hasEmbeddingText()) {
                     chunks.add(chunk);
                 }
             });
         } else {
-            JsonChunk chunk = new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName);
+            JsonChunk chunk = new JsonChunk(uri, (ObjectNode) chunksNode, textPointer, embeddingArrayName, base64EncodeVectors);
             if (chunk.hasEmbeddingText()) {
                 chunks.add(chunk);
             }
