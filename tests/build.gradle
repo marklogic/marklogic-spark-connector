@@ -17,7 +17,8 @@ dependencies {
   }
 
   // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.0.0-beta4"
+  // This oddly still doesn't have a 1.0.0 release, even though langchain4j has a 1.0.0 release from May 2025.
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.0.0-beta5"
 
   testImplementation('com.marklogic:ml-app-deployer:5.0.0') {
     exclude group: "com.fasterxml.jackson.core"
