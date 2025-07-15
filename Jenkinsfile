@@ -60,8 +60,7 @@ pipeline{
             docker-compose down -v || true
             sudo /usr/local/sbin/mladmin cleandata
             cd marklogic-spark-connector
-            mkdir -p docker/marklogic/logs
-            docker-compose up -d --build
+            MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
           '''
         runtests('JAVA17_HOME_DIR')
         withSonarQubeEnv('SONAR_Progress') {
@@ -111,7 +110,7 @@ pipeline{
                 cd marklogic-spark-connector
                 mkdir -p docker/marklogic/logs
                 docker-compose down -v || true
-                MARKLOGIC_TAG=progressofficial/marklogic-db:latest-11 docker-compose up -d --build
+                MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
             '''
             runtests('JAVA17_HOME_DIR')
       }
