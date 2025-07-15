@@ -15,14 +15,14 @@ services:
       - "8116:8116"
 
   marklogic:
-    image: "${MARKLOGIC_TAG}"
+    image: "${MARKLOGIC_IMAGE}"
     platform: linux/amd64
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin
       - MARKLOGIC_ADMIN_PASSWORD=admin
     volumes:
-      - ./docker/marklogic/logs:/var/opt/MarkLogic/Logs
+      - ${MARKLOGIC_LOGS_VOLUME}:/var/opt/MarkLogic/Logs
     ports:
       - "8000-8002:8000-8002"
       - "8015:8015"
