@@ -30,7 +30,7 @@ import java.util.stream.Stream;
  */
 class ArbitraryRowConverter implements RowConverter {
 
-    private static final String MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME = "marklogic_spark_file_path" ;
+    private static final String MARKLOGIC_SPARK_FILE_PATH_COLUMN_NAME = "marklogic_spark_file_path";
 
     private final ObjectMapper objectMapper;
     private final XmlMapper xmlMapper;
@@ -108,9 +108,10 @@ class ArbitraryRowConverter implements RowConverter {
             row.setNullAt(this.filePathIndex);
         } else {
             // Temporary URI to avoid issues during the document pipeline, where the lack of a URI can cause an error
-            // when constructing a DocumentWriteOperationImpl. This temporary URI will be replaced in all cases based
-            // on other inputs provided by the user.
-            initialUri = String.format("/temporary/%s.json", UUID.randomUUID());
+            // when constructing a DocumentWriteOperationImpl. This does duplicate a little bit of logic -
+            // StandardUriMaker assumes the same default value for a URI. That is acceptable, though, as a UUID is a very
+            // common way to generate a unique identifier.
+            initialUri = UUID.randomUUID().toString();
         }
         return initialUri;
     }
