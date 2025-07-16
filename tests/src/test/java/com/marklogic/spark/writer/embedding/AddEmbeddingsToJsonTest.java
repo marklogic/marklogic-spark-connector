@@ -344,6 +344,29 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void arbitraryRowWithNoInitialUriAndNoUriModifier() {
+        newSparkSession().read()
+            .option("header", true)
+            .csv("src/test/resources/inputForStream/Hogwarts.csv")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_COLLECTIONS, "hogwarts")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/House")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("hogwarts", 9);
+        getUrisInCollection("hogwarts", 9).forEach(uri -> {
+            String message = "The default URI should be a UUID followed by .json; actual URI: " + uri;
+            assertTrue(uri.endsWith(".json"), message);
+            assertFalse(uri.contains("/"), message);
+        });
+    }
+
+    @Test
     void base64EncodeVectors() {
         TestEmbeddingModel.reset();
         TestEmbeddingModel.useFixedTestVector = true;
