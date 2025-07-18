@@ -10,6 +10,11 @@ configurations {
   // with Spark.
   shadowDependencies
 
+  // Allows for Java 17-specific dependencies to be declared so that they can be added to the shadowJar, but also
+  // not included on the compile classpath for the connector. These dependencies are also declared in the "tests"
+  // project as test dependencies so that they can be tested. These are separate from shadowDependencies, as those
+  // are on the compile classpath. But we don't want the connector to require any Java 17 dependencies to be on the
+  // compile classpath so that we can still compile it using Java 11.
   java17Dependencies
 
   // This approach allows for all of the dependencies to be available for compilation and for running tests.
