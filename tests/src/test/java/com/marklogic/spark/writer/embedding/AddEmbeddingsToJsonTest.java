@@ -465,8 +465,9 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", chunk.get("embedding").asText(),
                 "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
 
-            assertTrue(chunk.has("language"), "Chunk should have a language field");
-            assertEquals("zxx", chunk.get("language").asText(), "Language should be 'zxx' to disable stemming");
+            assertFalse(chunk.has("lang"), "Due to MLE-22918, the 'lang' field is not set to 'zxx' since this " +
+                "will disable stemming on data outside the intended scope of the 'lang' field. A user is free to " +
+                "e.g. use a REST transform to add this if desired.");
         }
     }
 }

@@ -37,8 +37,9 @@ public class JsonChunk implements Chunk {
         if (base64EncodeVectors) {
             String base64Vector = VectorUtil.base64Encode(embedding);
             chunk.put(this.embeddingArrayName, base64Vector);
-            // Add language as a top-level property to disable stemming in MarkLogic
-            chunk.put("language", "zxx");
+            // Stemming is not disabled - see MLE-22918 about a bug pertaining to the scope of "lang". Per server docs,
+            // it should only affect siblings, which means we need it set in each chunk. But in the latest versions
+            // of 10, 11, and 12, it affects all content in the document that occurs after it is processed.
         } else {
             addEmbeddingAsArray(embedding);
         }
