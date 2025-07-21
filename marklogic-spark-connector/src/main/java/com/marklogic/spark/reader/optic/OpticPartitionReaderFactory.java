@@ -18,6 +18,7 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
     private final OpticReadContext opticReadContext;
 
     OpticPartitionReaderFactory(OpticReadContext opticReadContext) {
+        logger.info("CREATED");
         this.opticReadContext = opticReadContext;
     }
 

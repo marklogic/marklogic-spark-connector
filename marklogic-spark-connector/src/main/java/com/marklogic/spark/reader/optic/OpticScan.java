@@ -14,10 +14,12 @@ import org.slf4j.LoggerFactory;
 class OpticScan implements Scan {
 
     private static final Logger logger = LoggerFactory.getLogger(OpticScan.class);
+    private static int batchCounter = 0;
 
     private OpticReadContext opticReadContext;
 
     OpticScan(OpticReadContext opticReadContext) {
+        logger.info("CREATED");
         this.opticReadContext = opticReadContext;
     }
 
@@ -33,10 +35,12 @@ class OpticScan implements Scan {
 
     @Override
     public Batch toBatch() {
+        int currentBatchId = ++batchCounter;
+        logger.info("toBatch() called - creating batch #{}", currentBatchId);
         if (logger.isTraceEnabled()) {
             logger.trace("Creating new batch");
         }
-        return new OpticBatch(opticReadContext);
+        return new OpticBatch(opticReadContext, currentBatchId);
     }
 
     @Override

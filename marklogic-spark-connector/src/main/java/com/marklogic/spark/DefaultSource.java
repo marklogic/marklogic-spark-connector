@@ -67,6 +67,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
+        logger.warn("GET TABLE");
         if (isFileOperation(properties)) {
             // Not yet supporting progress logging for file operations.
             return new MarkLogicFileTable(SparkSession.active(),

@@ -46,6 +46,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
     MarkLogicTable(StructType schema, Map<String, String> properties) {
         this.readSchema = schema;
         this.readProperties = properties;
+        logger.warn("CREATED");
     }
 
     MarkLogicTable(WriteContext writeContext) {

@@ -15,9 +15,12 @@ class OpticBatch implements Batch {
 
     private final OpticReadContext opticReadContext;
     private final InputPartition[] partitions;
+    private final int batchId;
 
-    OpticBatch(OpticReadContext opticReadContext) {
+    OpticBatch(OpticReadContext opticReadContext, int batchId) {
+        logger.info("CREATED - Batch #{}", batchId);
         this.opticReadContext = opticReadContext;
+        this.batchId = batchId;
         PlanAnalysis planAnalysis = opticReadContext.getPlanAnalysis();
         partitions = planAnalysis != null ?
             planAnalysis.getPartitionArray() :
@@ -31,6 +34,7 @@ class OpticBatch implements Batch {
 
     @Override
     public PartitionReaderFactory createReaderFactory() {
+        logger.info("createReaderFactory() called for Batch #{}", batchId);
         if (logger.isTraceEnabled()) {
             logger.trace("Creating new partition reader factory");
         }

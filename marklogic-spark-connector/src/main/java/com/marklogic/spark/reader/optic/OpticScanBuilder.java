@@ -38,6 +38,7 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
     }
 
     public OpticScanBuilder(OpticReadContext opticReadContext) {
+        logger.warn("CREATED");
         this.opticReadContext = opticReadContext;
     }
 
