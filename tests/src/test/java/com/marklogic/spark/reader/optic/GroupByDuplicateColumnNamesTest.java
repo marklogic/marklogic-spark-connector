@@ -79,6 +79,7 @@ class GroupByDuplicateColumnNamesTest extends AbstractPushDownTest {
         assertRowsReadFromMarkLogic(15, "Surprisingly, Spark never calls pushDownAggregation in this scenario. The " +
             "use of withColumn with a new set of values seems to prevent that, but it is not known why. We get back " +
             "the correct data from Spark, but the groupBy/sum are not pushed down. ");
+        rows.forEach(row -> System.out.println(row.prettyJson()));
         for (int i = 0; i < 5; i++) {
             Row row = rows.get(i);
             assertEquals(i + 1, row.getLong(0));

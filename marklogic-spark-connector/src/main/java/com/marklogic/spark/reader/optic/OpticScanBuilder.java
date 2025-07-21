@@ -46,6 +46,12 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         if (logger.isTraceEnabled()) {
             logger.trace("Creating new scan");
         }
+        if (logger.isDebugEnabled()) {
+            logger.debug("OpticScanBuilder.build() called - final scan configuration:");
+            logger.debug("  bucketCount: {}", opticReadContext.getBucketCount());
+            logger.debug("  schema: {}", opticReadContext.getSchema().json());
+            logger.debug("  pushedFilters count: {}", pushedFilters != null ? pushedFilters.size() : 0);
+        }
         return new OpticScan(opticReadContext);
     }
 
@@ -140,7 +146,17 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
      */
     @Override
     public boolean supportCompletePushDown(Aggregation aggregation) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("supportCompletePushDown called with aggregation: {}", describeAggregation(aggregation));
+            logger.debug("planAnalysisFoundNoRows: {}, pushDownAggregatesIsDisabled: {}",
+                opticReadContext.planAnalysisFoundNoRows(), pushDownAggregatesIsDisabled());
+            logger.debug("bucketCount: {}", opticReadContext.getBucketCount());
+        }
+
         if (opticReadContext.planAnalysisFoundNoRows() || pushDownAggregatesIsDisabled()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("supportCompletePushDown returning false - no rows found or aggregates disabled");
+            }
             return false;
         }
 
@@ -148,6 +164,9 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Aggregation contains one or more unsupported functions, " +
                     "so not pushing aggregation to MarkLogic: {}", describeAggregation(aggregation));
+            }
+            if (logger.isDebugEnabled()) {
+                logger.debug("supportCompletePushDown returning false - unsupported aggregate function");
             }
             return false;
         }
@@ -157,27 +176,49 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
                 Util.MAIN_LOGGER.info("Multiple requests will be made to MarkLogic; aggregation will be applied by Spark as well: {}",
                     describeAggregation(aggregation));
             }
+            if (logger.isDebugEnabled()) {
+                logger.debug("supportCompletePushDown returning false - multiple buckets ({})", opticReadContext.getBucketCount());
+            }
             return false;
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("supportCompletePushDown returning true - complete pushdown supported");
         }
         return true;
     }
 
     @Override
     public boolean pushAggregation(Aggregation aggregation) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("pushAggregation called with aggregation: {}", describeAggregation(aggregation));
+            logger.debug("planAnalysisFoundNoRows: {}, hasUnsupportedAggregateFunction: {}, pushDownAggregatesIsDisabled: {}",
+                opticReadContext.planAnalysisFoundNoRows(),
+                hasUnsupportedAggregateFunction(aggregation),
+                pushDownAggregatesIsDisabled());
+        }
+
         // For the initial 2.0 release, there aren't any known unsupported aggregate functions that can be called
         // after a "groupBy". If one is detected though, the aggregation won't be pushed down as it's uncertain if
         // pushing it down would produce the correct results.
         if (opticReadContext.planAnalysisFoundNoRows() || hasUnsupportedAggregateFunction(aggregation)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("pushAggregation returning false - no rows found or unsupported aggregate function");
+            }
             return false;
         }
 
         if (pushDownAggregatesIsDisabled()) {
             Util.MAIN_LOGGER.info("Push down of aggregates is disabled; Spark will handle all aggregations.");
+            if (logger.isDebugEnabled()) {
+                logger.debug("pushAggregation returning false - aggregates disabled");
+            }
             return false;
         }
 
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down aggregation: {}", describeAggregation(aggregation));
+            logger.debug("pushAggregation returning true - aggregation will be pushed down");
         }
         opticReadContext.pushDownAggregation(aggregation);
         return true;
