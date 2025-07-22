@@ -9,7 +9,6 @@ import com.marklogic.client.expression.PlanBuilder;
 import org.apache.spark.sql.sources.Filter;
 
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -32,7 +31,7 @@ class ParentFilter implements OpticFilter {
                 }
                 return opticFilter;
             })
-            .collect(Collectors.toList()));
+            .toList());
     }
 
     ParentFilter(String functionName, List<OpticFilter> filters) {

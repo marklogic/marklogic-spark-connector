@@ -111,8 +111,8 @@ class AggregateXmlSplitter {
     }
 
     private String determineInitialUri(StringHandle stringHandle, String uriPrefix) {
-        if (stringHandle instanceof StringHandleWithUriValue) {
-            String uriValue = ((StringHandleWithUriValue) stringHandle).getUriValue();
+        if (stringHandle instanceof StringHandleWithUriValue stringHandleWithUriValue) {
+            String uriValue = stringHandleWithUriValue.getUriValue();
             if (uriValue == null) {
                 String message = String.format("No occurrence of URI element '%s' found in aggregate element %d in %s",
                     this.uriElement, rowCounter, this.identifierForErrors);

@@ -23,7 +23,6 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -161,7 +160,7 @@ public class OpticReadContext extends ContextSupport {
     void pushDownAggregation(Aggregation aggregation) {
         final List<String> groupByColumnNames = Stream.of(aggregation.groupByExpressions())
             .map(PlanUtil::expressionToColumnName)
-            .collect(Collectors.toList());
+            .toList();
 
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("groupBy column names: {}", groupByColumnNames);
@@ -177,16 +176,13 @@ public class OpticReadContext extends ContextSupport {
                 newSchema = newSchema.add(func.toString(), DataTypes.LongType);
             } else if (func instanceof CountStar) {
                 newSchema = newSchema.add("count", DataTypes.LongType);
-            } else if (func instanceof Max) {
-                Max max = (Max) func;
+            } else if (func instanceof Max max) {
                 StructField field = findColumnInSchema(max.column(), PlanUtil.expressionToColumnName(max.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Min) {
-                Min min = (Min) func;
+            } else if (func instanceof Min min) {
                 StructField field = findColumnInSchema(min.column(), PlanUtil.expressionToColumnName(min.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Sum) {
-                Sum sum = (Sum) func;
+            } else if (func instanceof Sum sum) {
                 StructField field = findColumnInSchema(sum.column(), PlanUtil.expressionToColumnName(sum.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
             } else if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -199,7 +195,7 @@ public class OpticReadContext extends ContextSupport {
                 "performance of pushed down aggregation.");
             List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())
-                .collect(Collectors.toList());
+                .toList();
             this.planAnalysis = new PlanAnalysis(planAnalysis.getSerializedPlan(), mergedPartitions, planAnalysis.getServerTimestamp());
         }
 
