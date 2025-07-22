@@ -23,7 +23,7 @@ subprojects {
   // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
     toolchain {
-      languageVersion = JavaLanguageVersion.of(11)
+      languageVersion = JavaLanguageVersion.of(17)
     }
   }
 
