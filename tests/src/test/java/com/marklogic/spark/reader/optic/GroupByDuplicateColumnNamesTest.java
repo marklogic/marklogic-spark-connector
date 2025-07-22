@@ -6,7 +6,6 @@ package com.marklogic.spark.reader.optic;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -65,7 +64,6 @@ class GroupByDuplicateColumnNamesTest extends AbstractPushDownTest {
         });
     }
 
-    @Disabled("Not yet working with Spark 4.0, needs more debugging")
     @Test
     void groupByTwoColumns() {
         List<Row> rows = newDefaultReader()
@@ -80,8 +78,7 @@ class GroupByDuplicateColumnNamesTest extends AbstractPushDownTest {
         assertEquals(5, rows.size());
         assertRowsReadFromMarkLogic(15, "Surprisingly, Spark never calls pushDownAggregation in this scenario. The " +
             "use of withColumn with a new set of values seems to prevent that, but it is not known why. We get back " +
-            "the correct data from Spark, but the groupBy/sum are not pushed down. " +
-            "Hmm - Spark 4.0, it does seem to get pushed down.");
+            "the correct data from Spark, but the groupBy/sum are not pushed down. ");
         for (int i = 0; i < 5; i++) {
             Row row = rows.get(i);
             assertEquals(i + 1, row.getLong(0));

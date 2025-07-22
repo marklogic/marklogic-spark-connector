@@ -12,8 +12,8 @@ import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import scala.collection.Seq;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConversions;
+import scala.collection.mutable.WrappedArray;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -164,11 +164,11 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
     }
 
     private void verifyMetadataColumns(Row row) {
-        List<String> collections = CollectionConverters.asJava(row.getSeq(3));
+        List<String> collections = JavaConversions.seqAsJavaList(row.getSeq(3));
         assertEquals(1, collections.size());
         assertEquals("partial-batch", collections.get(0));
 
-        Map<String, Seq<?>> permissions = row.getJavaMap(4);
+        Map<String, WrappedArray> permissions = row.getJavaMap(4);
         assertTrue(permissions.get("spark-user-role").toString().contains("READ"));
         assertTrue(permissions.get("spark-user-role").toString().contains("UPDATE"));
 
@@ -176,7 +176,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
         assertTrue(row.isNullAt(6));
 
-        Map<String, Seq<?>> metadataValues = row.getJavaMap(7);
+        Map<String, WrappedArray> metadataValues = row.getJavaMap(7);
         assertEquals(0, metadataValues.size());
     }
 }

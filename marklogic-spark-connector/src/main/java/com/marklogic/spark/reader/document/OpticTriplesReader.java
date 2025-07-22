@@ -20,6 +20,7 @@ import org.apache.spark.unsafe.types.UTF8String;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -105,7 +106,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
         IOUtils.closeQuietly(this.currentRowSet);
     }
 
-    private void readNextBatchOfTriples(List<String> uris) {
+    private void readNextBatchOfTriples(@NotNull List<String> uris) {
         PlanBuilder.ModifyPlan plan = op
             .fromTriples(op.pattern(op.col("subject"), op.col("predicate"), op.col(OBJECT_COLUMN), op.graphCol(GRAPH_COLUMN)))
             .where(op.cts.documentQuery(op.xs.stringSeq(uris.toArray(new String[0]))));

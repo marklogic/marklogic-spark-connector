@@ -11,8 +11,8 @@ import org.apache.spark.sql.Row;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import scala.collection.Seq;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConverters;
+import scala.collection.mutable.WrappedArray;
 
 import java.util.Map;
 
@@ -133,28 +133,25 @@ class ReadDocumentRowsWithMetadataTest extends AbstractIntegrationTest {
         properties.assertElementValue("/prop:properties/ex:key1", "value1");
         properties.assertElementValue("/prop:properties/key2", "value2");
 
-        @SuppressWarnings("unchecked")
-        Map<String, String> metadataValues = CollectionConverters.asJava((scala.collection.immutable.Map<String, String>) row.get(7));
+        Map<String, String> metadataValues = JavaConverters.mapAsJavaMap((scala.collection.immutable.Map) row.get(7));
         assertEquals(2, metadataValues.size());
         assertEquals("value1", metadataValues.get("meta1"));
         assertEquals("value2", metadataValues.get("meta2"));
     }
 
     private void verifyCollectionsColumn(Row row) {
-        @SuppressWarnings("unchecked")
-        Seq<String> collections = (Seq<String>) row.get(3);
+        WrappedArray collections = (WrappedArray) row.get(3);
         assertEquals("collection1", collections.apply(0));
         assertEquals("collection2", collections.apply(1));
     }
 
     private void verifyPermissionsColumn(Row row) {
-        @SuppressWarnings("unchecked")
-        Map<String, Seq<String>> permissions = CollectionConverters.asJava((scala.collection.immutable.Map<String, Seq<String>>) row.get(4));
+        Map<String, WrappedArray> permissions = JavaConverters.mapAsJavaMap((scala.collection.immutable.Map) row.get(4));
         assertEquals(2, permissions.size());
         assertTrue(permissions.containsKey("spark-user-role"));
         assertTrue(permissions.containsKey("qconsole-user"));
 
-        Seq<String> capabilities = permissions.get("spark-user-role");
+        WrappedArray capabilities = permissions.get("spark-user-role");
         assertEquals(2, capabilities.length());
         assertTrue(capabilities.contains("READ"));
         assertTrue(capabilities.contains("UPDATE"));

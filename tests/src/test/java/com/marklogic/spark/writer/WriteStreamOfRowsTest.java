@@ -5,7 +5,6 @@ package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.Options;
-import org.apache.spark.sql.Row;
 import org.apache.spark.sql.streaming.DataStreamWriter;
 import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.streaming.StreamingQueryException;
@@ -57,7 +56,7 @@ class WriteStreamOfRowsTest extends AbstractWriteTest {
             "Unexpected error: " + cause);
     }
 
-    private DataStreamWriter<Row> newDefaultStreamWriter(Path tempDir) {
+    private DataStreamWriter newDefaultStreamWriter(Path tempDir) {
         return newSparkSession().readStream()
             .schema(SCHEMA)
             .option("header", true)
