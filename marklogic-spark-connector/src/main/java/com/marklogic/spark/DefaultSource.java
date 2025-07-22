@@ -22,7 +22,7 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.JavaConverters;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.Arrays;
 import java.util.List;
@@ -69,9 +69,9 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
             // Not yet supporting progress logging for file operations.
-            return new MarkLogicFileTable(SparkSession.active(),
+            return new MarkLogicFileTable(SparkSession.getActiveSession().get(),
                 new CaseInsensitiveStringMap(properties),
-                JavaConverters.asScalaBuffer(getPaths(properties)), schema
+                scala.collection.immutable.List.from(CollectionConverters.asScala(getPaths(properties))), schema
             );
         }
 
