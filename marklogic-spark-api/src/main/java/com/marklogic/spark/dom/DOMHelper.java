@@ -51,8 +51,8 @@ public class DOMHelper {
     }
 
     public Document extractDocument(AbstractWriteHandle handle, String sourceUri) {
-        if (handle instanceof DOMHandle) {
-            return ((DOMHandle) handle).get();
+        if (handle instanceof DOMHandle domHandle) {
+            return domHandle.get();
         }
 
         String xml = HandleAccessor.contentAsString(handle);

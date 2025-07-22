@@ -78,7 +78,7 @@ class MarkLogicTable implements SupportsRead, SupportsWrite {
 
         // This is needed by the Optic partition reader; capturing it in the ReadContext so that the reader does not
         // have a dependency on an active Spark session, which makes certain kinds of tests easier.
-        int defaultMinPartitions = SparkSession.active().sparkContext().defaultMinPartitions();
+        int defaultMinPartitions = SparkSession.getActiveSession().get().sparkContext().defaultMinPartitions();
         return new OpticScanBuilder(new OpticReadContext(readProperties, readSchema, defaultMinPartitions));
     }
 
