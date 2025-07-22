@@ -42,13 +42,12 @@ subprojects {
 
   configurations.all {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-      // Added after upgrading langchain4j to 1.0.0-beta2, which brought Jackson 2.18.2 in.
       if (details.requested.group.startsWith('com.fasterxml.jackson')) {
-        details.useVersion '2.15.2'
+        details.useVersion '2.17.2'
         details.because 'Need to match the version used by Spark.'
       }
       if (details.requested.group.equals("org.slf4j")) {
-        details.useVersion "2.0.16"
+        details.useVersion "2.0.17"
         details.because "Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can " +
           "lead to this issue - https://www.slf4j.org/codes.html#StaticLoggerBinder."
       }

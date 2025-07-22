@@ -1,16 +1,8 @@
-java {
-  // Must use Java 17 as langchain4j depends on 17+.
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
-
 dependencies {
   testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
-  // This forces this subproject onto Java 17.
   testImplementation (project(":marklogic-langchain4j")) {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
