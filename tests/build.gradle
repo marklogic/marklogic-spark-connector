@@ -1,16 +1,8 @@
-java {
-  // Must use Java 17 as langchain4j depends on 17+.
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
-
 dependencies {
   testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
-  // This forces this subproject onto Java 17.
   testImplementation (project(":marklogic-langchain4j")) {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
@@ -39,7 +31,7 @@ dependencies {
   }
 
   // marklogic-junit5 still needs spring-test, but we want the 6 version to minimize vulnerabilities.
-  testImplementation "org.springframework:spring-test:6.2.9"
+  testImplementation "org.springframework:spring-test:6.2.11"
 
   testImplementation "ch.qos.logback:logback-classic:1.5.18"
   testImplementation "org.slf4j:jcl-over-slf4j:2.0.17"
