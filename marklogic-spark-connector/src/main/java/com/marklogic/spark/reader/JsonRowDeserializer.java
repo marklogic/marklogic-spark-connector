@@ -15,11 +15,11 @@ import org.apache.spark.sql.types.StructType;
 import org.apache.spark.unsafe.types.UTF8String;
 import scala.Function1;
 import scala.Function2;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Handles deserializing a JSON object into a Spark InternalRow. This is accomplished via Spark's JacksonParser.
@@ -49,8 +49,9 @@ public class JsonRowDeserializer {
 
     private JacksonParser newJacksonParser(StructType schema) {
         final boolean allowArraysAsStructs = true;
-        final Seq<Filter> filters = JavaConverters.asScalaIterator(new ArrayList<Filter>().iterator()).toSeq();
+        List<Filter> filters = new ArrayList<>();
+        scala.collection.immutable.Seq<Filter> filterSeq = scala.collection.immutable.List.from(CollectionConverters.asScala(filters)).toSeq();
         JSONOptions jsonOptions = new JsonRowSerializer(schema, new HashMap<>()).getJsonOptions();
-        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filters);
+        return new JacksonParser(schema, jsonOptions, allowArraysAsStructs, filterSeq);
     }
 }
