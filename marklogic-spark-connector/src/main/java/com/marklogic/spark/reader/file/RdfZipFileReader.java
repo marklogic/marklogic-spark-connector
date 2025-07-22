@@ -11,6 +11,7 @@ import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.ZipEntry;
@@ -105,7 +106,7 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
 
         private boolean readyToClose = false;
 
-        public CustomZipInputStream(InputStream in) {
+        public CustomZipInputStream(@NotNull InputStream in) {
             super(in);
         }
 

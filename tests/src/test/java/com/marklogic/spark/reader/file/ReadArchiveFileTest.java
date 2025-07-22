@@ -16,8 +16,8 @@ import org.jdom2.Namespace;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import scala.collection.Seq;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.collection.JavaConversions;
+import scala.collection.mutable.WrappedArray;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -260,13 +260,13 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
     }
 
     private void verifyCollections(Row row) {
-        List<String> collections = CollectionConverters.asJava(row.getSeq(3));
+        List<String> collections = JavaConversions.seqAsJavaList(row.getSeq(3));
         assertEquals("collection1", collections.get(0));
         assertEquals("collection2", collections.get(1));
     }
 
     private void verifyPermissions(Row row) {
-        Map<String, Seq<?>> permissions = row.getJavaMap(4);
+        Map<String, WrappedArray> permissions = row.getJavaMap(4);
         assertTrue(permissions.get("spark-user-role").toString().contains("READ"));
         assertTrue(permissions.get("spark-user-role").toString().contains("UPDATE"));
         assertTrue(permissions.get("qconsole-user").toString().contains("READ"));

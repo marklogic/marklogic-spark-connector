@@ -39,41 +39,36 @@ abstract class AbstractPushDownTest extends AbstractIntegrationTest {
             .option(Options.READ_NUM_PARTITIONS, 1);
     }
 
-    protected final boolean isSparkThreeFiveOrHigher() {
+    protected final boolean isSparkThreeFive() {
         // The pushdown support appears to have changed between Spark 3.4 and 3.5. In a scenario with a single partition
         // reader, logging show the reader being created twice and performing its query twice, resulting in an unexpected
         // number of rows being read from MarkLogic. The correct number of rows are present in the Spark dataframe,
         // but assertions on how many rows were read from MarkLogic fail. Will investigate further when we start
         // building against Spark 3.5 or higher.
-        // This issue is still present in Spark 4.0. The issue involves multiple OpticBatch objects being created, each
-        // of which creates an OpticPartitionReaderFactory. Though sometimes an OpticBatch object or an
-        // OpticPartitionReaderFactory isn't even used by Spark. The issue may still be specific to when a single
-        // partition is used.
-        String version = sparkSession.version();
-        return version.startsWith("3.5") || version.startsWith("4");
+        return sparkSession.version().startsWith("3.5");
     }
 
     protected final void assertRowsReadFromMarkLogic(long expectedCount) {
-        if (!isSparkThreeFiveOrHigher()) {
+        if (!isSparkThreeFive()) {
             assertEquals(expectedCount, countOfRowsReadFromMarkLogic);
         }
     }
 
     protected final void assertRowsReadFromMarkLogic(long expectedCount, String message) {
-        if (!isSparkThreeFiveOrHigher()) {
+        if (!isSparkThreeFive()) {
             assertEquals(expectedCount, countOfRowsReadFromMarkLogic, message);
         }
     }
 
     protected final void assertRowsReadFromMarkLogicGreaterThan(long expectedCount, String message) {
-        if (!isSparkThreeFiveOrHigher()) {
+        if (!isSparkThreeFive()) {
             assertTrue(countOfRowsReadFromMarkLogic > expectedCount,
                 message + "; actual count: " + countOfRowsReadFromMarkLogic);
         }
     }
 
     protected final void assertRowsReadFromMarkLogicBetween(long min, long max, String message) {
-        if (!isSparkThreeFiveOrHigher()) {
+        if (!isSparkThreeFive()) {
             assertTrue(countOfRowsReadFromMarkLogic > min && countOfRowsReadFromMarkLogic < max,
                 message + "; actual count: " + countOfRowsReadFromMarkLogic);
         }

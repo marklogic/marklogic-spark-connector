@@ -16,6 +16,7 @@ import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 
+import javax.validation.constraints.NotNull;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -66,7 +67,7 @@ class ContentWriter {
         }
     }
 
-    void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
+    void writeContent(InternalRow row, @NotNull OutputStream outputStream) throws IOException {
         if (this.isStreamingFiles) {
             streamDocumentToFile(row, outputStream);
         } else if (this.prettyPrint) {
@@ -140,7 +141,7 @@ class ContentWriter {
         }
     }
 
-    private void prettyPrintContent(InternalRow row, OutputStream outputStream) throws IOException {
+    private void prettyPrintContent(InternalRow row, @NotNull OutputStream outputStream) throws IOException {
         final byte[] content = row.getBinary(1);
         Objects.requireNonNull(content);
         final String format = row.isNullAt(2) ? null : row.getString(2);

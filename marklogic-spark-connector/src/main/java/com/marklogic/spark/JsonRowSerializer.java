@@ -7,7 +7,8 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.catalyst.json.JSONOptions;
 import org.apache.spark.sql.catalyst.json.JacksonGenerator;
 import org.apache.spark.sql.types.StructType;
-import scala.jdk.javaapi.CollectionConverters;
+import scala.Predef;
+import scala.collection.JavaConverters;
 
 import java.io.StringWriter;
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class JsonRowSerializer {
 
         this.jsonOptions = new JSONOptions(
             // Funky code to convert a Java map into a Scala immutable Map.
-            scala.collection.immutable.Map.from(CollectionConverters.asScala(options)),
+            JavaConverters.mapAsScalaMapConverter(options).asScala().toMap(Predef.$conforms()),
 
             // As verified via tests, this default timezone ID is overridden by a user via
             // the spark.sql.session.timeZone option.
