@@ -15,6 +15,7 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
     static final long serialVersionUID = 1;
 
     private static final Logger logger = LoggerFactory.getLogger(OpticPartitionReaderFactory.class);
+    private static int readerCounter = 0;
     private final OpticReadContext opticReadContext;
 
     OpticPartitionReaderFactory(OpticReadContext opticReadContext) {
@@ -24,6 +25,8 @@ class OpticPartitionReaderFactory implements PartitionReaderFactory {
 
     @Override
     public PartitionReader<InternalRow> createReader(InputPartition partition) {
+        int currentReaderId = ++readerCounter;
+        logger.info("createReader() called - creating reader #{} for partition: {}", currentReaderId, partition);
         if (logger.isDebugEnabled()) {
             logger.debug("Creating reader for partition: {}", partition);
         }
