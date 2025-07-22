@@ -6,7 +6,7 @@ java {
 }
 
 dependencies {
-  testImplementation "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+  testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
   testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
@@ -57,4 +57,7 @@ test {
     '--add-exports=java.base/sun.util.calendar=ALL-UNNAMED',
     '--add-exports=java.base/sun.security.action=ALL-UNNAMED'
   ]
+
+  // Increased heap size as part of the Spark 4 upgrade, as we started experiencing OOM errors in the tests.
+  jvmArgs '-Xmx6g', '-Xms3g'
 }
