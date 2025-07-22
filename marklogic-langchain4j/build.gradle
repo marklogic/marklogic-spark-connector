@@ -1,14 +1,11 @@
 /**
  * This project defines processing that depends on langchain4j and thus will require Java 17.
+ *
+ * Now that we're building on Spark 4, this separation can be removed and this functionality can be moved into either
+ * marklogic-spark-api or marklogic-spark-connector.
  */
-
-java {
-  toolchain {
-    languageVersion = JavaLanguageVersion.of(17)
-  }
-}
 
 dependencies {
   api project(":marklogic-spark-api")
-  api "dev.langchain4j:langchain4j:1.0.0"
+  api "dev.langchain4j:langchain4j:1.1.0"
 }
