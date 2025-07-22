@@ -12,7 +12,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.jdom2.Namespace;
 import org.junit.jupiter.api.Test;
-import scala.collection.mutable.WrappedArray;
+import scala.collection.Seq;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -257,9 +257,9 @@ class ReadMlcpArchiveFilesTest extends AbstractIntegrationTest {
     }
 
     private void verifyPermissions(Row row) {
-        Map<String, WrappedArray<String>> permissions = row.getJavaMap(PERMISSIONS_COLUMN);
+        Map<String, Seq<String>> permissions = row.getJavaMap(PERMISSIONS_COLUMN);
         assertEquals(2, permissions.size());
-        WrappedArray<String> capabilities = permissions.get("qconsole-user");
+        Seq<String> capabilities = permissions.get("qconsole-user");
         assertEquals(1, capabilities.size());
         assertEquals("READ", capabilities.apply(0));
         capabilities = permissions.get("spark-user-role");
