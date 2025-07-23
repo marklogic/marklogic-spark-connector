@@ -1,6 +1,7 @@
 @Library('shared-libraries') _
 
 def runtests(String javaVersion){
+  cleanupDocker()
   // 'set -e' causes the script to fail if any command fails.
   sh label:'test', script: '''#!/bin/bash
     set -e
@@ -74,6 +75,7 @@ pipeline{
             cd marklogic-spark-connector
             docker-compose down -v || true
           '''
+          cleanupDocker()
         }
       }
     }
@@ -103,6 +105,7 @@ pipeline{
         }
       }
       steps{
+            cleanupDocker()
             sh label:'mlsetup', script: '''#!/bin/bash
                 echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
                 sudo /usr/local/sbin/mladmin remove
@@ -121,6 +124,7 @@ pipeline{
             cd marklogic-spark-connector
             docker-compose down -v || true
           '''
+          cleanupDocker()
         }
       }
 
