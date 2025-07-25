@@ -1,7 +1,6 @@
 @Library('shared-libraries') _
 
 def runtests(String javaVersion){
-  cleanupDocker()
   // 'set -e' causes the script to fail if any command fails.
   sh label:'test', script: '''#!/bin/bash
     set -e
@@ -10,12 +9,13 @@ def runtests(String javaVersion){
     export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
     echo "Waiting for MarkLogic server to initialize."
-    sleep 30s
+    sleep 60s
     ./gradlew clean
-   ./gradlew -i mlDeploy
-   echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
-   ./gradlew -i mlLoadData
-   ./gradlew clean testCodeCoverageReport || true
+    ./gradlew mlTestConnections
+    ./gradlew -i mlDeploy
+    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
+    ./gradlew -i mlLoadData
+    ./gradlew clean testCodeCoverageReport || true
   '''
   junit '**/build/**/*.xml'
 }
@@ -55,6 +55,7 @@ pipeline{
       }
       agent {label 'devExpLinuxPool'}
       steps{
+        cleanupDocker()
         sh label:'mlsetup', script: '''#!/bin/bash
             echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
             sudo /usr/local/sbin/mladmin remove

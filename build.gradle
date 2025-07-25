@@ -18,7 +18,6 @@ subprojects {
   apply plugin: "jacoco"
 
   group = "com.marklogic"
-  version "2.7-SNAPSHOT"
 
   // Defaults to the Java 11 toolchain. Overridden by subprojects that require Java 17.
   // See https://docs.gradle.org/current/userguide/toolchains.html .
