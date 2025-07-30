@@ -3,7 +3,7 @@
  * marklogic-langchain4j and marklogic-spark-connector projects.
  */
 dependencies {
-  api("com.marklogic:marklogic-client-api:7.2-SNAPSHOT") {
+  api("com.marklogic:marklogic-client-api:7.2.0") {
     // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
