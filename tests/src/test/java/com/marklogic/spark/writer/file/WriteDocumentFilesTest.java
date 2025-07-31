@@ -97,7 +97,8 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
         TextDocumentManager mgr = getDatabaseClient().newTextDocumentManager();
         DocumentWriteSet writeSet = mgr.newWriteSet();
         writeSet.add("example.txt", metadata, new StringHandle("URI without leading slash"));
-        writeSet.add("org:example2.txt", metadata, new StringHandle("Opaque URI"));
+        writeSet.add("some:org:example2.txt", metadata, new StringHandle("Opaque URI"));
+        writeSet.add("example with spaces.txt", metadata, new StringHandle("Spaces URI"));
         mgr.write(writeSet);
 
         newSparkSession().read()
@@ -112,15 +113,16 @@ class WriteDocumentFilesTest extends AbstractIntegrationTest {
 
         File[] files = tempDir.toFile().listFiles();
         List<String> filenames = Arrays.stream(files).map(File::getName).toList();
-        assertEquals(2, filenames.size());
+        assertEquals(3, filenames.size());
         assertTrue(filenames.contains("example.txt"), "Unexpected filenames: " + filenames);
-        assertTrue(filenames.contains("example2.txt"), "MLCP has a check for an 'opaque' URI, of which org:example2.txt " +
-            "is an example. An opaque URI does not have a path, so its 'scheme-specific' part is expected to be used " +
-            "as the filename; actual filenames: " + filenames);
+        assertTrue(filenames.contains("example with spaces.txt"), "Unexpected filenames: " + filenames);
+        assertTrue(filenames.contains("some:org:example2.txt"), "As of 2.7.0, opaque URIs - those with a colon and " +
+            "no loading slash - are prepended with './' to make the Hadoop Path constructor happy, and thus " +
+            "the full filename should be present; actual filenames: " + filenames);
 
         String content = new String(FileCopyUtils.copyToByteArray(files[filenames.indexOf("example.txt")]));
         assertEquals("URI without leading slash", content);
-        content = new String(FileCopyUtils.copyToByteArray(files[filenames.indexOf("example2.txt")]));
+        content = new String(FileCopyUtils.copyToByteArray(files[filenames.indexOf("some:org:example2.txt")]));
         assertEquals("Opaque URI", content);
     }
 

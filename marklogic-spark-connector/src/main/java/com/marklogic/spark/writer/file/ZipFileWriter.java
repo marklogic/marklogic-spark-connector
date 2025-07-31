@@ -65,7 +65,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         Objects.requireNonNull(contentWriter);
 
         final String uri = row.getString(0);
-        final String entryName = FileUtil.makePathFromDocumentURI(uri);
+        // As of 2.7.0, not doing any special handling for an "opaque" URI which appears to be fine as a zip entry name.
+        final String entryName = uri;
 
         writeMetadataEntryIfNecessary(row, uri, entryName);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
