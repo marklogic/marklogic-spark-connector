@@ -1,6 +1,6 @@
 MarkLogic® Connector for Spark
 
-Copyright © 2025 MarkLogic Corporation. All Rights Reserved.
+Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
 
 To the extent required by the applicable open-source license, a complete machine-readable copy of the source code
 corresponding to such code is available upon request. This offer is valid to anyone in receipt of this information and
@@ -13,20 +13,16 @@ Third Party Notices
 jackson-dataformat-xml 2.15.2 (Apache-2.0)
 jdom2 2.0.6.1 (Apache-2.0)
 jena-arq 4.10.0 (Apache-2.0)
-langchain4j 1.0.0-rc1 (Apache-2.0)
-marklogic-client-api 7.1.0 (Apache-2.0)
+langchain4j 1.1.0 (Apache-2.0)
+marklogic-client-api 7.2.0 (Apache-2.0)
 okhttp 4.12.0 (Apache-2.0)
 Semaphore-CS-Client 5.6.1 (Apache-2.0)
 Semaphore-Cloud-Client 5.6.1 (Apache-2.0)
-tika-core 3.1.0 (Apache-2.0)
-
-Common Licenses
-
-Apache License 2.0 (Apache-2.0)
+tika-core 3.2.1 (Apache-2.0)
 
 Third-Party Components
 
-The following is a list of the third-party components used by the MarkLogic® Spark connector 2.6.0 (last updated May 1, 2025):
+The following is a list of the third-party components used by the MarkLogic® Spark connector 2.7.0 (last updated July 31, 2025):
 
 jackson-dataformat-xml 2.15.2 (Apache-2.0)
 https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/
@@ -40,11 +36,11 @@ jena-arq 4.10.0 (Apache-2.0)
 https://repo1.maven.org/maven2/org/apache/jena/jena-arq/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
-langchain4j 1.0.0-rc1 (Apache-2.0)
+langchain4j 1.1.0 (Apache-2.0)
 https://repo1.maven.org/maven2/dev/langchain4j/langchain4j/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
-marklogic-client-api 7.1.0 (Apache-2.0)
+marklogic-client-api 7.2.0 (Apache-2.0)
 https://repo1.maven.org/maven2/com/marklogic/marklogic-client-api/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
@@ -60,13 +56,13 @@ Semaphore-CS-Client 5.6.1 (Apache-2.0)
 https://repo1.maven.org/maven2/com/smartlogic/cloud/Semaphore-Cloud-Client/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
-tika-core 3.1.0 (Apache-2.0)
+tika-core 3.2.1 (Apache-2.0)
 https://repo1.maven.org/maven2/org/apache/tika/tika-core/
 For the full text of the Apache-2.0 license, see Apache License 2.0 (Apache-2.0)
 
 Common Licenses
 
-The following is a list of the third-party components used by the MarkLogic® Spark connector 2.6.0 (last updated May 1, 2025):
+The following is a list of the common licenses used by the MarkLogic® Spark connector 2.7.0 (last updated July 31, 2025):
 
 Apache License 2.0 (Apache-2.0)
 https://spdx.org/licenses/Apache-2.0.html
