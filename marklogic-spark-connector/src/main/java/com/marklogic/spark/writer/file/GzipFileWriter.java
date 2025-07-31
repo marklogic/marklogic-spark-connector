@@ -18,8 +18,8 @@ class GzipFileWriter extends DocumentFileWriter {
     }
 
     @Override
-    protected String makeFilePath(String uri) {
-        return super.makeFilePath(uri) + ".gz";
+    protected Path makeFilePath(String path, String documentUri) {
+        return FileUtil.makePathFromDocumentURI(path, documentUri + ".gz");
     }
 
     @Override
