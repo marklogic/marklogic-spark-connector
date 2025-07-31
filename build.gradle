@@ -63,6 +63,9 @@ subprojects {
       // Avoids a classpath conflict between Spark and the tika-parser-microsoft-module. Tika needs a
       // more recent version and Spark (and Jena as well) both seems fine with this (as they should be per semver).
       force "org.apache.commons:commons-compress:1.27.1"
+
+      // Avoids CVEs in earlier minor versions.
+      force "org.apache.commons:commons-lang3:3.18.0"
     }
 
     // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
