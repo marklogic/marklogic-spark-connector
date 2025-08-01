@@ -19,7 +19,7 @@ dependencies {
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.1.0-beta7"
 
-  testImplementation('com.marklogic:ml-app-deployer:5.0.0') {
+  testImplementation('com.marklogic:ml-app-deployer:6.0.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
 
@@ -33,7 +33,13 @@ dependencies {
 
     // Use the Java Client declared by marklogic-spark-connector.
     exclude module: "marklogic-client-api"
+
+    // Use the Spring dependencies from ml-app-deployer 6 to avoid vulnerabilities in Spring 5.
+    exclude group: "org.springframework"
   }
+
+  // marklogic-junit5 still needs spring-test, but we want the 6 version to minimize vulnerabilities.
+  testImplementation "org.springframework:spring-test:6.2.9"
 
   testImplementation "ch.qos.logback:logback-classic:1.5.18"
   testImplementation "org.slf4j:jcl-over-slf4j:2.0.17"
