@@ -3,11 +3,31 @@
  */
 package com.marklogic.spark.writer.file;
 
+import com.marklogic.spark.Util;
 import org.apache.hadoop.fs.Path;
+
+import java.net.URI;
+import java.net.URISyntaxException;
 
 public interface FileUtil {
 
     static Path makePathFromDocumentURI(String basePath, String documentURI) {
+        // Mostly copied from MLCP.
+        try {
+            URI uri = new URI(documentURI);
+            // As of 1.4.0, an opaque URI will not cause a problem due to the inclusion of "./" below.
+            // We still parse the URI to get the path in case there is a scheme (e.g. file://).
+            if (!uri.isOpaque()) {
+                documentURI = uri.getPath();
+            }
+        } catch (URISyntaxException e) {
+            // MLCP logs errors from parsing the URI at the "WARN" level. That seems noisy, as large numbers of URIs
+            // could e.g. have spaces in them. So DEBUG is used instead.
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Unable to parse document URI: {}; will use unparsed URI as file path.", documentURI);
+            }
+        }
+
         if (documentURI.charAt(0) == '/') {
             return new Path(basePath + documentURI);
         }
