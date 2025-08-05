@@ -222,6 +222,106 @@ the cost of a filtered search may be outweighed by the connector having to retur
 a filtered search will both return accurate results and may be faster. Ideally though, you can configure indexes on your
 database to allow for an unfiltered search, which will return accurate results and be faster than a filtered search.
 
+## Using secondary URIs queries
+
+As of version 2.7.0, the connector supports executing secondary queries to retrieve additional URIs beyond those specified in your initial document query. This feature is useful when you need to read documents that are related to your initial set of documents through shared data values or other relationships.
+
+When using secondary URIs queries, the connector will first retrieve the URIs from your primary query (via `spark.marklogic.read.documents.uris` or other document query options), then execute your secondary query code with access to those URIs, and finally return documents for both the original URIs and any additional URIs returned by the secondary query.
+
+### Basic usage
+
+You can execute a secondary query using JavaScript via the `spark.marklogic.read.secondaryUris.javascript` option:
+
+```python
+df = spark.read.format("marklogic") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.documents.uris", "/author/author1.json\n/author/author2.json") \
+    .option("spark.marklogic.read.secondaryUris.javascript", """
+        var URIs;
+        const citationIds = cts.elementValues(xs.QName("CitationID"), null, null, cts.documentQuery(URIs));
+        cts.uris(null, null, cts.andQuery([
+            cts.notQuery(cts.documentQuery(URIs)),
+            cts.collectionQuery('author'),
+            cts.jsonPropertyValueQuery('CitationID', citationIds)
+        ]))
+    """) \
+    .load()
+df.show()
+```
+
+Or using XQuery via the `spark.marklogic.read.secondaryUris.xquery` option:
+
+```python
+df = spark.read.format("marklogic") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.documents.uris", "/author/author1.json\n/author/author2.json") \
+    .option("spark.marklogic.read.secondaryUris.xquery", """
+        declare namespace json = "http://marklogic.com/xdmp/json";
+        declare variable $URIs external;
+        let $values := json:array-values($URIs)
+        let $citationIds := cts:element-values(xs:QName("CitationID"), (), (), cts:document-query($values))
+        return cts:uris((), (), cts:and-query((
+            cts:not-query(cts:document-query($values)),
+            cts:collection-query('author'),
+            cts:json-property-value-query('CitationID', $citationIds)
+        )))
+    """) \
+    .load()
+df.show()
+```
+
+### Available URIs in secondary queries
+
+Your secondary query code has access to the URIs from your primary query through:
+
+- **JavaScript**: An external variable named `URIs` containing the array of URIs
+- **XQuery**: An external variable named `$URIs` containing a JSON array of the URIs
+
+The examples above show how to use these URIs to find related documents - in this case, finding other author documents that share the same CitationID values as the original documents.
+
+### Using module invocation
+
+You can invoke a JavaScript or XQuery module from your application's modules database via the `spark.marklogic.read.secondaryUris.invoke` option:
+
+```python
+option("spark.marklogic.read.secondaryUris.invoke", "/findRelatedAuthors.xqy")
+```
+
+### Using local files
+
+You can specify local file paths containing either JavaScript or XQuery code via the `spark.marklogic.read.secondaryUris.javascriptFile` and `spark.marklogic.read.secondaryUris.xqueryFile` options:
+
+```python
+.option("spark.marklogic.read.secondaryUris.javascriptFile", "/path/to/findRelatedAuthors.js") \
+```
+
+### Custom external variables
+
+You can pass external variables to your secondary query code by configuring options with names starting with `spark.marklogic.read.secondaryUris.vars.`. The remainder of the option name will be used as the external variable name:
+
+```python
+df = spark.read.format("marklogic") \
+    .option("spark.marklogic.client.uri", "spark-example-user:password@localhost:8003") \
+    .option("spark.marklogic.read.documents.uris", "/author/author1.json") \
+    .option("spark.marklogic.read.secondaryUris.javascript", "Sequence.from([URI1, URI2])") \
+    .option("spark.marklogic.read.secondaryUris.vars.URI1", "/author/author2.json") \
+    .option("spark.marklogic.read.secondaryUris.vars.URI2", "/author/author3.json") \
+    .load()
+df.show()
+```
+
+### Use cases
+
+Secondary URIs queries are particularly useful for:
+
+- **Document relationships**: Finding documents that reference or are referenced by your initial set
+- **Hierarchical data**: Retrieving parent or child documents in a hierarchy
+- **Cross-references**: Finding documents that share common property values
+- **Graph traversal**: Following relationships between documents to expand your result set
+- **Data enrichment**: Adding related documents to provide fuller context for analysis
+
+The secondary query is executed after the primary document selection, allowing you to build complex multi-step queries that would be difficult to express in a single MarkLogic search operation.
+
 ## Tuning performance
 
 The connector mimics the behavior of the [MarkLogic Data Movement SDK](https://docs.marklogic.com/guide/java/data-movement)
