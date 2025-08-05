@@ -17,7 +17,7 @@ dependencies {
   }
 
   // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.1.0-beta7"
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.2.0-beta8"
 
   testImplementation('com.marklogic:ml-app-deployer:6.0.0') {
     exclude group: "com.fasterxml.jackson.core"
