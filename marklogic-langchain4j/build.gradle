@@ -10,5 +10,5 @@ java {
 
 dependencies {
   api project(":marklogic-spark-api")
-  api "dev.langchain4j:langchain4j:1.1.0"
+  api "dev.langchain4j:langchain4j:1.2.0"
 }
