@@ -14,6 +14,16 @@ class FileUtilTest {
         assertEquals("/base/path/to/doc.xml", makePath("/path/to/doc.xml"));
     }
 
+    @Test
+    void noForwardSlash() {
+        assertEquals("/base/path/to/doc.xml", makePath("path/to/doc.xml"));
+    }
+
+    @Test
+    void justFilename() {
+        assertEquals("/base/doc.xml", makePath("doc.xml"));
+    }
+
     /**
      * This was altered in the 2.7.0 to fix a bug where a URI with two or more colons and
      * no leading slash causing a URISyntaxException when the Hadoop Path constructor was called. This
@@ -38,7 +48,20 @@ class FileUtilTest {
     void allKindsOfStuff() {
         assertEquals("/base/has+lots of&/stuff_in-it.json", makePath("has+lots of&/stuff_in-it.json"));
     }
-    
+
+    @Test
+    void fileBasedUri() {
+        assertEquals("/base/hey.json", makePath("file://tmp/hey.json"), "Per the fixes for 1.4.0, " +
+            "we're retaining the behavior where the scheme is removed for a non-opaque URI. This ensures we don't " +
+            "try to files with e.g. 'http://' or 'file://' in the URI. This won't prevent issues like writing files " +
+            "to Azure Storage, which doesn't allow colons - a colon can appear anywhere in the URI and still be valid.");
+    }
+
+    @Test
+    void httpBasedUri() {
+        assertEquals("/base/path/to/file.xml", makePath("https://www.exampple.org/path/to/file.xml"));
+    }
+
     private String makePath(String uri) {
         return FileUtil.makePathFromDocumentURI("/base", uri).toString();
     }
