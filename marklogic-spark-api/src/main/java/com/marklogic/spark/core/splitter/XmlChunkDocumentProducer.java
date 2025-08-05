@@ -41,7 +41,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
-        this.xmlChunkConfig = new XmlChunkConfig(chunkConfig.getEmbeddingXmlNamespace());
+        this.xmlChunkConfig = new XmlChunkConfig(null, null, chunkConfig.getEmbeddingXmlNamespace(), null, chunkConfig.isBase64EncodeVectors());
         documentBuilderFactory = DocumentBuilderFactory.newInstance();
     }
 
@@ -129,7 +129,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
         }
 
-        var domChunk = new DOMChunk(super.sourceDocument.getUri(), doc, chunk, this.xmlChunkConfig, this.xPathFactory);
+        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
         if (embedding != null) {
             domChunk.addEmbedding(embedding);
         }

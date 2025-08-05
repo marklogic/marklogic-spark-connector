@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.core.embedding;
 
+import com.marklogic.client.util.VectorUtil;
 import com.marklogic.spark.ConnectorException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -17,23 +18,16 @@ import java.util.List;
 
 public class DOMChunk implements Chunk {
 
-    private final String documentUri;
     private final Document document;
     private final Element chunkElement;
     private final XmlChunkConfig xmlChunkConfig;
     private final XPathFactory xpathFactory;
 
-    public DOMChunk(String documentUri, Document document, Element chunkElement, XmlChunkConfig xmlChunkConfig, XPathFactory xpathFactory) {
-        this.documentUri = documentUri;
+    public DOMChunk(Document document, Element chunkElement, XmlChunkConfig xmlChunkConfig, XPathFactory xpathFactory) {
         this.document = document;
         this.chunkElement = chunkElement;
         this.xmlChunkConfig = xmlChunkConfig;
         this.xpathFactory = xpathFactory;
-    }
-
-    @Override
-    public String getDocumentUri() {
-        return documentUri;
     }
 
     public boolean hasEmbeddingText() {
@@ -64,12 +58,22 @@ public class DOMChunk implements Chunk {
     @Override
     public void addEmbedding(float[] embedding) {
         // DOM is fine with null as a value for the namespace.
-        Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
-        List<Float> values = new ArrayList<>(embedding.length);
-        for (float val : embedding) {
-            values.add(val);
+        final Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
+
+        // Disable stemming.
+        embeddingElement.setAttributeNS("http://www.w3.org/XML/1998/namespace", "xml:lang", "zxx");
+
+        if (xmlChunkConfig.isBase64EncodeVectors()) {
+            String base64Vector = VectorUtil.base64Encode(embedding);
+            embeddingElement.setTextContent(base64Vector);
+        } else {
+            List<Float> values = new ArrayList<>(embedding.length);
+            for (float val : embedding) {
+                values.add(val);
+            }
+            embeddingElement.setTextContent(values.toString());
         }
-        embeddingElement.setTextContent(values.toString());
+
         chunkElement.appendChild(embeddingElement);
     }
 

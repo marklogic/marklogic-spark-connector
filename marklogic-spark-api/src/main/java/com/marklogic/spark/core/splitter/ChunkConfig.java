@@ -20,11 +20,12 @@ public class ChunkConfig {
     private final String embeddingXmlNamespace;
     private final String uriPrefix;
     private final String uriSuffix;
+    private final boolean base64EncodeVectors;
 
     // Ignoring Sonar warning about too many constructor args, as that's mitigated via the builder.
     @SuppressWarnings("java:S107")
     private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String documentType, String rootName,
-                        String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix) {
+                        String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix, boolean base64EncodeVectors) {
         this.metadata = metadata;
         this.maxChunks = maxChunks;
         this.documentType = documentType;
@@ -33,6 +34,7 @@ public class ChunkConfig {
         this.embeddingXmlNamespace = embeddingXmlNamespace;
         this.uriPrefix = uriPrefix;
         this.uriSuffix = uriSuffix;
+        this.base64EncodeVectors = base64EncodeVectors;
     }
 
     public static class Builder {
@@ -44,6 +46,7 @@ public class ChunkConfig {
         private String embeddingXmlNamespace;
         private String uriPrefix;
         private String uriSuffix;
+        private boolean base64EncodeVectors = false;
 
         public ChunkConfig build() {
             String tempNamespace = embeddingXmlNamespace;
@@ -51,7 +54,7 @@ public class ChunkConfig {
                 // If no embedding XML namespace is specified, default to the chunk namespace is defined.
                 tempNamespace = xmlNamespace != null ? xmlNamespace : Util.DEFAULT_XML_NAMESPACE;
             }
-            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, tempNamespace, uriPrefix, uriSuffix);
+            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, tempNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {
@@ -97,6 +100,11 @@ public class ChunkConfig {
             this.uriSuffix = uriSuffix;
             return this;
         }
+
+        public Builder withBase64EncodeVectors(boolean base64EncodeVectors) {
+            this.base64EncodeVectors = base64EncodeVectors;
+            return this;
+        }
     }
 
     public DocumentMetadataHandle getMetadata() {
@@ -129,5 +137,9 @@ public class ChunkConfig {
 
     public String getEmbeddingXmlNamespace() {
         return embeddingXmlNamespace;
+    }
+
+    public boolean isBase64EncodeVectors() {
+        return base64EncodeVectors;
     }
 }

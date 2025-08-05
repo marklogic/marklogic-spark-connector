@@ -45,7 +45,7 @@ class DOMChunkSelectorTest {
         "node()[self::text or self::other]//text(),Hello  bold text Other text"
     })
     void test(String textExpression, String expectedChunkText) {
-        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, null);
+        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, null, false);
         String actualChunkText = new DOMChunkSelector("/root/chunk", xmlChunkConfig)
             .selectChunks("/test.xml", new StringHandle(XML).withFormat(Format.XML))
             .getChunks().get(0).getEmbeddingText();
@@ -61,7 +61,7 @@ class DOMChunkSelectorTest {
         Map<String, String> properties = new HashMap<>();
         properties.put(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example");
 
-        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, NamespaceContextFactory.makeNamespaceContext(properties));
+        XmlChunkConfig xmlChunkConfig = new XmlChunkConfig(textExpression, null, null, NamespaceContextFactory.makeNamespaceContext(properties), false);
         List<Chunk> chunks = new DOMChunkSelector("/ex:root/ex:chunk", xmlChunkConfig)
             .selectChunks("/test.xml", new StringHandle(NAMESPACED_XML).withFormat(Format.XML))
             .getChunks();

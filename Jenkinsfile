@@ -1,18 +1,21 @@
 @Library('shared-libraries') _
 
 def runtests(String javaVersion){
+  // 'set -e' causes the script to fail if any command fails.
   sh label:'test', script: '''#!/bin/bash
+    set -e
     export JAVA_HOME=$'''+javaVersion+'''
     export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
     export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
     echo "Waiting for MarkLogic server to initialize."
-    sleep 30s
+    sleep 60s
     ./gradlew clean
-   ./gradlew -i mlDeploy
-   echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
-   ./gradlew -i mlLoadData
-   ./gradlew clean testCodeCoverageReport || true
+    ./gradlew mlTestConnections
+    ./gradlew -i mlDeploy
+    echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
+    ./gradlew -i mlLoadData
+    ./gradlew clean testCodeCoverageReport || true
   '''
   junit '**/build/**/*.xml'
 }
@@ -52,14 +55,14 @@ pipeline{
       }
       agent {label 'devExpLinuxPool'}
       steps{
+        cleanupDocker()
         sh label:'mlsetup', script: '''#!/bin/bash
             echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
             sudo /usr/local/sbin/mladmin remove
             docker-compose down -v || true
             sudo /usr/local/sbin/mladmin cleandata
             cd marklogic-spark-connector
-            mkdir -p docker/marklogic/logs
-            docker-compose up -d --build
+            MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
           '''
         runtests('JAVA17_HOME_DIR')
         withSonarQubeEnv('SONAR_Progress') {
@@ -68,11 +71,12 @@ pipeline{
       }
       post{
         always{
+          updateWorkspacePermissions()
           sh label:'mlcleanup', script: '''#!/bin/bash
             cd marklogic-spark-connector
             docker-compose down -v || true
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
           '''
+          cleanupDocker()
         }
       }
     }
@@ -102,6 +106,7 @@ pipeline{
         }
       }
       steps{
+            cleanupDocker()
             sh label:'mlsetup', script: '''#!/bin/bash
                 echo "Removing any running MarkLogic server and clean up MarkLogic data directory"
                 sudo /usr/local/sbin/mladmin remove
@@ -109,18 +114,18 @@ pipeline{
                 cd marklogic-spark-connector
                 mkdir -p docker/marklogic/logs
                 docker-compose down -v || true
-                MARKLOGIC_TAG=progressofficial/marklogic-db:latest-11 docker-compose up -d --build
+                MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
             '''
             runtests('JAVA17_HOME_DIR')
       }
       post{
         always{
+          updateWorkspacePermissions()
           sh label:'mlcleanup', script: '''#!/bin/bash
             cd marklogic-spark-connector
             docker-compose down -v || true
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/caddy/
-            sudo /usr/local/sbin/mladmin delete $WORKSPACE/marklogic-spark-connector/docker/marklogic/logs/
           '''
+          cleanupDocker()
         }
       }
 

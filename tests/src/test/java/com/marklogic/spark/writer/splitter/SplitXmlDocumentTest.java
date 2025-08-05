@@ -13,6 +13,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,47 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         String firstChunk = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
         assertTrue(firstChunk.startsWith("When working with the Java API"), "The first chunk should begin with the " +
             "text in the original 'text' element. Actual chunk: " + firstChunk);
+    }
+
+    /**
+     * This test was added via MLE-21420 to add support for XPath 2.0 expressions via the Saxon-HE library.
+     * Unfortunately, that library forces itself as the implementation of TransformerFactory. And it has issues with
+     * serializing data in an XMLStreamReader, which is needed for reading aggregate XML files. The main workaround
+     * would be to include the following in the connector:
+     * <p>
+     * System.setProperty("javax.xml.transform.TransformerFactory",
+     * "com.sun.org.apache.xalan.internal.xsltc.trax.TransformerFactoryImpl");
+     * <p>
+     * But that is not guaranteed to work, as the user's JRE may not have that Sun-specific class in it.
+     * Copilot also suggested using the old xalan:xalan library. But that library's Transformer implementation does not
+     * support a StaxSource at all.
+     * <p>
+     * So for now, we're going to hold off on adding XPath 2.0 support until it becomes a more pressing need.
+     */
+    @Disabled("See comment above.")
+    @Test
+    void xpath2Expression() {
+        // This test uses an XPath 2.0 conditional expression which requires Saxon XPath processor.
+        readDocument("/marklogic-docs/xpath2-test.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH,
+                "//document[if (@type = 'tutorial') then true() else (@type = 'article' and @date > '2023-02-01')]/content/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .mode(SaveMode.Append)
+            .save();
+
+        XmlNode doc = readXmlDocument("/split-test.xml");
+        doc.assertElementCount("The two 'content' elements should have text that less than 1000 chars, and thus " +
+            "there should be a single chunk.", "/root/model:chunks/model:chunk", 1);
+
+        String expectedText = "Learn how to use XPath 2.0 features like conditional expressions and regex functions. " +
+            "Exploring various patterns for integrating databases with XML processing systems.";
+        String actualText = doc.getElementValue("/root/model:chunks/model:chunk[1]/model:text");
+        assertEquals(expectedText, actualText, "The XPath 2.0 expression should have selected only 2 of the " +
+            "4 'content' elements in the document. The text of the two elements should have been concatenated " +
+            "together to create a single chunk.");
     }
 
     @Test

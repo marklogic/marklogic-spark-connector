@@ -114,11 +114,6 @@ public class DocumentPipeline implements Closeable {
         }
 
         @Override
-        public String getDocumentUri() {
-            return inputs.getInitialUri();
-        }
-
-        @Override
         public String getEmbeddingText() {
             return inputs.getChunks().get(chunkIndex);
         }

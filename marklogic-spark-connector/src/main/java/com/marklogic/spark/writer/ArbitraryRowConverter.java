@@ -54,12 +54,7 @@ class ArbitraryRowConverter implements RowConverter {
 
     @Override
     public Iterator<DocumentInputs> convertRow(InternalRow row) {
-        String initialUri = null;
-        if (this.filePathIndex > -1) {
-            initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
-            row.setNullAt(this.filePathIndex);
-        }
-
+        final String initialUri = determineInitialUri(row);
         final String json = this.jsonRowSerializer.serializeRowToJson(row);
 
         AbstractWriteHandle contentHandle = null;
@@ -104,6 +99,21 @@ class ArbitraryRowConverter implements RowConverter {
         }
 
         return Stream.of(new DocumentInputs(initialUri, contentHandle, uriTemplateValues, null)).iterator();
+    }
+
+    private String determineInitialUri(InternalRow row) {
+        String initialUri;
+        if (this.filePathIndex > -1) {
+            initialUri = row.getString(this.filePathIndex) + "/" + UUID.randomUUID();
+            row.setNullAt(this.filePathIndex);
+        } else {
+            // Temporary URI to avoid issues during the document pipeline, where the lack of a URI can cause an error
+            // when constructing a DocumentWriteOperationImpl. This does duplicate a little bit of logic -
+            // StandardUriMaker assumes the same default value for a URI. That is acceptable, though, as a UUID is a very
+            // common way to generate a unique identifier.
+            initialUri = UUID.randomUUID().toString();
+        }
+        return initialUri;
     }
 
     @Override

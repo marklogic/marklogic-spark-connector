@@ -22,13 +22,16 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
 
     public static int batchCounter;
     public static int chunkCounter;
-
+    public static List<String> chunkTexts = new ArrayList<>();
     public static List<Integer> batchSizes = new ArrayList<>();
+    public static boolean useFixedTestVector = false;
 
     public static void reset() {
         batchCounter = 0;
         chunkCounter = 0;
+        chunkTexts.clear();
         batchSizes.clear();
+        useFixedTestVector = false;
     }
 
     private static AllMiniLmL6V2EmbeddingModel realEmbeddingModel = new AllMiniLmL6V2EmbeddingModel();
@@ -48,7 +51,18 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         batchCounter++;
         batchSizes.add(textSegments.size());
         chunkCounter += textSegments.size();
-        return realEmbeddingModel.embedAll(textSegments);
+        textSegments.forEach(segment -> chunkTexts.add(segment.text()));
+
+        if (useFixedTestVector) {
+            // Return the fixed test vector float[]{3.14f, 1.59f, 2.65f} for each text segment
+            List<Embedding> embeddings = new ArrayList<>();
+            for (int i = 0; i < textSegments.size(); i++) {
+                embeddings.add(Embedding.from(new float[]{3.14f, 1.59f, 2.65f}));
+            }
+            return Response.from(embeddings);
+        } else {
+            return realEmbeddingModel.embedAll(textSegments);
+        }
     }
 
     public static class TestChunk implements Chunk {
@@ -57,11 +71,6 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
 
         public TestChunk(String text) {
             this.text = text;
-        }
-
-        @Override
-        public String getDocumentUri() {
-            return "/doesnt/matter.json";
         }
 
         @Override

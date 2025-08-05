@@ -18,6 +18,7 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -26,6 +27,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
     private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
+
+    @AfterEach
+    void teardown() {
+        TestEmbeddingModel.reset();
+    }
 
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
@@ -243,6 +249,31 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void prompt() {
+        TestEmbeddingModel.reset();
+
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            // Include whitespace in the prompt to ensure it's not dropped.
+            .option(Options.WRITE_EMBEDDER_PROMPT, "MY PROMPT: ")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(2, TestEmbeddingModel.chunkTexts.size());
+
+        for (String chunkText : TestEmbeddingModel.chunkTexts) {
+            assertTrue(chunkText.startsWith("MY PROMPT: "), "Each chunk text - i.e. each text segment that has an " +
+                "embedding generated for it - should start with the user-defined prompt text. Actual chunk text: " + chunkText);
+        }
+    }
+
+    @Test
     void batchSizeIsHigherThanChunkCount() {
         TestEmbeddingModel.reset();
 
@@ -280,6 +311,108 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
         ConnectorException ex = assertThrowsConnectorException(writer::save);
         assertEquals("The value of 'spark.marklogic.write.embedder.batchSize' must be numeric.", ex.getMessage());
+    }
+
+    @Test
+    void arbitraryRowWithNoInitialUri() {
+        newSparkSession().read()
+            .option("header", true)
+            .csv("src/test/resources/inputForStream/Hogwarts.csv")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/aaa/{Name}.json")
+            .option(Options.WRITE_COLLECTIONS, "hogwarts")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/House")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("hogwarts", 9);
+
+        JsonNode doc = readJsonDocument("/aaa/Harry Potter.json");
+        assertEquals("Harry Potter", doc.get("Name").asText());
+        assertEquals("Gryffindor", doc.get("House").asText());
+        assertTrue(doc.has("embedding"));
+        assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType(),
+            "Verifies that an embedding is generated, which addresses bug MLE-22784. This bug was caused by " +
+                "'arbitrary' rows (i.e. from Spark data sources) not having an internal initial URI. The lack of " +
+                "that URI caused the construction of a DocumentWriteOperationImpl to fail. The fix - providing a " +
+                "temporary initial URI - avoids this bug, with the real URI being set after the embedding " +
+                "generation process.");
+    }
+
+    @Test
+    void arbitraryRowWithNoInitialUriAndNoUriModifier() {
+        newSparkSession().read()
+            .option("header", true)
+            .csv("src/test/resources/inputForStream/Hogwarts.csv")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_COLLECTIONS, "hogwarts")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "")
+            .option(Options.WRITE_EMBEDDER_TEXT_JSON_POINTER, "/House")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("hogwarts", 9);
+        getUrisInCollection("hogwarts", 9).forEach(uri -> {
+            String message = "The default URI should be a UUID followed by .json; actual URI: " + uri;
+            assertTrue(uri.endsWith(".json"), message);
+            assertFalse(uri.contains("/"), message);
+        });
+    }
+
+    @Test
+    void base64EncodeVectors() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readJsonDocument("/split-test.json"));
+    }
+
+    @Test
+    void base64EncodeVectorsWithExistingChunks() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        // First create chunks without embeddings
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .mode(SaveMode.Append)
+            .save();
+
+        // Now add base64-encoded embeddings to existing chunks
+        readDocument("/split-test.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readJsonDocument("/split-test.json"));
     }
 
     private Dataset<Row> readDocument(String uri) {
@@ -320,5 +453,21 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         }
 
         assertEquals(4, counter, "Each test is expected to produce 4 chunks based on the max chunk size of 500.");
+    }
+
+    private void verifyDocumentHasTwoChunksWithEncodedVectors(JsonNode doc) {
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(2, chunks.size());
+
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("embedding"), "Chunk should have an embedding field");
+            assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", chunk.get("embedding").asText(),
+                "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
+
+            assertFalse(chunk.has("lang"), "Due to MLE-22918, the 'lang' field is not set to 'zxx' since this " +
+                "will disable stemming on data outside the intended scope of the 'lang' field. A user is free to " +
+                "e.g. use a REST transform to add this if desired.");
+        }
     }
 }

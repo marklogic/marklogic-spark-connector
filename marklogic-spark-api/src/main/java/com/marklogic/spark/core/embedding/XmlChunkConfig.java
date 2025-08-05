@@ -21,17 +21,19 @@ public class XmlChunkConfig {
     private final String embeddingName;
     private final String embeddingNamespace;
     private final NamespaceContext namespaceContext;
+    private final boolean base64EncodeVectors;
 
     // Defaults to the config used by the connector's splitter feature.
     public XmlChunkConfig(String embeddingNamespace) {
-        this(null, null, embeddingNamespace, null);
+        this(null, null, embeddingNamespace, null, false);
     }
 
-    public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext) {
+    public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext, boolean base64EncodeVectors) {
         this.textExpression = textExpression != null ? textExpression : DEFAULT_TEXT_EXPRESSION;
         this.embeddingName = embeddingName != null ? embeddingName : "embedding";
         this.embeddingNamespace = embeddingNamespace != null ? embeddingNamespace : Util.DEFAULT_XML_NAMESPACE;
         this.namespaceContext = namespaceContext;
+        this.base64EncodeVectors = base64EncodeVectors;
     }
 
     public String getTextExpression() {
@@ -48,5 +50,9 @@ public class XmlChunkConfig {
 
     NamespaceContext getNamespaceContext() {
         return namespaceContext;
+    }
+
+    boolean isBase64EncodeVectors() {
+        return base64EncodeVectors;
     }
 }

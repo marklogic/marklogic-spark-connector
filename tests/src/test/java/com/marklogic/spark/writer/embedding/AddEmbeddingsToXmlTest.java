@@ -296,9 +296,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
     private void verifyEachChunkOnDocumentHasAnEmbedding(String uri) {
         XmlNode doc = readXmlDocument(uri);
-        doc.getXmlNodes("/node()/chunks/chunk").forEach(chunk -> {
-            chunk.assertElementExists("/chunk/text");
-            chunk.assertElementExists("/chunk/model:embedding");
+        doc.getXmlNodes("/node()/model:chunks/model:chunk").forEach(chunk -> {
+            chunk.assertElementExists("/model:chunk/model:text");
+            chunk.assertElementExists(
+                "As of the 2.7.0 release, the embedding should have the zxx lang to disable stemming by MarkLogic.",
+                "/model:chunk/model:embedding[@xml:lang='zxx']"
+            );
         });
     }
 
@@ -331,6 +334,69 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             chunk.assertElementExists("/ex:chunk/ex:text");
             chunk.assertElementExists("The embedding should default to the MarkLogic-specific namespace when not " +
                 "specified by the user.", "/ex:chunk/model:embedding");
+        }
+    }
+
+    @Test
+    void base64EncodeVectors() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readXmlDocument("/split-test.xml"));
+    }
+
+    @Test
+    void base64EncodeVectorsWithExistingChunks() {
+        TestEmbeddingModel.reset();
+        TestEmbeddingModel.useFixedTestVector = true;
+
+        // First create chunks without embeddings
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .mode(SaveMode.Append)
+            .save();
+
+        // Now add base64-encoded embeddings to existing chunks
+        readDocument("/split-test.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
+            .option(Options.XPATH_NAMESPACE_PREFIX + "model", "http://marklogic.com/appservices/model")
+            .option(Options.WRITE_EMBEDDER_CHUNKS_XPATH, "/root/model:chunks/model:chunk")
+            .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .mode(SaveMode.Append)
+            .save();
+
+        verifyDocumentHasTwoChunksWithEncodedVectors(readXmlDocument("/split-test.xml"));
+    }
+
+    private void verifyDocumentHasTwoChunksWithEncodedVectors(XmlNode doc) {
+        doc.assertElementCount("/root/model:chunks/model:chunk", 2);
+
+        for (XmlNode chunk : doc.getXmlNodes("/root/model:chunks/model:chunk")) {
+            String embeddingValue = chunk.getElementValue("/model:chunk/model:embedding");
+            assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", embeddingValue,
+                "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
+
+            chunk.assertElementExists("xml:lang attribute should be 'zxx' to disable stemming",
+                "/model:chunk/model:embedding[@xml:lang='zxx']");
         }
     }
 }

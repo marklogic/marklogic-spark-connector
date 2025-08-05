@@ -3,10 +3,8 @@
  * marklogic-langchain4j and marklogic-spark-connector projects.
  */
 dependencies {
-  api("com.marklogic:marklogic-client-api:7.1.0") {
-    // The Java Client uses Jackson 2.15.2; Scala 3.4.x does not yet support that and will throw the following error:
-    // Scala module 2.14.2 requires Jackson Databind version >= 2.14.0 and < 2.15.0 - Found jackson-databind version 2.15.2
-    // So the 4 Jackson modules are excluded to allow for Spark's to be used.
+  api("com.marklogic:marklogic-client-api:7.2.0") {
+    // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
@@ -25,14 +23,14 @@ dependencies {
   implementation "jaxen:jaxen:2.0.0"
 
   // Needed for classifying documents via Semaphore.
-  api ("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
+  api("com.smartlogic.csclient:Semaphore-CS-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
     exclude module: "icu4j"
   }
   // The S4 CS client depends on a very old version of icu4j - 4.0.1 - which has a critical security vulnerability.
   // Bumping up to the latest version, which has worked correctly via manual testing.
   implementation "com.ibm.icu:icu4j:77.1"
-  api ("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
+  api("com.smartlogic.cloud:Semaphore-Cloud-Client:5.6.1") {
     exclude group: "com.fasterxml.jackson.core"
   }
 

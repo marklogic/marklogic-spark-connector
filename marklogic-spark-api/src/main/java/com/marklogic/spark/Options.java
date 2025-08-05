@@ -56,6 +56,36 @@ public abstract class Options {
     public static final String READ_DOCUMENTS_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.read.documents.transformParamsDelimiter";
     public static final String READ_DOCUMENTS_URIS = "spark.marklogic.read.documents.uris";
 
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_INVOKE = "spark.marklogic.read.secondaryUris.invoke";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_JAVASCRIPT = "spark.marklogic.read.secondaryUris.javascript";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_JAVASCRIPT_FILE = "spark.marklogic.read.secondaryUris.javascriptFile";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_XQUERY = "spark.marklogic.read.secondaryUris.xquery";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_XQUERY_FILE = "spark.marklogic.read.secondaryUris.xqueryFile";
+
+    /**
+     * @since 2.7.0
+     */
+    public static final String READ_SECONDARY_URIS_VARS_PREFIX = "spark.marklogic.read.secondaryUris.vars.";
+
     public static final String READ_TRIPLES_GRAPHS = "spark.marklogic.read.triples.graphs";
     public static final String READ_TRIPLES_COLLECTIONS = "spark.marklogic.read.triples.collections";
     public static final String READ_TRIPLES_QUERY = "spark.marklogic.read.triples.query";
@@ -363,6 +393,13 @@ public abstract class Options {
     public static final String WRITE_EMBEDDER_PREFIX = "spark.marklogic.write.embedder.";
 
     /**
+     * Optional prompt used when generating embeddings. The prompt is prepended to the text being embedded.
+     *
+     * @since 2.7.0
+     */
+    public static final String WRITE_EMBEDDER_PROMPT = WRITE_EMBEDDER_PREFIX + "prompt";
+
+    /**
      * Enables the embedder feature; name of a class on the classpath that implements the interface
      * {@code Function<Map<String, String>, EmbeddingModel>}.
      *
@@ -425,6 +462,13 @@ public abstract class Options {
      * @since 2.5.0
      */
     public static final String WRITE_EMBEDDER_BATCH_SIZE = WRITE_EMBEDDER_PREFIX + "batchSize";
+
+    /**
+     * Enables base64 encoding of vector embeddings in a format supported by the MarkLogic server.
+     *
+     * @since 2.7.0
+     */
+    public static final String WRITE_EMBEDDER_BASE64_ENCODE = WRITE_EMBEDDER_PREFIX + "base64Encode";
 
     /**
      * Defines the host for classification requests

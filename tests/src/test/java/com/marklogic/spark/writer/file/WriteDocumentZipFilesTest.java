@@ -64,7 +64,7 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void opaqueURI(@TempDir Path tempDir) throws IOException {
-        final String uri = "org:example/123.xml";
+        final String uri = "some:org:example/123.xml";
 
         getDatabaseClient().newXMLDocumentManager().write(uri,
             TestUtil.withDefaultPermissions(new DocumentMetadataHandle()).withCollections("opaque-test"),
@@ -85,9 +85,62 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
         assertEquals(1, tempDir.toFile().listFiles().length);
         File file = tempDir.toFile().listFiles()[0];
         ZipFile zipFile = new ZipFile(file);
-        assertNotNull(zipFile.getEntry("example/123.xml"), "org:example/123.xml is considered an 'opaque' URI per " +
-            "the definition of java.net.URI:isOpaque. Per MLCP behavior, the URI is expected to be set to the " +
-            "'schema-specific part', which is just example/123.xml.");
+        assertNotNull(zipFile.getEntry(uri), "some:org:example/123.xml is considered an 'opaque' URI per " +
+            "the definition of java.net.URI:isOpaque. As of 1.4.0 now, we no longer modify those when the document " +
+            "is written to a zip, as zip entry names can be opaque URIs.");
+    }
+
+    @Test
+    void uriWithScheme(@TempDir Path tempDir) throws IOException {
+        final String uri = "http://example.org/some/file.xml";
+
+        getDatabaseClient().newXMLDocumentManager().write(uri,
+            TestUtil.withDefaultPermissions(new DocumentMetadataHandle()).withCollections("http-test"),
+            new StringHandle("<hello>world</hello>"));
+
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "http-test")
+            .load()
+            .repartition(1)
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        assertEquals(1, tempDir.toFile().listFiles().length);
+        File file = tempDir.toFile().listFiles()[0];
+        ZipFile zipFile = new ZipFile(file);
+        assertNotNull(zipFile.getEntry(uri), "When writing URIs to a zip, we don't need to modify them at all, " +
+            "unless we later find out there's some set of characters that are not allowed in zip entry names.");
+    }
+
+    @Test
+    void uriWithSpaces(@TempDir Path tempDir) throws IOException {
+        final String uri = "has multiple spaces.xml";
+
+        getDatabaseClient().newXMLDocumentManager().write(uri,
+            TestUtil.withDefaultPermissions(new DocumentMetadataHandle()).withCollections("spaces-test"),
+            new StringHandle("<hello>world</hello>"));
+
+        newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "spaces-test")
+            .load()
+            .repartition(1)
+            .write()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        assertEquals(1, tempDir.toFile().listFiles().length);
+        File file = tempDir.toFile().listFiles()[0];
+        ZipFile zipFile = new ZipFile(file);
+        assertNotNull(zipFile.getEntry(uri));
     }
 
     /**

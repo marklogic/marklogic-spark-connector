@@ -186,6 +186,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
             Namespace.getNamespace("model", "http://marklogic.com/appservices/model"),
             Namespace.getNamespace("ex", "org:example"),
             Namespace.getNamespace("acme", "org:acme"),
+            Namespace.getNamespace("xml", "http://www.w3.org/XML/1998/namespace"),
 
             // These are specific to text extraction tests, but no harm in including them here.
             Namespace.getNamespace("pdf", "http://ns.adobe.com/pdf/1.3/"),

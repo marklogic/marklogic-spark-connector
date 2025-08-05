@@ -67,14 +67,13 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
     }
 
     private Path makeFilePath(InternalRow row) {
-        final String uri = row.getString(0);
-        String filePath = makeFilePath(uri);
-        return filePath.charAt(0) == '/' ? new Path(this.path + filePath) : new Path(this.path, filePath);
+        final String documentUri = row.getString(0);
+        return makeFilePath(this.path, documentUri);
     }
 
     // Protected so it can be overridden by subclass.
-    protected String makeFilePath(String uri) {
-        return FileUtil.makePathFromDocumentURI(uri);
+    protected Path makeFilePath(String path, String documentUri) {
+        return FileUtil.makePathFromDocumentURI(path, documentUri);
     }
 
     // Protected so it can be overridden by subclass.
