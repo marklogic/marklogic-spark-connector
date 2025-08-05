@@ -244,6 +244,8 @@ The options controlling the embedder feature are:
 | spark.marklogic.write.embedder.embedding.name | Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk. | 
 | spark.marklogic.write.embedder.embedding.namespace | Allows for an optional namespace to be assigned to the embedding element in an XML chunk. | 
 | spark.marklogic.write.embedder.batchSize | Defines the number of chunks to send to the embedding model in a single call. Defaults to 1. | 
+| spark.marklogic.write.embedder.prompt | New in 2.7.0 - optional prompt to prepend to the text sent to the embedding model. Useful for providing context or other information to the embedding model. |
+| spark.marklogic.write.embedder.base64encode | New in 2.7.0 - encodes each vector produced by the embedding model using a format compliant with the new vector encoding functions in MarkLogic 12. Useful for reducing the size of vectors in your documents. |
 
 ### Streaming support
 
