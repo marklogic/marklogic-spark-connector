@@ -14,11 +14,3 @@ dependencies {
   // A problem to be fixed later.
   jacocoAggregation project(':tests')
 }
-
-reporting {
-  reports {
-    testCodeCoverageReport(JacocoCoverageReport) {
-      testType = TestSuiteType.UNIT_TEST
-    }
-  }
-}
