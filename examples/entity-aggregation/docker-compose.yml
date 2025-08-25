@@ -5,6 +5,8 @@ services:
   marklogic:
     image: "marklogicdb/marklogic-db:latest-11"
     platform: linux/amd64
+    cap_drop:
+      - NET_RAW
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin
@@ -16,6 +18,8 @@ services:
 
   postgres:
     image: postgres:latest
+    cap_drop:
+      - NET_RAW
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -28,6 +32,8 @@ services:
   # Included solely for users that wish to explore the Postgres database.
   pgadmin:
     image: dpage/pgadmin4:latest
+    cap_drop:
+      - NET_RAW
     environment:
       PGADMIN_DEFAULT_EMAIL: postgres@pgadmin.com
       PGADMIN_DEFAULT_PASSWORD: postgres
