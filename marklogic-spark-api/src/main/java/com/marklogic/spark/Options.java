@@ -40,6 +40,19 @@ public abstract class Options {
     public static final String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
     public static final String READ_PUSH_DOWN_AGGREGATES = "spark.marklogic.read.pushDownAggregates";
 
+    /**
+     * Defines the name of an Optic parameter in an Optic query and its default value. The intent is for the parameter
+     * value to be overridden via a Spark filter operation.
+     */
+    @Experimental
+    public static final String READ_OPTIC_PARAM_PREFIX = "spark.marklogic.read.optic.param.";
+
+    /**
+     * Defines the type of the value associated with an Optic parameter. If not specified, the type defaults to string.
+     */
+    @Experimental
+    public static final String READ_OPTIC_PARAM_TYPE_PREFIX = "spark.marklogic.read.optic.param.type.";
+
     // "categories" as defined by https://docs.marklogic.com/REST/GET/v1/documents .
     public static final String READ_DOCUMENTS_CATEGORIES = "spark.marklogic.read.documents.categories";
     public static final String READ_DOCUMENTS_COLLECTIONS = "spark.marklogic.read.documents.collections";

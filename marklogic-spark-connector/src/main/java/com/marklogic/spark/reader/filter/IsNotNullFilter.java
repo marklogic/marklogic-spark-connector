@@ -31,4 +31,9 @@ class IsNotNullFilter implements OpticFilter {
     public PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan) {
         return plan;
     }
+
+    @Override
+    public String getColumnName() {
+        return filter.attribute();
+    }
 }
