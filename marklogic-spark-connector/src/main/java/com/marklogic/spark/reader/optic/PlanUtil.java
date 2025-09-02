@@ -200,6 +200,18 @@ public abstract class PlanUtil {
         return fieldNames[0];
     }
 
+    static ObjectNode buildBind(String column, ObjectNode value) {
+        return newOperation("bind", args ->
+            args.addArray().addObject()
+                .put("ns", "op").put("fn", "as").putArray("args")
+                .add(column).add(value)
+        );
+    }
+
+    static ObjectNode buildParam(String paramName) {
+        return newOperation("param", args -> args.add(paramName));
+    }
+
     /**
      * Captures the name of an Optic function and the column name based on a Spark AggregateFunc's Expression. Used
      * to simplify building a serialized Optic function reference.
