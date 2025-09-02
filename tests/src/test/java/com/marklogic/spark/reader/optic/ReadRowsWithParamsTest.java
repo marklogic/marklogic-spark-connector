@@ -5,6 +5,7 @@ package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 
@@ -99,5 +100,47 @@ class ReadRowsWithParamsTest extends AbstractIntegrationTest {
             "Verifies that if the user performs a filter operation on the op.param, the type must be defined. In " +
                 "this case, the type is an integer, which allows for the 'myValue = 2' filter expression to be " +
                 "accepted by Spark.");
+    }
+
+    @Test
+    void groupByWithCount() {
+        String query = """
+            op.fromView('Medical', 'Authors', '')
+                .where(op.eq(op.col('LastName'), op.param('myValue')))
+            """;
+
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_OPTIC_QUERY, query)
+            .option(Options.READ_OPTIC_PARAM_PREFIX + "myValue", "Shoebotham")
+            .load()
+            .groupBy(new Column("myValue"))
+            .count()
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals(1L, (long) rows.get(0).getAs("count"),
+            "Verifies that the user can group by the param column");
+    }
+
+    @Test
+    void orderByWithLimit() {
+        String query = """
+            op.fromView('Medical', 'Authors', '')
+                .where(op.eq(op.col('LastName'), op.param('myValue')))
+            """;
+
+        List<Row> rows = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_OPTIC_QUERY, query)
+            .option(Options.READ_OPTIC_PARAM_PREFIX + "myValue", "Shoebotham")
+            .load()
+            .filter("myValue == 'Wooles'")
+            .orderBy(new Column("myValue"))
+            .limit(1)
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("Wooles", rows.get(0).getAs("LastName"));
     }
 }
