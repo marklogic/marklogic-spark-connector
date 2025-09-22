@@ -1,9 +1,9 @@
 plugins {
   id "net.saliman.properties" version "1.5.2"
-  id "com.marklogic.ml-gradle" version "6.0.0"
+  id "com.marklogic.ml-gradle" version "6.0.1"
 }
 
-task reloadTestData(type: com.marklogic.gradle.task.MarkLogicTask) {
+tasks.register("reloadTestData", com.marklogic.gradle.task.MarkLogicTask) {
   description = "Convenience task for clearing the test database and reloading the test data; only intended for a connector developer to use."
   doLast {
     new com.marklogic.mgmt.resource.databases.DatabaseManager(getManageClient()).clearDatabase("spark-test-test-content")
