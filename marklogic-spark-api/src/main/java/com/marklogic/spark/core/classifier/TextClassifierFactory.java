@@ -18,7 +18,6 @@ import com.smartlogic.cloud.Token;
 import com.smartlogic.cloud.TokenFetcher;
 import org.w3c.dom.Document;
 
-import javax.validation.constraints.NotNull;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -149,7 +148,7 @@ public abstract class TextClassifierFactory {
 
         // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
         @SuppressWarnings("java:S3010")
-        private MockSemaphoreProxy(@NotNull String mockResponse) {
+        private MockSemaphoreProxy(String mockResponse) {
             this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
             timesInvoked = 0;
         }
@@ -164,15 +163,17 @@ public abstract class TextClassifierFactory {
 
         @Override
         public byte[] classifyDocument(byte[] content, String uri) {
-            String mockSingleArticleResponse = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "            <response>\n" +
-                "              <STRUCTUREDDOCUMENT>\n" +
-                "              <URL>../tmp/ca002056-e3f6-4c81-8c9f-00ca218330c4/1739460469_43eb</URL>\n" +
-                "              <SYSTEM name=\"HASH\" value=\"2c3bcaf41fbabf8ff2e236c7580893ec\"/>\n" +
-                "              <META name=\"Type\" value=\"TEXT (4003)\"/>\n" +
-                "              <META name=\"title/document_title\" value=\"/some-uri.xml\"/>\n" +
-                "              <SYSTEM name=\"DeterminedLanguage\" value=\"default\"/>" +
-                "</STRUCTUREDDOCUMENT></response>\n";
+            String mockSingleArticleResponse = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <response>
+                  <STRUCTUREDDOCUMENT>
+                    <URL>../tmp/ca002056-e3f6-4c81-8c9f-00ca218330c4/1739460469_43eb</URL>
+                    <SYSTEM name="HASH" value="2c3bcaf41fbabf8ff2e236c7580893ec"/>
+                    <META name="Type" value="TEXT (4003)"/>
+                    <META name="title/document_title" value="/some-uri.xml"/>
+                    <SYSTEM name="DeterminedLanguage" value="default"/>
+                  </STRUCTUREDDOCUMENT>
+                </response>""";
 
             return mockSingleArticleResponse.getBytes();
         }

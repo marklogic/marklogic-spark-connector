@@ -22,7 +22,7 @@ configurations {
 }
 
 dependencies {
-  compileOnly "org.apache.spark:spark-sql_2.12:${sparkVersion}"
+  compileOnly "org.apache.spark:spark-sql_2.13:${sparkVersion}"
   shadowDependencies project(":marklogic-spark-api")
   java17Dependencies project(":marklogic-langchain4j")
 

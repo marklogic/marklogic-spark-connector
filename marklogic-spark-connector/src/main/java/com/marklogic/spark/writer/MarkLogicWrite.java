@@ -107,7 +107,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
         // This is the last chance we have for accessing the hadoop config, which is needed by the writer.
         // SerializableConfiguration allows for it to be sent to the factory.
-        Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
+        Configuration config = SparkSession.getActiveSession().get().sparkContext().hadoopConfiguration();
         return new WriteBatcherDataWriterFactory(writeContext, new SerializableConfiguration(config));
     }
 

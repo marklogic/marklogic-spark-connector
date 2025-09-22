@@ -218,7 +218,7 @@ public class OpticReadContext extends ContextSupport {
             .map(PlanUtil::expressionToColumnName)
             // We cannot push down a groupBy on an op.param name as it's not a real column.
             .filter(name -> !opticParamNames.contains(name))
-            .collect(Collectors.toList());
+            .toList();
 
         if (groupByColumnNames.isEmpty()) {
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -242,16 +242,13 @@ public class OpticReadContext extends ContextSupport {
                 newSchema = newSchema.add(func.toString(), DataTypes.LongType);
             } else if (func instanceof CountStar) {
                 newSchema = newSchema.add("count", DataTypes.LongType);
-            } else if (func instanceof Max) {
-                Max max = (Max) func;
+            } else if (func instanceof Max max) {
                 StructField field = findColumnInSchema(max.column(), PlanUtil.expressionToColumnName(max.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Min) {
-                Min min = (Min) func;
+            } else if (func instanceof Min min) {
                 StructField field = findColumnInSchema(min.column(), PlanUtil.expressionToColumnName(min.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Sum) {
-                Sum sum = (Sum) func;
+            } else if (func instanceof Sum sum) {
                 StructField field = findColumnInSchema(sum.column(), PlanUtil.expressionToColumnName(sum.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
             } else if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -264,7 +261,7 @@ public class OpticReadContext extends ContextSupport {
                 "performance of pushed down aggregation.");
             List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())
-                .collect(Collectors.toList());
+                .toList();
             this.planAnalysis = new PlanAnalysis(planAnalysis.getSerializedPlan(), mergedPartitions, planAnalysis.getServerTimestamp());
         }
 

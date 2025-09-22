@@ -90,15 +90,15 @@ public interface Util {
         if (content instanceof DOMHandle || content instanceof JDOMHandle || uri.endsWith(".xml")) {
             return Format.XML;
         }
-        if (content instanceof BaseHandle) {
-            return ((BaseHandle) content).getFormat();
+        if (content instanceof BaseHandle<?, ?> baseHandle) {
+            return baseHandle.getFormat();
         }
         return null;
     }
 
     static JsonNode getJsonFromHandle(AbstractWriteHandle writeHandle) {
-        if (writeHandle instanceof JacksonHandle) {
-            return ((JacksonHandle) writeHandle).get();
+        if (writeHandle instanceof JacksonHandle jacksonHandle) {
+            return jacksonHandle.get();
         } else {
             String json = HandleAccessor.contentAsString(writeHandle);
             try {

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.junit5.spring.AbstractSpringMarkLogicTest;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.*;
 import org.apache.spark.util.VersionUtils;
@@ -65,7 +66,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     @AfterEach
     public void closeSparkSession() {
         if (sparkSession != null) {
-            sparkSession.close();
+            IOUtils.closeQuietly(sparkSession);
         }
     }
 
