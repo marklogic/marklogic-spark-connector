@@ -11,6 +11,7 @@ import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,9 +88,10 @@ public class EmbeddingGenerator implements EmbeddingProducer {
 
             if (LANGCHAIN4J_LOGGER.isDebugEnabled()) {
                 long totalRequests = requestCount.incrementAndGet();
-                if (response.tokenUsage() != null) {
+                final TokenUsage tokenUsage = response.tokenUsage();
+                if (tokenUsage != null) {
                     LANGCHAIN4J_LOGGER.debug("Requests: {}; tokens: {}", totalRequests,
-                        tokenCount.addAndGet(response.tokenUsage().inputTokenCount())
+                        tokenCount.addAndGet(tokenUsage.inputTokenCount())
                     );
                 } else {
                     LANGCHAIN4J_LOGGER.debug("Requests: {}", totalRequests);
