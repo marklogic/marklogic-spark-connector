@@ -315,11 +315,21 @@ class ReadDocumentRowsTest extends AbstractWriteTest {
             .load();
 
         SparkException ex = assertThrows(SparkException.class, dataset::count);
-        assertTrue(ex.getMessage().contains("This is an intentional error for testing purposes."),
+        String message = ex.getMessage();
+
+        if (message.contains("java.io.InterruptedIOException")) {
+            // This test can sometimes fail due to a timeout while being run by Jenkins. No idea why that happens.
+            // In the event that this happens, we try again.
+            logger.warn("Unexpected timeout error, will try again: {}", message);
+            ex = assertThrows(SparkException.class, dataset::count);
+            message = ex.getMessage();
+        }
+
+        assertTrue(message.contains("This is an intentional error for testing purposes."),
             "When the transform throws an error, our connector throws a ConnectorException, but Spark seems to wrap " +
                 "its stacktrace into a SparkException, such that we can't access the original ConnectorException " +
                 "object. But the transform error should be in the error message. " +
-                "Actual message: " + ex.getMessage());
+                "Actual message: " + message);
     }
 
     private DataFrameReader startRead() {

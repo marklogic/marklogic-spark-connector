@@ -114,7 +114,6 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
-    @Deprecated
     void forceDocumentType() {
         newSparkSession()
             .read()
@@ -124,7 +123,7 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .format(CONNECTOR_IDENTIFIER)
             .options(defaultWriteOptions())
             // Verifies that the value gets capitalized.
-            .option(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE, "jSoN")
+            .option(Options.WRITE_DOCUMENT_TYPE, "jSoN")
             .option(Options.WRITE_COLLECTIONS, "json-unrecognized-extension")
             .mode(SaveMode.Append)
             .save();
@@ -138,7 +137,6 @@ class WriteFileRowsTest extends AbstractWriteTest {
     }
 
     @Test
-    @Deprecated
     void invalidDocumentType() {
         DataFrameWriter writer = newSparkSession()
             .read()
@@ -147,13 +145,13 @@ class WriteFileRowsTest extends AbstractWriteTest {
             .write()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_FILE_ROWS_DOCUMENT_TYPE, "not valid")
+            .option(Options.WRITE_DOCUMENT_TYPE, "not valid")
             .mode(SaveMode.Append);
 
         SparkException ex = assertThrows(SparkException.class, writer::save);
         assertTrue(ex.getCause() instanceof ConnectorException);
         ConnectorException ce = (ConnectorException) ex.getCause();
-        assertEquals("Invalid value for " + Options.WRITE_FILE_ROWS_DOCUMENT_TYPE + ": not valid; " +
+        assertEquals("Invalid value for " + Options.WRITE_DOCUMENT_TYPE + ": not valid; " +
             "must be one of 'JSON', 'XML', or 'TEXT'.", ce.getMessage());
     }
 
