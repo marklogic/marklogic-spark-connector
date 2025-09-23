@@ -189,8 +189,8 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.abortOnFailure | Whether the Spark job should abort if a batch fails to be written; defaults to `true`. |
 | spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
+| spark.marklogic.write.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
-| spark.marklogic.write.fileRows.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.jsonRootName | As of 2.3.0, specifies a root field name when writing JSON documents based on arbitrary rows. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
 | spark.marklogic.write.threadCount | The number of threads used across all partitions to send documents to MarkLogic; defaults to 4. |
