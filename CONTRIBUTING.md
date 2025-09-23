@@ -1,12 +1,7 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-**You must use Java 17 for developing, testing, and building this project**, even though the connector supports
-running on Java 11. For users, Java 17 is only required if using the splitting and embedding features, as those
-depend on a third party module that requires Java 17.
-
-**You also need Java 11 installed** so that the subprojects in this repository that require Java 11 have access to a 
-Java 11 SDK. [sdkman](https://sdkman.io/) is highly recommend for installing multiple JDKs.
+**You must use Java 17 for developing, testing, and building this project**.
 
 # Setup
 
@@ -43,6 +38,12 @@ index page for the test application server.
 To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
+
+To also get code coverage, run:
+
+    ./gradlew test jacocoTestReport
+
+The code coverage report will be in `marklogic-spark-connector/build/reports/jacoco/test/html/index.html`.
 
 **To run the tests in Intellij**, you must configure your JUnit template to include a few JVM args:
 
