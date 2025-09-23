@@ -1,13 +1,17 @@
 dependencies {
   testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
-  testImplementation project(":marklogic-spark-api")
+//  testImplementation project(":marklogic-spark-api")
   testImplementation project(":marklogic-spark-connector")
 
-  testImplementation (project(":marklogic-langchain4j")) {
+//  testImplementation (project(":marklogic-langchain4j")) {
+//    exclude group: "com.fasterxml.jackson.core"
+//    exclude group: "com.fasterxml.jackson.dataformat"
+//  }
+
+  testImplementation ("dev.langchain4j:langchain4j:${langchain4jVersion}") {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
-
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.5.0-beta11"
 
