@@ -1,3 +1,4 @@
+# Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
 # This is intended solely for testing spark-submit as described in the CONTRIBUTING.md file.
 
 from pyspark.sql import SparkSession
