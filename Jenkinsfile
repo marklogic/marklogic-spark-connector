@@ -15,7 +15,7 @@ def runtests(String javaVersion){
     ./gradlew -i mlDeploy
     echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
     ./gradlew -i mlLoadData
-    ./gradlew clean testCodeCoverageReport || true
+    ./gradlew clean test jacocoTestReport || true
   '''
   junit '**/build/**/*.xml'
 }
