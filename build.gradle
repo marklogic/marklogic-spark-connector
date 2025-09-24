@@ -36,12 +36,16 @@ subprojects {
   repositories {
     mavenCentral()
     maven {
-      url "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
+      url = "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
     }
   }
 
   configurations.all {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if (details.requested.group.equals("org.apache.hadoop") and details.requested.version.equals("3.4.1")) {
+        details.useVersion "3.4.2"
+        details.because "Using 3.4.2 to minimize CVEs and because Flux is doing the same thing. This only affects the connector tests."
+      }
       if (details.requested.group.startsWith('com.fasterxml.jackson')) {
         details.useVersion '2.17.2'
         details.because 'Need to match the version used by Spark.'
@@ -79,16 +83,12 @@ subprojects {
     exclude module: "rocksdbjni"
   }
 
-  task allDeps(type: DependencyReportTask) {
-    description = "Allows for generating dependency reports for every subproject in a single task."
-  }
-
   test {
     useJUnitPlatform()
     finalizedBy jacocoTestReport
     testLogging {
-      events 'started', 'passed', 'skipped', 'failed'
-      exceptionFormat 'full'
+      events = ['started', 'passed', 'skipped', 'failed']
+      exceptionFormat = 'full'
     }
     environment "SEMAPHORE_API_KEY", semaphoreApiKey
     environment "SEMAPHORE_HOST", semaphoreHost
