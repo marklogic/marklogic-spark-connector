@@ -20,7 +20,7 @@ dependencies {
   compileOnly "org.apache.spark:spark-sql_2.13:${sparkVersion}"
 
   // This is compileOnly as Spark will provide its own copy at runtime.
-  compileOnly "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+  compileOnly "com.fasterxml.jackson.core:jackson-databind:2.18.2"
 
   shadowDependencies("com.marklogic:marklogic-client-api:7.2.0") {
     // Need to use the versions of Jackson preferred by Spark.
@@ -47,7 +47,7 @@ dependencies {
   shadowDependencies "org.apache.tika:tika-core:${tikaVersion}"
 
   // Needed for using XmlMapper.
-  shadowDependencies("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.17.2") {
+  shadowDependencies("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.2") {
     // Not needed, as the modules in this group that this dependency depends on are all provided by Spark.
     exclude group: "com.fasterxml.jackson.core"
   }
