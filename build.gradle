@@ -47,8 +47,8 @@ subprojects {
         details.because "Using 3.4.2 to minimize CVEs and because Flux is doing the same thing. This only affects the connector tests."
       }
       if (details.requested.group.startsWith('com.fasterxml.jackson')) {
-        details.useVersion '2.17.2'
-        details.because 'Need to match the version used by Spark.'
+        details.useVersion '2.18.2'
+        details.because 'Need to match the version used by Spark 4.0.1.'
       }
       if (details.requested.group.equals("org.slf4j")) {
         details.useVersion "2.0.17"
