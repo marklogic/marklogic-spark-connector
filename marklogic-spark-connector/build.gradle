@@ -71,6 +71,12 @@ dependencies {
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
   compileOnly 'com.squareup.okhttp3:okhttp:4.12.0'
 
+  // Automatic loading of test framework implementation dependencies is deprecated.
+  // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
+  // Without this, once using JUnit 5.12 or higher, Gradle will not find any tests and report an error of:
+  // org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
+  testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
+
   testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
 
   // Supports testing the embedder feature.
@@ -112,11 +118,11 @@ test {
   jvmArgs = [
     '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
     '--add-exports=java.base/sun.util.calendar=ALL-UNNAMED',
-    '--add-exports=java.base/sun.security.action=ALL-UNNAMED'
-  ]
+    '--add-exports=java.base/sun.security.action=ALL-UNNAMED',
 
-  // Increased heap size as part of the Spark 4 upgrade, as we started experiencing OOM errors in the tests.
-  jvmArgs '-Xmx6g', '-Xms3g'
+    // Increased heap size as part of the Spark 4 upgrade, as we started experiencing OOM errors in the tests.
+    '-Xmx6g', '-Xms3g'
+  ]
 }
 
 shadowJar {
@@ -143,6 +149,13 @@ shadowJar {
 java {
   withJavadocJar()
   withSourcesJar()
+}
+
+// Allows for identifying compiler warnings and treating them as errors.
+tasks.withType(JavaCompile) {
+  options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Werror"]
+  options.deprecation = true
+  options.warnings = true
 }
 
 javadoc.failOnError = false
@@ -185,8 +198,8 @@ publishing {
     maven {
       if (project.hasProperty("mavenUser")) {
         credentials {
-          username mavenUser
-          password mavenPassword
+          username = mavenUser
+          password = mavenPassword
         }
         url publishUrl
         allowInsecureProtocol = true
@@ -194,8 +207,8 @@ publishing {
         name = "central"
         url = mavenCentralUrl
         credentials {
-          username mavenCentralUsername
-          password mavenCentralPassword
+          username = mavenCentralUsername
+          password = mavenCentralPassword
         }
       }
     }

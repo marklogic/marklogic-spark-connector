@@ -139,7 +139,7 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
     /**
      * Avoids having to repeat mode/save.
      */
-    protected void defaultWrite(DataFrameWriter writer) {
+    protected void defaultWrite(DataFrameWriter<?> writer) {
         writer.options(defaultWriteOptions())
             .mode(SaveMode.Append)
             .save();
