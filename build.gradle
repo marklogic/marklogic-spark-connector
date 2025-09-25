@@ -42,23 +42,11 @@ subprojects {
 
   configurations.all {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      // These all impact Spark and its dependencies, but not the published connector as the connector does not contain
+      // any Spark libraries.
       if (details.requested.group.equals("org.apache.hadoop") and details.requested.version.equals("3.4.1")) {
         details.useVersion "3.4.2"
-        details.because "Using 3.4.2 to minimize CVEs and because Flux is doing the same thing. This only affects the connector tests."
-      }
-      if (details.requested.group.startsWith('com.fasterxml.jackson')) {
-        details.useVersion '2.18.2'
-        details.because 'Need to match the version used by Spark 4.0.1.'
-      }
-      if (details.requested.group.equals("org.slf4j")) {
-        details.useVersion "2.0.17"
-        details.because "Ensures that slf4j-api 1.x does not appear on the Flux classpath in particular, which can " +
-          "lead to this issue - https://www.slf4j.org/codes.html#StaticLoggerBinder."
-      }
-      if (details.requested.group.equals("org.apache.logging.log4j")) {
-        details.useVersion "2.24.3"
-        details.because "Need to match the version used by Apache Tika. Spark uses 2.20.0 but automated tests confirm " +
-          "that Spark seems fine with 2.24.3."
+        details.because "Using 3.4.2 to minimize CVEs and because Flux is doing the same thing."
       }
       if (details.requested.group.equals("org.codehaus.janino")) {
         details.useVersion "3.1.12"
@@ -69,18 +57,6 @@ subprojects {
         details.because "Bumping from 4.1.118 (what Spark SQL 4.0.1 depends on) to 4.1.127 to minimize CVEs."
       }
     }
-
-    resolutionStrategy {
-      // Avoids a classpath conflict between Spark and the tika-parser-microsoft-module. Tika needs a
-      // more recent version and Spark (and Jena as well) both seems fine with this (as they should be per semver).
-      force "org.apache.commons:commons-compress:1.27.1"
-
-      // Avoids CVEs in earlier minor versions.
-      force "org.apache.commons:commons-lang3:3.18.0"
-    }
-
-    // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
-    exclude module: "rocksdbjni"
   }
 
   test {

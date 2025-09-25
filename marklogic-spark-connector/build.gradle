@@ -1,72 +1,61 @@
 plugins {
-  id 'com.gradleup.shadow' version '8.3.3'
+  id 'com.gradleup.shadow' version '9.2.1'
   id 'maven-publish'
-}
-
-configurations {
-  // Defines all the implementation dependencies, but in such a way that they are not included as dependencies in the
-  // library's pom.xml file. This is due to the shadow jar being published instead of a jar only containing this
-  // project's classes. The shadow jar is published due to the need to relocate several packages to avoid conflicts
-  // with Spark.
-  shadowDependencies
-
-  // This approach allows for all of the dependencies to be available for compilation and for running tests.
-  compileOnly.extendsFrom(shadowDependencies)
-  testImplementation.extendsFrom(compileOnly)
 }
 
 dependencies {
   // Need to compile against Spark, but its libraries are not part of the connector jar.
-  compileOnly "org.apache.spark:spark-sql_2.13:${sparkVersion}"
+  compileOnly ("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
+    // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
+    exclude module: "rocksdbjni"
+  }
 
   // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:2.18.2"
 
-  shadowDependencies("com.marklogic:marklogic-client-api:7.2.0") {
+  implementation("com.marklogic:marklogic-client-api:7.2.0") {
     // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
   // For logging.
-  shadowDependencies "org.slf4j:jcl-over-slf4j:2.0.17"
+  implementation "org.slf4j:jcl-over-slf4j:2.0.17"
 
   // Needed for splitting XML documents via XPath.
-  shadowDependencies "jaxen:jaxen:2.0.0"
+  implementation "jaxen:jaxen:2.0.0"
 
   // Needed for classifying documents via Semaphore.
-  shadowDependencies("com.smartlogic.csclient:Semaphore-CS-Client:${semaphoreVersion}") {
+  implementation("com.smartlogic.csclient:Semaphore-CS-Client:${semaphoreVersion}") {
     exclude group: "com.fasterxml.jackson.core"
   }
-  shadowDependencies("com.smartlogic.cloud:Semaphore-Cloud-Client:${semaphoreVersion}") {
+  implementation("com.smartlogic.cloud:Semaphore-Cloud-Client:${semaphoreVersion}") {
     exclude group: "com.fasterxml.jackson.core"
   }
 
   // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
   // include the necessary parsers.
-  shadowDependencies "org.apache.tika:tika-core:${tikaVersion}"
+  implementation "org.apache.tika:tika-core:${tikaVersion}"
 
   // Needed for using XmlMapper.
-  shadowDependencies("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.2") {
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.19.0") {
     // Not needed, as the modules in this group that this dependency depends on are all provided by Spark.
     exclude group: "com.fasterxml.jackson.core"
   }
 
   // Supports reading and writing RDF data. Including this here so it's available to the tests as well.
   // Bumped to 5.x, which requires Java 17, while upgrading Spark to 4.x.
-  shadowDependencies("org.apache.jena:jena-arq:5.5.0") {
+  implementation("org.apache.jena:jena-arq:5.5.0") {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
-  shadowDependencies "org.jdom:jdom2:2.0.6.1"
+  implementation "org.jdom:jdom2:2.0.6.1"
 
-  shadowDependencies "dev.langchain4j:langchain4j:${langchain4jVersion}"
-
-  // Ensuring the desired version of commons-compress is included in the connector jar. Some tests have failed in Flux
-  // because an older version - likely the one depended on by Jena - is included instead.
-  shadowDependencies "org.apache.commons:commons-compress:1.27.1"
+  implementation ("dev.langchain4j:langchain4j:${langchain4jVersion}") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
@@ -78,10 +67,14 @@ dependencies {
   // org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
   testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.13.4"
 
-  testImplementation "org.apache.spark:spark-sql_2.13:${sparkVersion}"
+  testImplementation ("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
+    exclude module: "rocksdbjni"
+  }
 
   // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.5.0-beta11"
+  testImplementation ("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.5.0-beta11") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
 
   testImplementation('com.marklogic:ml-app-deployer:6.0.1') {
     exclude group: "com.fasterxml.jackson.core"
@@ -106,7 +99,6 @@ dependencies {
   testImplementation "org.springframework:spring-test:6.2.11"
 
   testImplementation "ch.qos.logback:logback-classic:1.5.18"
-  testImplementation "org.slf4j:jcl-over-slf4j:2.0.17"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
@@ -126,15 +118,6 @@ test {
   ]
 }
 
-shadowJar {
-  configurations = [project.configurations.shadowDependencies]
-
-  // "all" is the default; no need for that in the connector filename. This also results in this becoming the library
-  // artifact that is published as a dependency. That is desirable as it includes the relocated packages listed below,
-  // which a dependent would otherwise have to manage themselves.
-  archiveClassifier.set("")
-}
-
 // Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .
 java {
   withJavadocJar()
@@ -151,6 +134,11 @@ tasks.withType(JavaCompile) {
 javadoc.failOnError = false
 // Ignores warnings on params that don't have descriptions, which is a little too noisy
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+// We don't want the shadow jar to be published to a Maven repository.
+shadow {
+  addShadowVariantIntoJavaComponent = false
+}
 
 publishing {
   publications {
