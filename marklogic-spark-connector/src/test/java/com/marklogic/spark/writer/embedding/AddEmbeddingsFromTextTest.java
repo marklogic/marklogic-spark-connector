@@ -72,7 +72,7 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             XmlNode doc = readXmlDocument(uri);
             doc.assertElementCount("/node()/model:chunks/model:chunk", 1);
             String textValue = doc.getElementValue("/node()/model:chunks/model:chunk/model:text");
-            String embeddingValue = doc.getElementValue("/node()/model:chunks/model:chunk/model:embedding");
+            String embeddingValue = doc.getElementValue("/node()/model:chunks/model:chunk/vec:embedding");
             if (!chunkEmbeddings.containsKey(textValue)) {
                 chunkEmbeddings.put(textValue, embeddingValue);
             }

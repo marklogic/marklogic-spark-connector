@@ -15,6 +15,7 @@ public interface NamespaceContextFactory {
     static NamespaceContext makeDefaultNamespaceContext() {
         Map<String, String> prefixesToNamespaces = new HashMap<>();
         prefixesToNamespaces.put("model", Util.DEFAULT_XML_NAMESPACE);
+        prefixesToNamespaces.put("vec", Util.DEFAULT_VECTOR_NAMESPACE);
         return new XPathNamespaceContext(prefixesToNamespaces);
     }
 
