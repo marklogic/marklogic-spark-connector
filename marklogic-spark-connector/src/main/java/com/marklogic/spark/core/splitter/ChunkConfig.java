@@ -43,18 +43,13 @@ public class ChunkConfig {
         private String documentType;
         private String rootName;
         private String xmlNamespace = Util.DEFAULT_XML_NAMESPACE;
-        private String embeddingXmlNamespace;
+        private String embeddingXmlNamespace = Util.DEFAULT_VECTOR_NAMESPACE;
         private String uriPrefix;
         private String uriSuffix;
         private boolean base64EncodeVectors = false;
 
         public ChunkConfig build() {
-            String tempNamespace = embeddingXmlNamespace;
-            if (tempNamespace == null) {
-                // If no embedding XML namespace is specified, default to the chunk namespace is defined.
-                tempNamespace = xmlNamespace != null ? xmlNamespace : Util.DEFAULT_XML_NAMESPACE;
-            }
-            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, tempNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
+            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, embeddingXmlNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {

@@ -26,6 +26,13 @@ public interface Util {
 
     String DEFAULT_XML_NAMESPACE = "http://marklogic.com/appservices/model";
 
+    /**
+     * Aligns with the default vector namespace in the server.
+     *
+     * @since 3.0.0
+     */
+    String DEFAULT_VECTOR_NAMESPACE = "http://marklogic.com/vector";
+
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
             .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());

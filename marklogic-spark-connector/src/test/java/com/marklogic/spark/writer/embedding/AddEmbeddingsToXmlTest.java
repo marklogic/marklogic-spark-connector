@@ -88,8 +88,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("When a namespace is specified for the sidecar XML document, that should " +
-                "override the default namespace for the embedding element.", "/ex:chunk/ex:embedding");
+            chunk.assertElementExists("As of 3.0.0, the embedding namespace should be the MarkLogic-specific one, " +
+                "unless the user explicitly overrides it.", "/ex:chunk/vec:embedding");
         }
     }
 
@@ -164,8 +164,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
         doc.assertElementValue("/root/source-uri", "/split-test.xml");
         doc.assertElementExists("/root/chunks/chunk[1]/text");
-        doc.assertElementExists("Since a namespace is specified for the document - no namespace - it should be " +
-            "applied to the embedding element too.", "/root/chunks/chunk[1]/embedding");
+        doc.assertElementExists("As of 3.0.0, the embedding element should default to the MarkLogic-specific " +
+            "namespace unless the user explicitly sets it.", "/root/chunks/chunk[1]/vec:embedding");
     }
 
     @Test
@@ -183,7 +183,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementCount("Each of the 2 custom chunks should have an 'embedding' element.",
-            "/envelope/my-chunks/my-chunk[my-text and model:embedding]", 2);
+            "/envelope/my-chunks/my-chunk[my-text and vec:embedding]", 2);
     }
 
     @Test
@@ -201,8 +201,10 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementCount("Each of the 2 custom chunks should have an 'embedding' element.",
-            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and model:embedding]", 2);
+        doc.assertElementCount("As of 3.0.0, the embedding element should default to the MarkLogic-specific " +
+                "namespace unless the user explicitly sets it. In this test, the chunks are in a custom namespace, " +
+                "but the embedding is not.",
+            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and vec:embedding]", 2);
     }
 
     @Test
@@ -299,8 +301,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.getXmlNodes("/node()/model:chunks/model:chunk").forEach(chunk -> {
             chunk.assertElementExists("/model:chunk/model:text");
             chunk.assertElementExists(
-                "As of the 2.7.0 release, the embedding should have the zxx lang to disable stemming by MarkLogic.",
-                "/model:chunk/model:embedding[@xml:lang='zxx']"
+                "As of the 2.7.0 release, the embedding should have the zxx lang to disable stemming by MarkLogic. " +
+                    "And as of the 3.0.0 release, the embedding should default to the MarkLogic-specific vector namespace.",
+                "/model:chunk/vec:embedding[@xml:lang='zxx']"
             );
         });
     }
@@ -391,12 +394,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/root/model:chunks/model:chunk", 2);
 
         for (XmlNode chunk : doc.getXmlNodes("/root/model:chunks/model:chunk")) {
-            String embeddingValue = chunk.getElementValue("/model:chunk/model:embedding");
+            String embeddingValue = chunk.getElementValue("/model:chunk/vec:embedding");
             assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", embeddingValue,
                 "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
 
             chunk.assertElementExists("xml:lang attribute should be 'zxx' to disable stemming",
-                "/model:chunk/model:embedding[@xml:lang='zxx']");
+                "/model:chunk/vec:embedding[@xml:lang='zxx']");
         }
     }
 }

@@ -453,7 +453,9 @@ public abstract class Options {
     public static final String WRITE_EMBEDDER_EMBEDDING_NAME = WRITE_EMBEDDER_PREFIX + "embedding.name";
 
     /**
-     * Allows for an optional namespace to be assigned to the embedding element in an XML chunk.
+     * Allows for an optional namespace to be assigned to the embedding element in an XML chunk. As of 3.0.0, if not
+     * set, then embedding elements in XML documents will be in the MarkLogic-specific vector namespace of
+     * "http://marklogic.com/vector".
      *
      * @since 2.5.0
      */
