@@ -38,9 +38,9 @@ dependencies {
   }
 
   // This is compileOnly as Spark will provide its own copy at runtime.
-  compileOnly "com.fasterxml.jackson.core:jackson-databind:2.18.2"
+  compileOnly "com.fasterxml.jackson.core:jackson-databind:2.19.0"
 
-  implementation("com.marklogic:marklogic-client-api:7.2.0") {
+  implementation("com.marklogic:marklogic-client-api:8.0-SNAPSHOT") {
     // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
@@ -86,7 +86,7 @@ dependencies {
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:4.12.0'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.2.0'
 
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
