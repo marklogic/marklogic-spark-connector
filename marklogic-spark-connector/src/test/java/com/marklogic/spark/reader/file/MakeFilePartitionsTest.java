@@ -38,4 +38,10 @@ class MakeFilePartitionsTest {
         assertEquals("B", partitions[1].getPaths().get(0));
         assertEquals("C", partitions[2].getPaths().get(0));
     }
+
+    @Test
+    void zeroPartitions() {
+        FilePartition[] partitions = FileUtil.makeFilePartitions(new String[]{"A", "B", "C"}, 0);
+        assertEquals(1, partitions.length, "If a value less than 1 is passed in, partitions should default to 1.");
+    }
 }

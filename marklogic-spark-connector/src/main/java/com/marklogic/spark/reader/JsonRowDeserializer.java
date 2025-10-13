@@ -20,6 +20,7 @@ import scala.jdk.javaapi.CollectionConverters;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Handles deserializing a JSON object into a Spark InternalRow. This is accomplished via Spark's JacksonParser.
@@ -44,7 +45,9 @@ public class JsonRowDeserializer {
     }
 
     public InternalRow deserializeJson(String json) {
-        return this.jacksonParser.parse(json, this.jsonParserCreator, this.utf8StringCreator).head();
+        var parsedResult = this.jacksonParser.parse(json, this.jsonParserCreator, this.utf8StringCreator);
+        Objects.requireNonNull(parsedResult, "The output from parsing the JSON should never be null");
+        return parsedResult.head();
     }
 
     private JacksonParser newJacksonParser(StructType schema) {
