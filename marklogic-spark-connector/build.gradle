@@ -4,7 +4,7 @@ plugins {
 }
 
 configurations {
-  all {
+  configureEach {
     resolutionStrategy.eachDependency { DependencyResolveDetails details ->
       // These all impact Spark and its dependencies, but not the published connector as the connector does not contain
       // any Spark libraries.
@@ -125,7 +125,7 @@ dependencies {
   // marklogic-junit5 still needs spring-test, but we want the 6 version to minimize vulnerabilities.
   testImplementation "org.springframework:spring-test:6.2.11"
 
-  testImplementation "ch.qos.logback:logback-classic:1.5.18"
+  testImplementation "ch.qos.logback:logback-classic:1.5.19"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
@@ -152,7 +152,7 @@ java {
 }
 
 // Allows for identifying compiler warnings and treating them as errors.
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
   options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Werror"]
   options.deprecation = true
   options.warnings = true
