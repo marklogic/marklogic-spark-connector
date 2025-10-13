@@ -47,11 +47,18 @@ public interface FileUtil {
     }
 
     static FilePartition[] makeFilePartitions(String[] files, int numPartitions) {
-        int filesPerPartition = (int) Math.ceil((double) files.length / (double) numPartitions);
+        if (numPartitions <= 0) {
+            // Divide-by-zero protection.
+            numPartitions = 1;
+        }
+
+        final int filesPerPartition = (int) Math.ceil((double) files.length / (double) numPartitions);
         if (files.length < numPartitions) {
             numPartitions = files.length;
         }
+
         final FilePartition[] partitions = new FilePartition[numPartitions];
+
         List<String> currentPartition = new ArrayList<>();
         int partitionIndex = 0;
         for (int i = 0; i < files.length; i++) {
