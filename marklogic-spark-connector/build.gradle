@@ -103,12 +103,9 @@ dependencies {
     exclude group: "com.fasterxml.jackson.core"
   }
 
-  testImplementation('com.marklogic:ml-app-deployer:6.0.1') {
+  testImplementation('com.marklogic:ml-app-deployer:6.1.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
-
-    // Use the Java Client declared above.
-    exclude module: "marklogic-client-api"
   }
 
   testImplementation('com.marklogic:marklogic-junit5:1.5.0') {
