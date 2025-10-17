@@ -4,11 +4,11 @@
 package com.marklogic.spark.reader.optic;
 
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.CustomLongOffset;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.connector.read.streaming.Offset;
-import org.apache.spark.sql.execution.streaming.LongOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ class OpticMicroBatchStream implements MicroBatchStream {
         if (logger.isTraceEnabled()) {
             logger.trace("Returning latest offset: {}", bucketIndex);
         }
-        return new LongOffset(bucketIndex++);
+        return new CustomLongOffset(bucketIndex++);
     }
 
     /**
@@ -57,7 +57,7 @@ class OpticMicroBatchStream implements MicroBatchStream {
      */
     @Override
     public InputPartition[] planInputPartitions(Offset start, Offset end) {
-        int index = (int) ((LongOffset) end).offset();
+        int index = (int) ((CustomLongOffset) end).getValue();
         return index >= allBuckets.size() ?
             null :
             new InputPartition[]{new PlanAnalysis.Partition(index + "", allBuckets.get(index))};
@@ -70,12 +70,12 @@ class OpticMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset initialOffset() {
-        return new LongOffset(0);
+        return new CustomLongOffset(0);
     }
 
     @Override
     public Offset deserializeOffset(String json) {
-        return new LongOffset(Long.parseLong(json));
+        return new CustomLongOffset(Long.parseLong(json));
     }
 
     @Override

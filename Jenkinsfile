@@ -1,28 +1,34 @@
 @Library('shared-libraries') _
 
-def runtests(String javaVersion){
+def runtests(){
   // 'set -e' causes the script to fail if any command fails.
-  sh label:'test', script: '''#!/bin/bash
+  sh label:'deploy-test-app', script: '''#!/bin/bash
     set -e
-    export JAVA_HOME=$'''+javaVersion+'''
+    export JAVA_HOME=$JAVA17_HOME_DIR
     export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
-    export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
+    export PATH=$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
-    echo "Waiting for MarkLogic server to initialize."
-    sleep 60s
-    ./gradlew clean
+    ./gradlew -i mlWaitTillReady
     ./gradlew mlTestConnections
     ./gradlew -i mlDeploy
     echo "Loading data a second time to try to avoid Optic bug with duplicate rows being returned."
     ./gradlew -i mlLoadData
+  '''
+
+  sh label:'test', script: '''#!/bin/bash
+    set -e
+    export JAVA_HOME=$JAVA17_HOME_DIR
+    export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
+    export PATH=$JAVA_HOME/bin:$PATH
+    cd marklogic-spark-connector
     ./gradlew clean test jacocoTestReport || true
   '''
   junit '**/build/**/*.xml'
 }
 
-def runSonarScan(String javaVersion){
-    sh label:'test', script: '''#!/bin/bash
-      export JAVA_HOME=$'''+javaVersion+'''
+def runSonarScan(){
+    sh label:'run-sonar', script: '''#!/bin/bash
+      export JAVA_HOME=$JAVA17_HOME_DIR
       export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
       export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
       cd marklogic-spark-connector
@@ -30,25 +36,39 @@ def runSonarScan(String javaVersion){
     '''
 }
 
+def tearDownDocker() {
+  updateWorkspacePermissions()
+  sh label:'mlcleanup', script: '''#!/bin/bash
+    cd marklogic-spark-connector
+    docker-compose down -v || true
+  '''
+  cleanupDocker()
+}
+
 pipeline{
   agent none
+  
   triggers{
     parameterizedCron(env.BRANCH_NAME == "develop" ? "00 02 * * * % regressions=true" : "")
   }
   parameters{
     booleanParam(name: 'regressions', defaultValue: false, description: 'indicator if build is for regressions')
   }
+  
   options {
     checkoutToSubdirectory 'marklogic-spark-connector'
     buildDiscarder logRotator(artifactDaysToKeepStr: '7', artifactNumToKeepStr: '', daysToKeepStr: '30', numToKeepStr: '')
   }
+  
   environment{
     JAVA17_HOME_DIR="/home/builder/java/jdk-17.0.2"
     GRADLE_DIR   =".gradle"
     DMC_USER     = credentials('MLBUILD_USER')
     DMC_PASSWORD = credentials('MLBUILD_PASSWORD')
   }
+
   stages{
+
     stage('tests'){
       environment{
         scannerHome = tool 'SONAR_Progress'
@@ -64,22 +84,18 @@ pipeline{
             cd marklogic-spark-connector
             MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
           '''
-        runtests('JAVA17_HOME_DIR')
+        runtests()
         withSonarQubeEnv('SONAR_Progress') {
-          runSonarScan('JAVA17_HOME_DIR')
+          runSonarScan()
         }
       }
       post{
         always{
-          updateWorkspacePermissions()
-          sh label:'mlcleanup', script: '''#!/bin/bash
-            cd marklogic-spark-connector
-            docker-compose down -v || true
-          '''
-          cleanupDocker()
+          tearDownDocker()
         }
       }
     }
+
     stage('publish'){
       agent {label 'devExpLinuxPool'}
       when {
@@ -89,7 +105,7 @@ pipeline{
       	sh label:'publish', script: '''#!/bin/bash
           export JAVA_HOME=$JAVA17_HOME_DIR
           export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
-          export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
+          export PATH=$JAVA_HOME/bin:$PATH
           cd marklogic-spark-connector
           ./gradlew clean
           cp ~/.gradle/gradle.properties $GRADLE_USER_HOME;
@@ -97,6 +113,7 @@ pipeline{
         '''
       }
     }
+
     stage('regressions'){
       agent {label 'devExpLinuxPool'}
       when{
@@ -116,19 +133,13 @@ pipeline{
                 docker-compose down -v || true
                 MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
             '''
-            runtests('JAVA17_HOME_DIR')
+            runtests()
       }
       post{
         always{
-          updateWorkspacePermissions()
-          sh label:'mlcleanup', script: '''#!/bin/bash
-            cd marklogic-spark-connector
-            docker-compose down -v || true
-          '''
-          cleanupDocker()
+          tearDownDocker()
         }
       }
-
     }
   }
 }
