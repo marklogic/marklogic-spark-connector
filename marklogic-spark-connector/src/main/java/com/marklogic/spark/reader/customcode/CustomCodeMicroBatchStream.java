@@ -4,11 +4,11 @@
 package com.marklogic.spark.reader.customcode;
 
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.CustomLongOffset;
 import org.apache.spark.sql.connector.read.InputPartition;
 import org.apache.spark.sql.connector.read.PartitionReaderFactory;
 import org.apache.spark.sql.connector.read.streaming.MicroBatchStream;
 import org.apache.spark.sql.connector.read.streaming.Offset;
-import org.apache.spark.sql.execution.streaming.LongOffset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +35,7 @@ class CustomCodeMicroBatchStream implements MicroBatchStream {
      */
     @Override
     public Offset latestOffset() {
-        Offset result = partitionIndex >= partitions.size() ? null : new LongOffset(partitionIndex);
+        Offset result = partitionIndex >= partitions.size() ? null : new CustomLongOffset(partitionIndex);
         if (logger.isTraceEnabled()) {
             logger.trace("Returning latest offset: {}", partitionIndex);
         }
@@ -50,7 +50,7 @@ class CustomCodeMicroBatchStream implements MicroBatchStream {
      */
     @Override
     public InputPartition[] planInputPartitions(Offset start, Offset end) {
-        long index = ((LongOffset) end).offset();
+        long index = ((CustomLongOffset) end).getValue();
         return new InputPartition[]{new CustomCodePartition(partitions.get((int) index))};
     }
 
@@ -61,12 +61,12 @@ class CustomCodeMicroBatchStream implements MicroBatchStream {
 
     @Override
     public Offset initialOffset() {
-        return new LongOffset(0);
+        return new CustomLongOffset(0);
     }
 
     @Override
     public Offset deserializeOffset(String json) {
-        return new LongOffset(Long.parseLong(json));
+        return new CustomLongOffset(Long.parseLong(json));
     }
 
     @Override
