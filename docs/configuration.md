@@ -39,7 +39,7 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.password             | Required for `basic` and `digest` authentication. |
 | spark.marklogic.client.certificate.file     | Required for `certificate` authentication; the path to a certificate file. |
 | spark.marklogic.client.certificate.password | Required for `certificate` authentication; the password for accessing the certificate file. |
-| spark.marklogic.client.cloud.apiKey         | Required for MarkLogic `cloud` authentication. |
+| spark.marklogic.client.cloud.apiKey         | Required for Progress Data Cloud (PDC) `cloud` authentication. |
 | spark.marklogic.client.kerberos.principal | Required for `kerberos` authentication. |
 | spark.marklogic.client.saml.token | Required for `saml` authentication. |
 | spark.marklogic.client.sslEnabled | If 'true', an SSL connection is created using the JVM's default SSL context.
@@ -49,6 +49,10 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.ssl.keystore.type | Java keystore type for 2-way SSL; defaults to "JKS"; since 2.1.0. |
 | spark.marklogic.client.ssl.keystore.algorithm | Java keystore algorithm for 2-way SSL; defaults to "SunX509"; since 2.1.0. |
 | spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
+
+If you are using the connector with a MarkLogic server hosted in Progress Data Cloud (PDC), please see 
+the related [Flux documentation](https://marklogic.github.io/flux/common-options.html) on how to configure the 
+values for the MarkLogic host, base path, and cloud API key.
 
 ### Connecting with a client URI
 
