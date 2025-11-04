@@ -177,8 +177,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         } finally {
             // This is needed for when files are being streamed into MarkLogic; gives a chance for the file reader to
             // close the associated InputStream.
-            if (iterator instanceof Closeable) {
-                IOUtils.closeQuietly((Closeable) iterator);
+            if (iterator instanceof Closeable closeable) {
+                IOUtils.closeQuietly(closeable);
             }
         }
     }
@@ -244,8 +244,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private synchronized void throwWriteFailureIfExists() {
         if (writeFailure.get() != null) {
             Throwable failure = writeFailure.get();
-            if (failure instanceof ConnectorException) {
-                throw (ConnectorException) failure;
+            if (failure instanceof ConnectorException connectorException) {
+                throw connectorException;
             }
             // Originally, only the failure message was included under the impression that the Spark environment was
             // logging the full stacktrace. That either was not the case or is no longer the case on Spark 3.5.x.

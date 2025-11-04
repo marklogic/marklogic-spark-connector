@@ -23,6 +23,7 @@ import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,6 +46,7 @@ public class OpticReadContext extends ContextSupport {
     private StructType schema;
     private List<OpticFilter> opticFilters;
     private final long batchSize;
+    private final Set<String> opticParamNames;
 
     public OpticReadContext(Map<String, String> properties, StructType schema, int defaultMinPartitions) {
         super(properties);
@@ -55,6 +57,12 @@ public class OpticReadContext extends ContextSupport {
         }
 
         this.schema = schema;
+
+        this.opticParamNames = getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+            .collect(Collectors.toSet());
+
         this.batchSize = getNumericOption(Options.READ_BATCH_SIZE, DEFAULT_BATCH_SIZE, 0);
         this.planAnalysis = analyzePlan(dslQuery, getNumericOption(Options.READ_NUM_PARTITIONS, defaultMinPartitions, 1));
 
@@ -65,6 +73,11 @@ public class OpticReadContext extends ContextSupport {
             }
             if (Util.MAIN_LOGGER.isDebugEnabled() && planAnalysis.getServerTimestamp() > 0) {
                 Util.MAIN_LOGGER.debug("Will use server timestamp: {}", planAnalysis.getServerTimestamp());
+            }
+
+            // Each Optic param is bound as a column so that it can be referenced by the Spark program.
+            for (String opticParamName : opticParamNames) {
+                planAnalysis.pushOperatorIntoPlan(PlanUtil.buildBind(opticParamName, PlanUtil.buildParam(opticParamName)));
             }
         }
     }
@@ -133,20 +146,62 @@ public class OpticReadContext extends ContextSupport {
                 .bindParam("ML_UPPER_BOUND", bucket.upperBound);
         }
 
+        // Need to keep track of which Optic param names have values bound as a result of a user invoking a Spark
+        // filter operation. Any Optic param names that don't have values bound must then have their user-defined
+        // default values bound.
+        final Set<String> boundOpticParamNames = new HashSet<>();
+
         if (opticFilters != null) {
             for (OpticFilter opticFilter : opticFilters) {
-                plan = opticFilter.bindFilterValue(plan);
+                final String columnName = opticFilter.getColumnName();
+                if (opticParamNames.contains(columnName)) {
+                    boundOpticParamNames.add(columnName);
+                    plan = opticFilter.bindFilterValue(plan, columnName);
+                } else {
+                    plan = opticFilter.bindFilterValue(plan);
+                }
             }
         }
 
-        return plan;
+        return bindDefaultOpticParamValues(plan, boundOpticParamNames);
+    }
+
+    /**
+     * For any column associated with an op.param call that doesn't have a value bound already, we need to use the
+     * default value provided by the user. Not binding a value at all would cause the server to throw an error.
+     *
+     * @param plan
+     * @param boundOpticParamNames the set of Optic param names that have already been bound and thus should not have
+     *                             default values bound
+     * @return
+     */
+    private PlanBuilder.Plan bindDefaultOpticParamValues(PlanBuilder.Plan plan, Set<String> boundOpticParamNames) {
+        AtomicReference<PlanBuilder.Plan> planRef = new AtomicReference<>(plan);
+        getProperties().keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .forEach(key -> {
+                String paramName = key.substring(Options.READ_OPTIC_PARAM_PREFIX.length());
+                // Don't bind a param if it was already bound by an OpticFilter, as that would override the filter's value.
+                if (!boundOpticParamNames.contains(paramName)) {
+                    String paramValue = getProperties().get(key);
+                    planRef.set(planRef.get().bindParam(paramName, paramValue));
+                }
+            });
+        return planRef.get();
     }
 
     void pushDownFiltersIntoOpticQuery(List<OpticFilter> opticFilters) {
         this.opticFilters = opticFilters;
-        // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
-        // which Optic does not allow.
-        opticFilters.forEach(filter -> planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(filter)));
+
+        // Any filter associated with an op.param call should not be pushed down as a new operator in the Optic
+        // plan. Such a filter just needs to have its value bound to the plan.
+        opticFilters.forEach(opticFilter -> {
+            if (!opticParamNames.contains(opticFilter.getColumnName())) {
+                // Add each filter in a separate "where" so we don't toss an op.sqlCondition into an op.and,
+                // which Optic does not allow.
+                planAnalysis.pushOperatorIntoPlan(PlanUtil.buildWhere(opticFilter));
+            }
+        });
     }
 
     void pushDownLimit(int limit) {
@@ -158,10 +213,20 @@ public class OpticReadContext extends ContextSupport {
         pushDownLimit(limit);
     }
 
-    void pushDownAggregation(Aggregation aggregation) {
+    boolean pushDownAggregation(Aggregation aggregation) {
         final List<String> groupByColumnNames = Stream.of(aggregation.groupByExpressions())
             .map(PlanUtil::expressionToColumnName)
-            .collect(Collectors.toList());
+            // We cannot push down a groupBy on an op.param name as it's not a real column.
+            .filter(name -> !opticParamNames.contains(name))
+            .toList();
+
+        if (groupByColumnNames.isEmpty()) {
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Not pushing down aggregation as there are no groupBy columns after removing " +
+                    "those associated with op.param calls.");
+            }
+            return false;
+        }
 
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("groupBy column names: {}", groupByColumnNames);
@@ -177,16 +242,13 @@ public class OpticReadContext extends ContextSupport {
                 newSchema = newSchema.add(func.toString(), DataTypes.LongType);
             } else if (func instanceof CountStar) {
                 newSchema = newSchema.add("count", DataTypes.LongType);
-            } else if (func instanceof Max) {
-                Max max = (Max) func;
+            } else if (func instanceof Max max) {
                 StructField field = findColumnInSchema(max.column(), PlanUtil.expressionToColumnName(max.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Min) {
-                Min min = (Min) func;
+            } else if (func instanceof Min min) {
                 StructField field = findColumnInSchema(min.column(), PlanUtil.expressionToColumnName(min.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
-            } else if (func instanceof Sum) {
-                Sum sum = (Sum) func;
+            } else if (func instanceof Sum sum) {
                 StructField field = findColumnInSchema(sum.column(), PlanUtil.expressionToColumnName(sum.column()));
                 newSchema = newSchema.add(func.toString(), field.dataType());
             } else if (Util.MAIN_LOGGER.isDebugEnabled()) {
@@ -199,7 +261,7 @@ public class OpticReadContext extends ContextSupport {
                 "performance of pushed down aggregation.");
             List<PlanAnalysis.Partition> mergedPartitions = planAnalysis.getPartitions().stream()
                 .map(p -> p.mergeBuckets())
-                .collect(Collectors.toList());
+                .toList();
             this.planAnalysis = new PlanAnalysis(planAnalysis.getSerializedPlan(), mergedPartitions, planAnalysis.getServerTimestamp());
         }
 
@@ -207,6 +269,8 @@ public class OpticReadContext extends ContextSupport {
             Util.MAIN_LOGGER.debug("Schema after pushing down aggregation: {}", newSchema);
         }
         this.schema = newSchema;
+
+        return true;
     }
 
     private StructType buildSchemaWithColumnNames(List<String> groupByColumnNames) {

@@ -17,16 +17,19 @@ import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
 import org.apache.spark.sql.sources.DataSourceRegister;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.JavaConverters;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
@@ -62,16 +65,18 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         } else if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
-        return inferSchemaFromOpticQuery(properties);
+
+        StructType schema = inferSchemaFromOpticQuery(properties);
+        return addColumnsForOpticParams(schema, properties);
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
             // Not yet supporting progress logging for file operations.
-            return new MarkLogicFileTable(SparkSession.active(),
+            return new MarkLogicFileTable(SparkSession.getActiveSession().get(),
                 new CaseInsensitiveStringMap(properties),
-                JavaConverters.asScalaBuffer(getPaths(properties)), schema
+                scala.collection.immutable.List.from(CollectionConverters.asScala(getPaths(properties))), schema
             );
         }
 
@@ -166,5 +171,34 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return properties.containsKey("path") ?
             Arrays.asList(properties.get("path")) :
             Util.parsePaths(properties.get("paths"));
+    }
+
+    /**
+     * Each Optic param needs to be added to the Spark schema so that a user can invoke a Spark filter operation on it.
+     */
+    private StructType addColumnsForOpticParams(StructType schema, Map<String, String> caseSensitiveOptions) {
+        Set<String> opticParamNames = caseSensitiveOptions.keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+            .collect(Collectors.toSet());
+
+        // Add a new column to the schema for each param.
+        for (String paramName : opticParamNames) {
+            final String typeOption = Options.READ_OPTIC_PARAM_TYPE_PREFIX + paramName;
+            DataType type = DataTypes.StringType;
+            if (caseSensitiveOptions.containsKey(typeOption)) {
+                try {
+                    type = DataType.fromJson("\"" + caseSensitiveOptions.get(typeOption) + "\"");
+                } catch (Exception ex) {
+                    throw new ConnectorException(String.format("Unable to parse type for param %s; cause: %s", typeOption, ex.getMessage()), ex);
+                }
+            }
+            schema = schema.add(paramName, type, true);
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Added column for Optic param: {} with type: {}", paramName, type);
+            }
+        }
+
+        return schema;
     }
 }

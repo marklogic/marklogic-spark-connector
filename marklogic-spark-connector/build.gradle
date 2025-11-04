@@ -1,58 +1,120 @@
 plugins {
-  id 'com.gradleup.shadow' version '8.3.3'
+  id 'com.gradleup.shadow' version '9.2.1'
   id 'maven-publish'
 }
 
 configurations {
-  // Defines all the implementation dependencies, but in such a way that they are not included as dependencies in the
-  // library's pom.xml file. This is due to the shadow jar being published instead of a jar only containing this
-  // project's classes. The shadow jar is published due to the need to relocate several packages to avoid conflicts
-  // with Spark.
-  shadowDependencies
-
-  // Allows for Java 17-specific dependencies to be declared so that they can be added to the shadowJar, but also
-  // not included on the compile classpath for the connector. These dependencies are also declared in the "tests"
-  // project as test dependencies so that they can be tested. These are separate from shadowDependencies, as those
-  // are on the compile classpath. But we don't want the connector to require any Java 17 dependencies to be on the
-  // compile classpath so that we can still compile it using Java 11.
-  java17Dependencies
-
-  // This approach allows for all of the dependencies to be available for compilation and for running tests.
-  compileOnly.extendsFrom(shadowDependencies)
+  configureEach {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      // These all impact Spark and its dependencies, but not the published connector as the connector does not contain
+      // any Spark libraries.
+      if (details.requested.group.equals("org.codehaus.janino")) {
+        details.useVersion "3.1.12"
+        details.because "Bumping from 3.1.9 (what Spark SQL 4.0.1 depends on) to 3.1.12 to minimize CVEs."
+      }
+    }
+  }
 }
 
-dependencies {
-  compileOnly "org.apache.spark:spark-sql_2.12:${sparkVersion}"
-  shadowDependencies project(":marklogic-spark-api")
-  java17Dependencies project(":marklogic-langchain4j")
 
-  // Ensuring the desired version of commons-compress is included in the connector jar. Some tests have failed in Flux
-  // because an older version - likely the one depended on by Jena - is included instead.
-  shadowDependencies "org.apache.commons:commons-compress:1.27.1"
+dependencies {
+  // Need to compile against Spark, but its libraries are not part of the connector jar.
+  compileOnly("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
+    // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
+    exclude module: "rocksdbjni"
+  }
+
+  // This is compileOnly as Spark will provide its own copy at runtime.
+  compileOnly "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+
+  implementation("com.marklogic:marklogic-client-api:8.0.0") {
+    // Need to use the versions of Jackson preferred by Spark.
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  // For logging.
+  implementation "org.slf4j:jcl-over-slf4j:2.0.17"
+
+  // Needed for splitting XML documents via XPath.
+  implementation "jaxen:jaxen:2.0.0"
+
+  // Needed for classifying documents via Semaphore.
+  implementation("com.smartlogic.csclient:Semaphore-CS-Client:${semaphoreVersion}") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
+  implementation("com.smartlogic.cloud:Semaphore-Cloud-Client:${semaphoreVersion}") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
+
+  // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
+  // include the necessary parsers.
+  implementation "org.apache.tika:tika-core:${tikaVersion}"
+
+  // Needed for using XmlMapper.
+  implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:${jacksonVersion}"
+
+  // Supports reading and writing RDF data. Including this here so it's available to the tests as well.
+  // Bumped to 5.x, which requires Java 17, while upgrading Spark to 4.x.
+  implementation("org.apache.jena:jena-arq:5.6.0") {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  // Needed for some XML operations that are far easier with JDOM2 than with DOM.
+  implementation "org.jdom:jdom2:2.0.6.1"
+
+  implementation("dev.langchain4j:langchain4j:${langchain4jVersion}") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:4.12.0'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.2.1'
+
+  // Automatic loading of test framework implementation dependencies is deprecated.
+  // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
+  // Without this, once using JUnit 5.12 or higher, Gradle will not find any tests and report an error of:
+  // org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
+  testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.14.0"
+
+  testImplementation("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
+    exclude module: "rocksdbjni"
+  }
+
+  // Supports testing the embedder feature.
+  testImplementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.8.0-beta15") {
+    exclude group: "com.fasterxml.jackson.core"
+  }
+
+  testImplementation('com.marklogic:ml-app-deployer:6.2-SNAPSHOT') {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  testImplementation('com.marklogic:marklogic-junit5:2.0-SNAPSHOT') {
+    exclude group: "com.fasterxml.jackson.core"
+    exclude group: "com.fasterxml.jackson.dataformat"
+  }
+
+  testImplementation "ch.qos.logback:logback-classic:1.5.20"
+  testImplementation "org.skyscreamer:jsonassert:1.5.3"
+
+  testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
+  testImplementation "org.apache.tika:tika-parser-pdf-module:${tikaVersion}"
 }
 
-shadowJar {
-  configurations = [project.configurations.shadowDependencies, project.configurations.java17Dependencies]
+test {
+  // See https://stackoverflow.com/questions/72724816/running-unit-tests-with-spark-3-3-0-on-java-17-fails-with-illegalaccesserror-cl
+  // for an explanation of why these are needed when running the tests on Java 17.
+  jvmArgs = [
+    '--add-exports=java.base/sun.nio.ch=ALL-UNNAMED',
+    '--add-exports=java.base/sun.util.calendar=ALL-UNNAMED',
+    '--add-exports=java.base/sun.security.action=ALL-UNNAMED',
 
-  // "all" is the default; no need for that in the connector filename. This also results in this becoming the library
-  // artifact that is published as a dependency. That is desirable as it includes the relocated packages listed below,
-  // which a dependent would otherwise have to manage themselves.
-  archiveClassifier.set("")
-
-  // Spark uses an older version of OkHttp; see
-  // https://stackoverflow.com/questions/61147800/how-to-override-spark-jars-while-running-spark-submit-command-in-cluster-mode
-  // for more information on why these are relocated.
-  relocate "okhttp3", "marklogicspark.okhttp3"
-  relocate "okio", "marklogicspark.okio"
-
-  // Shadowing these as well to avoid issues where a user needs to use the "normal" Java Client with the
-  // regular OkHttp classes.
-  relocate "com.marklogic.client", "marklogicspark.marklogic.client"
-  relocate "com.burgstaller.okhttp", "marklogicspark.com.burgstaller.okhttp"
+    // Increased heap size as part of the Spark 4 upgrade, as we started experiencing OOM errors in the tests.
+    '-Xmx6g', '-Xms3g'
+  ]
 }
 
 // Publishing setup - see https://docs.gradle.org/current/userguide/publishing_setup.html .
@@ -61,9 +123,21 @@ java {
   withSourcesJar()
 }
 
+// Allows for identifying compiler warnings and treating them as errors.
+tasks.withType(JavaCompile).configureEach {
+  options.compilerArgs += ["-Xlint:unchecked", "-Xlint:deprecation", "-Werror"]
+  options.deprecation = true
+  options.warnings = true
+}
+
 javadoc.failOnError = false
 // Ignores warnings on params that don't have descriptions, which is a little too noisy
 javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+// We don't want the shadow jar to be published to a Maven repository.
+shadow {
+  addShadowVariantIntoJavaComponent = false
+}
 
 publishing {
   publications {
@@ -101,8 +175,8 @@ publishing {
     maven {
       if (project.hasProperty("mavenUser")) {
         credentials {
-          username mavenUser
-          password mavenPassword
+          username = mavenUser
+          password = mavenPassword
         }
         url publishUrl
         allowInsecureProtocol = true
@@ -110,15 +184,15 @@ publishing {
         name = "central"
         url = mavenCentralUrl
         credentials {
-          username mavenCentralUsername
-          password mavenCentralPassword
+          username = mavenCentralUsername
+          password = mavenCentralPassword
         }
       }
     }
   }
 }
 
-task gettingStartedZip(type: Zip) {
+tasks.register("gettingStartedZip", Zip) {
   description = "Creates a zip of the getting-started project that is intended to be included as a downloadable file " +
     "on the GitHub release page."
   from "../examples/getting-started"

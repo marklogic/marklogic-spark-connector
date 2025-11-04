@@ -31,6 +31,17 @@ public interface OpticFilter extends Serializable {
     PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan);
 
     /**
+     * Allows for a filter to be associated with an Optic op.param column name.
+     *
+     * @param plan
+     * @param paramColumnName
+     * @return
+     */
+    default PlanBuilder.Plan bindFilterValue(PlanBuilder.Plan plan, String paramColumnName) {
+        return bindFilterValue(plan);
+    }
+
+    /**
      * Allows the filter to determine if - after having been constructed - it's not a valid Optic expression and thus
      * cannot be pushed down to MarkLogic.
      *
@@ -38,5 +49,15 @@ public interface OpticFilter extends Serializable {
      */
     default boolean isValid() {
         return true;
+    }
+
+    /**
+     * Allows for a Spark column name to be associated with the filter, which is necessary for determining if the
+     * filter is associated with an actual column or with an op.param function call.
+     *
+     * @return
+     */
+    default String getColumnName() {
+        return null;
     }
 }

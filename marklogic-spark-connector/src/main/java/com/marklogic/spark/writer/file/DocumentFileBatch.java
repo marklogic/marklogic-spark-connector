@@ -29,7 +29,7 @@ class DocumentFileBatch implements BatchWrite {
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         // This is the last chance we have for accessing the hadoop config, which is needed by the writer.
         // SerializableConfiguration allows for it to be sent to the factory.
-        Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
+        Configuration config = SparkSession.getActiveSession().get().sparkContext().hadoopConfiguration();
         return new DocumentFileWriterFactory(properties, new SerializableConfiguration(config), schema);
     }
 
@@ -42,14 +42,14 @@ class DocumentFileBatch implements BatchWrite {
             String path = null;
             String zipFilePath = null;
             for (WriterCommitMessage message : messages) {
-                if (message instanceof FileCommitMessage) {
-                    path = ((FileCommitMessage) message).getPath();
-                    fileCount += ((FileCommitMessage) message).getFileCount();
-                } else if (message instanceof ZipCommitMessage) {
-                    path = ((ZipCommitMessage)message).getPath();
-                    zipFilePath = ((ZipCommitMessage) message).getZipFilePath();
+                if (message instanceof FileCommitMessage fileCommitMessage) {
+                    path = fileCommitMessage.getPath();
+                    fileCount += fileCommitMessage.getFileCount();
+                } else if (message instanceof ZipCommitMessage zipCommitMessage) {
+                    path = zipCommitMessage.getPath();
+                    zipFilePath = zipCommitMessage.getZipFilePath();
                     zipFileCount++;
-                    zipEntryCount += ((ZipCommitMessage) message).getZipEntryCount();
+                    zipEntryCount += zipCommitMessage.getZipEntryCount();
                 }
             }
             if (fileCount == 1) {

@@ -6,6 +6,10 @@ services:
   # and load balancer.
   caddy-load-balancer:
     image: caddy:2-alpine
+    # The NET_RAW capability allows a process to create raw sockets. Polaris does not like that.
+    # This setting removes the NET_RAW capability from the container.
+    cap_drop:
+      - NET_RAW
     volumes:
       # Not mapping the Caddy data directory, as that causes issues for Jenkins.
       - ./docker/caddy/config/Caddyfile:/etc/caddy/Caddyfile
@@ -17,6 +21,8 @@ services:
   marklogic:
     image: "${MARKLOGIC_IMAGE}"
     platform: linux/amd64
+    cap_drop:
+      - NET_RAW
     environment:
       - MARKLOGIC_INIT=true
       - MARKLOGIC_ADMIN_USERNAME=admin

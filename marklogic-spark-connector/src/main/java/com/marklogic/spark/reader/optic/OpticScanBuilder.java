@@ -179,8 +179,8 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
         if (logger.isDebugEnabled()) {
             logger.debug("Pushing down aggregation: {}", describeAggregation(aggregation));
         }
-        opticReadContext.pushDownAggregation(aggregation);
-        return true;
+
+        return opticReadContext.pushDownAggregation(aggregation);
     }
 
     @Override
