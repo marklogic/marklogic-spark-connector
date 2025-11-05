@@ -46,6 +46,19 @@ class ReadRowsTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void sysTables() {
+        Dataset<Row> dataset = newDefaultReader()
+            .option(Options.READ_OPTIC_QUERY, "op.fromView('sys','sys_tables')")
+            .load();
+
+        ConnectorException ex = assertThrows(ConnectorException.class, dataset::count);
+        assertTrue(ex.getMessage().contains("TDE-INVALIDVIEWNAME"), "MLE-151 captures a bug where internal/viewinfo " +
+            "does not work for sys/sys_tables. This is capturing that behavior, though we may end up closing the bug " +
+            "as 'not supported'. The main use case is that it can be helpful in an environment like PySpark to quickly " +
+            "learn what views exist for a database.");
+    }
+
+    @Test
     void emptyQualifier() {
         List<Row> rows = newDefaultReader()
             .option(Options.READ_OPTIC_QUERY, "op.fromView('Medical','Authors', '')")
