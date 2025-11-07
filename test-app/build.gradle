@@ -11,11 +11,12 @@ buildscript {
   }
 }
 
-plugins {
-  id "net.saliman.properties" version "1.5.2"
-}
-
 apply plugin: "com.marklogic.ml-gradle"
+
+// Sometimes, 3 x 20 isn't enough on Jenkins.
+mlWaitTillReady {
+  maxAttempts = 40
+}
 
 tasks.register("reloadTestData", com.marklogic.gradle.task.MarkLogicTask) {
   description = "Convenience task for clearing the test database and reloading the test data; only intended for a connector developer to use."
