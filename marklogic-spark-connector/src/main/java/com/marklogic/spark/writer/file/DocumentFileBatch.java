@@ -29,7 +29,8 @@ class DocumentFileBatch implements BatchWrite {
     public DataWriterFactory createBatchWriterFactory(PhysicalWriteInfo info) {
         // This is the last chance we have for accessing the hadoop config, which is needed by the writer.
         // SerializableConfiguration allows for it to be sent to the factory.
-        Configuration config = SparkSession.getActiveSession().get().sparkContext().hadoopConfiguration();
+        SparkSession session = Util.getSparkSession();
+        Configuration config = session.sparkContext().hadoopConfiguration();
         return new DocumentFileWriterFactory(properties, new SerializableConfiguration(config), schema);
     }
 

@@ -74,7 +74,8 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
             // Not yet supporting progress logging for file operations.
-            return new MarkLogicFileTable(SparkSession.getActiveSession().get(),
+            SparkSession session = Util.getSparkSession();
+            return new MarkLogicFileTable(session,
                 new CaseInsensitiveStringMap(properties),
                 scala.collection.immutable.List.from(CollectionConverters.asScala(getPaths(properties))), schema
             );
