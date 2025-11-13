@@ -10,8 +10,10 @@ import com.marklogic.client.extra.jdom.JDOMHandle;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.*;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
+import org.apache.spark.sql.classic.SparkSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Option;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -33,6 +35,18 @@ public interface Util {
      */
     String DEFAULT_VECTOR_NAMESPACE = "http://marklogic.com/vector";
 
+    static SparkSession getSparkSession() {
+        Option<SparkSession> activeSession = SparkSession.getActiveSession();
+        if (activeSession.isDefined()) {
+            return activeSession.get();
+        }
+        Option<SparkSession> defaultSession = SparkSession.getDefaultSession();
+        if (defaultSession.isDefined()) {
+            return defaultSession.get();
+        }
+        throw new ConnectorException("Could not obtain a Spark session, no active or default one found.");
+    }
+    
     static boolean hasOption(Map<String, String> properties, String... options) {
         return Stream.of(options)
             .anyMatch(option -> properties.get(option) != null && !properties.get(option).trim().isEmpty());
