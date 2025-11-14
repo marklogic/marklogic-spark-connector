@@ -1,0 +1,5 @@
+@prefix ad: <http://marklogicsparql.com/addressbook#> .
+@prefix id:  <http://marklogicsparql.com/id#> .
+id:1111 ad:firstName "Jane" .
+id:1111 ad:lastName  "Smith"@en-us .
+id:1111 ad:homeTel   1111111111 .
