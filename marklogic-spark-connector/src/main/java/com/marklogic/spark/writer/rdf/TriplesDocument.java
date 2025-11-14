@@ -38,12 +38,14 @@ class TriplesDocument {
         triple.addContent(new Element("subject", SEMANTICS_NAMESPACE).addContent(row.getString(0)));
         triple.addContent(new Element("predicate", SEMANTICS_NAMESPACE).addContent(row.getString(1)));
         Element object = new Element("object", SEMANTICS_NAMESPACE).addContent(row.getString(2));
-        if (!row.isNullAt(3)) {
-            object.setAttribute("datatype", row.getString(3));
-        }
+
+        // Fix in 3.0 - only set datatype if lang isn't set. Avoids a problem in MarkLogic 11 (no problem occurs in 12).
         if (!row.isNullAt(4)) {
             object.setAttribute("lang", row.getString(4), XML_NAMESPACE);
+        } else if (!row.isNullAt(3)) {
+            object.setAttribute("datatype", row.getString(3));
         }
+
         triple.addContent(object);
         tripleCount++;
     }
