@@ -23,6 +23,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
     @Test
     void jsonChunks() {
         prepareToWriteChunkDocuments()
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -42,6 +43,7 @@ class SplitTextDocumentTest extends AbstractIntegrationTest {
     void xmlChunks() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE, "xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 

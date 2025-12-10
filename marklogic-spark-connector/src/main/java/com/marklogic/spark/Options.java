@@ -295,7 +295,9 @@ public abstract class Options {
 
     /**
      * Configures the connector to write chunks to separate "sidecar" documents instead of to the source document (the
-     * default behavior). Defines the maximum number of chunks to write to a sidecar document.
+     * default behavior). Defines the maximum number of chunks to write to a sidecar document. Prior to 3.0.0, this
+     * had a default value of zero, meaning all chunks would be written to a single sidecar document. As of 3.0.0,
+     * the default value is one, meaning that each chunk is written to a separate sidecar document.
      *
      * @since 2.5.0
      */

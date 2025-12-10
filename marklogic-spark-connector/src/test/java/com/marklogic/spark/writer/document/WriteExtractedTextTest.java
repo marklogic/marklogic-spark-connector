@@ -287,6 +287,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_REPLACE, ".*/extraction-files,'/abc'")
             .option(Options.WRITE_COLLECTIONS, "extraction-test")
             .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.WRITE_EXTRACTED_TEXT, true)
             .option(Options.WRITE_EXTRACTED_TEXT_COLLECTIONS, "extraction-test")
             .mode(SaveMode.Append)
