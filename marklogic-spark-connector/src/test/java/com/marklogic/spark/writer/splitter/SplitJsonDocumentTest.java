@@ -27,15 +27,27 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunk-docs")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
             .mode(SaveMode.Append)
             .save();
 
         JsonNode doc = readJsonDocument("/split-test.json");
-        assertEquals(2, doc.get("chunks").size(), "Expecting 2 chunks based on default max chunk size of 1000.");
-        assertTrue(doc.get("chunks").get(0).has("text"));
-        assertTrue(doc.get("chunks").get(1).has("text"));
+        assertFalse(doc.has("chunks"), "Starting in version 3.0.0, the number of chunks per sidecar document should " +
+            "default to 1 to adhere to our best practice of one chunk/embedding per document.");
+
+        assertCollectionSize("Expecting 2 chunk documents based on the default chunk size of 1000", "chunk-docs", 2);
+
+        JsonNode chunkDoc = readJsonDocument("/split-test.json-chunks-1.json");
+        assertEquals(1, chunkDoc.get("chunks").size());
+        String chunkText = chunkDoc.get("chunks").get(0).get("text").asText();
+        assertTrue(chunkText.startsWith("When working with the Java API"), "Unexpected chunk text: " + chunkText);
+
+        chunkDoc = readJsonDocument("/split-test.json-chunks-2.json");
+        assertEquals(1, chunkDoc.get("chunks").size());
+        chunkText = chunkDoc.get("chunks").get(0).get("text").asText();
+        assertTrue(chunkText.startsWith("This chapter covers a number"), "Unexpected chunk text: " + chunkText);
     }
 
     @Test
@@ -47,6 +59,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -67,6 +80,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -88,6 +102,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/test-array")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 100)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
             .mode(SaveMode.Append)
@@ -263,6 +278,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.CustomSplitter")
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS_OPTION_PREFIX + "textToReturn", "this is a test")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -276,6 +292,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
     void customSplitterNoClassOptions() {
         prepareToWriteChunkDocuments()
             .option(Options.WRITE_SPLITTER_CUSTOM_CLASS, "com.marklogic.langchain4j.splitter.CustomSplitter")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -313,6 +330,7 @@ class SplitJsonDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 

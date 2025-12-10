@@ -47,6 +47,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             // to be logged but no error to be thrown.
             .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(29))
             .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -104,6 +105,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(28))
             .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
             .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 

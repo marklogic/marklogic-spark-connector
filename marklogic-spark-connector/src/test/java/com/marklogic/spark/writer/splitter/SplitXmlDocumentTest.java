@@ -30,6 +30,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_SPLITTER_MAX_OVERLAP_SIZE, 0)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .mode(SaveMode.Append)
             .save();
@@ -89,6 +90,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_XPATH, "/ex:root/ex:text/text()")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.XPATH_NAMESPACE_PREFIX + "ex", "org:example")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/namespace-test.xml")
@@ -186,6 +188,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, "1500")
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -204,6 +207,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_SPLITTER_REGEX, "basic architecture")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
@@ -376,6 +380,7 @@ class SplitXmlDocumentTest extends AbstractIntegrationTest {
         readDocument("/marklogic-docs/has-chunks-already.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text/text()")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")

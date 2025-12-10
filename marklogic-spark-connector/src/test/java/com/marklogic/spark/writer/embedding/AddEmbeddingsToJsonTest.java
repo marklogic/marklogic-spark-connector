@@ -70,6 +70,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
             .option(Options.WRITE_COLLECTIONS, "json-vector-chunks")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -92,6 +93,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -102,6 +104,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_COLLECTIONS, "json-vector-chunks")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
             .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -228,6 +231,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 300)
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
             .option(Options.WRITE_EMBEDDER_BATCH_SIZE, 3)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -380,6 +384,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
             .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -399,6 +404,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
             .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 1000)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
@@ -409,6 +415,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, "com.marklogic.spark.writer.embedding.TestEmbeddingModel")
             .option(Options.WRITE_EMBEDDER_CHUNKS_JSON_POINTER, "/chunks")
             .option(Options.WRITE_EMBEDDER_BASE64_ENCODE, "true")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 

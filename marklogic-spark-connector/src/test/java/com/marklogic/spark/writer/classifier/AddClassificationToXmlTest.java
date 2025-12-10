@@ -22,6 +22,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
         readAndStartWrite()
             .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(3))
             .option(Options.WRITE_SPLITTER_XPATH, "/root/text")
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
             .mode(SaveMode.Append)
             .save();
 
