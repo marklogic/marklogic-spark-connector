@@ -59,6 +59,16 @@ class FileBatch implements Batch {
                 throw new ConnectorException(String.format("Invalid value for number of partitions: %s", value));
             }
         }
-        return filePaths.size();
+
+        return getDefaultNumberOfPartitions(filePaths);
+    }
+
+    protected static int getDefaultNumberOfPartitions(List<String> filePaths) {
+        final int defaultParallelism = Util.getSparkSession().sparkContext().defaultParallelism();
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Default parallelism: {}", defaultParallelism);
+        }
+
+        return Math.min(defaultParallelism, filePaths.size());
     }
 }
