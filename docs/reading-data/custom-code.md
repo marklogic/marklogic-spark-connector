@@ -121,8 +121,12 @@ sequence of values to be returned. You can return any values you want to define 
 what the values represent. The connector will then execute your custom code - defined by `spark.marklogic.read.invoke`,
 `spark.marklogic.read.javascript`, `spark.marklogic.read.javascriptFile`, `spark.marklogic.read.xquery` or 
 `spark.marklogic.read.xqueryFile` - once for each partition value. The partition value
-will be defined in an external variable named `PARTITION`. Any external variables you define via the
-`spark.marklogic.read.partitions.vars.` prefix will be sent to the code for returning partitions.
+will be defined in an external variable named `PARTITION`. 
+
+Any external variables you define via the
+`spark.marklogic.read.partitions.vars.` prefix will be sent to the code for returning partitions. Prior to the 3.0.0 
+release of the connector, variables defined via the `spark.marklogic.read.vars.` prefix were sent to the code for 
+returning partitions. 
 
 The following example shows a common use case for using MarkLogic forest IDs as partitions:
 
