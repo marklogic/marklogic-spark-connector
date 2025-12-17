@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.core.classifier.TextClassifierFactory;
+import com.marklogic.spark.core.classifier.MockSemaphoreProxy;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -74,7 +74,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertEquals(3, TextClassifierFactory.MockSemaphoreProxy.getTimesInvoked(), "The mock classifier should " +
+        assertEquals(3, MockSemaphoreProxy.getTimesInvoked(), "The mock classifier should " +
             "have been invoked 3 times - with 10, 10, and then 8 articles.");
     }
 
