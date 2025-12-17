@@ -102,7 +102,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
                 "const row = {\"partition\": PARTITION, \"var\": USER_VAR_EXAMPLE}; " +
                 "Sequence.from([row])")
             .option(Options.READ_PARTITIONS_VARS_PREFIX + "USER_VAR_EXAMPLE", "2")
-            .option(Options.READ_VARS_PREFIX + "USER_VAR_EXAMPLE", "2")
+            .option(Options.READ_VARS_PREFIX + "USER_VAR_EXAMPLE", "3")
             .schema(new StructType()
                 .add("partition", DataTypes.StringType)
                 .add("var", DataTypes.StringType))
@@ -122,7 +122,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
         for (int i = 1; i <= 2; i++) {
             JsonNode doc = readJsonDocument("/read-stream/" + i + ".json");
             assertEquals(i, Integer.parseInt(doc.get("partition").asText()));
-            assertEquals("2", doc.get("var").asText());
+            assertEquals("3", doc.get("var").asText());
         }
     }
 
