@@ -145,6 +145,7 @@ multiple queries, the following options can also be used to control how partitio
 | spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
 | spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute. |
+| spark.marklogic.read.partitions.vars. | Prefix for user-defined variables to be sent to the partition code. |
 
 ### Read options for documents
 

@@ -33,7 +33,7 @@ class CustomCodeScan implements Scan {
             .withXqueryOptionName(Options.READ_PARTITIONS_XQUERY)
             .withJavascriptFileOptionName(Options.READ_PARTITIONS_JAVASCRIPT_FILE)
             .withXqueryFileOptionName(Options.READ_PARTITIONS_XQUERY_FILE)
-            .withVarsPrefix(Options.READ_VARS_PREFIX)
+            .withVarsPrefix(Options.READ_PARTITIONS_VARS_PREFIX)
             .build(this.customCodeContext)
             .ifPresent(callFactory -> {
                 try (DatabaseClient client = this.customCodeContext.connectToMarkLogic()) {

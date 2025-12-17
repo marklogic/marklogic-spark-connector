@@ -101,6 +101,7 @@ class ReadStreamWithCustomCodeTest extends AbstractIntegrationTest {
             .option(Options.READ_JAVASCRIPT,
                 "const row = {\"partition\": PARTITION, \"var\": USER_VAR_EXAMPLE}; " +
                 "Sequence.from([row])")
+            .option(Options.READ_PARTITIONS_VARS_PREFIX + "USER_VAR_EXAMPLE", "2")
             .option(Options.READ_VARS_PREFIX + "USER_VAR_EXAMPLE", "2")
             .schema(new StructType()
                 .add("partition", DataTypes.StringType)
