@@ -114,14 +114,15 @@ your query into many smaller queries, you can use one of the following options t
 - `spark.marklogic.read.partitions.javascriptFile` (New in 2.3.0)
 - `spark.marklogic.read.partitions.xquery`
 - `spark.marklogic.read.partitions.xqueryFile` (New in 2.3.0)
+- `spark.marklogic.read.partitions.vars.` (New in 3.0.0)
 
 If one of the above options is defined, the connector will execute the code associated with the option and expect a
 sequence of values to be returned. You can return any values you want to define partitions; the connector does not care
 what the values represent. The connector will then execute your custom code - defined by `spark.marklogic.read.invoke`,
 `spark.marklogic.read.javascript`, `spark.marklogic.read.javascriptFile`, `spark.marklogic.read.xquery` or 
 `spark.marklogic.read.xqueryFile` - once for each partition value. The partition value
-will be defined in an external variable named `PARTITION`. Note as well that any external variables you define via the
-`spark.marklogic.read.vars` prefix will also be sent to the code for returning partitions.
+will be defined in an external variable named `PARTITION`. Any external variables you define via the
+`spark.marklogic.read.partitions.vars.` prefix will be sent to the code for returning partitions.
 
 The following example shows a common use case for using MarkLogic forest IDs as partitions:
 

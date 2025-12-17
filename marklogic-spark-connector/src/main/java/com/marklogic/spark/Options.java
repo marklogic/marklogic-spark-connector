@@ -35,6 +35,11 @@ public abstract class Options {
     public static final String READ_PARTITIONS_XQUERY = "spark.marklogic.read.partitions.xquery";
     public static final String READ_PARTITIONS_XQUERY_FILE = "spark.marklogic.read.partitions.xqueryFile";
 
+    /**
+     * @since 3.0.0
+     */
+    public static final String READ_PARTITIONS_VARS_PREFIX = "spark.marklogic.read.partitions.vars.";
+
     public static final String READ_OPTIC_QUERY = "spark.marklogic.read.opticQuery";
     public static final String READ_NUM_PARTITIONS = "spark.marklogic.read.numPartitions";
     public static final String READ_BATCH_SIZE = "spark.marklogic.read.batchSize";
