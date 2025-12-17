@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.core.classifier.TextClassifierFactory;
+import com.marklogic.spark.core.classifier.MockSemaphoreProxy;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -27,7 +27,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -48,7 +48,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -83,7 +83,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertTrue(doc.get("classification").has("STRUCTUREDDOCUMENT"));
@@ -100,7 +100,7 @@ class AddClassificationToJsonTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         JsonNode doc = readJsonDocument("/split-test.json");
         assertEquals(4, doc.get("chunks").size(), "Expecting 4 chunks based on max chunk size of 500.");

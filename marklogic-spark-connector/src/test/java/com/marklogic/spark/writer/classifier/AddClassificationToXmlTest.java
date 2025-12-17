@@ -6,7 +6,7 @@ package com.marklogic.spark.writer.classifier;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.core.classifier.TextClassifierFactory;
+import com.marklogic.spark.core.classifier.MockSemaphoreProxy;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -26,7 +26,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting each chunk to have a 'model:classification' child element",
@@ -45,7 +45,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",
@@ -76,7 +76,7 @@ class AddClassificationToXmlTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
-        assertTrue(TextClassifierFactory.MockSemaphoreProxy.isClosed());
+        assertTrue(MockSemaphoreProxy.isClosed());
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementExists("Expecting the root of the document to have a 'model:classification' child element",

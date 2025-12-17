@@ -25,8 +25,8 @@ class ConfigHelperTest {
             put(Options.WRITE_CLASSIFIER_TOKEN_PATH, "tokenPath");
         }};
 
-        TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
-        ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
         assertEquals("somehost", config.getHostName());
         assertEquals("/classifier", config.getHostPath(), "To ensure a valid URL, the helper should " +
             "prepend a forward slash when one does not exist.");
@@ -44,8 +44,8 @@ class ConfigHelperTest {
             put(Options.WRITE_CLASSIFIER_HOST, "somehost");
         }};
 
-        TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
-        ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
         assertEquals("https://somehost:443/", config.getUrl());
         assertEquals("https://somehost:443/token", helper.getTokenUrl().toString());
     }
@@ -60,8 +60,8 @@ class ConfigHelperTest {
             put(Options.WRITE_CLASSIFIER_HTTP, "true");
         }};
 
-        TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
-        ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
         assertEquals("http://somehost:8080/classifier", config.getUrl());
         assertEquals("http://somehost:8080/my-token", helper.getTokenUrl().toString());
     }
@@ -75,8 +75,8 @@ class ConfigHelperTest {
             put(Options.WRITE_CLASSIFIER_OPTION_PREFIX + "language", "ch1");
         }};
 
-        TextClassifierFactory.ConfigHelper helper = new TextClassifierFactory.ConfigHelper(new Context(properties));
-        ClassificationConfiguration config = helper.buildClassificationConfiguration("fake-api-token");
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
 
         Map<String, String> additionalParams = config.getAdditionalParameters();
         assertEquals("17", additionalParams.get("threshold"));

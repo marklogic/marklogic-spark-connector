@@ -10,6 +10,7 @@ import com.smartlogic.classificationserver.client.ClassificationException;
 import org.w3c.dom.Document;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 /**
  * Not threadsafe, as the config of the underlying client is modified. This is fine in the context of the connector,
@@ -18,10 +19,22 @@ import java.io.IOException;
 class SemaphoreProxyImpl implements SemaphoreProxy {
 
     private final ClassificationClient classificationClient;
+    private final TokenRefreshHandler tokenRefreshHandler;
     private long totalDurationOfCalls;
 
-    public SemaphoreProxyImpl(ClassificationConfiguration config) {
+    // A Supplier<String> is used instead of TokenGenerator so that we can easily mock it in tests for the
+    // TokenRefreshHandler.
+    SemaphoreProxyImpl(ClassificationConfiguration config, Supplier<String> tokenGenerator) {
         this.classificationClient = new ClassificationClient();
+        if (tokenGenerator != null) {
+            config.setApiToken(tokenGenerator.get());
+            this.tokenRefreshHandler = new TokenRefreshHandler(
+                tokenGenerator,
+                token -> classificationClient.getClassificationConfiguration().setApiToken(token)
+            );
+        } else {
+            this.tokenRefreshHandler = null;
+        }
         config.setMultiArticle(true);
         classificationClient.setClassificationConfiguration(config);
     }
@@ -30,10 +43,13 @@ class SemaphoreProxyImpl implements SemaphoreProxy {
     public byte[] classifyDocument(byte[] content, String uri) {
         try {
             classificationClient.getClassificationConfiguration().setMultiArticle(false);
-            long start = System.currentTimeMillis();
-            byte[] response = classificationClient.getClassificationServerResponse(content, uri, null, null);
-            logDuration(start);
-            return response;
+            if (tokenRefreshHandler != null) {
+                return tokenRefreshHandler.executeWithTokenRefresh(
+                    () -> doClassifyDocument(content, uri),
+                    String.format("Unable to classify content with URI: %s; cause: ", uri)
+                );
+            }
+            return doClassifyDocument(content, uri);
         } catch (ClassificationException ex) {
             throw new ConnectorException(String.format("Unable to classify content with URI: %s; cause: %s", uri, ex.getMessage()), ex);
         } finally {
@@ -41,16 +57,33 @@ class SemaphoreProxyImpl implements SemaphoreProxy {
         }
     }
 
+    private byte[] doClassifyDocument(byte[] content, String uri) throws ClassificationException {
+        long start = System.currentTimeMillis();
+        byte[] response = classificationClient.getClassificationServerResponse(content, uri, null, null);
+        logDuration(start);
+        return response;
+    }
+
     @Override
     public Document classifyArticles(byte[] multiArticleDocumentBytes) {
         try {
-            long start = System.currentTimeMillis();
-            Document response = classificationClient.getStructuredDocument(multiArticleDocumentBytes, "content.xml");
-            logDuration(start);
-            return response;
-        } catch (ClassificationException e) {
-            throw new ConnectorException(String.format("Unable to classify content; cause: %s", e.getMessage()), e);
+            if (tokenRefreshHandler != null) {
+                return tokenRefreshHandler.executeWithTokenRefresh(
+                    () -> doClassifyArticles(multiArticleDocumentBytes),
+                    "Unable to classify content; cause: "
+                );
+            }
+            return doClassifyArticles(multiArticleDocumentBytes);
+        } catch (ClassificationException ex) {
+            throw new ConnectorException(String.format("Unable to classify content; cause: %s", ex.getMessage()), ex);
         }
+    }
+
+    private Document doClassifyArticles(byte[] multiArticleDocumentBytes) throws ClassificationException {
+        long start = System.currentTimeMillis();
+        Document response = classificationClient.getStructuredDocument(multiArticleDocumentBytes, "content.xml");
+        logDuration(start);
+        return response;
     }
 
     @Override
