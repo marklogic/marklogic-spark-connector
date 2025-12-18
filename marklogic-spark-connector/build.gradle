@@ -3,22 +3,10 @@ plugins {
   id 'maven-publish'
 }
 
-configurations {
-  configureEach {
-    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-      // These all impact Spark and its dependencies, but not the published connector as the connector does not contain
-      // any Spark libraries.
-      if (details.requested.group.equals("org.codehaus.janino")) {
-        details.useVersion "3.1.12"
-        details.because "Bumping from 3.1.9 (what Spark SQL 4.0.1 depends on) to 3.1.12 to minimize CVEs."
-      }
-    }
-  }
-}
-
-
 dependencies {
   // Need to compile against Spark, but its libraries are not part of the connector jar.
+  // CVEs recorded in Black Duck against Spark and its dependencies will be remediated as "not affected" because this
+  // is a compileOnly dependency.
   compileOnly("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
     // Excluded from Flux for size reasons, so excluded here as well to ensure we don't need it when running tests.
     exclude module: "rocksdbjni"
@@ -70,7 +58,7 @@ dependencies {
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:5.2.1'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.2.0'
 
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
