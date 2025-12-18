@@ -6,7 +6,11 @@ package com.marklogic.spark.writer;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,6 +30,37 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             final String expectedUri = String.format("/test/%d/doc%d.json", i, i);
             assertInCollections(expectedUri, COLLECTION);
         }
+    }
+
+    @Test
+    void someDocumentsAreMissingFields() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "json_lines")
+            .load("src/test/resources/json-lines/missing-fields.txt")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_COLLECTIONS, "json-lines")
+            .option(Options.WRITE_URI_TEMPLATE, "/a/{id}.json")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertCollectionSize("Each document should be created, but two of the documents will have UUIDs in the URI " +
+            "instead of the 'id' value since they don't have an 'id' value. This behavior was introduced in release " +
+            "3.0.0 to provide a better default user experience for when some documents unexpectedly do not have " +
+            "the specified value.", "json-lines", 4);
+
+        List<String> uris = getUrisInCollection("json-lines", 4);
+        assertTrue(uris.contains("/a/1.json"));
+        assertTrue(uris.contains("/a/3.json"));
+        uris.forEach(uri -> {
+            if (!uri.equals("/a/1.json") && !uri.equals("/a/3.json")) {
+                String uuidPart = uri.replaceAll("/a/", "").replaceAll(".json", "");
+                UUID uuid = UUID.fromString(uuidPart);
+                assertNotNull(uuid, "Calling fromString ensures that the URI contains a UUID, which should be " +
+                    "used when an expression in the URI template can not be resolved.");
+            }
+        });
     }
 
     @Test
@@ -54,6 +89,8 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             SparkException.class,
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{id}/{doesntExist}.json")
+                // 3.0.0 now requires this option in order for a failure to occur.
+                .option(Options.WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD, true)
                 .save()
         );
 
@@ -78,6 +115,8 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             SparkException.class,
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{id}/{columnWithOnlyWhitespace}.json")
+                // 3.0.0 now requires this option in order for a failure to occur.
+                .option(Options.WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD, true)
                 .save()
         );
 
