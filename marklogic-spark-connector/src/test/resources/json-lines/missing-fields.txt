@@ -1,0 +1,4 @@
+{"id": 1, "color": "blue"}
+{"color": "green"}
+{"id": 3, "color": "red"}
+{"id": "", "color": "orange"}

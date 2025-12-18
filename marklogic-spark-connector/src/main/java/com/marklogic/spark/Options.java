@@ -182,6 +182,12 @@ public abstract class Options {
     public static final String WRITE_URI_REPLACE = "spark.marklogic.write.uriReplace";
     public static final String WRITE_URI_SUFFIX = "spark.marklogic.write.uriSuffix";
     public static final String WRITE_URI_TEMPLATE = "spark.marklogic.write.uriTemplate";
+
+    /**
+     * @since 3.0.0
+     */
+    public static final String WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD = "spark.marklogic.write.uriTemplate.failOnMissingField";
+
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
