@@ -42,6 +42,7 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .option(Options.WRITE_COLLECTIONS, "json-lines")
             .option(Options.WRITE_URI_TEMPLATE, "/a/{id}.json")
+            .option(Options.WRITE_URI_TEMPLATE_WARN_ON_MISSING_FIELD, true)
             .mode(SaveMode.Append)
             .save();
 
@@ -55,8 +56,13 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
         assertTrue(uris.contains("/a/3.json"));
         uris.forEach(uri -> {
             if (!uri.equals("/a/1.json") && !uri.equals("/a/3.json")) {
-                String uuidPart = uri.replaceAll("/a/", "").replaceAll(".json", "");
-                UUID uuid = UUID.fromString(uuidPart);
+                String replacement = uri.replaceAll("/a/", "").replaceAll(".json", "");
+                assertTrue(replacement.startsWith("UNRESOLVED-"), "When a field cannot be resolved in a URI " +
+                    "template, and the warnOnMissingField option is set, the connector should replace the " +
+                    "expression with 'UNRESOLVED-' followed by a UUID. Actual URI: " + uri);
+
+
+                UUID uuid = UUID.fromString(replacement.replaceAll("UNRESOLVED-", ""));
                 assertNotNull(uuid, "Calling fromString ensures that the URI contains a UUID, which should be " +
                     "used when an expression in the URI template can not be resolved.");
             }
@@ -89,8 +95,6 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             SparkException.class,
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{id}/{doesntExist}.json")
-                // 3.0.0 now requires this option in order for a failure to occur.
-                .option(Options.WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD, true)
                 .save()
         );
 
@@ -115,8 +119,6 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
             SparkException.class,
             () -> newWriterForSingleRow()
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{id}/{columnWithOnlyWhitespace}.json")
-                // 3.0.0 now requires this option in order for a failure to occur.
-                .option(Options.WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD, true)
                 .save()
         );
 

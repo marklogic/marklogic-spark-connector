@@ -6,6 +6,7 @@ package com.marklogic.spark.core.classifier;
 import com.marklogic.spark.ConnectorException;
 import com.smartlogic.classificationserver.client.ClassificationException;
 
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -40,6 +41,8 @@ record TokenRefreshHandler(Supplier<String> tokenGenerator, Consumer<String> tok
 
     private void refreshToken() {
         String newToken = tokenGenerator.get();
+        // This should never happen, but Polaris is complaining - so, just in case it somehow does...
+        Objects.requireNonNull(newToken, "Token generation unexpectedly returned a null token.");
         tokenSetter.accept(newToken);
     }
 

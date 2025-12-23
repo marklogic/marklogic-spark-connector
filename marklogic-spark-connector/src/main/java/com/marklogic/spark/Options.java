@@ -186,7 +186,7 @@ public abstract class Options {
     /**
      * @since 3.0.0
      */
-    public static final String WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD = "spark.marklogic.write.uriTemplate.failOnMissingField";
+    public static final String WRITE_URI_TEMPLATE_WARN_ON_MISSING_FIELD = "spark.marklogic.write.uriTemplate.warnOnMissingField";
 
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";

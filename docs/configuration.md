@@ -207,6 +207,7 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.uriReplace | Modify the initial URI for a row via a comma-delimited list of regular expression and replacement string pairs - e.g. regex,'value',regex,'value'. Each replacement string must be enclosed by single quotes. |
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
+| spark.marklogic.write.uriTemplate.warnOnMissingField | New in 3.0.0; boolean defining whether to log a warning instead of fail when a URI template has an expression that cannot be resolved for a row. If set to true, the expression will be replaced with "UNRESOLVED-" followed by a random UUID. |
 
 ### Processing rows via custom code
 
