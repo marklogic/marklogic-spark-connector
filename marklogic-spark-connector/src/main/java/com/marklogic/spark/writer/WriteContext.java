@@ -190,9 +190,9 @@ public class WriteContext extends ContextSupport {
     private void configureTemplateUriMaker(DocBuilderFactory factory) {
         final String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
         final String optionAlias = getOptionNameForMessage(Options.WRITE_URI_TEMPLATE);
-        final boolean failOnMissingField = getBooleanOption(Options.WRITE_URI_TEMPLATE_FAIL_ON_MISSING_FIELD, false);
+        final boolean warnOnMissingField = getBooleanOption(Options.WRITE_URI_TEMPLATE_WARN_ON_MISSING_FIELD, false);
 
-        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias, failOnMissingField));
+        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias, warnOnMissingField));
 
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);

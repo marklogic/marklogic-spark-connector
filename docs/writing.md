@@ -167,6 +167,9 @@ value in a URI, you would use the following configuration:
 
     .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{/Employee/employee_id}.json")
 
+As of the 3.0.0 release, you can set the new `spark.marklogic.write.uriTemplate.warnOnMissingField` option to `true`
+so that if an expression in a URI template cannot be resolved for a row, the error is logged as a warning instead of 
+thrown. In addition, the expression will be replaced with "UNRESOLVED-" followed by a random UUID.
 
 If you are writing file rows that conform to 
 [Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 

@@ -18,19 +18,19 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
 
     private final String uriTemplate;
     private final String uriTemplateOptionName;
-    private final boolean failOnMissingField;
+    private final boolean warnOnMissingField;
 
     // The matcher can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
     // its own and never has multiple threads trying to access it at the same time.
     private Matcher matcher;
 
-    SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName, boolean failOnMissingField) {
+    SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName, boolean warnOnMissingField) {
         this.uriTemplate = uriTemplate;
         this.uriTemplateOptionName = uriTemplateOptionName;
         validateUriTemplate();
 
         this.matcher = Pattern.compile("\\{([^}]+)\\}", Pattern.CASE_INSENSITIVE).matcher(uriTemplate);
-        this.failOnMissingField = failOnMissingField;
+        this.warnOnMissingField = warnOnMissingField;
     }
 
     @Override
@@ -101,11 +101,10 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
             String message = String.format("Expression '%s' did not resolve to a value in row: %s; expression is required by URI template: %s",
                 expression, uriTemplateValues, uriTemplate
             );
-            if (failOnMissingField) {
-                throw new ConnectorException(message);
+            if (warnOnMissingField) {
+                return replaceExpressionWithUnresolvedUUID(message);
             }
-            Util.MAIN_LOGGER.warn("{}; will use a random UUID instead.", message);
-            return UUID.randomUUID().toString();
+            throw new ConnectorException(message);
         }
 
         String text = node.asText();
@@ -113,13 +112,18 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
             String message = String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
                 expression, uriTemplateValues, uriTemplate
             );
-            if (failOnMissingField) {
-                throw new ConnectorException(message);
+            if (warnOnMissingField) {
+                return replaceExpressionWithUnresolvedUUID(message);
             }
-            Util.MAIN_LOGGER.warn("{}; will use a random UUID instead.", message);
-            return UUID.randomUUID().toString();
+            throw new ConnectorException(message);
         }
 
         return text;
+    }
+
+    private String replaceExpressionWithUnresolvedUUID(String message) {
+        final String replacement = "UNRESOLVED-" + UUID.randomUUID();
+        Util.MAIN_LOGGER.warn("{}; will use {} instead.", message, replacement);
+        return replacement;
     }
 }
