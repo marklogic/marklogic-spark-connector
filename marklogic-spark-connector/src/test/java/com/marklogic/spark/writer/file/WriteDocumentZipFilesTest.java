@@ -3,17 +3,22 @@
  */
 package com.marklogic.spark.writer.file;
 
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
+import com.marklogic.spark.Util;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -197,6 +202,61 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
             String name = file.getName();
             assertTrue(name.startsWith(expectedPrefix), String.format("Filename %s did not start with %s", name, expectedPrefix));
             assertTrue(name.endsWith(".zip"));
+        }
+    }
+
+    @Test
+    void warnOnLargeZipFile(@TempDir Path tempDir) {
+        // Set up a ListAppender to capture log messages
+        Logger logger = (Logger) LoggerFactory.getLogger(Util.MAIN_LOGGER.getName());
+        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+
+        try {
+            readAuthorCollection()
+                // Write a single zip file so we can assert on one log message.
+                .repartition(1)
+                .write()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.WRITE_FILES_COMPRESSION, "zip")
+                .option(Options.WRITE_FILES_ZIP_WARN_THRESHOLD, 2)
+                .mode(SaveMode.Append)
+                .save(tempDir.toFile().getAbsolutePath());
+
+            assertTrue(listAppender.list.stream().anyMatch(event ->
+                    event.getLevel().toString().equals("WARN") &&
+                        event.getFormattedMessage().contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
+                "Expected warning message about zip file entries was not logged; log entries: " + listAppender.list);
+        } finally {
+            logger.detachAppender(listAppender);
+        }
+    }
+
+    @Test
+    void noWarningWhenThresholdIsZero(@TempDir Path tempDir) {
+        Logger logger = (Logger) LoggerFactory.getLogger(Util.MAIN_LOGGER.getName());
+        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
+        listAppender.start();
+        logger.addAppender(listAppender);
+
+        try {
+            readAuthorCollection()
+                // Write a single zip file so we can assert on one log message.
+                .repartition(1)
+                .write()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.WRITE_FILES_COMPRESSION, "zip")
+                .option(Options.WRITE_FILES_ZIP_WARN_THRESHOLD, 0)
+                .mode(SaveMode.Append)
+                .save(tempDir.toFile().getAbsolutePath());
+
+            assertFalse(listAppender.list.stream().anyMatch(event ->
+                    event.getLevel().toString().equals("WARN") &&
+                        event.getFormattedMessage().contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
+                "Warning message should not be logged when threshold is zero; log entries: " + listAppender.list);
+        } finally {
+            logger.detachAppender(listAppender);
         }
     }
 

@@ -108,7 +108,7 @@ class UrisPage implements DocumentPage {
 
     private static class UriRecord implements DocumentRecord {
 
-        private String uri;
+        private final String uri;
 
         public UriRecord(String uri) {
             this.uri = uri;

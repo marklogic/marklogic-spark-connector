@@ -25,17 +25,25 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipFileWriter implements DataWriter<InternalRow> {
 
+    // Default threshold for logging a warning about large zip files. Based on some math with Copilot about heap usage:
+    // 46 bytes per zip entry; 100 bytes on average for URI length; 500k entries = ~70MB of heap usage.
+    // With a default of 10 Spark tasks per executor, that would be ~700MB of heap usage if all tasks hit the threshold.
+    // That is a reasonable time to log a warning about potential heap space usage.
+    private static final int DEFAULT_WARN_THRESHOLD = 500000;
+
     private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
 
     private final String path;
     private final Path zipPath;
+    private final int warnThreshold;
 
     // These can be instantiated lazily depending on which constructor is used.
     private ContentWriter contentWriter;
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
+    private boolean hasLoggedThresholdWarning;
 
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this(properties.get("path"), properties, hadoopConfiguration, partitionId, true);
@@ -47,6 +55,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         this.zipPath = makeFilePath(path, partitionId);
         this.context = new ContextSupport(properties);
         this.hadoopConfiguration = hadoopConfiguration;
+        this.warnThreshold = context.getIntOption(Options.WRITE_FILES_ZIP_WARN_THRESHOLD, DEFAULT_WARN_THRESHOLD, 0);
+
         if (createZipFileImmediately) {
             createZipFileAndContentWriter();
         }
@@ -68,6 +78,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
         zipEntryCounter++;
+        logThresholdWarningIfNecessary();
     }
 
     @Override
@@ -134,6 +145,17 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // Using File.separator on Windows would result in a "\" in an S3 URL, which is awkward for a user to work with,
         // and appears buggy and unexpected.
         return new Path(path, zipFilename);
+    }
+
+    private void logThresholdWarningIfNecessary() {
+        if (warnThreshold > 0 && !hasLoggedThresholdWarning && zipEntryCounter >= warnThreshold) {
+            Util.MAIN_LOGGER.warn(
+                "Zip file {} has {} entries. Large zip files keep entry metadata in memory, which may cause JVM heap pressure. " +
+                    "To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.",
+                zipPath.getName(), zipEntryCounter
+            );
+            hasLoggedThresholdWarning = true;
+        }
     }
 
     public String getZipFilePath() {
