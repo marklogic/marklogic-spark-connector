@@ -381,6 +381,12 @@ public abstract class Options {
     // Applies to writing documents as files, gzipped files, and as entries in zips/archives.
     public static final String WRITE_FILES_ENCODING = "spark.marklogic.write.files.encoding";
 
+    /**
+     * Threshold for logging a warning when a zip file exceeds a certain number of entries. Set to 0 to disable.
+     * @since 3.0.0
+     */
+    public static final String WRITE_FILES_ZIP_WARN_THRESHOLD = "spark.marklogic.write.files.zip.warnThreshold";
+
     public static final String WRITE_RDF_FILES_FORMAT = "spark.marklogic.write.files.rdf.format";
     public static final String WRITE_RDF_FILES_GRAPH = "spark.marklogic.write.files.rdf.graph";
 
