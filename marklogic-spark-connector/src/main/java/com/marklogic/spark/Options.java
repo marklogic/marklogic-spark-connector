@@ -383,6 +383,7 @@ public abstract class Options {
 
     /**
      * Threshold for logging a warning when a zip file exceeds a certain number of entries. Set to 0 to disable.
+     *
      * @since 3.0.0
      */
     public static final String WRITE_FILES_ZIP_WARN_THRESHOLD = "spark.marklogic.write.files.zip.warnThreshold";
@@ -549,6 +550,43 @@ public abstract class Options {
      * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
+
+    /**
+     * @since 3.0.0
+     */
+    public static final String WRITE_INCREMENTAL = "spark.marklogic.write.incremental";
+
+    /**
+     * Whether to use an Optic query or an eval call to identify documents that have changed since the last write.
+     * Defaults to null, meaning an Optic query is used.
+     *
+     * @since 3.0.0
+     */
+    public static final String WRITE_INCREMENTAL_QUERY_TYPE = "spark.marklogic.write.incremental.queryType";
+
+    /**
+     * Name of the MarkLogic field that holds the hash value for identifying changed documents.
+     * Defaults to "incrementalWriteHash".
+     *
+     * @since 3.0.0
+     */
+    public static final String WRITE_INCREMENTAL_FIELD_NAME = "spark.marklogic.write.incremental.fieldName";
+
+    /**
+     * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.
+     *
+     * @since 3.0.0
+     */
+    public static final String WRITE_INCREMENTAL_CANONICALIZE_JSON = "spark.marklogic.write.incremental.canonicalizeJson";
+
+    /**
+     * Similar to {@code WRITE_LOG_PROGRESS}, but for logging the number of documents that were skipped during an
+     * import operation.
+     *
+     * @since 3.0.0
+     */
+    public static final String WRITE_LOG_SKIPPED_DOCUMENTS = "spark.marklogic.write.logSkippedDocuments";
+
 
     private Options() {
     }
