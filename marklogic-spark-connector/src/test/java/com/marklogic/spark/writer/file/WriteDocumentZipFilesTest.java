@@ -3,9 +3,6 @@
  */
 package com.marklogic.spark.writer.file;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.StringHandle;
@@ -13,12 +10,12 @@ import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.TestUtil;
 import com.marklogic.spark.Util;
+import nl.altindag.log.LogCaptor;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -207,15 +204,8 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
 
     @Test
     void warnOnLargeZipFile(@TempDir Path tempDir) {
-        // Set up a ListAppender to capture log messages
-        Logger logger = (Logger) LoggerFactory.getLogger(Util.MAIN_LOGGER.getName());
-        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-        listAppender.start();
-        logger.addAppender(listAppender);
-
-        try {
+        try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             readAuthorCollection()
-                // Write a single zip file so we can assert on one log message.
                 .repartition(1)
                 .write()
                 .format(CONNECTOR_IDENTIFIER)
@@ -224,23 +214,15 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
                 .mode(SaveMode.Append)
                 .save(tempDir.toFile().getAbsolutePath());
 
-            assertTrue(listAppender.list.stream().anyMatch(event ->
-                    event.getLevel().toString().equals("WARN") &&
-                        event.getFormattedMessage().contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
-                "Expected warning message about zip file entries was not logged; log entries: " + listAppender.list);
-        } finally {
-            logger.detachAppender(listAppender);
+            assertTrue(logCaptor.getWarnLogs().stream()
+                    .anyMatch(msg -> msg.contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
+                "Expected warning message about zip file entries was not logged; log entries: " + logCaptor.getWarnLogs());
         }
     }
 
     @Test
     void noWarningWhenThresholdIsZero(@TempDir Path tempDir) {
-        Logger logger = (Logger) LoggerFactory.getLogger(Util.MAIN_LOGGER.getName());
-        ListAppender<ILoggingEvent> listAppender = new ListAppender<>();
-        listAppender.start();
-        logger.addAppender(listAppender);
-
-        try {
+        try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             readAuthorCollection()
                 // Write a single zip file so we can assert on one log message.
                 .repartition(1)
@@ -251,12 +233,9 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
                 .mode(SaveMode.Append)
                 .save(tempDir.toFile().getAbsolutePath());
 
-            assertFalse(listAppender.list.stream().anyMatch(event ->
-                    event.getLevel().toString().equals("WARN") &&
-                        event.getFormattedMessage().contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
-                "Warning message should not be logged when threshold is zero; log entries: " + listAppender.list);
-        } finally {
-            logger.detachAppender(listAppender);
+            assertFalse(logCaptor.getWarnLogs().stream()
+                    .anyMatch(msg -> msg.contains("To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.")),
+                "Warning message should not be logged when threshold is zero; log entries: " + logCaptor.getWarnLogs());
         }
     }
 
