@@ -85,6 +85,9 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
+  // For asserting on log messages.
+  testImplementation "io.github.hakky54:logcaptor:2.12.1"
+
   testImplementation "ch.qos.logback:logback-classic:1.5.20"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
