@@ -565,12 +565,12 @@ public abstract class Options {
     public static final String WRITE_INCREMENTAL_QUERY_TYPE = "spark.marklogic.write.incremental.queryType";
 
     /**
-     * Name of the MarkLogic field that holds the hash value for identifying changed documents.
+     * Name of the MarkLogic metadata key that holds the hash value for identifying changed documents.
      * Defaults to "incrementalWriteHash".
      *
      * @since 3.0.0
      */
-    public static final String WRITE_INCREMENTAL_FIELD_NAME = "spark.marklogic.write.incremental.fieldName";
+    public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = "spark.marklogic.write.incremental.hashKeyName";
 
     /**
      * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.

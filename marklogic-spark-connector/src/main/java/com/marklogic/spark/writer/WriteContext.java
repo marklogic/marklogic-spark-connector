@@ -121,9 +121,9 @@ public class WriteContext extends ContextSupport {
             .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
             .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length));
 
-        final String fieldName = getStringOption(Options.WRITE_INCREMENTAL_FIELD_NAME);
-        if (fieldName != null && !fieldName.trim().isEmpty()) {
-            builder.fieldName(fieldName);
+        final String hashKeyName = getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME);
+        if (hashKeyName != null && !hashKeyName.trim().isEmpty()) {
+            builder.hashKeyName(hashKeyName);
         }
 
         return builder.build();
