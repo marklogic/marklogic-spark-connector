@@ -103,6 +103,7 @@ class OpticTriplesReader implements PartitionReader<InternalRow> {
     @Override
     public void close() {
         IOUtils.closeQuietly(this.currentRowSet);
+        IOUtils.closeQuietly(this.databaseClient);
     }
 
     private void readNextBatchOfTriples(List<String> uris) {

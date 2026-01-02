@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
@@ -57,10 +58,10 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         if (messages != null && messages.length > 0) {
             final CommitResults commitResults = aggregateCommitMessages(messages);
             if (!commitResults.graphs.isEmpty()) {
-                new GraphWriter(
-                    writeContext.connectToMarkLogic(),
-                    writeContext.getProperties().get(Options.WRITE_PERMISSIONS)
-                ).createGraphs(commitResults.graphs);
+                try (DatabaseClient client = writeContext.connectToMarkLogic()) {
+                    GraphWriter graphWriter = new GraphWriter(client, writeContext.getProperties().get(Options.WRITE_PERMISSIONS));
+                    graphWriter.createGraphs(commitResults.graphs);
+                }
             }
 
             if (successCountConsumer != null) {

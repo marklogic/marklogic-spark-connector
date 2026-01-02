@@ -5,6 +5,7 @@ package com.marklogic.spark.writer.file;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.InputStreamHandle;
@@ -19,10 +20,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import javax.xml.transform.*;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Objects;
@@ -32,15 +30,16 @@ import java.util.Objects;
  * pretty-printing as well. This keeps an instance of a JAXP Transformer, which is safe for one thread to use
  * multiple times.
  */
-class ContentWriter {
+class ContentWriter implements Closeable {
 
     private final Transformer transformer;
     private final ObjectMapper objectMapper;
     private final boolean prettyPrint;
     private final Charset encoding;
-
     private final boolean isStreamingFiles;
+
     // Only used when streaming.
+    private final DatabaseClient databaseClient;
     private final GenericDocumentManager documentManager;
 
     ContentWriter(Map<String, String> properties) {
@@ -57,13 +56,20 @@ class ContentWriter {
 
         this.isStreamingFiles = context.isStreamingFiles();
         if (this.isStreamingFiles) {
-            this.documentManager = context.connectToMarkLogic().newDocumentManager();
+            this.databaseClient = context.connectToMarkLogic();
+            this.documentManager = databaseClient.newDocumentManager();
             if (context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
                 this.documentManager.setMetadataCategories(ContextSupport.getRequestedMetadata(context));
             }
         } else {
+            this.databaseClient = null;
             this.documentManager = null;
         }
+    }
+
+    @Override
+    public void close() {
+        IOUtils.closeQuietly(this.databaseClient);
     }
 
     void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
