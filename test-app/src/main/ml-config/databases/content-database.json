@@ -23,6 +23,10 @@
       "fast-diacritic-sensitive-searches": false
     },
     {
+      "field-name": "customWriteHash",
+      "metadata": ""
+    },
+    {
       "field-name": "",
       "include-root": true
     }
@@ -32,6 +36,13 @@
       "scalar-type": "string",
       "collation": "http://marklogic.com/collation/",
       "field-name": "incrementalWriteHash",
+      "range-value-positions": false,
+      "invalid-values": "reject"
+    },
+    {
+      "scalar-type": "string",
+      "collation": "http://marklogic.com/collation/",
+      "field-name": "customWriteHash",
       "range-value-positions": false,
       "invalid-values": "reject"
     }

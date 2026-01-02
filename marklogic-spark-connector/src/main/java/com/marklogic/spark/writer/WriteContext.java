@@ -114,19 +114,13 @@ public class WriteContext extends ContextSupport {
     }
 
     private DocumentWriteSetFilter buildIncrementalWriteFilter() {
-        final boolean eval = "eval".equalsIgnoreCase(getStringOption(Options.WRITE_INCREMENTAL_QUERY_TYPE));
-
-        IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
-            .useEvalQuery(eval)
+        return IncrementalWriteFilter.newBuilder()
+            .useEvalQuery("eval".equalsIgnoreCase(getStringOption(Options.WRITE_INCREMENTAL_QUERY_TYPE)))
             .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
-            .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length));
-
-        final String hashKeyName = getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME);
-        if (hashKeyName != null && !hashKeyName.trim().isEmpty()) {
-            builder.hashKeyName(hashKeyName);
-        }
-
-        return builder.build();
+            .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
+            .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
+            .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length))
+            .build();
     }
 
     /**
