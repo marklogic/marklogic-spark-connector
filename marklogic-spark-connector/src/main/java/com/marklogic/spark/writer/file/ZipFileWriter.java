@@ -84,6 +84,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     @Override
     public void close() {
         IOUtils.closeQuietly(zipOutputStream);
+        IOUtils.closeQuietly(contentWriter);
     }
 
     @Override

@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
@@ -157,18 +158,22 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (query == null || query.trim().isEmpty()) {
             throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
-        RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
-        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
-        try {
-            // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
-            StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+
+        try (DatabaseClient client = new ContextSupport(caseSensitiveOptions).connectToMarkLogic()) {
+            RowManager rowManager = client.newRowManager();
+            RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
+
+            try {
+                // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
+                StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
+                StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+                if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                    logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+                }
+                return schema;
+            } catch (Exception ex) {
+                throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
             }
-            return schema;
-        } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 

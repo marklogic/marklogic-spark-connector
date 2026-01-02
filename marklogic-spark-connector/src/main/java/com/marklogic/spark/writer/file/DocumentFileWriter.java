@@ -63,7 +63,7 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public void close() {
-        // Nothing to close.
+        IOUtils.closeQuietly(contentWriter);
     }
 
     private Path makeFilePath(InternalRow row) {

@@ -83,17 +83,11 @@ public class OpticReadContext extends ContextSupport {
     }
 
     private PlanAnalysis analyzePlan(final String dslQuery, final long partitionCount) {
-        DatabaseClient client = null;
-        try {
-            client = connectToMarkLogic();
+        try (DatabaseClient client = connectToMarkLogic()) {
             return new PlanAnalyzer((DatabaseClientImpl) client).analyzePlan(dslQuery, partitionCount, batchSize);
         } catch (FailedRequestException ex) {
             handlePlanAnalysisError(dslQuery, ex);
             return null;
-        } finally {
-            if (client != null) {
-                client.release();
-            }
         }
     }
 

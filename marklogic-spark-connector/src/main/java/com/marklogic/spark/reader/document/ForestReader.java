@@ -158,9 +158,7 @@ class ForestReader implements PartitionReader<InternalRow> {
     @Override
     public void close() {
         closeCurrentDocumentPage();
-        if (databaseClient != null) {
-            databaseClient.release();
-        }
+        IOUtils.closeQuietly(this.databaseClient);
     }
 
     private List<String> getNextBatchOfUris() {
