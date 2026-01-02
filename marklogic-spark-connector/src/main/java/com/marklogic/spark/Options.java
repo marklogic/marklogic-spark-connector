@@ -573,6 +573,14 @@ public abstract class Options {
     public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = "spark.marklogic.write.incremental.hashKeyName";
 
     /**
+     * Name of the MarkLogic metadata key that holds the timestamp value for identifying changed documents.
+     * Defaults to "incrementalWriteTimestamp".
+     *
+     * @since 3.0.0
+     */
+    public static final String WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME = "spark.marklogic.write.incremental.timestampKeyName";
+
+    /**
      * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.
      *
      * @since 3.0.0
