@@ -214,8 +214,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = readJsonDocument("/custom-path-test.json");
-        assertTrue(doc.has("embedding"));
-        assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType());
+        assertTrue(doc.has("_vector"));
+        assertEquals(JsonNodeType.ARRAY, doc.get("_vector").getNodeType());
     }
 
     @Test
@@ -240,7 +240,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         assertEquals(8, chunks.size());
         for (int i = 0; i < chunks.size(); i++) {
             JsonNode chunk = chunks.get(i);
-            assertTrue(chunk.has("embedding"), "No embedding found in chunk " + i);
+            assertTrue(chunk.has("_vector"), "No embedding found in chunk " + i);
         }
 
         assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 3 batches to be sent to the test " +
@@ -338,8 +338,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         JsonNode doc = readJsonDocument("/aaa/Harry Potter.json");
         assertEquals("Harry Potter", doc.get("Name").asText());
         assertEquals("Gryffindor", doc.get("House").asText());
-        assertTrue(doc.has("embedding"));
-        assertEquals(JsonNodeType.ARRAY, doc.get("embedding").getNodeType(),
+        assertTrue(doc.has("_vector"));
+        assertEquals(JsonNodeType.ARRAY, doc.get("_vector").getNodeType(),
             "Verifies that an embedding is generated, which addresses bug MLE-22784. This bug was caused by " +
                 "'arbitrary' rows (i.e. from Spark data sources) not having an internal initial URI. The lack of " +
                 "that URI caused the construction of a DocumentWriteOperationImpl to fail. The fix - providing a " +
@@ -435,8 +435,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         ArrayNode chunks = (ArrayNode) doc.get("chunks");
         chunks.forEach(node -> {
             assertTrue(node.has("text"));
-            assertTrue(node.has("embedding"));
-            assertEquals(JsonNodeType.ARRAY, node.get("embedding").getNodeType());
+            assertTrue(node.has("_vector"));
+            assertEquals(JsonNodeType.ARRAY, node.get("_vector").getNodeType());
         });
     }
 
@@ -468,8 +468,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
 
         for (int i = 0; i < chunks.size(); i++) {
             JsonNode chunk = chunks.get(i);
-            assertTrue(chunk.has("embedding"), "Chunk should have an embedding field");
-            assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", chunk.get("embedding").asText(),
+            assertTrue(chunk.has("_vector"), "Chunk should have a _vector field");
+            assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", chunk.get("_vector").asText(),
                 "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
 
             assertFalse(chunk.has("lang"), "Due to MLE-22918, the 'lang' field is not set to 'zxx' since this " +

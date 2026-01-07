@@ -18,7 +18,8 @@ public class JsonChunk implements Chunk {
     public JsonChunk(ObjectNode chunk, String textPointer, String embeddingArrayName, boolean base64EncodeVectors) {
         this.chunk = chunk;
         this.textPointer = JsonPointer.compile(textPointer != null ? textPointer : "/text");
-        this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "embedding";
+        // Changed the default from 2.7 to 3.0 to be "vector" instead of "embedding".
+        this.embeddingArrayName = embeddingArrayName != null ? embeddingArrayName : "_vector";
         this.base64EncodeVectors = base64EncodeVectors;
     }
 

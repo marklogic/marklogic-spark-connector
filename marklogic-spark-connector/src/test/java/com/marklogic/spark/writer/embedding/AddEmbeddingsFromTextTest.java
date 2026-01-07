@@ -45,7 +45,7 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             assertEquals(JsonNodeType.ARRAY, doc.get("chunks").getNodeType());
             doc.get("chunks").forEach(chunkEmbedding -> {
                 String textValue = chunkEmbedding.get("text").asText();
-                String embeddingValue = chunkEmbedding.get("embedding").toPrettyString();
+                String embeddingValue = chunkEmbedding.get("_vector").toPrettyString();
                 if (!chunkEmbeddings.containsKey(textValue)) {
                     chunkEmbeddings.put(textValue, embeddingValue);
                 }
@@ -72,7 +72,7 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             XmlNode doc = readXmlDocument(uri);
             doc.assertElementCount("/node()/model:chunks/model:chunk", 1);
             String textValue = doc.getElementValue("/node()/model:chunks/model:chunk/model:text");
-            String embeddingValue = doc.getElementValue("/node()/model:chunks/model:chunk/vec:embedding");
+            String embeddingValue = doc.getElementValue("/node()/model:chunks/model:chunk/vec:vector");
             if (!chunkEmbeddings.containsKey(textValue)) {
                 chunkEmbeddings.put(textValue, embeddingValue);
             }
