@@ -30,7 +30,8 @@ public class XmlChunkConfig {
 
     public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext, boolean base64EncodeVectors) {
         this.textExpression = textExpression != null ? textExpression : DEFAULT_TEXT_EXPRESSION;
-        this.embeddingName = embeddingName != null ? embeddingName : "embedding";
+        // Changed the default from 2.7 to 3.0 to be "vector" instead of "embedding".
+        this.embeddingName = embeddingName != null ? embeddingName : "vector";
         this.embeddingNamespace = embeddingNamespace != null ? embeddingNamespace : Util.DEFAULT_VECTOR_NAMESPACE;
         this.namespaceContext = namespaceContext;
         this.base64EncodeVectors = base64EncodeVectors;

@@ -90,7 +90,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
             chunk.assertElementExists("As of 3.0.0, the embedding namespace should be the MarkLogic-specific one, " +
-                "unless the user explicitly overrides it.", "/ex:chunk/vec:embedding");
+                "unless the user explicitly overrides it.", "/ex:chunk/vec:vector");
         }
     }
 
@@ -144,12 +144,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementExists(
             "When splitting and adding embeddings, the user can specify a namespace both for the sidecar document " +
                 "and a separate namespace for the embedding.",
-            "/ex:root/ex:chunks/ex:chunk[1]/acme:embedding"
+            "/ex:root/ex:chunks/ex:chunk[1]/acme:vector"
         );
     }
 
     @Test
-    void sidecarWithNoNamespace() {
+    void sidecarWithNoNamespaces() {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
@@ -158,6 +158,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
             .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 100)
             .option(Options.WRITE_SPLITTER_SIDECAR_XML_NAMESPACE, "")
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE, "")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
             .mode(SaveMode.Append)
             .save();
@@ -165,8 +166,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         XmlNode doc = readXmlDocument("/split-test.xml-chunks-1.xml");
         doc.assertElementValue("/root/source-uri", "/split-test.xml");
         doc.assertElementExists("/root/chunks/chunk[1]/text");
-        doc.assertElementExists("As of 3.0.0, the embedding element should default to the MarkLogic-specific " +
-            "namespace unless the user explicitly sets it.", "/root/chunks/chunk[1]/vec:embedding");
+        doc.assertElementExists("The user should be able to specify an empty string for both namespace " +
+                "options, resulting in no namespace being added to the chunk element nor to the vector element.",
+            "/root/chunks/chunk[1]/vector");
     }
 
     @Test
@@ -183,8 +185,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementCount("Each of the 2 custom chunks should have an 'embedding' element.",
-            "/envelope/my-chunks/my-chunk[my-text and vec:embedding]", 2);
+        doc.assertElementCount("Each of the 2 custom chunks should have a 'vector' element.",
+            "/envelope/my-chunks/my-chunk[my-text and vec:vector]", 2);
     }
 
     @Test
@@ -202,10 +204,10 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             .save();
 
         XmlNode doc = readXmlDocument("/split-test.xml");
-        doc.assertElementCount("As of 3.0.0, the embedding element should default to the MarkLogic-specific " +
+        doc.assertElementCount("As of 3.0.0, the vector element should default to the MarkLogic-specific " +
                 "namespace unless the user explicitly sets it. In this test, the chunks are in a custom namespace, " +
-                "but the embedding is not.",
-            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and vec:embedding]", 2);
+                "but the vector is not.",
+            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and vec:vector]", 2);
     }
 
     @Test
@@ -303,8 +305,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             chunk.assertElementExists("/model:chunk/model:text");
             chunk.assertElementExists(
                 "As of the 2.7.0 release, the embedding should have the zxx lang to disable stemming by MarkLogic. " +
-                    "And as of the 3.0.0 release, the embedding should default to the MarkLogic-specific vector namespace.",
-                "/model:chunk/vec:embedding[@xml:lang='zxx']"
+                    "And as of the 3.0.0 release, the vector should default to the MarkLogic-specific vector namespace.",
+                "/model:chunk/vec:vector[@xml:lang='zxx']"
             );
         });
     }
@@ -336,8 +338,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/ex:sidecar/ex:chunks/ex:chunk", 4);
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
-            chunk.assertElementExists("The embedding should default to the MarkLogic-specific namespace when not " +
-                "specified by the user.", "/ex:chunk/model:embedding");
+            chunk.assertElementExists("/ex:chunk/model:vector");
         }
     }
 
@@ -398,12 +399,12 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("/root/model:chunks/model:chunk", 2);
 
         for (XmlNode chunk : doc.getXmlNodes("/root/model:chunks/model:chunk")) {
-            String embeddingValue = chunk.getElementValue("/model:chunk/vec:embedding");
+            String embeddingValue = chunk.getElementValue("/model:chunk/vec:vector");
             assertEquals("AAAAAAMAAADD9UhAH4XLP5qZKUA=", embeddingValue,
                 "Base64 encoded vector should match expected encoding for test vector [3.14, 1.59, 2.65]");
 
             chunk.assertElementExists("xml:lang attribute should be 'zxx' to disable stemming",
-                "/model:chunk/vec:embedding[@xml:lang='zxx']");
+                "/model:chunk/vec:vector[@xml:lang='zxx']");
         }
     }
 }
