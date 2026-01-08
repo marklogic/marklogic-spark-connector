@@ -4,8 +4,10 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.datamovement.*;
-import com.marklogic.client.datamovement.filter.IncrementalWriteFilter;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.WriteBatch;
+import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
@@ -101,26 +103,12 @@ public class WriteContext extends ContextSupport {
             .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
             .onBatchSuccess(this::logBatchOnSuccess);
 
-        if (hasOption(Options.WRITE_INCREMENTAL)) {
-            writeBatcher.withDocumentWriteSetFilter(buildIncrementalWriteFilter());
-        }
-
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
         }
 
         return writeBatcher;
-    }
-
-    private DocumentWriteSetFilter buildIncrementalWriteFilter() {
-        return IncrementalWriteFilter.newBuilder()
-            .useEvalQuery("eval".equalsIgnoreCase(getStringOption(Options.WRITE_INCREMENTAL_QUERY_TYPE)))
-            .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
-            .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
-            .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
-            .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length))
-            .build();
     }
 
     /**

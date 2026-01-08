@@ -551,51 +551,6 @@ public abstract class Options {
      */
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
 
-    /**
-     * @since 3.0.0
-     */
-    public static final String WRITE_INCREMENTAL = "spark.marklogic.write.incremental";
-
-    /**
-     * Whether to use an Optic query or an eval call to identify documents that have changed since the last write.
-     * Defaults to null, meaning an Optic query is used.
-     *
-     * @since 3.0.0
-     */
-    public static final String WRITE_INCREMENTAL_QUERY_TYPE = "spark.marklogic.write.incremental.queryType";
-
-    /**
-     * Name of the MarkLogic metadata key that holds the hash value for identifying changed documents.
-     * Defaults to "incrementalWriteHash".
-     *
-     * @since 3.0.0
-     */
-    public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = "spark.marklogic.write.incremental.hashKeyName";
-
-    /**
-     * Name of the MarkLogic metadata key that holds the timestamp value for identifying changed documents.
-     * Defaults to "incrementalWriteTimestamp".
-     *
-     * @since 3.0.0
-     */
-    public static final String WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME = "spark.marklogic.write.incremental.timestampKeyName";
-
-    /**
-     * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.
-     *
-     * @since 3.0.0
-     */
-    public static final String WRITE_INCREMENTAL_CANONICALIZE_JSON = "spark.marklogic.write.incremental.canonicalizeJson";
-
-    /**
-     * Similar to {@code WRITE_LOG_PROGRESS}, but for logging the number of documents that were skipped during an
-     * import operation.
-     *
-     * @since 3.0.0
-     */
-    public static final String WRITE_LOG_SKIPPED_DOCUMENTS = "spark.marklogic.write.logSkippedDocuments";
-
-
     private Options() {
     }
 }
