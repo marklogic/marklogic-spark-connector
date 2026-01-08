@@ -15,7 +15,7 @@ dependencies {
   // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
-  implementation("com.marklogic:marklogic-client-api:8.1-SNAPSHOT") {
+  implementation("com.marklogic:marklogic-client-api:8.0.0") {
     // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
@@ -80,7 +80,7 @@ dependencies {
     exclude group: "com.fasterxml.jackson.dataformat"
   }
 
-  testImplementation('com.marklogic:marklogic-junit5:2.0-SNAPSHOT') {
+  testImplementation('com.marklogic:marklogic-junit5:2.0.0') {
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
   }
@@ -88,7 +88,7 @@ dependencies {
   // For asserting on log messages.
   testImplementation "io.github.hakky54:logcaptor:2.12.1"
 
-  testImplementation "ch.qos.logback:logback-classic:1.5.20"
+  testImplementation "ch.qos.logback:logback-classic:1.5.23"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
