@@ -1,30 +1,44 @@
+buildscript {
+  repositories {
+    mavenCentral()
+  }
+  dependencies {
+    classpath "com.marklogic:flux-api:1.4.0"
+  }
+  configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+      if (details.requested.group.startsWith('com.fasterxml.jackson')) {
+        details.useVersion '2.15.2'
+        details.because 'Must ensure the Jackson version preferred by Spark is used to avoid classpath conflicts.'
+      }
+    }
+  }
+}
+
 plugins {
   id 'net.saliman.properties' version '1.5.2'
-  id "com.marklogic.ml-gradle" version "5.0.0"
+  id "com.marklogic.ml-gradle" version "6.1.0"
 }
 
 repositories {
   mavenCentral()
-  maven { url "https://developer.marklogic.com/maven2/" }
 }
 
-configurations {
-  mlcp
-}
-
-dependencies {
-  mlcp "com.marklogic:mlcp:11.3.0"
-}
-
-task loadEmployees(type: com.marklogic.gradle.task.MlcpTask) {
-  classpath = configurations.mlcp
-  command = "IMPORT"
-  port = mlAppConfig.restPort
-  database = mlAppConfig.contentDatabaseName
-  input_file_path = "data/employees.zip"
-  input_compressed = true
-  output_collections = "employee"
-  output_permissions = "rest-reader,read,rest-reader,update"
-  output_uri_replace = ".*data/,'/'"
+tasks.register("loadEmployees") {
+  doLast {
+    com.marklogic.flux.api.Flux.importGenericFiles()
+      .from({
+        it.paths("data/employees.zip")
+          .compressionType(com.marklogic.flux.api.CompressionType.ZIP)
+      })
+      .connectionString("${mlUsername}:${mlPassword}:@${mlHost}:${mlRestPort}")
+      .to({
+        it
+          .collections("employee")
+          .uriReplace(".*data/,'/'")
+          .permissionsString("rest-reader,read,rest-reader,update")
+      })
+      .execute()
+  }
 }
 mlDeploy.finalizedBy loadEmployees

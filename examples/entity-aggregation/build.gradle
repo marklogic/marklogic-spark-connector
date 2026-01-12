@@ -7,17 +7,17 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.apache.spark:spark-sql_2.12:3.5.6'
-  implementation "com.marklogic:marklogic-spark-connector:2.6.0"
-  implementation "org.postgresql:postgresql:42.7.4"
+  implementation 'org.apache.spark:spark-sql_2.13:4.1.1'
+  implementation "com.marklogic:marklogic-spark-connector:3.0.0"
+  implementation "org.postgresql:postgresql:42.7.8"
 }
 
-task importCustomers(type: JavaExec) {
+tasks.register("importCustomers", JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'org.example.ImportCustomers'
 }
 
-task importCustomersWithRentalsAndPayments(type: JavaExec) {
+tasks.register("importCustomersWithRentalsAndPayments", JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'org.example.ImportCustomersWithRentalsAndPayments'
 }

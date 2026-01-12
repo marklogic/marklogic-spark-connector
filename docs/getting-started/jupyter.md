@@ -21,6 +21,12 @@ Notebook, though the instructions will work for JupyterLab as well.
 Note that if you have not already installed PySpark, run `pip install pyspark` using the same Python interpreter that 
 you will use to run Jupyter Notebook or JupyterLab.
 
+You will also need to run the following command to install a few other dependencies:
+
+```
+pip install pandas matplotlib
+```
+
 Once you have installed, started, and accessed Jupyter Notebook in your web browser - in a default Notebook 
 installation, you should be able to access it at http://localhost:8889/tree - click on "New" in the upper right hand 
 corner of the Notebook interface and select "Python 3 (ipykernel)" to create a new notebook.
@@ -32,7 +38,7 @@ connector and also to initialize Spark:
 
 ```
 import os
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars "/path/to/marklogic-spark-connector-2.6.0.jar" pyspark-shell'
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars "/path/to/marklogic-spark-connector-3.0.0.jar" pyspark-shell'
 
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.master("local[*]").appName('My Notebook').getOrCreate()
@@ -40,7 +46,7 @@ spark.sparkContext.setLogLevel("WARN")
 spark
 ```
 
-The path of `/path/to/marklogic-spark-connector-2.6.0.jar` should be changed to match the location of the connector 
+The path of `/path/to/marklogic-spark-connector-3.0.0.jar` should be changed to match the location of the connector 
 jar on your filesystem. You are free to customize the `spark` variable in any manner you see fit as well. 
 
 Now that you have an initialized Spark session, you can run any of the examples found in the 

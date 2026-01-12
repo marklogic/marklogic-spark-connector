@@ -4,3 +4,4 @@ build
 out
 gradle-local.properties
 .venv
+marklogic-spark-connector*.jar
