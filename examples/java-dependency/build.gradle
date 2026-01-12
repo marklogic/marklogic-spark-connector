@@ -7,11 +7,14 @@ repositories {
 }
 
 dependencies {
-  implementation 'org.apache.spark:spark-sql_2.12:3.5.6'
-  implementation 'com.marklogic:marklogic-spark-connector:2.6.0'
+  implementation 'org.apache.spark:spark-sql_2.13:4.1.1'
+  implementation 'com.marklogic:marklogic-spark-connector:3.0.0'
 }
 
-task runApp(type: JavaExec) {
+tasks.register("runApp", JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'org.example.App'
+  jvmArgs = [
+    '--add-exports=java.base/sun.util.calendar=ALL-UNNAMED'
+  ]
 }

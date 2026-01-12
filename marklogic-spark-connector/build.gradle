@@ -130,12 +130,17 @@ shadow {
   addShadowVariantIntoJavaComponent = false
 }
 
+tasks.shadowJar {
+  // Removes "-all" from the filename
+  archiveClassifier = ""
+}
+
 publishing {
   publications {
     mainJava(MavenPublication) {
       pom {
         name = "${group}:${project.name}"
-        description = "Spark 3 connector for MarkLogic"
+        description = "Progress MarkLogic Connector for Apache Spark"
         packaging = "jar"
         from components.java
         url = "https://github.com/marklogic/${project.name}"
