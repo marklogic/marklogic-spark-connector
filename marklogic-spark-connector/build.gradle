@@ -42,7 +42,7 @@ dependencies {
   // Needed for using XmlMapper.
   implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-xml:${jacksonVersion}"
 
-  // Supports reading and writing RDF data. Including this here so it's available to the tests as well.
+  // Supports reading and writing RDF data.
   // Bumped to 5.x, which requires Java 17, while upgrading Spark to 4.x.
   implementation("org.apache.jena:jena-arq:5.6.0") {
     exclude group: "com.fasterxml.jackson.core"
@@ -64,7 +64,7 @@ dependencies {
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
   // Without this, once using JUnit 5.12 or higher, Gradle will not find any tests and report an error of:
   // org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
-  testRuntimeOnly "org.junit.platform:junit-platform-launcher:1.14.0"
+  testRuntimeOnly "org.junit.platform:junit-platform-launcher:6.0.1"
 
   testImplementation("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
     exclude module: "rocksdbjni"
