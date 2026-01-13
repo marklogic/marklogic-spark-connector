@@ -47,24 +47,38 @@ public interface FileUtil {
     }
 
     static FilePartition[] makeFilePartitions(String[] files, int numPartitions) {
-        int filesPerPartition = (int) Math.ceil((double) files.length / (double) numPartitions);
+        // Files can be empty when, for example, a glob pattern doesn't match any files.
+        if (files == null || files.length == 0) {
+            return new FilePartition[]{};
+        }
+
+        if (numPartitions <= 0) {
+            // Divide-by-zero protection.
+            numPartitions = 1;
+        }
+
         if (files.length < numPartitions) {
             numPartitions = files.length;
         }
+
         final FilePartition[] partitions = new FilePartition[numPartitions];
-        List<String> currentPartition = new ArrayList<>();
-        int partitionIndex = 0;
-        for (int i = 0; i < files.length; i++) {
-            if (currentPartition.size() == filesPerPartition) {
-                partitions[partitionIndex] = new FilePartition(currentPartition);
-                partitionIndex++;
-                currentPartition = new ArrayList<>();
+
+        // Distribute files across partitions as evenly as possible, ensuring that no partition is empty.
+        final int baseFilesPerPartition = files.length / numPartitions;
+        final int remainingFiles = files.length % numPartitions;
+
+        int fileIndex = 0;
+        for (int partitionIndex = 0; partitionIndex < numPartitions; partitionIndex++) {
+            // First 'remainingFiles' partitions get one extra file
+            int filesForThisPartition = baseFilesPerPartition + (partitionIndex < remainingFiles ? 1 : 0);
+
+            List<String> currentPartition = new ArrayList<>();
+            for (int i = 0; i < filesForThisPartition; i++) {
+                currentPartition.add(files[fileIndex++]);
             }
-            currentPartition.add(files[i]);
-        }
-        if (!currentPartition.isEmpty()) {
             partitions[partitionIndex] = new FilePartition(currentPartition);
         }
+
         return partitions;
     }
 

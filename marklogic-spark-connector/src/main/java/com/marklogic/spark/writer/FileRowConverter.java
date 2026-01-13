@@ -19,7 +19,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Knows how to build a document from a row corresponding to our {@code FileRowSchema}.
+ * Knows how to build a document from a row corresponding to a row from Spark's binaryFile data source.
  */
 class FileRowConverter implements RowConverter {
 
@@ -47,16 +47,10 @@ class FileRowConverter implements RowConverter {
         return Stream.<DocumentInputs>empty().iterator();
     }
 
-    @SuppressWarnings({"deprecation", "removal"})
     private void forceFormatIfNecessary(BytesHandle content) {
         Format format = writeContext.getDocumentFormat();
         if (format != null) {
             content.withFormat(format);
-        } else {
-            format = writeContext.getDeprecatedFileRowsDocumentFormat();
-            if (format != null) {
-                content.withFormat(format);
-            }
         }
     }
 

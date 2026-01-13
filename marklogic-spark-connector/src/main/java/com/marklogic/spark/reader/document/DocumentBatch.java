@@ -30,31 +30,32 @@ class DocumentBatch implements Batch {
     DocumentBatch(DocumentContext context) {
         this.context = context;
 
-        DatabaseClient client = this.context.connectToMarkLogic();
-        Forest[] forests = client.newDataMovementManager().readForestConfig().listForests();
+        try (DatabaseClient client = this.context.connectToMarkLogic()) {
+            Forest[] forests = client.newDataMovementManager().readForestConfig().listForests();
 
-        SearchQueryDefinition query = TripleRowSchema.SCHEMA.equals(context.getSchema()) ?
-            this.context.buildTriplesSearchQuery(client) :
-            this.context.buildSearchQuery(client);
-        
-        // Must null this out so SearchHandle still works below.
-        query.setResponseTransform(null);
+            SearchQueryDefinition query = TripleRowSchema.SCHEMA.equals(context.getSchema()) ?
+                this.context.buildTriplesSearchQuery(client) :
+                this.context.buildSearchQuery(client);
 
-        QueryManager queryManager = client.newQueryManager();
-        queryManager.setPageLength(1);
+            // Must null this out so SearchHandle still works below.
+            query.setResponseTransform(null);
 
-        SearchHandle handle = queryManager.search(query, new SearchHandle());
-        final long estimate = handle.getTotalResults();
-        final long serverTimestamp = handle.getServerTimestamp();
+            QueryManager queryManager = client.newQueryManager();
+            queryManager.setPageLength(1);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Creating forest partitions; query estimate: {}; server timestamp: {}", estimate, serverTimestamp);
-        }
-        ForestPartitionPlanner planner = new ForestPartitionPlanner(context.getPartitionsPerForest());
-        this.partitions = planner.makePartitions(estimate, serverTimestamp, forests);
+            SearchHandle handle = queryManager.search(query, new SearchHandle());
+            final long estimate = handle.getTotalResults();
+            final long serverTimestamp = handle.getServerTimestamp();
 
-        if (Util.MAIN_LOGGER.isInfoEnabled()) {
-            Util.MAIN_LOGGER.info("Created {} partitions; query estimate: {}", partitions.length, estimate);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Creating forest partitions; query estimate: {}; server timestamp: {}", estimate, serverTimestamp);
+            }
+            ForestPartitionPlanner planner = new ForestPartitionPlanner(context.getPartitionsPerForest());
+            this.partitions = planner.makePartitions(estimate, serverTimestamp, forests);
+
+            if (Util.MAIN_LOGGER.isInfoEnabled()) {
+                Util.MAIN_LOGGER.info("Created {} partitions; query estimate: {}", partitions.length, estimate);
+            }
         }
     }
 

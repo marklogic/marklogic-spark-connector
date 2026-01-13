@@ -7,9 +7,11 @@ package com.marklogic.spark.reader.optic;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ReadProgressLogger;
 import com.marklogic.spark.reader.JsonRowDeserializer;
+import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
 import org.slf4j.Logger;
@@ -25,6 +27,7 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
     private final OpticReadContext opticReadContext;
     private final PlanAnalysis.Partition partition;
     private final RowManager rowManager;
+    private final DatabaseClient databaseClient;
 
     private JsonRowDeserializer jsonRowDeserializer;
 
@@ -47,7 +50,10 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
         this.opticReadContext = opticReadContext;
         this.batchSize = opticReadContext.getBatchSize();
         this.partition = partition;
-        this.rowManager = opticReadContext.connectToMarkLogic().newRowManager();
+
+        this.databaseClient = opticReadContext.connectToMarkLogic();
+        this.rowManager = databaseClient.newRowManager();
+
         // Nested values won't work with the JacksonParser used by JsonRowDeserializer, so we ask for type info to not
         // be in the rows.
         this.rowManager.setDatatypeStyle(RowManager.RowSetPart.HEADER);
@@ -110,6 +116,8 @@ class OpticPartitionReader implements PartitionReader<InternalRow> {
 
         // Not yet certain how to make use of CustomTaskMetric, so just logging metrics of interest for now.
         logMetrics();
+
+        IOUtils.closeQuietly(this.databaseClient);
     }
 
     private void logMetrics() {

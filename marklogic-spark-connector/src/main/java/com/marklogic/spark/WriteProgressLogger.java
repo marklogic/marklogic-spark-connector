@@ -18,11 +18,13 @@ public class WriteProgressLogger implements Serializable {
     private static ProgressLogger progressLogger;
 
     public static void initialize(long progressInterval, String message) {
-        progressLogger = new ProgressLogger(progressInterval, message);
+        if (progressInterval > 0) {
+            progressLogger = new ProgressLogger(progressInterval, message);
+        }
     }
 
     public static void logProgressIfNecessary(long itemCount) {
-        if (Util.MAIN_LOGGER.isInfoEnabled() && progressLogger != null) {
+        if (progressLogger != null && Util.MAIN_LOGGER.isInfoEnabled()) {
             synchronized (lock) {
                 progressLogger.logProgressIfNecessary(itemCount);
             }

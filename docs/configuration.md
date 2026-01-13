@@ -39,7 +39,7 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.password             | Required for `basic` and `digest` authentication. |
 | spark.marklogic.client.certificate.file     | Required for `certificate` authentication; the path to a certificate file. |
 | spark.marklogic.client.certificate.password | Required for `certificate` authentication; the password for accessing the certificate file. |
-| spark.marklogic.client.cloud.apiKey         | Required for MarkLogic `cloud` authentication. |
+| spark.marklogic.client.cloud.apiKey         | Required for Progress Data Cloud (PDC) `cloud` authentication. |
 | spark.marklogic.client.kerberos.principal | Required for `kerberos` authentication. |
 | spark.marklogic.client.saml.token | Required for `saml` authentication. |
 | spark.marklogic.client.sslEnabled | If 'true', an SSL connection is created using the JVM's default SSL context.
@@ -49,6 +49,10 @@ These options define how the connector connects and authenticates with MarkLogic
 | spark.marklogic.client.ssl.keystore.type | Java keystore type for 2-way SSL; defaults to "JKS"; since 2.1.0. |
 | spark.marklogic.client.ssl.keystore.algorithm | Java keystore algorithm for 2-way SSL; defaults to "SunX509"; since 2.1.0. |
 | spark.marklogic.client.uri | Shortcut for setting the host, port, username, and password when using `basic` or `digest` authentication. See below for more information. |
+
+If you are using the connector with a MarkLogic server hosted in Progress Data Cloud (PDC), please see 
+the related [Flux documentation](https://marklogic.github.io/flux/common-options.html) on how to configure the 
+values for the MarkLogic host, base path, and cloud API key.
 
 ### Connecting with a client URI
 
@@ -141,6 +145,7 @@ multiple queries, the following options can also be used to control how partitio
 | spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
 | spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute. |
+| spark.marklogic.read.partitions.vars. | Prefix for user-defined variables to be sent to the partition code. |
 
 ### Read options for documents
 
@@ -189,8 +194,8 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.abortOnFailure | Whether the Spark job should abort if a batch fails to be written; defaults to `true`. |
 | spark.marklogic.write.batchSize | The number of documents written in a call to MarkLogic; defaults to 100. |
 | spark.marklogic.write.collections | Comma-delimited string of collection names to add to each document. |
+| spark.marklogic.write.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.permissions | Comma-delimited string of role names and capabilities to add to each document - e.g. role1,read,role2,update,role3,execute . |
-| spark.marklogic.write.fileRows.documentType | Forces a document type when MarkLogic does not recognize a URI extension; must be one of `JSON`, `XML`, or `TEXT`. |
 | spark.marklogic.write.jsonRootName | As of 2.3.0, specifies a root field name when writing JSON documents based on arbitrary rows. |
 | spark.marklogic.write.temporalCollection | Name of a temporal collection to assign each document to. |
 | spark.marklogic.write.threadCount | The number of threads used across all partitions to send documents to MarkLogic; defaults to 4. |
@@ -202,6 +207,7 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.uriReplace | Modify the initial URI for a row via a comma-delimited list of regular expression and replacement string pairs - e.g. regex,'value',regex,'value'. Each replacement string must be enclosed by single quotes. |
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
+| spark.marklogic.write.uriTemplate.warnOnMissingField | New in 3.0.0; boolean defining whether to log a warning instead of fail when a URI template has an expression that cannot be resolved for a row. If set to true, the expression will be replaced with "UNRESOLVED-" followed by a random UUID. |
 
 ### Processing rows via custom code
 

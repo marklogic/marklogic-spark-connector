@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark;
 
+import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.row.RawQueryDSLPlan;
 import com.marklogic.client.row.RowManager;
@@ -17,16 +18,19 @@ import org.apache.spark.sql.connector.catalog.Table;
 import org.apache.spark.sql.connector.catalog.TableProvider;
 import org.apache.spark.sql.connector.expressions.Transform;
 import org.apache.spark.sql.sources.DataSourceRegister;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.apache.spark.sql.util.CaseInsensitiveStringMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.collection.JavaConverters;
+import scala.jdk.javaapi.CollectionConverters;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * The name "DefaultSource" is used here so that this connector can be loaded using the Spark V2 approach, where the
@@ -62,16 +66,19 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         } else if (Util.isReadWithCustomCodeOperation(properties)) {
             return new StructType().add("URI", DataTypes.StringType);
         }
-        return inferSchemaFromOpticQuery(properties);
+
+        StructType schema = inferSchemaFromOpticQuery(properties);
+        return addColumnsForOpticParams(schema, properties);
     }
 
     @Override
     public Table getTable(StructType schema, Transform[] partitioning, Map<String, String> properties) {
         if (isFileOperation(properties)) {
             // Not yet supporting progress logging for file operations.
-            return new MarkLogicFileTable(SparkSession.active(),
+            SparkSession session = Util.getSparkSession();
+            return new MarkLogicFileTable(session,
                 new CaseInsensitiveStringMap(properties),
-                JavaConverters.asScalaBuffer(getPaths(properties)), schema
+                scala.collection.immutable.List.from(CollectionConverters.asScala(getPaths(properties))), schema
             );
         }
 
@@ -104,6 +111,7 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         final long writeProgressInterval = tempContext.getNumericOption(Options.WRITE_LOG_PROGRESS, 0, 0);
         String message = Util.isWriteWithCustomCodeOperation(properties) ? "Items processed: {}" : "Documents written: {}";
         WriteProgressLogger.initialize(writeProgressInterval, message);
+
         return new MarkLogicTable(new WriteContext(schema, properties));
     }
 
@@ -147,18 +155,22 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         if (query == null || query.trim().isEmpty()) {
             throw new ConnectorException(Util.getOptionNameForErrorMessage("spark.marklogic.read.noOpticQuery"));
         }
-        RowManager rowManager = new ContextSupport(caseSensitiveOptions).connectToMarkLogic().newRowManager();
-        RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
-        try {
-            // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
-            StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
-            StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+
+        try (DatabaseClient client = new ContextSupport(caseSensitiveOptions).connectToMarkLogic()) {
+            RowManager rowManager = client.newRowManager();
+            RawQueryDSLPlan dslPlan = rowManager.newRawQueryDSLPlan(new StringHandle(query));
+
+            try {
+                // columnInfo is what forces a minimum MarkLogic version of 10.0-9 or higher.
+                StringHandle columnInfoHandle = rowManager.columnInfo(dslPlan, new StringHandle());
+                StructType schema = SchemaInferrer.inferSchema(columnInfoHandle.get());
+                if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                    logger.debug("Inferred schema from Optic columnInfo: {}", schema);
+                }
+                return schema;
+            } catch (Exception ex) {
+                throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
             }
-            return schema;
-        } catch (Exception ex) {
-            throw new ConnectorException(String.format("Unable to run Optic query %s; cause: %s", query, ex.getMessage()), ex);
         }
     }
 
@@ -166,5 +178,34 @@ public class DefaultSource implements TableProvider, DataSourceRegister {
         return properties.containsKey("path") ?
             Arrays.asList(properties.get("path")) :
             Util.parsePaths(properties.get("paths"));
+    }
+
+    /**
+     * Each Optic param needs to be added to the Spark schema so that a user can invoke a Spark filter operation on it.
+     */
+    private StructType addColumnsForOpticParams(StructType schema, Map<String, String> caseSensitiveOptions) {
+        Set<String> opticParamNames = caseSensitiveOptions.keySet().stream()
+            .filter(key -> key.startsWith(Options.READ_OPTIC_PARAM_PREFIX))
+            .map(key -> key.substring(Options.READ_OPTIC_PARAM_PREFIX.length()))
+            .collect(Collectors.toSet());
+
+        // Add a new column to the schema for each param.
+        for (String paramName : opticParamNames) {
+            final String typeOption = Options.READ_OPTIC_PARAM_TYPE_PREFIX + paramName;
+            DataType type = DataTypes.StringType;
+            if (caseSensitiveOptions.containsKey(typeOption)) {
+                try {
+                    type = DataType.fromJson("\"" + caseSensitiveOptions.get(typeOption) + "\"");
+                } catch (Exception ex) {
+                    throw new ConnectorException(String.format("Unable to parse type for param %s; cause: %s", typeOption, ex.getMessage()), ex);
+                }
+            }
+            schema = schema.add(paramName, type, true);
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Added column for Optic param: {} with type: {}", paramName, type);
+            }
+        }
+
+        return schema;
     }
 }

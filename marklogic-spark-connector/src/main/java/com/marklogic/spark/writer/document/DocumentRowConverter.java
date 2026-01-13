@@ -12,6 +12,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.*;
@@ -80,17 +81,41 @@ public class DocumentRowConverter implements RowConverter {
     }
 
     private JsonNode deserializeContentToJson(String initialUri, BytesHandle contentHandle, String format) {
+        // Added this check in release 3.0.0 to avoid unnecessary deserialization attempts. We can only assume this when
+        // the format is XML, as binary/text formats may still be deserializable to JSON.
+        if ("xml".equalsIgnoreCase(format) || Format.XML.equals(contentHandle.getFormat())) {
+            return buildDefaultUriTemplateValues(initialUri, format);
+        }
+
         try {
             return objectMapper.readTree(contentHandle.get());
         } catch (IOException e) {
-            // Preserves the initial support in the 2.2.0 release.
-            ObjectNode values = objectMapper.createObjectNode();
-            values.put("URI", initialUri);
-            if (format != null) {
-                values.put("format", format);
+            // Because we can't reliably know if the content is JSON or not, we don't want to log this error at info
+            // or warn because it may be innocuous. For example, a file may not have an extension and not be JSON, and
+            // we can't know that until we try to deserialize it. A deserialization failure is expected in that case.
+            // But there could be a legitimate issue if the content is supposed to be JSON and is valid, but cannot be
+            // deserialized by Jackson. This occurred in testing with a document containing a very large string value
+            // that exceeded a Jackson limit. So we need visibility to the error, we just do it at the debug level so
+            // it's possible to get that error without alarming users about what are usually innocuous failures.
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("Unable to deserialize content for URI template values for document {}; cause: {}",
+                    initialUri, e.getMessage());
             }
-            return values;
+
+            return buildDefaultUriTemplateValues(initialUri, format);
         }
+    }
+
+    private ObjectNode buildDefaultUriTemplateValues(String initialUri, String format) {
+        // Release 2.3.0 added support for using a URI template against JSON content. Prior to that, the only values
+        // exposed to a URI template were "URI" and "format". So when the content is not JSON, we use this default set
+        // of values.
+        ObjectNode values = objectMapper.createObjectNode();
+        values.put("URI", initialUri);
+        if (format != null) {
+            values.put("format", format);
+        }
+        return values;
     }
 
     /**

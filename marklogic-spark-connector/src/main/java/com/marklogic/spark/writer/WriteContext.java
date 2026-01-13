@@ -107,6 +107,7 @@ public class WriteContext extends ContextSupport {
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
         }
+
         return writeBatcher;
     }
 
@@ -182,37 +183,18 @@ public class WriteContext extends ContextSupport {
     }
 
     /**
-     * @deprecated since 2.3.0; users should use getDocumentFormat instead.
-     */
-    @Deprecated(since = "2.3.0")
-    // We don't need Sonar to remind us of this deprecation.
-    @SuppressWarnings({"java:S1133", "removal"})
-    Format getDeprecatedFileRowsDocumentFormat() {
-        final String deprecatedOption = Options.WRITE_FILE_ROWS_DOCUMENT_TYPE;
-        if (hasOption(deprecatedOption)) {
-            String value = getStringOption(deprecatedOption);
-            Objects.requireNonNull(value);
-            try {
-                return Format.valueOf(value.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                String message = "Invalid value for %s: %s; must be one of 'JSON', 'XML', or 'TEXT'.";
-                String optionAlias = getOptionNameForMessage(deprecatedOption);
-                throw new ConnectorException(String.format(message, optionAlias, value));
-            }
-        }
-        return null;
-    }
-
-    /**
      * The URI template approach will typically be used with rows with an "arbitrary" schema where each column value
      * may be useful in constructing a URI.
      *
      * @param factory
      */
     private void configureTemplateUriMaker(DocBuilderFactory factory) {
-        String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
-        String optionAlias = getOptionNameForMessage(Options.WRITE_URI_TEMPLATE);
-        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias));
+        final String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
+        final String optionAlias = getOptionNameForMessage(Options.WRITE_URI_TEMPLATE);
+        final boolean warnOnMissingField = getBooleanOption(Options.WRITE_URI_TEMPLATE_WARN_ON_MISSING_FIELD, false);
+
+        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias, warnOnMissingField));
+
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);
             if (value != null && !value.trim().isEmpty()) {

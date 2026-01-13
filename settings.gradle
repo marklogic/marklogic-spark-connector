@@ -1,6 +1,7 @@
-include "marklogic-spark-api"
-include "marklogic-langchain4j"
+// The connector code was previously split across multiple subprojects to allow for different Java
+// requirements. That separation is no longer needed now that the connector requires Spark 4 and thus
+// requires Java 17. The marklogic-spark-connector subproject is being kept for now in case there's
+// a need for another subproject in the future. And having the test-app in a separate subproject is
+// cleaner than including it in the base project. 
 include "marklogic-spark-connector"
-include "tests"
 include "test-app"
-include "code-coverage-report"

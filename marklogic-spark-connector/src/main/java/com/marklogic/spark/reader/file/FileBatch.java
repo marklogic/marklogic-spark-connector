@@ -5,6 +5,7 @@ package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.connector.read.Batch;
@@ -43,7 +44,8 @@ class FileBatch implements Batch {
     public PartitionReaderFactory createReaderFactory() {
         // This config is needed to resolve file paths. This is our last chance to access it and provide a serialized
         // version to the factory, which must be serializable itself.
-        Configuration config = SparkSession.active().sparkContext().hadoopConfiguration();
+        SparkSession session = Util.getSparkSession();
+        Configuration config = session.sparkContext().hadoopConfiguration();
         FileContext fileContext = new FileContext(properties, new SerializableConfiguration(config));
         return new FilePartitionReaderFactory(fileContext);
     }
@@ -57,6 +59,16 @@ class FileBatch implements Batch {
                 throw new ConnectorException(String.format("Invalid value for number of partitions: %s", value));
             }
         }
-        return filePaths.size();
+
+        return getDefaultNumberOfPartitions(filePaths);
+    }
+
+    protected static int getDefaultNumberOfPartitions(List<String> filePaths) {
+        final int defaultParallelism = Util.getSparkSession().sparkContext().defaultParallelism();
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Default parallelism: {}", defaultParallelism);
+        }
+
+        return Math.min(defaultParallelism, filePaths.size());
     }
 }

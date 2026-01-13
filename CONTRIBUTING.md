@@ -1,12 +1,7 @@
 This guide covers how to develop and test this project. It assumes that you have cloned this repository to your local
 workstation.
 
-**You must use Java 17 for developing, testing, and building this project**, even though the connector supports
-running on Java 11. For users, Java 17 is only required if using the splitting and embedding features, as those
-depend on a third party module that requires Java 17.
-
-**You also need Java 11 installed** so that the subprojects in this repository that require Java 11 have access to a 
-Java 11 SDK. [sdkman](https://sdkman.io/) is highly recommend for installing multiple JDKs.
+**You must use Java 17 for developing, testing, and building this project**.
 
 # Setup
 
@@ -43,6 +38,12 @@ index page for the test application server.
 To run the tests against the test application, run the following Gradle task:
 
     ./gradlew test
+
+To also get code coverage, run:
+
+    ./gradlew test jacocoTestReport
+
+The code coverage report will be in `marklogic-spark-connector/build/reports/jacoco/test/html/index.html`.
 
 **To run the tests in Intellij**, you must configure your JUnit template to include a few JVM args:
 
@@ -90,7 +91,7 @@ This will produce a single jar file for the connector in the `./build/libs` dire
 
 You can then launch PySpark with the connector available via:
 
-    pyspark --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.7-SNAPSHOT.jar
+    pyspark --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-3.0-SNAPSHOT.jar
 
 The below command is an example of loading data from the test application deployed via the instructions at the top of 
 this page. 
@@ -150,8 +151,7 @@ spark.read.option("header", True).csv("marklogic-spark-connector/src/test/resour
 When you run PySpark, it will create its own Spark cluster. If you'd like to try against a separate Spark cluster
 that still runs on your local machine, perform the following steps:
 
-1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark 3.5.6` since we are currently
-building against Spark 3.5.6.
+1. Use [sdkman to install Spark](https://sdkman.io/sdks#spark). Run `sdk install spark (version)` where `version` is the latest Spark 4.x release.
 2. `cd ~/.sdkman/candidates/spark/current/sbin`, which is where sdkman will install Spark.
 3. Run `./start-master.sh` to start a master Spark node.
 4. `cd ../logs` and open the master log file that was created to find the address for the master node. It will be in a
@@ -166,7 +166,7 @@ The Spark master GUI is at <http://localhost:8080>. You can use this to view det
 
 Now that you have a Spark cluster running, you just need to tell PySpark to connect to it:
 
-    pyspark --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.7-SNAPSHOT.jar
+    pyspark --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-3.0-SNAPSHOT.jar
 
 You can then run the same commands as shown in the PySpark section above. The Spark master GUI will allow you to 
 examine details of each of the commands that you run.
@@ -185,7 +185,7 @@ You will need the connector jar available, so run `./gradlew clean shadowJar` if
 You can then run a test Python program in this repository via the following (again, change the master address as 
 needed); note that you run this outside of PySpark, and `spark-submit` is available after having installed PySpark:
 
-    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-2.7-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
+    spark-submit --master spark://NYWHYC3G0W:7077 --jars marklogic-spark-connector/build/libs/marklogic-spark-connector-3.0-SNAPSHOT.jar marklogic-spark-connector/src/test/python/test_program.py
 
 You can also test a Java program. To do so, first move the `com.marklogic.spark.TestProgram` class from `src/test/java`
 to `src/main/java`. Then run the following:
@@ -193,7 +193,7 @@ to `src/main/java`. Then run the following:
 ```
 ./gradlew clean shadowJar
 cd marklogic-spark-connector
-spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-2.7-SNAPSHOT.jar
+spark-submit --master spark://NYWHYC3G0W:7077 --class com.marklogic.spark.TestProgram build/libs/marklogic-spark-connector-3.0-SNAPSHOT.jar
 ```
 
 Be sure to move `TestProgram` back to `src/test/java` when you are done. 

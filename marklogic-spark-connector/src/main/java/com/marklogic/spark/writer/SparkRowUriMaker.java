@@ -5,7 +5,9 @@ package com.marklogic.spark.writer;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,16 +18,19 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
 
     private final String uriTemplate;
     private final String uriTemplateOptionName;
+    private final boolean warnOnMissingField;
 
     // The matcher can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
     // its own and never has multiple threads trying to access it at the same time.
     private Matcher matcher;
 
-    SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName) {
+    SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName, boolean warnOnMissingField) {
         this.uriTemplate = uriTemplate;
         this.uriTemplateOptionName = uriTemplateOptionName;
-        validateUriTemplate(uriTemplate);
+        validateUriTemplate();
+
         this.matcher = Pattern.compile("\\{([^}]+)\\}", Pattern.CASE_INSENSITIVE).matcher(uriTemplate);
+        this.warnOnMissingField = warnOnMissingField;
     }
 
     @Override
@@ -53,7 +58,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         return output.toString();
     }
 
-    private void validateUriTemplate(String uriTemplate) {
+    private void validateUriTemplate() {
         // Copied from the DHF Spark 2 connector
         final String preamble = String.format("Invalid value for %s: %s; ", uriTemplateOptionName, uriTemplate);
         boolean inToken = false;
@@ -93,19 +98,32 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
         }
 
         if (node == null || node.isMissingNode()) {
-            throw new ConnectorException(
-                String.format("Expression '%s' did not resolve to a value in row: %s; expression is required by URI template: %s",
-                    expression, uriTemplateValues, uriTemplate
-                ));
+            String message = String.format("Expression '%s' did not resolve to a value in row: %s; expression is required by URI template: %s",
+                expression, uriTemplateValues, uriTemplate
+            );
+            if (warnOnMissingField) {
+                return replaceExpressionWithUnresolvedUUID(message);
+            }
+            throw new ConnectorException(message);
         }
 
         String text = node.asText();
         if (text.trim().isEmpty()) {
-            throw new ConnectorException(
-                String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
-                    expression, uriTemplateValues, uriTemplate
-                ));
+            String message = String.format("Expression '%s' resolved to an empty string in row: %s; expression is required by URI template: %s",
+                expression, uriTemplateValues, uriTemplate
+            );
+            if (warnOnMissingField) {
+                return replaceExpressionWithUnresolvedUUID(message);
+            }
+            throw new ConnectorException(message);
         }
+
         return text;
+    }
+
+    private String replaceExpressionWithUnresolvedUUID(String message) {
+        final String replacement = "UNRESOLVED-" + UUID.randomUUID();
+        Util.MAIN_LOGGER.warn("{}; will use {} instead.", message, replacement);
+        return replacement;
     }
 }

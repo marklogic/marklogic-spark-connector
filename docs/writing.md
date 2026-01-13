@@ -49,7 +49,7 @@ The URI can then be further adjusted as described in the "Controlling document U
 This feature allows for ingesting files of any type. The MarkLogic REST API will
 [determine the document type](https://docs.marklogic.com/guide/rest-dev/intro#id_53367) based on the URI extension, if
 MarkLogic recognizes it. If MarkLogic does not recognize the extension, and you wish to force a document type on each of
-the documents, you can set the `spark.marklogic.write.fileRows.documentType` option to one of `XML`, `JSON`, or `TEXT`.
+the documents, you can set the `spark.marklogic.write.documentType` option to one of `XML`, `JSON`, or `TEXT`.
 
 ### Writing document rows
 
@@ -167,6 +167,9 @@ value in a URI, you would use the following configuration:
 
     .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{/Employee/employee_id}.json")
 
+As of the 3.0.0 release, you can set the new `spark.marklogic.write.uriTemplate.warnOnMissingField` option to `true`
+so that if an expression in a URI template cannot be resolved for a row, the error is logged as a warning instead of 
+thrown. In addition, the expression will be replaced with "UNRESOLVED-" followed by a random UUID.
 
 If you are writing file rows that conform to 
 [Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 

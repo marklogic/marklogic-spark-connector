@@ -92,10 +92,10 @@ If you are writing files with extensions that MarkLogic does not recognize based
 you can force a document type for each file with an unrecognized extension:
 
 ```
-  .option("spark.marklogic.write.fileRows.documentType", "JSON")
+  .option("spark.marklogic.write.documentType", "JSON")
 ```
 
-The `spark.marklogic.write.fileRows.documentType` option supports values of `JSON`, `XML`, and `TEXT`. 
+The `spark.marklogic.write.documentType` option supports values of `JSON`, `XML`, and `TEXT`. 
 
 Please see [the guide on writing data](../../writing.md) for information on how "file rows" can then be written to
 MarkLogic as documents.

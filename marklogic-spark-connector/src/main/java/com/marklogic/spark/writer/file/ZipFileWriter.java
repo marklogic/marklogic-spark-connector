@@ -6,6 +6,7 @@ package com.marklogic.spark.writer.file;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -13,10 +14,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.write.DataWriter;
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 import org.apache.spark.util.SerializableConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -27,19 +25,25 @@ import java.util.zip.ZipOutputStream;
 
 public class ZipFileWriter implements DataWriter<InternalRow> {
 
-    private static final Logger logger = LoggerFactory.getLogger(ZipFileWriter.class);
+    // Default threshold for logging a warning about large zip files. Based on some math with Copilot about heap usage:
+    // 46 bytes per zip entry; 100 bytes on average for URI length; 500k entries = ~70MB of heap usage.
+    // With a default of 10 Spark tasks per executor, that would be ~700MB of heap usage if all tasks hit the threshold.
+    // That is a reasonable time to log a warning about potential heap space usage.
+    private static final int DEFAULT_WARN_THRESHOLD = 500000;
 
     private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
 
     private final String path;
-    private final String zipFilePath;
+    private final Path zipPath;
+    private final int warnThreshold;
 
     // These can be instantiated lazily depending on which constructor is used.
     private ContentWriter contentWriter;
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
+    private boolean hasLoggedThresholdWarning;
 
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this(properties.get("path"), properties, hadoopConfiguration, partitionId, true);
@@ -48,9 +52,11 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     public ZipFileWriter(String path, Map<String, String> properties, SerializableConfiguration hadoopConfiguration,
                          int partitionId, boolean createZipFileImmediately) {
         this.path = path;
-        this.zipFilePath = makeFilePath(path, partitionId);
+        this.zipPath = makeFilePath(path, partitionId);
         this.context = new ContextSupport(properties);
         this.hadoopConfiguration = hadoopConfiguration;
+        this.warnThreshold = context.getIntOption(Options.WRITE_FILES_ZIP_WARN_THRESHOLD, DEFAULT_WARN_THRESHOLD, 0);
+
         if (createZipFileImmediately) {
             createZipFileAndContentWriter();
         }
@@ -72,16 +78,18 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
         this.contentWriter.writeContent(row, zipOutputStream);
         zipEntryCounter++;
+        logThresholdWarningIfNecessary();
     }
 
     @Override
     public void close() {
         IOUtils.closeQuietly(zipOutputStream);
+        IOUtils.closeQuietly(contentWriter);
     }
 
     @Override
     public WriterCommitMessage commit() {
-        return new ZipCommitMessage(path, zipFilePath, zipEntryCounter);
+        return new ZipCommitMessage(path, zipPath.toString(), zipEntryCounter);
     }
 
     @Override
@@ -90,15 +98,14 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     private void createZipFileAndContentWriter() {
-        Path filePath = new Path(zipFilePath);
-        if (logger.isDebugEnabled()) {
-            logger.debug("Will write to: {}", filePath);
+        if (Util.MAIN_LOGGER.isDebugEnabled()) {
+            Util.MAIN_LOGGER.debug("Will write file at: {}", zipPath);
         }
         this.contentWriter = new ContentWriter(context.getProperties());
         try {
-            FileSystem fileSystem = filePath.getFileSystem(hadoopConfiguration.value());
+            FileSystem fileSystem = zipPath.getFileSystem(hadoopConfiguration.value());
             fileSystem.setWriteChecksum(false);
-            zipOutputStream = new ZipOutputStream(fileSystem.create(filePath, true));
+            zipOutputStream = new ZipOutputStream(fileSystem.create(zipPath, true));
         } catch (IOException e) {
             throw new ConnectorException("Unable to create stream for writing zip file: " + e.getMessage(), e);
         }
@@ -132,12 +139,27 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
      * @param partitionId
      * @return
      */
-    private String makeFilePath(String path, int partitionId) {
+    private Path makeFilePath(String path, int partitionId) {
         final String timestamp = new SimpleDateFormat("yyyyMMddHHmmssZ").format(new Date());
-        return String.format("%s%s%s-%d.zip", path, File.separator, timestamp, partitionId);
+        final String zipFilename = String.format("%s-%d.zip", timestamp, partitionId);
+        // Fixed a bug in 1.x (fixed in 2.0) by using a Path here instead of string concatenation with File.separator.
+        // Using File.separator on Windows would result in a "\" in an S3 URL, which is awkward for a user to work with,
+        // and appears buggy and unexpected.
+        return new Path(path, zipFilename);
+    }
+
+    private void logThresholdWarningIfNecessary() {
+        if (warnThreshold > 0 && !hasLoggedThresholdWarning && zipEntryCounter >= warnThreshold) {
+            Util.MAIN_LOGGER.warn(
+                "Zip file {} has {} entries. Large zip files keep entry metadata in memory, which may cause JVM heap pressure. " +
+                    "To reduce entries per file, increase the number of partitions per forest for reading data from MarkLogic.",
+                zipPath.getName(), zipEntryCounter
+            );
+            hasLoggedThresholdWarning = true;
+        }
     }
 
     public String getZipFilePath() {
-        return zipFilePath;
+        return zipPath.toString();
     }
 }
