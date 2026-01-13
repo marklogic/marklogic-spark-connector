@@ -41,7 +41,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
-        this.xmlChunkConfig = new XmlChunkConfig(null, null, chunkConfig.getEmbeddingXmlNamespace(), null, chunkConfig.isBase64EncodeVectors());
+
+        // In 3.0.0, fixed bug where embeddingName was not being honored.
+        this.xmlChunkConfig = new XmlChunkConfig(null, chunkConfig.getEmbeddingName(),
+            chunkConfig.getEmbeddingXmlNamespace(), null, chunkConfig.isBase64EncodeVectors());
+
         documentBuilderFactory = DocumentBuilderFactory.newInstance();
     }
 

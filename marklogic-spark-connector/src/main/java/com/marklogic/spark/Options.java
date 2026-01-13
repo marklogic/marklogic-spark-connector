@@ -466,7 +466,8 @@ public abstract class Options {
     public static final String WRITE_EMBEDDER_TEXT_XPATH = WRITE_EMBEDDER_PREFIX + "text.xpath";
 
     /**
-     * Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk.
+     * Allows for the embedding name to be customized when the embedding is added to a JSON or XML chunk. As of 3.0.0,
+     * if not set, then the default name is "_vector" for JSON chunks and "vector" for XML chunks.
      *
      * @since 2.5.0
      */

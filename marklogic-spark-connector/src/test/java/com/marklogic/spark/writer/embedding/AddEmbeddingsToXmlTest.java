@@ -124,6 +124,36 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void xmlSidecarWithVersion2XDefaultsForEmbeddings() {
+        readDocument("/marklogic-docs/java-client-intro.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_SPLITTER_XPATH, "/node()/text/text()")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.xml")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAMESPACE, "http://marklogic.com/appservices/model")
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAME, "embedding")
+            .mode(SaveMode.Append)
+            .save();
+
+        for (String uri : getUrisInCollection("chunks", 4)) {
+            XmlNode doc = readXmlDocument(uri);
+            doc.assertElementExists("/model:root/model:source-uri");
+            doc.assertElementExists("/model:root/model:chunks/model:chunk/model:text");
+            doc.assertElementExists(
+                "Verifies that with the 3.0.0 release, the user can still specify the embedding name and namespace " +
+                    "values that were used by default in the 2.x releases for storing the embedding. This also " +
+                    "seems to fix a bug where in the 2.x releases, it was not possible to override the embedding " +
+                    "name in certain scenarios.",
+                "/model:root/model:chunks/model:chunk/model:embedding"
+            );
+        }
+    }
+
+    @Test
     void sidecarWithCustomNamespaceAndCustomEmbeddingNamespace() {
         readDocument("/marklogic-docs/java-client-intro.xml")
             .write().format(CONNECTOR_IDENTIFIER)
