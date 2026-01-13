@@ -55,7 +55,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 }
             }
             float[] embedding = getEmbeddingIfExists(embeddings, chunksCounter);
-            var jsonChunk = new JsonChunk(chunk, null, null, chunkConfig.isBase64EncodeVectors());
+            var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (embedding != null) {
                 jsonChunk.addEmbedding(embedding);
             }
@@ -95,7 +95,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 }
             }
             float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
-            var jsonChunk = new JsonChunk(chunk, null, null, chunkConfig.isBase64EncodeVectors());
+            var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (embedding != null) {
                 jsonChunk.addEmbedding(embedding);
             }

@@ -16,6 +16,7 @@ public class ChunkConfig {
     private final int maxChunks;
     private final String documentType;
     private final String rootName;
+    private final String embeddingName;
     private final String xmlNamespace;
     private final String embeddingXmlNamespace;
     private final String uriPrefix;
@@ -25,11 +26,13 @@ public class ChunkConfig {
     // Ignoring Sonar warning about too many constructor args, as that's mitigated via the builder.
     @SuppressWarnings("java:S107")
     private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String documentType, String rootName,
+                        String embeddingName,
                         String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix, boolean base64EncodeVectors) {
         this.metadata = metadata;
         this.maxChunks = maxChunks;
         this.documentType = documentType;
         this.rootName = rootName;
+        this.embeddingName = embeddingName;
         this.xmlNamespace = xmlNamespace;
         this.embeddingXmlNamespace = embeddingXmlNamespace;
         this.uriPrefix = uriPrefix;
@@ -42,6 +45,7 @@ public class ChunkConfig {
         private int maxChunks;
         private String documentType;
         private String rootName;
+        private String embeddingName;
         private String xmlNamespace = Util.DEFAULT_XML_NAMESPACE;
         private String embeddingXmlNamespace = Util.DEFAULT_VECTOR_NAMESPACE;
         private String uriPrefix;
@@ -49,7 +53,8 @@ public class ChunkConfig {
         private boolean base64EncodeVectors = false;
 
         public ChunkConfig build() {
-            return new ChunkConfig(metadata, maxChunks, documentType, rootName, xmlNamespace, embeddingXmlNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
+            return new ChunkConfig(metadata, maxChunks, documentType, rootName, embeddingName,
+                xmlNamespace, embeddingXmlNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {
@@ -69,6 +74,13 @@ public class ChunkConfig {
 
         public Builder withRootName(String rootName) {
             this.rootName = rootName;
+            return this;
+        }
+
+        public Builder withEmbeddingName(String embeddingName) {
+            if (embeddingName != null && !embeddingName.trim().isEmpty()) {
+                this.embeddingName = embeddingName;
+            }
             return this;
         }
 
@@ -116,6 +128,10 @@ public class ChunkConfig {
 
     public String getRootName() {
         return rootName;
+    }
+
+    public String getEmbeddingName() {
+        return embeddingName;
     }
 
     public String getUriPrefix() {

@@ -201,6 +201,32 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void jsonSidecarWithVersion2XDefaultsForEmbeddings() {
+        readDocument("/marklogic-docs/java-client-intro.json")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .option(Options.WRITE_URI_TEMPLATE, "/split-test.json")
+            .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
+            .option(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, 500)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 2)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "json-vector-chunks")
+            .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS)
+            .option(Options.WRITE_EMBEDDER_EMBEDDING_NAME, "embedding")
+            .mode(SaveMode.Append)
+            .save();
+
+        for (String uri : getUrisInCollection("json-vector-chunks", 2)) {
+            JsonNode doc = readJsonDocument(uri);
+            assertTrue(doc.has("chunks"));
+            JsonNode firstChunk = doc.get("chunks").get(1);
+            assertTrue(firstChunk.has("text"));
+            assertTrue(firstChunk.has("embedding"), "Verifies that a user can override the default of '_vector' in the 3.0 " +
+                "release to be the default value of 'embedding' from the 2.x releases. Actual chunk doc: " + firstChunk.toPrettyString());
+        }
+    }
+
+    @Test
     void chunksIsAnObjectInsteadOfAnArray() {
         readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)

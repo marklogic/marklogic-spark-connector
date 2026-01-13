@@ -23,11 +23,6 @@ public class XmlChunkConfig {
     private final NamespaceContext namespaceContext;
     private final boolean base64EncodeVectors;
 
-    // Defaults to the config used by the connector's splitter feature.
-    public XmlChunkConfig(String embeddingNamespace) {
-        this(null, null, embeddingNamespace, null, false);
-    }
-
     public XmlChunkConfig(String textExpression, String embeddingName, String embeddingNamespace, NamespaceContext namespaceContext, boolean base64EncodeVectors) {
         this.textExpression = textExpression != null ? textExpression : DEFAULT_TEXT_EXPRESSION;
         // Changed the default from 2.7 to 3.0 to be "vector" instead of "embedding".
