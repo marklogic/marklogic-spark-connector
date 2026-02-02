@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.Format;
+import com.marklogic.spark.core.ChunkInputs;
 
 import java.util.Iterator;
 import java.util.List;
@@ -16,27 +17,23 @@ import java.util.UUID;
 abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOperation> {
 
     protected final DocumentWriteOperation sourceDocument;
-    protected final List<String> textSegments;
+    protected final List<ChunkInputs> chunkInputsList;
     protected final ChunkConfig chunkConfig;
-    protected final List<byte[]> classifications;
-    protected final List<float[]> embeddings;
     protected final int maxChunksPerDocument;
 
     protected int listIndex = -1;
     private int chunkDocumentCounter = 1;
 
-    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
+    AbstractChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat, List<ChunkInputs> chunkInputsList, ChunkConfig chunkConfig) {
         this.sourceDocument = sourceDocument;
-        this.textSegments = textSegments;
+        this.chunkInputsList = chunkInputsList;
         this.chunkConfig = chunkConfig;
-        this.classifications = classifications;
-        this.embeddings = embeddings;
 
         // Chunks cannot be written to the source document unless its format is JSON or XML. So if maxChunks is zero and
         // we don't have a JSON or XML document, all chunks will be written to a separate document.
         boolean cannotAddChunksToSourceDocument = !Format.JSON.equals(sourceDocumentFormat) && !Format.XML.equals(sourceDocumentFormat);
         this.maxChunksPerDocument = cannotAddChunksToSourceDocument && chunkConfig.getMaxChunks() == 0 ?
-            textSegments.size() :
+            chunkInputsList.size() :
             chunkConfig.getMaxChunks();
     }
 
@@ -47,7 +44,7 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
 
     @Override
     public final boolean hasNext() {
-        return listIndex < textSegments.size();
+        return listIndex < chunkInputsList.size();
     }
 
     // Sonar complains that a NoSuchElementException should be thrown here, but that would only occur if the
@@ -58,7 +55,7 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
         if (listIndex == -1) {
             listIndex++;
             if (this.maxChunksPerDocument == 0) {
-                listIndex = textSegments.size();
+                listIndex = chunkInputsList.size();
                 return addChunksToSourceDocument();
             }
             return sourceDocument;
@@ -83,15 +80,4 @@ abstract class AbstractChunkDocumentProducer implements Iterator<DocumentWriteOp
         }
         return uri;
     }
-
-    /**
-     * Return the embedding at position n if it exists.
-     * @param embeddings the embeddings list
-     * @param n the position for the embedding requests
-     * @return the embedding float array
-     */
-    protected float[] getEmbeddingIfExists(List<float[]> embeddings, int n) {
-        return (embeddings != null && n < embeddings.size() ? embeddings.get(n) : null);
-    }
-
 }

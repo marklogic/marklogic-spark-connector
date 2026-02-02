@@ -1,11 +1,12 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.splitter;
 
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.ChunkInputs;
 
 import java.util.Iterator;
 import java.util.List;
@@ -20,7 +21,7 @@ public class DefaultChunkAssembler implements ChunkAssembler {
     }
 
     @Override
-    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<String> textSegments, List<byte[]> classifications, List<float[]> embeddings) {
+    public Iterator<DocumentWriteOperation> assembleChunks(DocumentWriteOperation sourceDocument, List<ChunkInputs> chunkInputsList) {
         final Format sourceDocumentFormat = Util.determineSourceDocumentFormat(sourceDocument.getContent(), sourceDocument.getUri());
         if (sourceDocumentFormat == null) {
             Util.MAIN_LOGGER.warn("Cannot split document with URI {}; cannot determine the document format.", sourceDocument.getUri());
@@ -30,8 +31,8 @@ public class DefaultChunkAssembler implements ChunkAssembler {
         final Format chunkDocumentFormat = determineChunkDocumentFormat(sourceDocumentFormat);
 
         return Format.XML.equals(chunkDocumentFormat) ?
-            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings) :
-            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
+            new XmlChunkDocumentProducer(sourceDocument, sourceDocumentFormat, chunkInputsList, chunkConfig) :
+            new JsonChunkDocumentProducer(sourceDocument, sourceDocumentFormat, chunkInputsList, chunkConfig);
     }
 
     private Format determineChunkDocumentFormat(Format sourceDocumentFormat) {

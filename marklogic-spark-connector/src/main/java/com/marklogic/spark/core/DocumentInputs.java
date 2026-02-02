@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core;
 
@@ -30,11 +30,7 @@ public class DocumentInputs {
     private Map<String, String> extractedMetadata;
 
     private byte[] documentClassification;
-    private List<byte[]> chunkClassifications;
-    private List<float[]> embeddings;
-
-    // These will be created via a splitter.
-    private List<String> chunks;
+    private List<ChunkInputs> chunkInputsList;
 
     public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                           DocumentMetadataHandle initialMetadata) {
@@ -78,17 +74,31 @@ public class DocumentInputs {
     }
 
     public void addChunkClassification(byte[] classification) {
-        if (chunkClassifications == null) {
-            chunkClassifications = new ArrayList<>();
+        if (chunkInputsList == null || chunkInputsList.isEmpty()) {
+            throw new IllegalStateException("Cannot add classification: no chunks exist");
         }
-        chunkClassifications.add(classification);
+        // Find the next chunk without a classification
+        for (ChunkInputs chunk : chunkInputsList) {
+            if (chunk.getClassification() == null) {
+                chunk.setClassification(classification);
+                return;
+            }
+        }
+        throw new IllegalStateException("Cannot add classification: all chunks already have classifications");
     }
 
     public void addEmbedding(float[] embedding) {
-        if (embeddings == null) {
-            embeddings = new ArrayList<>();
+        if (chunkInputsList == null || chunkInputsList.isEmpty()) {
+            throw new IllegalStateException("Cannot add embedding: no chunks exist");
         }
-        embeddings.add(embedding);
+        // Find the next chunk without an embedding
+        for (ChunkInputs chunk : chunkInputsList) {
+            if (chunk.getEmbedding() == null) {
+                chunk.setEmbedding(embedding);
+                return;
+            }
+        }
+        throw new IllegalStateException("Cannot add embedding: all chunks already have embeddings");
     }
 
     public String getInitialUri() {
@@ -124,15 +134,25 @@ public class DocumentInputs {
     }
 
     public List<String> getChunks() {
-        return chunks;
+        if (chunkInputsList == null) {
+            return null;
+        }
+        List<String> texts = new ArrayList<>(chunkInputsList.size());
+        for (ChunkInputs chunk : chunkInputsList) {
+            texts.add(chunk.getText());
+        }
+        return texts;
     }
 
     public void setChunks(List<String> chunks) {
-        this.chunks = chunks;
-    }
-
-    public List<byte[]> getClassifications() {
-        return chunkClassifications;
+        if (chunks == null) {
+            this.chunkInputsList = null;
+        } else {
+            this.chunkInputsList = new ArrayList<>(chunks.size());
+            for (String text : chunks) {
+                this.chunkInputsList.add(new ChunkInputs(text));
+            }
+        }
     }
 
     public byte[] getDocumentClassification() {
@@ -143,7 +163,7 @@ public class DocumentInputs {
         this.documentClassification = documentClassification;
     }
 
-    public List<float[]> getEmbeddings() {
-        return embeddings;
+    public List<ChunkInputs> getChunkInputsList() {
+        return chunkInputsList;
     }
 }
