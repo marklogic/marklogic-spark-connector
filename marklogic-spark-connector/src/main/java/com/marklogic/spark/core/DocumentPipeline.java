@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core;
 
@@ -119,8 +119,8 @@ public class DocumentPipeline implements Closeable {
         }
 
         @Override
-        public void addEmbedding(float[] embedding) {
-            inputs.addEmbedding(embedding);
+        public void addEmbedding(float[] embedding, String modelName) {
+            inputs.addEmbedding(embedding, modelName);
         }
     }
 

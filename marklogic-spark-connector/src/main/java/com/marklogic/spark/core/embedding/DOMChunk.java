@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.embedding;
 
@@ -56,7 +56,13 @@ public class DOMChunk implements Chunk {
     }
 
     @Override
-    public void addEmbedding(float[] embedding) {
+    public void addEmbedding(float[] embedding, String modelName) {
+        if (modelName != null) {
+            final Element modelNameElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), "model-name");
+            modelNameElement.setTextContent(modelName);
+            chunkElement.appendChild(modelNameElement);
+        }
+
         // DOM is fine with null as a value for the namespace.
         final Element embeddingElement = document.createElementNS(xmlChunkConfig.getEmbeddingNamespace(), xmlChunkConfig.getEmbeddingName());
 

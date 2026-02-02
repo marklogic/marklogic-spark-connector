@@ -87,7 +87,7 @@ public class DocumentInputs {
         throw new IllegalStateException("Cannot add classification: all chunks already have classifications");
     }
 
-    public void addEmbedding(float[] embedding) {
+    public void addEmbedding(float[] embedding, String modelName) {
         if (chunkInputsList == null || chunkInputsList.isEmpty()) {
             throw new IllegalStateException("Cannot add embedding: no chunks exist");
         }
@@ -95,6 +95,7 @@ public class DocumentInputs {
         for (ChunkInputs chunk : chunkInputsList) {
             if (chunk.getEmbedding() == null) {
                 chunk.setEmbedding(embedding);
+                chunk.setModelName(modelName);
                 return;
             }
         }
