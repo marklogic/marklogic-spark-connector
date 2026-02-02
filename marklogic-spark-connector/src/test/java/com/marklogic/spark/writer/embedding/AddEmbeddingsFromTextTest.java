@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.embedding;
 
@@ -27,9 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * need to specify the location of the chunks. The connector is expected to determine the location based on whether the
  * sidecar docs are JSON or XML.
  */
-class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
-
-    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
+class AddEmbeddingsFromTextTest extends AbstractEmbeddingTest {
 
     @Test
     void jsonSidecarDocuments() {
@@ -43,9 +41,11 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             assertTrue(uri.endsWith(".json"));
             JsonNode doc = readJsonDocument(uri);
             assertEquals(JsonNodeType.ARRAY, doc.get("chunks").getNodeType());
-            doc.get("chunks").forEach(chunkEmbedding -> {
-                String textValue = chunkEmbedding.get("text").asText();
-                String embeddingValue = chunkEmbedding.get("_vector").toPrettyString();
+            doc.get("chunks").forEach(chunk -> {
+                assertEquals(EXPECTED_MODEL_NAME, chunk.get("model-name").asText(), "Model name should be stored as of 3.1.0");
+
+                String textValue = chunk.get("text").asText();
+                String embeddingValue = chunk.get("_vector").toPrettyString();
                 if (!chunkEmbeddings.containsKey(textValue)) {
                     chunkEmbeddings.put(textValue, embeddingValue);
                 }
@@ -76,6 +76,9 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             if (!chunkEmbeddings.containsKey(textValue)) {
                 chunkEmbeddings.put(textValue, embeddingValue);
             }
+
+            assertEquals(EXPECTED_MODEL_NAME, doc.getElementValue("/node()/model:chunks/model:chunk/vec:model-name"),
+                "Model name should be stored as of 3.1.0");
         }
 
         // collapse embedding values in map to set. Any duplicates will be ignored. If there's a duplicate embedding
@@ -100,6 +103,4 @@ class AddEmbeddingsFromTextTest extends AbstractIntegrationTest {
             .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "text-chunks")
             .option(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME, TEST_EMBEDDING_FUNCTION_CLASS);
     }
-
-
 }

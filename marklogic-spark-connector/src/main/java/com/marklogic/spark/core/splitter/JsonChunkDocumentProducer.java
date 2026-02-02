@@ -56,7 +56,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
             var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (chunkInputs.getEmbedding() != null) {
-                jsonChunk.addEmbedding(chunkInputs.getEmbedding());
+                jsonChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
             }
             chunks.add(jsonChunk);
         }
@@ -93,7 +93,7 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
             var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (chunkInputs.getEmbedding() != null) {
-                jsonChunk.addEmbedding(chunkInputs.getEmbedding());
+                jsonChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
             }
             chunks.add(jsonChunk);
             listIndex++;

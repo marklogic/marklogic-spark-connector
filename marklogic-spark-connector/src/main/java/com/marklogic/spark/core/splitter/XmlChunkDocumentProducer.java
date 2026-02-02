@@ -70,7 +70,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             ChunkInputs chunkInputs = chunkInputsList.get(listIndex);
             Element classificationResponseNode = chunkInputs.getClassification() != null ?
                 getClassificationResponseElement(chunkInputs.getClassification()) : null;
-            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding());
+            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding(), chunkInputs.getModelName());
             listIndex++;
         }
 
@@ -91,7 +91,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         for (ChunkInputs chunkInputs : chunkInputsList) {
             Element classificationResponseNode = chunkInputs.getClassification() != null ?
                 getClassificationResponseElement(chunkInputs.getClassification()) : null;
-            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding());
+            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding(), chunkInputs.getModelName());
         }
 
         return new DocumentAndChunks(
@@ -110,7 +110,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
     }
 
-    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse, float[] embedding) {
+    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse, float[] embedding, String modelName) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
 
@@ -129,7 +129,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
         if (embedding != null) {
-            domChunk.addEmbedding(embedding);
+            domChunk.addEmbedding(embedding, modelName);
         }
         chunks.add(domChunk);
     }

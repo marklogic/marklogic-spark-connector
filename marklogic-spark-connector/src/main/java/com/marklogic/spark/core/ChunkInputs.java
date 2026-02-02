@@ -12,6 +12,7 @@ public class ChunkInputs {
     private final String text;
     private float[] embedding;
     private byte[] classification;
+    private String modelName;
 
     public ChunkInputs(String text) {
         this.text = text;
@@ -35,5 +36,13 @@ public class ChunkInputs {
 
     public void setClassification(byte[] classification) {
         this.classification = classification;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 }

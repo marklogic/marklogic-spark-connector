@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.embedding;
 
@@ -9,7 +9,6 @@ import com.marklogic.client.row.RowRecord;
 import com.marklogic.client.row.RowSet;
 import com.marklogic.junit5.RequiresMarkLogic12;
 import com.marklogic.junit5.XmlNode;
-import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameWriter;
@@ -22,9 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
-
-    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
+class AddEmbeddingsToXmlTest extends AbstractEmbeddingTest {
 
     @ExtendWith(RequiresMarkLogic12.class)
     @Test
@@ -91,6 +88,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
             chunk.assertElementExists("/ex:chunk/ex:text");
             chunk.assertElementExists("As of 3.0.0, the embedding namespace should be the MarkLogic-specific one, " +
                 "unless the user explicitly overrides it.", "/ex:chunk/vec:vector");
+
+            assertEquals(EXPECTED_MODEL_NAME, chunk.getElementValue("/ex:chunk/vec:model-name"),
+                "Model name should be stored as of 3.1.0");
         }
     }
 
@@ -150,6 +150,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
                     "name in certain scenarios.",
                 "/model:root/model:chunks/model:chunk/model:embedding"
             );
+
+            assertEquals(EXPECTED_MODEL_NAME, doc.getElementValue("/model:root/model:chunks/model:chunk/model:model-name"),
+                "Model name should be stored as of 3.1.0");
         }
     }
 
@@ -176,6 +179,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
                 "and a separate namespace for the embedding.",
             "/ex:root/ex:chunks/ex:chunk[1]/acme:vector"
         );
+
+        assertEquals(EXPECTED_MODEL_NAME, doc.getElementValue("/ex:root/ex:chunks/ex:chunk[1]/acme:model-name"),
+            "Model name should be stored as of 3.1.0");
     }
 
     @Test
@@ -199,6 +205,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementExists("The user should be able to specify an empty string for both namespace " +
                 "options, resulting in no namespace being added to the chunk element nor to the vector element.",
             "/root/chunks/chunk[1]/vector");
+        assertEquals(EXPECTED_MODEL_NAME, doc.getElementValue("/root/chunks/chunk[1]/model-name"),
+            "Model name should be stored as of 3.1.0");
     }
 
     @Test
@@ -216,7 +224,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
         XmlNode doc = readXmlDocument("/split-test.xml");
         doc.assertElementCount("Each of the 2 custom chunks should have a 'vector' element.",
-            "/envelope/my-chunks/my-chunk[my-text and vec:vector]", 2);
+            "/envelope/my-chunks/my-chunk[my-text and vec:vector and vec:model-name]", 2);
     }
 
     @Test
@@ -237,7 +245,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         doc.assertElementCount("As of 3.0.0, the vector element should default to the MarkLogic-specific " +
                 "namespace unless the user explicitly sets it. In this test, the chunks are in a custom namespace, " +
                 "but the vector is not.",
-            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and vec:vector]", 2);
+            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and vec:vector and vec:model-name]", 2);
     }
 
     @Test
@@ -266,7 +274,7 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
                 "an embedding element already exists, that won't cause a conflict as the connector embedding element " +
                 "is not appended and thus will not overwrite the existing element. These " +
                 "options may be deprecated and removed in the future.",
-            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and ml:my-embedding]", 2);
+            "/ex:envelope/ex:my-chunks/ex:my-chunk[ex:my-text and ml:my-embedding and ml:model-name]", 2);
     }
 
     @Test
@@ -338,6 +346,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
                     "And as of the 3.0.0 release, the vector should default to the MarkLogic-specific vector namespace.",
                 "/model:chunk/vec:vector[@xml:lang='zxx']"
             );
+
+            assertEquals(EXPECTED_MODEL_NAME, chunk.getElementValue("/model:chunk/vec:model-name"),
+                "Model name should be stored as of 3.1.0");
         });
     }
 
@@ -369,6 +380,8 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
         for (XmlNode chunk : doc.getXmlNodes("/ex:sidecar/ex:chunks/ex:chunk")) {
             chunk.assertElementExists("/ex:chunk/ex:text");
             chunk.assertElementExists("/ex:chunk/model:vector");
+            assertEquals(EXPECTED_MODEL_NAME, chunk.getElementValue("/ex:chunk/model:model-name"),
+                "Model name should be stored as of 3.1.0");
         }
     }
 
@@ -435,6 +448,9 @@ class AddEmbeddingsToXmlTest extends AbstractIntegrationTest {
 
             chunk.assertElementExists("xml:lang attribute should be 'zxx' to disable stemming",
                 "/model:chunk/vec:vector[@xml:lang='zxx']");
+
+            assertEquals(EXPECTED_MODEL_NAME, chunk.getElementValue("/model:chunk/vec:model-name"),
+                "Model name should be stored as of 3.1.0");
         }
     }
 }

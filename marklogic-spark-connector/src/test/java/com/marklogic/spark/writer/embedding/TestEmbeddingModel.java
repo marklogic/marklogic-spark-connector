@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.embedding;
 
@@ -79,7 +79,7 @@ public class TestEmbeddingModel implements EmbeddingModel, Function<Map<String, 
         }
 
         @Override
-        public void addEmbedding(float[] embedding) {
+        public void addEmbedding(float[] embedding, String modelName) {
             // Don't need to do this for the purposes of our test.
         }
     }
