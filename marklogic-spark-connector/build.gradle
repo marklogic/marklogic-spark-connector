@@ -60,6 +60,9 @@ dependencies {
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
   compileOnly 'com.squareup.okhttp3:okhttp:5.2.0'
 
+  // For Nuclia support
+  implementation 'com.squareup.okhttp3:okhttp-sse:5.2.1'
+
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
   // Without this, once using JUnit 5.12 or higher, Gradle will not find any tests and report an error of:

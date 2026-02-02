@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -495,6 +495,29 @@ public abstract class Options {
      * @since 2.7.0
      */
     public static final String WRITE_EMBEDDER_BASE64_ENCODE = WRITE_EMBEDDER_PREFIX + "base64Encode";
+
+    private static final String WRITE_NUCLIA_PREFIX = "spark.marklogic.write.nuclia.";
+
+    /**
+     * Nuclia API key for authentication. Required if any Nuclia options are used.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_API_KEY = WRITE_NUCLIA_PREFIX + "apikey";
+
+    /**
+     * Nuclia region (e.g., "aws-us-east-2-1"). Required if any Nuclia options are used.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_REGION = WRITE_NUCLIA_PREFIX + "region";
+
+    /**
+     * Maximum number of seconds to wait for Nuclia processing to complete. Defaults to 120 seconds.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_TIMEOUT = WRITE_NUCLIA_PREFIX + "timeout";
 
     /**
      * Defines the host for classification requests
