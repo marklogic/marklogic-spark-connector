@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.splitter;
 
@@ -9,6 +9,7 @@ import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.ChunkInputs;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
@@ -24,7 +25,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -36,8 +36,8 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final DocumentBuilderFactory documentBuilderFactory;
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
+                             List<ChunkInputs> chunkInputsList, ChunkConfig chunkConfig) {
+        super(sourceDocument, sourceDocumentFormat, chunkInputsList, chunkConfig);
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
@@ -66,11 +66,12 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         root.appendChild(chunksElement);
 
         List<Chunk> chunks = new ArrayList<>();
-        int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            Element classificationReponseNode = getNthClassificationResponseElement(chunksCounter++);
-            float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
-            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode, embedding);
+            ChunkInputs chunkInputs = chunkInputsList.get(listIndex);
+            Element classificationResponseNode = chunkInputs.getClassification() != null ?
+                getClassificationResponseElement(chunkInputs.getClassification()) : null;
+            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding());
+            listIndex++;
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
@@ -87,12 +88,10 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         doc.getDocumentElement().appendChild(chunksElement);
 
         List<Chunk> chunks = new ArrayList<>();
-        AtomicInteger ct = new AtomicInteger(0);
-        for (String textSegment : textSegments) {
-            int segCounter = ct.getAndIncrement();
-            Element classificationReponseNode = getNthClassificationResponseElement(segCounter);
-            float[] embedding = getEmbeddingIfExists(embeddings, segCounter);
-            addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode, embedding);
+        for (ChunkInputs chunkInputs : chunkInputsList) {
+            Element classificationResponseNode = chunkInputs.getClassification() != null ?
+                getClassificationResponseElement(chunkInputs.getClassification()) : null;
+            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding());
         }
 
         return new DocumentAndChunks(
@@ -101,18 +100,13 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         );
     }
 
-    private Element getNthClassificationResponseElement(int n) {
-        if (classifications != null && !classifications.isEmpty()) {
-            byte[] classificationBytes = classifications.get(n);
-            try {
-                DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
-                Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
-                return classificationResponse.getDocumentElement();
-            } catch (Exception e) {
-                throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
-            }
-        } else {
-            return null;
+    private Element getClassificationResponseElement(byte[] classificationBytes) {
+        try {
+            DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+            Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
+            return classificationResponse.getDocumentElement();
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
         }
     }
 

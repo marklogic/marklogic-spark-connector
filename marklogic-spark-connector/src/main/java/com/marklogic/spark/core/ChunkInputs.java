@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ */
+package com.marklogic.spark.core;
+
+/**
+ * Encapsulates the data associated with a chunk of text, including its embedding and classification.
+ */
+public class ChunkInputs {
+
+    private final String text;
+    private float[] embedding;
+    private byte[] classification;
+
+    public ChunkInputs(String text) {
+        this.text = text;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public float[] getEmbedding() {
+        return embedding;
+    }
+
+    public void setEmbedding(float[] embedding) {
+        this.embedding = embedding;
+    }
+
+    public byte[] getClassification() {
+        return classification;
+    }
+
+    public void setClassification(byte[] classification) {
+        this.classification = classification;
+    }
+}
