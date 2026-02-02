@@ -156,6 +156,26 @@ public class DocumentInputs {
         }
     }
 
+    /**
+     * Adds a chunk with its embedding and model name. This is useful for workflows like Nuclia where
+     * chunks and embeddings are received together.
+     *
+     * @param text the chunk text
+     * @param embedding the embedding vector (can be null)
+     * @param modelName the model name (can be null)
+     */
+    public void addChunk(String text, float[] embedding, String modelName) {
+        if (chunkInputsList == null) {
+            chunkInputsList = new ArrayList<>();
+        }
+        ChunkInputs chunkInputs = new ChunkInputs(text);
+        if (embedding != null) {
+            chunkInputs.setEmbedding(embedding);
+            chunkInputs.setModelName(modelName);
+        }
+        chunkInputsList.add(chunkInputs);
+    }
+
     public byte[] getDocumentClassification() {
         return documentClassification;
     }
