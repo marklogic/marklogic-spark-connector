@@ -62,18 +62,20 @@ public class NucliaClient implements AutoCloseable {
      */
     public Stream<ObjectNode> processData(String filename, byte[] content) throws IOException, InterruptedException {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Starting processData for file: {}, size: {} bytes", filename, content.length);
+            Util.MAIN_LOGGER.debug("Starting processData; file: {}, size: {} bytes", filename, content.length);
         }
 
         final String resourceId = uploadFile(content, filename);
         final String processingId = submitFileForProcessing(filename, resourceId);
-        final boolean completed = waitForCompletion(processingId, timeoutSeconds);
+        final boolean completed = waitForCompletion(filename, processingId, timeoutSeconds);
 
         if (!completed) {
-            throw new IOException("Processing timed out after " + timeoutSeconds + " seconds for processing ID: " + processingId);
+            Util.MAIN_LOGGER.warn("Processing timed out after {} seconds; file: {}, processing ID: {}. Skipping Nuclia processing for this file.",
+                timeoutSeconds, filename, processingId);
+            return Stream.empty();
         }
 
-        return getProcessingResults(processingId);
+        return getProcessingResults(filename, processingId);
     }
 
     /**
@@ -87,7 +89,7 @@ public class NucliaClient implements AutoCloseable {
     private String uploadFile(byte[] content, String filename) throws IOException {
         String endpoint = baseUrl + "/processing/upload";
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Uploading file to Nuclia: filename={}, endpoint={}, size={} bytes", filename, endpoint, content.length);
+            Util.MAIN_LOGGER.debug("Uploading file to Nuclia: filename={}, size={} bytes", filename, content.length);
         }
 
         // Encode filename in base64 for X-FILENAME header
@@ -104,6 +106,9 @@ public class NucliaClient implements AutoCloseable {
                 throw new IOException("Failed to upload file: " + response.code() + " " + response.message());
             }
             String resourceId = response.body().string();
+            if (Util.MAIN_LOGGER.isDebugEnabled()) {
+                Util.MAIN_LOGGER.debug("File upload successful: filename={}", filename);
+            }
             return resourceId;
         }
     }
@@ -119,7 +124,7 @@ public class NucliaClient implements AutoCloseable {
     private String submitFileForProcessing(String filename, String resourceId) throws IOException {
         final String endpoint = baseUrl + "/processing/push";
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Submitting file for processing: filename={}, endpoint={}", filename, endpoint);
+            Util.MAIN_LOGGER.debug("Submitting file for processing: filename={}", filename);
         }
 
         final String requestBody = String.format("""
@@ -133,8 +138,8 @@ public class NucliaClient implements AutoCloseable {
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                Util.MAIN_LOGGER.error("Failed to submit file: {} {}", response.code(), response.message());
-                throw new IOException("Failed to submit file: " + response.code() + " " + response.message());
+                Util.MAIN_LOGGER.error("Failed to submit file {}: {} {}", filename, response.code(), response.message());
+                throw new IOException("Failed to submit file " + filename + ": " + response.code() + " " + response.message());
             }
 
             String responseBody = response.body().string();
@@ -144,7 +149,7 @@ public class NucliaClient implements AutoCloseable {
             JsonNode jsonResponse = objectMapper.readTree(responseBody);
             String processingId = jsonResponse.get("processing_id").asText();
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug("File submission successful, received processingId: {}", processingId);
+                Util.MAIN_LOGGER.debug("File submission successful: filename={}, processingId={}", filename, processingId);
             }
             return processingId;
         }
@@ -153,11 +158,12 @@ public class NucliaClient implements AutoCloseable {
     /**
      * Checks the status of a processing request.
      *
+     * @param filename     the name of the file being processed
      * @param processingId the processing ID returned from submitText
      * @return true if processing is complete, false otherwise
      * @throws IOException if the request fails
      */
-    private boolean isProcessingComplete(String processingId) throws IOException {
+    private boolean isProcessingComplete(String filename, String processingId) throws IOException {
         String endpoint = baseUrl + "/processing/requests/" + processingId;
 
         Request request = newAuthenticatedRequestBuilder(endpoint)
@@ -166,7 +172,7 @@ public class NucliaClient implements AutoCloseable {
 
         try (Response response = httpClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
-                throw new IOException("Failed to check status: " + response.code() + " " + response.message());
+                throw new IOException("Failed to check status for file " + filename + ": " + response.code() + " " + response.message());
             }
 
             String responseBody = response.body().string();
@@ -178,49 +184,51 @@ public class NucliaClient implements AutoCloseable {
     /**
      * Waits for processing to complete, polling at regular intervals.
      *
+     * @param filename       the name of the file being processed
      * @param processingId   the processing ID to wait for
      * @param maxWaitSeconds maximum time to wait in seconds
      * @return true if processing completed within the timeout, false otherwise
      * @throws IOException          if a request fails
      * @throws InterruptedException if the thread is interrupted while waiting
      */
-    private boolean waitForCompletion(String processingId, int maxWaitSeconds) throws IOException, InterruptedException {
+    private boolean waitForCompletion(String filename, String processingId, int maxWaitSeconds) throws IOException, InterruptedException {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Polling for completion: processingId={}, maxWaitSeconds={}", processingId, maxWaitSeconds);
+            Util.MAIN_LOGGER.debug("Polling for completion: filename={}, processingId={}, maxWaitSeconds={}", filename, processingId, maxWaitSeconds);
         }
 
         int attempts = 0;
         int maxAttempts = maxWaitSeconds;
 
         while (attempts < maxAttempts) {
-            if (isProcessingComplete(processingId)) {
+            if (isProcessingComplete(filename, processingId)) {
                 if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                    Util.MAIN_LOGGER.debug("Processing completed after {} attempts", attempts + 1);
+                    Util.MAIN_LOGGER.debug("Processing completed; file {}; {} attempts", filename, attempts + 1);
                 }
                 return true;
             }
             TimeUnit.SECONDS.sleep(1);
             attempts++;
             if (Util.MAIN_LOGGER.isDebugEnabled() && attempts % 5 == 0) {
-                Util.MAIN_LOGGER.debug("Still waiting for completion: attempt {}/{}", attempts, maxAttempts);
+                Util.MAIN_LOGGER.debug("Still waiting for completion: filename={}, attempt {}/{}", filename, attempts, maxAttempts);
             }
         }
 
-        Util.MAIN_LOGGER.warn("Processing did not complete within {} seconds", maxWaitSeconds);
+        Util.MAIN_LOGGER.warn("Processing did not complete within {} seconds; file: {}", maxWaitSeconds, filename);
         return false;
     }
 
     /**
      * Retrieves the SSE results stream from a completed processing request.
      *
+     * @param filename     the name of the file being processed
      * @param processingId the processing ID
      * @return a Stream of ObjectNode events
      * @throws IOException if the request fails
      */
-    private Stream<ObjectNode> getProcessingResults(String processingId) throws IOException {
+    private Stream<ObjectNode> getProcessingResults(String filename, String processingId) throws IOException {
         final String endpoint = baseUrl + "/processing/requests/" + processingId + "/results";
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Retrieving SSE results: processingId={}, endpoint={}", processingId, endpoint);
+            Util.MAIN_LOGGER.debug("Retrieving SSE results: filename={}, processingId={}", filename, processingId);
         }
 
         Request request = newAuthenticatedRequestBuilder(endpoint)
@@ -235,14 +243,14 @@ public class NucliaClient implements AutoCloseable {
         try {
             Stream<ObjectNode> results = collector.awaitCompletion(timeoutSeconds).stream();
             if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug("SSE stream completed for processingId: {}", processingId);
+                Util.MAIN_LOGGER.debug("SSE stream completed; file: {}, processingId: {}", filename, processingId);
             }
             return results;
         } catch (InterruptedException e) {
-            Util.MAIN_LOGGER.error("Interrupted while waiting for SSE stream: processingId={}", processingId, e);
+            Util.MAIN_LOGGER.error("Interrupted while waiting for SSE stream; filename={}, processingId={}", filename, processingId, e);
             eventSource.cancel();
             Thread.currentThread().interrupt();
-            throw new IOException("Interrupted while waiting for SSE stream", e);
+            throw new IOException("Interrupted while waiting for SSE stream; file: " + filename, e);
         }
     }
 

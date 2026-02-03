@@ -4,7 +4,7 @@
 package com.marklogic.spark.core.nuclia;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
 
 import java.io.IOException;
@@ -65,7 +65,8 @@ public class NucliaDocumentProcessor {
                 }
 
             } catch (IOException | InterruptedException e) {
-                throw new ConnectorException("Failed to process document with Nuclia: " + input.getInitialUri(), e);
+                Util.MAIN_LOGGER.warn("Failed to process document with Nuclia: {}, error: {}", input.getInitialUri(), e.getMessage());
+                // Continue processing other documents - this one will be written without Nuclia data
             }
         }
     }
