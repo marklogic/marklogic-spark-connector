@@ -17,11 +17,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
- * Client for interacting with the Nuclia RAG API.
+ * Default implementation of {@link NuaClient} for interacting with the Nuclia Understanding API (NUA).
  * Handles text ingestion, processing, and retrieval of embeddings and chunks.
  * Implements AutoCloseable to properly shut down HTTP client resources.
+ *
+ * @since 3.1.0
  */
-public class NucliaClient implements AutoCloseable {
+public class DefaultNuaClient implements NuaClient {
 
     private final String nuaKey;
     private final String baseUrl;
@@ -29,7 +31,7 @@ public class NucliaClient implements AutoCloseable {
     private final ObjectMapper objectMapper;
     private final int timeoutSeconds;
 
-    private NucliaClient(Builder builder) {
+    private DefaultNuaClient(Builder builder) {
         this.nuaKey = builder.nuaKey;
         this.baseUrl = builder.apiUrl;
         this.timeoutSeconds = builder.timeoutSeconds;
@@ -38,12 +40,12 @@ public class NucliaClient implements AutoCloseable {
         this.objectMapper = new ObjectMapper();
 
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Initialized NucliaClient: baseUrl={}, timeoutSeconds={}", baseUrl, timeoutSeconds);
+            Util.MAIN_LOGGER.debug("Initialized DefaultNuaClient: baseUrl={}, timeoutSeconds={}", baseUrl, timeoutSeconds);
         }
     }
 
     /**
-     * Creates a new Builder for constructing a NucliaClient.
+     * Creates a new Builder for constructing a DefaultNuaClient.
      *
      * @param nuaKey the Nuclia NUA key for authentication (required)
      * @return a new Builder instance
@@ -53,7 +55,7 @@ public class NucliaClient implements AutoCloseable {
     }
 
     /**
-     * Builder for creating NucliaClient instances.
+     * Builder for creating DefaultNuaClient instances.
      */
     public static class Builder {
         private static final String DEFAULT_API_URL = "https://aws-us-east-2-1.rag.progress.cloud/api/v1";
@@ -96,12 +98,12 @@ public class NucliaClient implements AutoCloseable {
         }
 
         /**
-         * Builds the NucliaClient instance.
+         * Builds the DefaultNuaClient instance.
          *
-         * @return a new NucliaClient
+         * @return a new DefaultNuaClient
          */
-        public NucliaClient build() {
-            return new NucliaClient(this);
+        public DefaultNuaClient build() {
+            return new DefaultNuaClient(this);
         }
     }
 
@@ -115,6 +117,7 @@ public class NucliaClient implements AutoCloseable {
      * @throws IOException          if any request fails
      * @throws InterruptedException if the thread is interrupted while waiting
      */
+    @Override
     public Stream<ObjectNode> processData(String filename, byte[] content) throws IOException, InterruptedException {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Starting processData; file: {}, size: {} bytes", filename, content.length);
@@ -342,7 +345,7 @@ public class NucliaClient implements AutoCloseable {
     @Override
     public void close() {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("Closing NucliaClient and releasing HTTP client resources");
+            Util.MAIN_LOGGER.debug("Closing DefaultNuaClient and releasing HTTP client resources");
         }
         try {
             httpClient.dispatcher().executorService().shutdownNow();
@@ -357,14 +360,16 @@ public class NucliaClient implements AutoCloseable {
             }
         }
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
-            Util.MAIN_LOGGER.debug("NucliaClient closed successfully");
+            Util.MAIN_LOGGER.debug("DefaultNuaClient closed successfully");
         }
     }
 
+    @Override
     public String getBaseUrl() {
         return baseUrl;
     }
 
+    @Override
     public int getTimeoutSeconds() {
         return timeoutSeconds;
     }

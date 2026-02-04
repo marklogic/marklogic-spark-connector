@@ -11,9 +11,10 @@ import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.extraction.ExtractionResult;
 import com.marklogic.spark.core.extraction.TextExtractor;
-import com.marklogic.spark.core.nuclia.NucliaClient;
+import com.marklogic.spark.core.nuclia.NuaClient;
 import com.marklogic.spark.core.nuclia.NucliaDocumentProcessor;
 import com.marklogic.spark.core.splitter.TextSplitter;
+import org.apache.commons.io.IOUtils;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -32,7 +33,7 @@ public class DocumentPipeline implements Closeable {
     private final TextClassifier textClassifier;
     private final EmbeddingProducer embeddingProducer;
     private final ChunkSelector chunkSelector;
-    private final NucliaClient nucliaClient;
+    private final NuaClient nuaClient;
     private final NucliaDocumentProcessor nucliaProcessor;
 
     public DocumentPipeline(TextExtractor textExtractor, TextSplitter textSplitter, TextClassifier textClassifier, EmbeddingProducer embeddingProducer, ChunkSelector chunkSelector) {
@@ -41,20 +42,20 @@ public class DocumentPipeline implements Closeable {
         this.textClassifier = textClassifier;
         this.embeddingProducer = embeddingProducer;
         this.chunkSelector = chunkSelector;
-        this.nucliaClient = null;
+        this.nuaClient = null;
         this.nucliaProcessor = null;
     }
 
     /**
      * Constructor for Nuclia-based pipeline. Nuclia handles extraction, splitting, and embedding generation.
      *
-     * @param nucliaClient the Nuclia client for processing
+     * @param nuaClient the Nuclia Understanding API client for processing
      * @param textClassifier optional text classifier (can be null)
      * @since 3.1.0
      */
-    public DocumentPipeline(NucliaClient nucliaClient, TextClassifier textClassifier) {
-        this.nucliaClient = nucliaClient;
-        this.nucliaProcessor = new NucliaDocumentProcessor(nucliaClient);
+    public DocumentPipeline(NuaClient nuaClient, TextClassifier textClassifier) {
+        this.nuaClient = nuaClient;
+        this.nucliaProcessor = new NucliaDocumentProcessor(nuaClient);
         this.textClassifier = textClassifier;
         this.textExtractor = null;
         this.textSplitter = null;
@@ -64,17 +65,13 @@ public class DocumentPipeline implements Closeable {
 
     @Override
     public void close() throws IOException {
-        if (textClassifier != null) {
-            textClassifier.close();
-        }
-        if (nucliaClient != null) {
-            nucliaClient.close();
-        }
+        IOUtils.closeQuietly(textClassifier);
+        IOUtils.closeQuietly(nuaClient);
     }
 
     // Package-private getters for testing
-    NucliaClient getNucliaClient() {
-        return nucliaClient;
+    NuaClient getNuaClient() {
+        return nuaClient;
     }
 
     TextClassifier getTextClassifier() {

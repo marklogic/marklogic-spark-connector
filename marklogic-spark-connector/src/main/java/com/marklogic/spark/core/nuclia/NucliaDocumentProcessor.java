@@ -19,10 +19,10 @@ import java.util.stream.Collectors;
  */
 public class NucliaDocumentProcessor {
 
-    private final NucliaClient nucliaClient;
+    private final NuaClient nuaClient;
 
-    public NucliaDocumentProcessor(NucliaClient nucliaClient) {
-        this.nucliaClient = nucliaClient;
+    public NucliaDocumentProcessor(NuaClient nuaClient) {
+        this.nuaClient = nuaClient;
     }
 
     /**
@@ -45,7 +45,7 @@ public class NucliaDocumentProcessor {
 
                 // Process through Nuclia using binary file upload workflow
                 // Collect to list since we need all the data anyway
-                List<ObjectNode> results = nucliaClient.processData(filename, content)
+                List<ObjectNode> results = nuaClient.processData(filename, content)
                     .collect(Collectors.toList());
 
                 if (results.isEmpty()) {

@@ -25,9 +25,9 @@ class DocumentPipelineFactoryTest {
 
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
 
-        assertNotNull(pipeline.getNucliaClient(), "NucliaClient should be present");
-        assertEquals("https://aws-us-east-2-1.rag.progress.cloud/api/v1", pipeline.getNucliaClient().getBaseUrl());
-        assertEquals(120, pipeline.getNucliaClient().getTimeoutSeconds(), "Default timeout should be 120 seconds");
+        assertNotNull(pipeline.getNuaClient(), "NuaClient should be present");
+        assertEquals("https://aws-us-east-2-1.rag.progress.cloud/api/v1", pipeline.getNuaClient().getBaseUrl());
+        assertEquals(120, pipeline.getNuaClient().getTimeoutSeconds(), "Default timeout should be 120 seconds");
 
         assertNull(pipeline.getTextExtractor(), "TextExtractor should not be present in Nuclia pipeline");
         assertNull(pipeline.getTextSplitter(), "TextSplitter should not be present in Nuclia pipeline");
@@ -44,8 +44,8 @@ class DocumentPipelineFactoryTest {
 
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
 
-        assertNotNull(pipeline.getNucliaClient());
-        assertEquals(300, pipeline.getNucliaClient().getTimeoutSeconds());
+        assertNotNull(pipeline.getNuaClient());
+        assertEquals(300, pipeline.getNuaClient().getTimeoutSeconds());
     }
 
     @Test
@@ -79,7 +79,7 @@ class DocumentPipelineFactoryTest {
 
         assertNotNull(pipeline, "Pipeline should be created with text extractor");
         assertNotNull(pipeline.getTextExtractor(), "TextExtractor should be present");
-        assertNull(pipeline.getNucliaClient(), "NucliaClient should not be present");
+        assertNull(pipeline.getNuaClient(), "NuaClient should not be present");
         assertNull(pipeline.getTextSplitter(), "TextSplitter should not be present");
         assertNull(pipeline.getEmbeddingProducer(), "EmbeddingProducer should not be present");
     }
@@ -96,7 +96,7 @@ class DocumentPipelineFactoryTest {
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
 
         assertNotNull(pipeline, "Pipeline should be created with Nuclia and classifier");
-        assertNotNull(pipeline.getNucliaClient(), "NucliaClient should be present");
+        assertNotNull(pipeline.getNuaClient(), "NuaClient should be present");
         assertNotNull(pipeline.getTextClassifier(), "TextClassifier should be present even with Nuclia");
     }
 
@@ -113,7 +113,7 @@ class DocumentPipelineFactoryTest {
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
 
         assertNotNull(pipeline, "Pipeline should be created");
-        assertNotNull(pipeline.getNucliaClient(), "NucliaClient should be present");
+        assertNotNull(pipeline.getNuaClient(), "NuaClient should be present");
         assertNull(pipeline.getTextExtractor(), "TextExtractor should be ignored when Nuclia is configured");
         assertNull(pipeline.getTextSplitter(), "TextSplitter should be ignored when Nuclia is configured");
     }
