@@ -15,7 +15,7 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 class NucliaAdHocTest extends AbstractIntegrationTest {
 
     @EnabledIfEnvironmentVariable(
-        named = "NUCLIA_API_KEY", matches = ".*"
+        named = "NUCLIA_NUA_KEY", matches = ".*"
     )
     @Test
     void nuclia() {
@@ -24,8 +24,7 @@ class NucliaAdHocTest extends AbstractIntegrationTest {
             .load("src/test/resources/extraction-files/armstrong_neil.pdf")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.WRITE_NUCLIA_API_KEY, System.getenv("NUCLIA_API_KEY"))
-            .option(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1")
+            .option(Options.WRITE_NUCLIA_NUA_KEY, System.getenv("NUCLIA_NUA_KEY"))
             .option(Options.WRITE_URI_REPLACE, ".*extraction-files,'/aaa'")
             .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
             .mode(SaveMode.Append)

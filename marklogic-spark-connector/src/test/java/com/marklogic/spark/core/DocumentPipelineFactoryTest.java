@@ -3,23 +3,24 @@
  */
 package com.marklogic.spark.core;
 
-import com.marklogic.spark.ConnectorException;
-import com.marklogic.spark.Context;
-import com.marklogic.spark.Options;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+
+import com.marklogic.spark.Context;
+import com.marklogic.spark.Options;
 
 class DocumentPipelineFactoryTest {
 
     @Test
     void nucliaWithAllRequiredOptions() {
         Map<String, String> options = new HashMap<>();
-        options.put(Options.WRITE_NUCLIA_API_KEY, "test-api-key");
-        options.put(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1");
+        options.put(Options.WRITE_NUCLIA_NUA_KEY, "test-api-key");
         Context context = new Context(options);
 
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
@@ -37,8 +38,7 @@ class DocumentPipelineFactoryTest {
     @Test
     void nucliaWithCustomTimeout() {
         Map<String, String> options = new HashMap<>();
-        options.put(Options.WRITE_NUCLIA_API_KEY, "test-api-key");
-        options.put(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1");
+        options.put(Options.WRITE_NUCLIA_NUA_KEY, "test-api-key");
         options.put(Options.WRITE_NUCLIA_TIMEOUT, "300");
         Context context = new Context(options);
 
@@ -49,29 +49,14 @@ class DocumentPipelineFactoryTest {
     }
 
     @Test
-    void nucliaWithMissingRegion() {
+    void nucliaWithEmptyNuaKey() {
         Map<String, String> options = new HashMap<>();
-        options.put(Options.WRITE_NUCLIA_API_KEY, "test-api-key");
-        Context context = new Context(options);
-
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> {
-            DocumentPipelineFactory.newDocumentPipeline(context);
-        });
-
-        assertTrue(ex.getMessage().contains(Options.WRITE_NUCLIA_REGION),
-            "Error message should mention missing region option");
-    }
-
-    @Test
-    void nucliaWithEmptyApiKey() {
-        Map<String, String> options = new HashMap<>();
-        options.put(Options.WRITE_NUCLIA_API_KEY, "   ");
-        options.put(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1");
+        options.put(Options.WRITE_NUCLIA_NUA_KEY, "   ");
         Context context = new Context(options);
 
         DocumentPipeline pipeline = DocumentPipelineFactory.newDocumentPipeline(context);
 
-        assertNull(pipeline, "Pipeline should be null when API key is empty/whitespace");
+        assertNull(pipeline, "Pipeline should be null when NUA key is empty/whitespace");
     }
 
     @Test
@@ -102,8 +87,7 @@ class DocumentPipelineFactoryTest {
     @Test
     void nucliaWithClassifier() {
         Map<String, String> options = new HashMap<>();
-        options.put(Options.WRITE_NUCLIA_API_KEY, "test-api-key");
-        options.put(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1");
+        options.put(Options.WRITE_NUCLIA_NUA_KEY, "test-api-key");
         options.put(Options.WRITE_CLASSIFIER_HOST, "classifier-host");
         options.put(Options.WRITE_CLASSIFIER_PORT, "8080");
         options.put(Options.WRITE_CLASSIFIER_PATH, "/classify");
@@ -120,8 +104,7 @@ class DocumentPipelineFactoryTest {
     void nucliaHasPriorityOverStandardPipeline() {
         Map<String, String> options = new HashMap<>();
         // Nuclia options
-        options.put(Options.WRITE_NUCLIA_API_KEY, "test-api-key");
-        options.put(Options.WRITE_NUCLIA_REGION, "aws-us-east-2-1");
+        options.put(Options.WRITE_NUCLIA_NUA_KEY, "test-api-key");
         // Standard pipeline options (should be ignored)
         options.put(Options.WRITE_EXTRACTED_TEXT, "true");
         options.put(Options.WRITE_SPLITTER_MAX_CHUNK_SIZE, "1000");

@@ -499,18 +499,19 @@ public abstract class Options {
     private static final String WRITE_NUCLIA_PREFIX = "spark.marklogic.write.nuclia.";
 
     /**
-     * Nuclia API key for authentication. Required if any Nuclia options are used.
+     * Nuclia NUA key for authentication. Required if any Nuclia options are used.
+     * See https://docs.rag.progress.cloud/docs/develop/python-sdk/nua/ for more information.
      *
      * @since 3.1.0
      */
-    public static final String WRITE_NUCLIA_API_KEY = WRITE_NUCLIA_PREFIX + "apikey";
+    public static final String WRITE_NUCLIA_NUA_KEY = WRITE_NUCLIA_PREFIX + "nuaKey";
 
     /**
-     * Nuclia region (e.g., "aws-us-east-2-1"). Required if any Nuclia options are used.
+     * Nuclia API URL. Defaults to "https://aws-us-east-2-1.rag.progress.cloud/api/v1" if not specified.
      *
      * @since 3.1.0
      */
-    public static final String WRITE_NUCLIA_REGION = WRITE_NUCLIA_PREFIX + "region";
+    public static final String WRITE_NUCLIA_API_URL = WRITE_NUCLIA_PREFIX + "apiUrl";
 
     /**
      * Maximum number of seconds to wait for Nuclia processing to complete. Defaults to 120 seconds.
