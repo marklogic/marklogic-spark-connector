@@ -3,6 +3,8 @@
  */
 package com.marklogic.spark.core;
 
+import com.fasterxml.jackson.databind.JsonNode;
+
 /**
  * Encapsulates the data associated with a chunk of text, including its embedding and classification. Note there's
  * some naming issues to work out with this class and the Chunk interface.
@@ -13,6 +15,7 @@ public class ChunkInputs {
     private float[] embedding;
     private byte[] classification;
     private String modelName;
+    private JsonNode metadata;
 
     public ChunkInputs(String text) {
         this.text = text;
@@ -44,5 +47,13 @@ public class ChunkInputs {
 
     public void setModelName(String modelName) {
         this.modelName = modelName;
+    }
+
+    public JsonNode getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(JsonNode metadata) {
+        this.metadata = metadata;
     }
 }

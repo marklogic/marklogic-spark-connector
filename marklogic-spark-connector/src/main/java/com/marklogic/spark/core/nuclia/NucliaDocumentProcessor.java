@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.core.nuclia;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.core.DocumentInputs;
@@ -94,6 +95,7 @@ public class NucliaDocumentProcessor {
      * {
      *   "type": "Chunk",
      *   "text": "chunk text content...",
+     *   "metadata": { ... },
      *   "embeddings": [
      *     {
      *       "id": "multilingual-2024-05-06",
@@ -109,6 +111,9 @@ public class NucliaDocumentProcessor {
         if (text == null || text.isEmpty()) {
             return;
         }
+
+        // Extract metadata as JsonNode if present
+        JsonNode metadata = node.has("metadata") ? node.get("metadata") : null;
 
         // Process each embedding in the array
         if (node.has("embeddings") && node.get("embeddings").isArray()) {
@@ -132,11 +137,11 @@ public class NucliaDocumentProcessor {
                     modelName = embeddingObj.get("id").asText();
                 }
 
-                input.addChunk(text, embedding, modelName);
+                input.addChunk(text, embedding, modelName, metadata);
             }
         } else {
-            // No embeddings, still add the chunk with just text
-            input.addChunk(text, null, null);
+            // No embeddings, still add the chunk with just text and metadata
+            input.addChunk(text, null, null, metadata);
         }
     }
 
