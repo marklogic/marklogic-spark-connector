@@ -65,19 +65,18 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element chunksElement = doc.createElementNS(chunkConfig.getXmlNamespace(), DEFAULT_CHUNKS_ELEMENT_NAME);
         root.appendChild(chunksElement);
 
-        List<Chunk> chunks = new ArrayList<>();
+        List<Chunk> addedChunks = new ArrayList<>();
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
             ChunkInputs chunkInputs = chunkInputsList.get(listIndex);
-            Element classificationResponseNode = chunkInputs.getClassification() != null ?
-                getClassificationResponseElement(chunkInputs.getClassification()) : null;
-            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding(), chunkInputs.getModelName());
+            DOMChunk chunk = addChunk(doc, chunkInputs, chunksElement);
+            addedChunks.add(chunk);
             listIndex++;
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
         return new DocumentAndChunks(
             new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new DOMHandle(doc)),
-            chunks
+            addedChunks
         );
     }
 
@@ -87,16 +86,15 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element chunksElement = doc.createElementNS(chunkConfig.getXmlNamespace(), determineChunksElementName(doc));
         doc.getDocumentElement().appendChild(chunksElement);
 
-        List<Chunk> chunks = new ArrayList<>();
+        List<Chunk> addedChunks = new ArrayList<>();
         for (ChunkInputs chunkInputs : chunkInputsList) {
-            Element classificationResponseNode = chunkInputs.getClassification() != null ?
-                getClassificationResponseElement(chunkInputs.getClassification()) : null;
-            addChunk(doc, chunkInputs.getText(), chunksElement, chunks, classificationResponseNode, chunkInputs.getEmbedding(), chunkInputs.getModelName());
+            DOMChunk chunk = addChunk(doc, chunkInputs, chunksElement);
+            addedChunks.add(chunk);
         }
 
         return new DocumentAndChunks(
             new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new DOMHandle(doc)),
-            chunks
+            addedChunks
         );
     }
 
@@ -110,15 +108,16 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
     }
 
-    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse, float[] embedding, String modelName) {
+    private DOMChunk addChunk(Document doc, ChunkInputs chunkInputs, Element chunksElement) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
 
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
-        text.setTextContent(textSegment);
+        text.setTextContent(chunkInputs.getText());
         chunk.appendChild(text);
 
-        if (classificationResponse != null) {
+        if (chunkInputs.getClassification() != null) {
+            Element classificationResponse = getClassificationResponseElement(chunkInputs.getClassification());
             Node classificationNode = doc.createElement("classification");
             chunk.appendChild(classificationNode);
             for (int i = 0; i < classificationResponse.getChildNodes().getLength(); i++) {
@@ -127,11 +126,21 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
         }
 
-        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
-        if (embedding != null) {
-            domChunk.addEmbedding(embedding, modelName);
+        if (chunkInputs.getMetadata() != null) {
+            Element metadataElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk-metadata");
+            // Re: possibly converting JSON to XML - Copilot recommends using the serialized string, as there's no
+            // "correct" way for converting JSON to XML, particularly in regard to arrays. If the user wants XML
+            // documents, they can always e.g. use a REST transform to determine how they want to represent the JSON
+            // as XML.
+            metadataElement.setTextContent(chunkInputs.getMetadata().toString());
+            chunk.appendChild(metadataElement);
         }
-        chunks.add(domChunk);
+
+        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
+        if (chunkInputs.getEmbedding() != null) {
+            domChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
+        }
+        return domChunk;
     }
 
     private String determineChunksElementName(Document doc) {

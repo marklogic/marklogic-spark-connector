@@ -54,6 +54,9 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
                 }
             }
+            if (chunkInputs.getMetadata() != null) {
+                chunk.set("chunk-metadata", chunkInputs.getMetadata());
+            }
             var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (chunkInputs.getEmbedding() != null) {
                 jsonChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
@@ -90,6 +93,9 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
                 }
+            }
+            if (chunkInputs.getMetadata() != null) {
+                chunk.set("chunk-metadata", chunkInputs.getMetadata());
             }
             var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
             if (chunkInputs.getEmbedding() != null) {

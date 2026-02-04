@@ -157,14 +157,15 @@ public class DocumentInputs {
     }
 
     /**
-     * Adds a chunk with its embedding and model name. This is useful for workflows like Nuclia where
+     * Adds a chunk with its embedding, model name, and metadata. This is useful for workflows like Nuclia where
      * chunks and embeddings are received together.
      *
-     * @param text the chunk text
+     * @param text      the chunk text
      * @param embedding the embedding vector (can be null)
      * @param modelName the model name (can be null)
+     * @param metadata  the metadata as a JsonNode (can be null)
      */
-    public void addChunk(String text, float[] embedding, String modelName) {
+    public void addChunk(String text, float[] embedding, String modelName, JsonNode metadata) {
         if (chunkInputsList == null) {
             chunkInputsList = new ArrayList<>();
         }
@@ -173,6 +174,7 @@ public class DocumentInputs {
             chunkInputs.setEmbedding(embedding);
             chunkInputs.setModelName(modelName);
         }
+        chunkInputs.setMetadata(metadata);
         chunkInputsList.add(chunkInputs);
     }
 
