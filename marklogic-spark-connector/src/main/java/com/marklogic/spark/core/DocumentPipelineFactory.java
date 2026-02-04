@@ -58,22 +58,22 @@ public abstract class DocumentPipelineFactory {
     }
 
     private static NucliaClient newNucliaClient(Context context) {
-        String apiKey = context.getProperties().get(Options.WRITE_NUCLIA_API_KEY);
-        if (apiKey == null || apiKey.trim().isEmpty()) {
+        String nuaKey = context.getProperties().get(Options.WRITE_NUCLIA_NUA_KEY);
+        if (nuaKey == null || nuaKey.trim().isEmpty()) {
             return null;
         }
 
-        final String region = context.getProperties().get(Options.WRITE_NUCLIA_REGION);
-
-        if (region == null || region.trim().isEmpty()) {
-            throw new ConnectorException(String.format("When %s is specified, %s must also be specified.",
-                context.getOptionNameForMessage(Options.WRITE_NUCLIA_API_KEY),
-                context.getOptionNameForMessage(Options.WRITE_NUCLIA_REGION)));
-        }
+        NucliaClient.Builder builder = NucliaClient.builder(nuaKey);
 
         int timeout = context.getIntOption(Options.WRITE_NUCLIA_TIMEOUT, 120, 1);
+        builder.withTimeout(timeout);
 
-        return new NucliaClient(apiKey, region, timeout);
+        String apiUrl = context.getProperties().get(Options.WRITE_NUCLIA_API_URL);
+        if (apiUrl != null && !apiUrl.trim().isEmpty()) {
+            builder.withApiUrl(apiUrl);
+        }
+
+        return builder.build();
     }
 
     private static TextSplitter newTextSplitter(Context context) {

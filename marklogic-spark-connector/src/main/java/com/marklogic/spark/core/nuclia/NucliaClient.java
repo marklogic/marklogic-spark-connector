@@ -23,30 +23,85 @@ import java.util.stream.Stream;
  */
 public class NucliaClient implements AutoCloseable {
 
-    private final String apiKey;
+    private final String nuaKey;
     private final String baseUrl;
     private final OkHttpClient httpClient;
     private final ObjectMapper objectMapper;
     private final int timeoutSeconds;
 
-    /**
-     * Creates a new NucliaClient with a custom timeout.
-     *
-     * @param apiKey         the Nuclia API key for authentication
-     * @param region         the region (e.g., "aws-us-east-2-1")
-     * @param timeoutSeconds the maximum number of seconds to wait for processing to complete
-     */
-    public NucliaClient(String apiKey, String region, int timeoutSeconds) {
-        this.apiKey = apiKey;
-        this.baseUrl = "https://" + region + ".rag.progress.cloud/api/v1";
-        this.httpClient = new OkHttpClient.Builder()
-            .readTimeout(timeoutSeconds, TimeUnit.SECONDS)
-            .build();
+    private NucliaClient(Builder builder) {
+        this.nuaKey = builder.nuaKey;
+        this.baseUrl = builder.apiUrl;
+        this.timeoutSeconds = builder.timeoutSeconds;
+
+        this.httpClient = new OkHttpClient.Builder().build();
         this.objectMapper = new ObjectMapper();
-        this.timeoutSeconds = timeoutSeconds;
 
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Initialized NucliaClient: baseUrl={}, timeoutSeconds={}", baseUrl, timeoutSeconds);
+        }
+    }
+
+    /**
+     * Creates a new Builder for constructing a NucliaClient.
+     *
+     * @param nuaKey the Nuclia NUA key for authentication (required)
+     * @return a new Builder instance
+     */
+    public static Builder builder(String nuaKey) {
+        return new Builder(nuaKey);
+    }
+
+    /**
+     * Builder for creating NucliaClient instances.
+     */
+    public static class Builder {
+        private static final String DEFAULT_API_URL = "https://aws-us-east-2-1.rag.progress.cloud/api/v1";
+        private static final int DEFAULT_TIMEOUT_SECONDS = 120;
+
+        private final String nuaKey;
+        private String apiUrl = DEFAULT_API_URL;
+        private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
+
+        private Builder(String nuaKey) {
+            if (nuaKey == null || nuaKey.trim().isEmpty()) {
+                throw new IllegalArgumentException("NUA key is required");
+            }
+            this.nuaKey = nuaKey;
+        }
+
+        /**
+         * Sets a custom API URL. Defaults to "https://aws-us-east-2-1.rag.progress.cloud/api/v1".
+         *
+         * @param apiUrl the Nuclia API base URL
+         * @return this builder
+         */
+        public Builder withApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
+            return this;
+        }
+
+        /**
+         * Sets a custom timeout. Defaults to 120 seconds. Use 0 for no timeout.
+         *
+         * @param timeoutSeconds the maximum number of seconds to wait for processing to complete, or 0 for no timeout
+         * @return this builder
+         */
+        public Builder withTimeout(int timeoutSeconds) {
+            if (timeoutSeconds < 0) {
+                throw new IllegalArgumentException("Timeout cannot be negative");
+            }
+            this.timeoutSeconds = timeoutSeconds;
+            return this;
+        }
+
+        /**
+         * Builds the NucliaClient instance.
+         *
+         * @return a new NucliaClient
+         */
+        public NucliaClient build() {
+            return new NucliaClient(this);
         }
     }
 
@@ -263,7 +318,7 @@ public class NucliaClient implements AutoCloseable {
     private Request.Builder newAuthenticatedRequestBuilder(String endpoint) {
         return new Request.Builder()
             .url(endpoint)
-            .header("Authorization", "Bearer " + apiKey);
+            .header("Authorization", "Bearer " + nuaKey);
     }
 
     /**
