@@ -15,21 +15,25 @@ import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.embedding.EmbeddingProducerFactory;
 import com.marklogic.spark.core.extraction.TextExtractor;
 import com.marklogic.spark.core.extraction.TikaTextExtractor;
-import com.marklogic.spark.core.nuclia.NucliaClient;
+import com.marklogic.spark.core.nuclia.DefaultNuaClient;
+import com.marklogic.spark.core.nuclia.MockNuaClient;
+import com.marklogic.spark.core.nuclia.NuaClient;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import com.marklogic.spark.core.splitter.TextSplitterFactory;
 
 public abstract class DocumentPipelineFactory {
+
+    private static final String MOCK_NUA_CLIENT_OPTION = "spark.marklogic.testing.mockNuaClientResponse";
 
     // For some reason, Sonar thinks the check for four nulls always resolves to false, even though it's definitely
     // possible. So ignoring that warning.
     @SuppressWarnings("java:S2589")
     public static DocumentPipeline newDocumentPipeline(Context context) {
         // Check for Nuclia configuration first
-        NucliaClient nucliaClient = newNucliaClient(context);
-        if (nucliaClient != null) {
+        NuaClient nuaClient = newNuaClient(context);
+        if (nuaClient != null) {
             TextClassifier textClassifier = TextClassifierFactory.newTextClassifier(context);
-            return new DocumentPipeline(nucliaClient, textClassifier);
+            return new DocumentPipeline(nuaClient, textClassifier);
         }
 
         // Standard pipeline with separate components
@@ -57,13 +61,19 @@ public abstract class DocumentPipelineFactory {
             new DocumentPipeline(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector);
     }
 
-    private static NucliaClient newNucliaClient(Context context) {
+    private static NuaClient newNuaClient(Context context) {
+        // Check for mock option first (for testing)
+        if (context.hasOption(MOCK_NUA_CLIENT_OPTION)) {
+            String mockResponseJson = context.getStringOption(MOCK_NUA_CLIENT_OPTION);
+            return new MockNuaClient(mockResponseJson);
+        }
+
         String nuaKey = context.getProperties().get(Options.WRITE_NUCLIA_NUA_KEY);
         if (nuaKey == null || nuaKey.trim().isEmpty()) {
             return null;
         }
 
-        NucliaClient.Builder builder = NucliaClient.builder(nuaKey);
+        DefaultNuaClient.Builder builder = DefaultNuaClient.builder(nuaKey);
 
         int timeout = context.getIntOption(Options.WRITE_NUCLIA_TIMEOUT, 120, 1);
         builder.withTimeout(timeout);
