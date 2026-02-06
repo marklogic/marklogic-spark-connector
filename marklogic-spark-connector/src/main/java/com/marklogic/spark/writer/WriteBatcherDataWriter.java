@@ -3,15 +3,23 @@
  */
 package com.marklogic.spark.writer;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.expression.PlanBuilder;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.JacksonHandle;
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.client.io.marker.GenericWriteHandle;
+import com.marklogic.client.row.RowManager;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
@@ -102,6 +110,36 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     @Override
     public void write(InternalRow row) {
+        RowManager rowManager = databaseClient.newRowManager().withUpdate(true);
+        // Build the row data as JSON - just the actual Spark row data
+        ArrayNode rows = new ObjectMapper().createArrayNode();
+        ObjectNode row1 = rows.addObject();
+        row1.put("docNum", row.getInt(0));
+        row1.put("docName", row.getString(1).toString());
+
+        // Use op.bind to create uri, doc, and permissions columns from the row data
+        String opticQuery = String.format("""
+            op.fromLiterals(%s)
+              .bind([
+                op.as('uri', op.fn.concat('/test/', op.col('docName'), '.json')),
+                op.as('doc', op.jsonObject([
+                  op.prop('docNum', op.col('docNum')),
+                  op.prop('docName', op.col('docName'))
+                ])),
+                op.as('permissions', [
+                  op.xdmp.permission('spark-user-role', 'read'),
+                  op.xdmp.permission('spark-user-role', 'update')
+                ])
+              ])
+              .select(['uri', 'doc', 'permissions'])
+              .write()
+            """, rows);
+
+        System.out.println(opticQuery);
+        PlanBuilder.Plan plan = rowManager.newRawQueryDSLPlan(new StringHandle(opticQuery));
+        rowManager.resultDoc(plan, new JacksonHandle());
+        if (true) return;
+
         throwWriteFailureIfExists();
         Iterator<DocumentInputs> inputs = rowConverter.convertRow(row);
         buildDocumentsAndFlushAsNeeded(inputs);

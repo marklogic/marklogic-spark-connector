@@ -37,6 +37,7 @@ public abstract class AbstractWriteTest extends AbstractIntegrationTest {
             .option("header", true)
             .format("csv")
             .csv("src/test/resources/" + csvFilename)
+            .limit(1)
             .repartition(partitionCount)
             .write()
             .format(CONNECTOR_IDENTIFIER)

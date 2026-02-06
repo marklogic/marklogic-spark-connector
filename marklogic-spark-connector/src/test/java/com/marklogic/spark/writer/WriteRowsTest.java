@@ -22,6 +22,11 @@ class WriteRowsTest extends AbstractWriteTest {
     private static final String TEMPORAL_COLLECTION = "temporal-collection";
 
     @Test
+    void opticUpdate() {
+        newWriter().save();
+    }
+
+    @Test
     void defaultBatchSizeAndThreadCount() {
         newWriter().save();
         verifyTwoHundredDocsWereWritten();
