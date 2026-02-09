@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.dom;
 
@@ -19,7 +19,7 @@ public interface NamespaceContextFactory {
         return new XPathNamespaceContext(prefixesToNamespaces);
     }
 
-    static NamespaceContext makeNamespaceContext(Map<String, String> properties) {
+    static Map<String, String> makePrefixesToNamespaces(Map<String, String> properties) {
         Map<String, String> prefixesToNamespaces = new HashMap<>();
         properties.keySet().stream()
             .filter(key -> key.startsWith(Options.XPATH_NAMESPACE_PREFIX))
@@ -28,6 +28,10 @@ public interface NamespaceContextFactory {
                 String namespace = properties.get(key);
                 prefixesToNamespaces.put(prefix, namespace);
             });
-        return new XPathNamespaceContext(prefixesToNamespaces);
+        return prefixesToNamespaces;
+    }
+
+    static NamespaceContext makeNamespaceContext(Map<String, String> properties) {
+        return new XPathNamespaceContext(makePrefixesToNamespaces(properties));
     }
 }
