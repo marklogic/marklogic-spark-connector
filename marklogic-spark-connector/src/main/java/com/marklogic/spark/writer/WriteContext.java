@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -8,12 +8,14 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatch;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.WriteEvent;
+import com.marklogic.client.datamovement.filter.IncrementalWriteFilter;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
 import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
@@ -103,12 +105,43 @@ public class WriteContext extends ContextSupport {
             .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
             .onBatchSuccess(this::logBatchOnSuccess);
 
+        if (getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
+            IncrementalWriteFilter filter = buildIncrementalWriteFilter();
+            writeBatcher.withDocumentWriteSetFilter(filter);
+        }
+
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
         }
 
         return writeBatcher;
+    }
+
+    protected final IncrementalWriteFilter buildIncrementalWriteFilter() {
+        IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
+            .useEvalQuery("eval".equalsIgnoreCase(getStringOption(Options.WRITE_INCREMENTAL_QUERY_TYPE)))
+            .fromView(
+                getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
+                getStringOption(Options.WRITE_INCREMENTAL_VIEW)
+            )
+            .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
+            .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
+            .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
+            .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length))
+            .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
+
+        if (hasOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS)) {
+            String[] jsonExclusions = getStringOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS).split("\\r?\\n");
+            builder.jsonExclusions(jsonExclusions);
+        }
+
+        if (hasOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS)) {
+            String[] xmlExclusions = getStringOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS).split("\\r?\\n");
+            builder.xmlExclusions(xmlExclusions);
+        }
+
+        return builder.build();
     }
 
     /**

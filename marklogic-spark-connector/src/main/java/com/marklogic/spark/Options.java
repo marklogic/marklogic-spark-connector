@@ -576,6 +576,82 @@ public abstract class Options {
      */
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
 
+    /**
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL = "spark.marklogic.write.incremental";
+
+    /**
+     * Whether to use an Optic query or an eval call to identify documents that have changed since the last write.
+     * Defaults to null, meaning an Optic query is used.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_QUERY_TYPE = WRITE_INCREMENTAL + ".queryType";
+
+    /**
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_SCHEMA = WRITE_INCREMENTAL + ".schema";
+
+    /**
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_VIEW = WRITE_INCREMENTAL + ".view";
+
+
+    /**
+     * Name of the MarkLogic metadata key that holds the hash value for identifying changed documents.
+     * Defaults to "incrementalWriteHash".
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = WRITE_INCREMENTAL + ".hashKeyName";
+
+    /**
+     * Name of the MarkLogic metadata key that holds the timestamp value for identifying changed documents.
+     * Defaults to "incrementalWriteTimestamp".
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME = WRITE_INCREMENTAL + ".timestampKeyName";
+
+    /**
+     * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_CANONICALIZE_JSON = WRITE_INCREMENTAL + ".canonicalizeJson";
+
+    /**
+     * Defines JSON data to exclude from the hash calculation when incremental write is enabled. Must be a
+     * newline-delimited list of JSON Pointer expressions.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_JSON_EXCLUSIONS = WRITE_INCREMENTAL + ".jsonExclusions";
+
+    /**
+     * Defines XML data to exclude from the hash calculation when incremental write is enabled. Must be a
+     * newline-delimited list of XPath expressions. Namespace prefixes can be registered via the
+     * XPATH_NAMESPACE_PREFIX option.
+     * <p>
+     * Contrary to use of a single XPath options for selecting nodes when splitting documents, this option supports
+     * multiple values for ease of use when there are multiple sections of a document to exclude from hashing
+     * that are difficult to reference in a single XPath expression.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_XML_EXCLUSIONS = WRITE_INCREMENTAL + ".xmlExclusions";
+
+    /**
+     * Similar to {@code WRITE_LOG_PROGRESS}, but for logging the number of documents that were skipped during an
+     * import operation.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_LOG_SKIPPED_DOCUMENTS = "spark.marklogic.write.logSkippedDocuments";
+
     private Options() {
     }
 }

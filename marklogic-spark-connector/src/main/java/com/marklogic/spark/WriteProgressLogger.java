@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -16,6 +16,7 @@ public class WriteProgressLogger implements Serializable {
 
     private static final Object lock = new Object();
     private static ProgressLogger progressLogger;
+    private static ProgressLogger skippedProgressLogger;
 
     public static void initialize(long progressInterval, String message) {
         if (progressInterval > 0) {
@@ -23,10 +24,24 @@ public class WriteProgressLogger implements Serializable {
         }
     }
 
+    public static void initializeSkipped(long progressInterval, String message) {
+        if (progressInterval > 0) {
+            skippedProgressLogger = new ProgressLogger(progressInterval, message);
+        }
+    }
+
     public static void logProgressIfNecessary(long itemCount) {
         if (progressLogger != null && Util.MAIN_LOGGER.isInfoEnabled()) {
             synchronized (lock) {
                 progressLogger.logProgressIfNecessary(itemCount);
+            }
+        }
+    }
+
+    public static void logSkippedProgressIfNecessary(long itemCount) {
+        if (skippedProgressLogger != null && Util.MAIN_LOGGER.isInfoEnabled()) {
+            synchronized (lock) {
+                skippedProgressLogger.logProgressIfNecessary(itemCount);
             }
         }
     }
