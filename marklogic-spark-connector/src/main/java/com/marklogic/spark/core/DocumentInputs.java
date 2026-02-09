@@ -73,35 +73,6 @@ public class DocumentInputs {
         return content;
     }
 
-    public void addChunkClassification(byte[] classification) {
-        if (chunkInputsList == null || chunkInputsList.isEmpty()) {
-            throw new IllegalStateException("Cannot add classification: no chunks exist");
-        }
-        // Find the next chunk without a classification
-        for (ChunkInputs chunk : chunkInputsList) {
-            if (chunk.getClassification() == null) {
-                chunk.setClassification(classification);
-                return;
-            }
-        }
-        throw new IllegalStateException("Cannot add classification: all chunks already have classifications");
-    }
-
-    public void addEmbedding(float[] embedding, String modelName) {
-        if (chunkInputsList == null || chunkInputsList.isEmpty()) {
-            throw new IllegalStateException("Cannot add embedding: no chunks exist");
-        }
-        // Find the next chunk without an embedding
-        for (ChunkInputs chunk : chunkInputsList) {
-            if (chunk.getEmbedding() == null) {
-                chunk.setEmbedding(embedding);
-                chunk.setModelName(modelName);
-                return;
-            }
-        }
-        throw new IllegalStateException("Cannot add embedding: all chunks already have embeddings");
-    }
-
     public String getInitialUri() {
         return initialUri;
     }
@@ -132,17 +103,6 @@ public class DocumentInputs {
 
     public void setExtractedMetadata(Map<String, String> extractedMetadata) {
         this.extractedMetadata = extractedMetadata;
-    }
-
-    public List<String> getChunks() {
-        if (chunkInputsList == null) {
-            return null;
-        }
-        List<String> texts = new ArrayList<>(chunkInputsList.size());
-        for (ChunkInputs chunk : chunkInputsList) {
-            texts.add(chunk.getText());
-        }
-        return texts;
     }
 
     public void setChunks(List<String> chunks) {
