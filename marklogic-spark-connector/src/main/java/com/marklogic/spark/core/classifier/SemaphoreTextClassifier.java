@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -104,9 +104,11 @@ class SemaphoreTextClassifier implements TextClassifier {
         Element root = doc.createElement("STRUCTUREDDOCUMENT");
         doc.appendChild(root);
         for (ClassifiableContent content : classifiableContents) {
-            Element article = doc.createElement("ARTICLE");
-            article.setTextContent(content.getTextToClassify().trim());
-            root.appendChild(article);
+            if (content.getTextToClassify() != null) {
+                Element article = doc.createElement("ARTICLE");
+                article.setTextContent(content.getTextToClassify().trim());
+                root.appendChild(article);
+            }
         }
         if (SEMAPHORE_LOGGER.isTraceEnabled()) {
             SEMAPHORE_LOGGER.trace("Multi-article request: {}", DOMHelper.prettyPrintNode(doc));

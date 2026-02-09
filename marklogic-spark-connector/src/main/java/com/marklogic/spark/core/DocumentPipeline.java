@@ -49,7 +49,7 @@ public class DocumentPipeline implements Closeable {
     /**
      * Constructor for Nuclia-based pipeline. Nuclia handles extraction, splitting, and embedding generation.
      *
-     * @param nuaClient the Nuclia Understanding API client for processing
+     * @param nuaClient      the Nuclia Understanding API client for processing
      * @param textClassifier optional text classifier (can be null)
      * @since 3.1.0
      */
@@ -136,9 +136,9 @@ public class DocumentPipeline implements Closeable {
             if (input.getContent() != null) {
                 textClassifier.classifyDocument(input);
             }
-            if (input.getChunks() != null) {
-                for (int i = 0; i < input.getChunks().size(); i++) {
-                    contents.add(new ClassifiableChunk(input, i));
+            if (input.getChunkInputsList() != null) {
+                for (ChunkInputs chunkInputs : input.getChunkInputsList()) {
+                    contents.add(new ClassifiableChunk(chunkInputs));
                 }
             }
         }
@@ -149,9 +149,9 @@ public class DocumentPipeline implements Closeable {
     private void addEmbeddings(List<DocumentInputs> inputs) {
         List<Chunk> chunks = new ArrayList<>();
         for (DocumentInputs input : inputs) {
-            if (input.getChunks() != null) {
-                for (int i = 0; i < input.getChunks().size(); i++) {
-                    chunks.add(new EmbeddableChunk(input, i));
+            if (input.getChunkInputsList() != null) {
+                for (ChunkInputs chunkInputs : input.getChunkInputsList()) {
+                    chunks.add(new EmbeddableChunk(chunkInputs));
                 }
             } else if (chunkSelector != null) {
                 DocumentAndChunks documentAndChunks = chunkSelector.selectChunks(input.getInitialUri(), input.getContent());
@@ -166,45 +166,30 @@ public class DocumentPipeline implements Closeable {
         }
     }
 
-    private static class EmbeddableChunk implements Chunk {
-        private final DocumentInputs inputs;
-        private final int chunkIndex;
-
-        public EmbeddableChunk(DocumentInputs inputs, int chunkIndex) {
-            this.inputs = inputs;
-            this.chunkIndex = chunkIndex;
-        }
+    private record EmbeddableChunk(ChunkInputs chunkInputs) implements Chunk {
 
         @Override
         public String getEmbeddingText() {
-            return inputs.getChunks().get(chunkIndex);
+            return chunkInputs.getText();
         }
 
         @Override
         public void addEmbedding(float[] embedding, String modelName) {
-            inputs.addEmbedding(embedding, modelName);
+            chunkInputs.setEmbedding(embedding);
+            chunkInputs.setModelName(modelName);
         }
     }
 
-    private static class ClassifiableChunk implements TextClassifier.ClassifiableContent {
-        private final int chunkListIndex;
-        private final DocumentInputs documentInputs;
-
-        private ClassifiableChunk(DocumentInputs documentInputs, int chunkListIndex) {
-            this.documentInputs = documentInputs;
-            this.chunkListIndex = chunkListIndex;
-        }
+    private record ClassifiableChunk(ChunkInputs chunkInputs) implements TextClassifier.ClassifiableContent {
 
         @Override
         public String getTextToClassify() {
-            return documentInputs.getChunks().get(chunkListIndex);
+            return chunkInputs.getText();
         }
 
         @Override
         public void addClassification(byte[] classification) {
-            // We shouldn't need an index here, as we expect to add classifications in the correct order, based on
-            // classifying chunks in the order defined by the chunks list.
-            documentInputs.addChunkClassification(classification);
+            chunkInputs.setClassification(classification);
         }
     }
 
