@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
@@ -231,6 +232,76 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             .load("path-doesnt-exist"));
 
         assertTrue(ex.getMessage().contains("Path does not exist"), "Unexpected error: " + ex.getMessage());
+    }
+
+    @Test
+    void emptyDoc(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/empty-file.txt")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("/empty-file.txt", rows.get(0).getString(0));
+
+        byte[] content = (byte[]) rows.get(0).get(1);
+        assertEquals(0, content.length, "The empty doc should have been written as an empty zip entry " +
+            "to the archive zip, and it can then be read back as a row with an empty content column.");
+
+        // Make sure the empty doc can be written to MarkLogic as well
+        sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_TEMPLATE, "/empty-file-from-archive.txt")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        String text = getDatabaseClient().newTextDocumentManager().read(
+            "/empty-file-from-archive.txt", new StringHandle()).get();
+        assertNull(text);
+    }
+
+    /**
+     * Same as the above test, verifies that streaming - which uses a different call to v1/documents - works fine for
+     * empty documents.
+     */
+    @Test
+    void emptyDocWithStreaming(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/empty-file.txt")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("/empty-file.txt", rows.get(0).getString(0));
+
+        byte[] content = (byte[]) rows.get(0).get(1);
+        assertEquals(0, content.length, "Verifying that an empty doc can be streamed to a zip.");
     }
 
     private void verifyAllMetadata(Path tempDir, int rowCount) {

@@ -15,7 +15,7 @@ dependencies {
   // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
-  implementation("com.marklogic:marklogic-client-api:8.0.0") {
+  implementation("com.marklogic:marklogic-client-api:8.1-SNAPSHOT") {
     // Need to use the versions of Jackson preferred by Spark.
     exclude group: "com.fasterxml.jackson.core"
     exclude group: "com.fasterxml.jackson.dataformat"
