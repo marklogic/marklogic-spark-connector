@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -8,6 +8,7 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.HandleAccessor;
 import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
@@ -63,7 +64,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private final boolean isStreamingFiles;
     // Only initialized if streaming files.
-    private final GenericDocumentManager documentManager;
+    private final GenericDocumentManager documentManagerForStreaming;
+    private final ServerTransform serverTransformForStreaming;
 
     private final DocumentPipeline documentPipeline;
 
@@ -80,8 +82,17 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
         this.rowConverter = determineRowConverter();
+
         this.isStreamingFiles = writeContext.isStreamingFiles();
-        this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
+        if (this.isStreamingFiles) {
+            this.documentManagerForStreaming = databaseClient.newDocumentManager();
+            Optional<ServerTransform> transform = writeContext.makeRestTransform();
+            this.serverTransformForStreaming = transform.orElse(null);
+        } else {
+            this.documentManagerForStreaming = null;
+            this.serverTransformForStreaming = null;
+        }
+
         this.documentPipeline = DocumentPipelineFactory.newDocumentPipeline(writeContext);
         this.pipelineBatchSize = writeContext.getIntOption(Options.WRITE_PIPELINE_BATCH_SIZE, 1, 1);
 
@@ -335,7 +346,12 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void writeDocumentViaPutOperation(DocumentWriteOperation writeOp) {
         final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
         try {
-            this.documentManager.write(uri, writeOp.getMetadata(), (GenericWriteHandle) writeOp.getContent());
+            GenericWriteHandle content = (GenericWriteHandle) writeOp.getContent();
+            if (this.serverTransformForStreaming != null) {
+                this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content, serverTransformForStreaming);
+            } else {
+                this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content);
+            }
             writeContext.logBatchOnSuccess(1, 0);
             this.successItemCount.incrementAndGet();
         } catch (RuntimeException ex) {

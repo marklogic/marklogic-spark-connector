@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -227,7 +227,7 @@ public class WriteContext extends ContextSupport {
         ));
     }
 
-    private Optional<ServerTransform> makeRestTransform() {
+    Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
         if (transformName != null && !transformName.trim().isEmpty()) {
             ServerTransform transform = new ServerTransform(transformName);
