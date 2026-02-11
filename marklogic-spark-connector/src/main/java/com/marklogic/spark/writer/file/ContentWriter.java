@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -185,8 +185,21 @@ class ContentWriter implements Closeable {
 
     private void streamDocumentToFile(InternalRow row, OutputStream outputStream) throws IOException {
         String uri = row.getString(0);
-        InputStream inputStream = documentManager.read(uri, new InputStreamHandle()).get();
-        // commons-io is a dependency of Spark and a common utility for copying between two steams.
-        IOUtils.copy(inputStream, outputStream);
+        InputStreamHandle contentHandle = this.documentManager.read(uri, new InputStreamHandle());
+        InputStream inputStream = null;
+        // Not using try-with-resources in case the inputStream is null.
+        try {
+            inputStream = contentHandle.get();
+            // null check is being added based on a user report of an NPE here for an empty document. This has not been
+            // reproduced yet, as empty documents were instead causing failures due to MLE-27077, which is an issue in the
+            // server that the Java Client patches in 8.1.0. But this null check is safe in case the InputStreamHandle
+            // somehow does return null for an empty document.
+            if (inputStream != null) {
+                // commons-io is a dependency of Spark and a common utility for copying between two streams.
+                IOUtils.copy(inputStream, outputStream);
+            }
+        } finally {
+            IOUtils.closeQuietly(inputStream);
+        }
     }
 }

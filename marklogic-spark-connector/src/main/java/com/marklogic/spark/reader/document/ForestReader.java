@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -143,9 +143,16 @@ class ForestReader implements PartitionReader<InternalRow> {
         DocumentRecord document = this.currentDocumentPage.next();
         DocumentRowBuilder builder = new DocumentRowBuilder(requestedMetadata).withUri(document.getUri());
         if (this.contentWasRequested) {
-            BytesHandle content = document.getContent(new BytesHandle());
-            Objects.requireNonNull(content);
-            builder.withContent(content.get());
+            try {
+                BytesHandle content = document.getContent(new BytesHandle());
+                if (content != null) {
+                    builder.withContent(content.get());
+                }
+            } catch (IllegalStateException e) {
+                Util.MAIN_LOGGER.debug("Document {} has no content; cause: {}", document.getUri(), e.getMessage());
+                // This will occur for an empty document, but the Spark row must have a non-null value.
+                builder.withContent(new byte[0]);
+            }
             builder.withFormat(document.getFormat() != null ? document.getFormat().toString() : Format.UNKNOWN.toString());
         }
         if (!requestedMetadata.isEmpty()) {
