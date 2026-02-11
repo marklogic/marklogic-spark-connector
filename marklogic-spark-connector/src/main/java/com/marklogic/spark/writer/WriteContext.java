@@ -260,7 +260,7 @@ public class WriteContext extends ContextSupport {
         ));
     }
 
-    private Optional<ServerTransform> makeRestTransform() {
+    Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
         if (transformName != null && !transformName.trim().isEmpty()) {
             ServerTransform transform = new ServerTransform(transformName);

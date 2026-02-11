@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.document;
 
@@ -169,6 +169,56 @@ class WriteDocumentRowsToMarkLogicTest extends AbstractIntegrationTest {
             assertEquals(1, tester.getDocumentPermissions().get("spark-user-role").size());
             assertEquals(1, tester.getDocumentPermissions().get("qconsole-user").size());
         });
+    }
+
+    /**
+     * MLE-14201 affects a POST and not a PUT, in that the content is always a binary with a POST.
+     */
+    @Test
+    void writeXmlAsBinaryViaTransform() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .load("src/test/resources/aggregates/employees.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_REPLACE, ".*employees.xml,'/a-binary-test.xml'")
+            .option(Options.WRITE_TRANSFORM_NAME, "toBinary")
+            .option(Options.WRITE_COLLECTIONS, "binary-test")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        Row row = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/a-binary-test.xml")
+            .load()
+            .collectAsList().get(0);
+
+        assertEquals("/a-binary-test.xml", row.getString(0));
+        assertEquals("BINARY", row.getString(2));
+    }
+
+    @Test
+    void writeXmlAsBinaryViaTransformWhileStreaming() {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .load("src/test/resources/aggregates/employees.xml")
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_REPLACE, ".*employees.xml,'/a-binary-test.xml'")
+            .option(Options.WRITE_TRANSFORM_NAME, "toBinary")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        Row row = newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/a-binary-test.xml")
+            .load()
+            .collectAsList().get(0);
+
+        assertEquals("/a-binary-test.xml", row.getString(0));
+        assertEquals("BINARY", row.getString(2));
     }
 
     private Dataset<Row> readTheTwoTestDocuments() {
