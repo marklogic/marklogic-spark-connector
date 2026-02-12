@@ -191,6 +191,7 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
+
     public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
     public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
 
@@ -404,6 +405,17 @@ public abstract class Options {
      * @since 2.4.0
      */
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
+
+    /**
+     * Comma-delimited list of file extensions (without dots) that should trigger transform application
+     * during streaming import when the document format is BINARY. Only used during streaming imports, and only
+     * relevant when importing an archive where the metadata entry name captures the expected document format.
+     * When set, transforms will ONLY be applied to documents with format=BINARY and a URI extension
+     * matching one of the configured extensions (e.g., "json,xml,txt").
+     *
+     * @since 3.1.0
+     */
+    public static final String STREAM_TRANSFORM_BINARY_EXTENSIONS = "spark.marklogic.streamTransformBinaryExtensions";
 
     /**
      * Prefix for registering XML namespace prefixes and URIs that can be reused in any connector

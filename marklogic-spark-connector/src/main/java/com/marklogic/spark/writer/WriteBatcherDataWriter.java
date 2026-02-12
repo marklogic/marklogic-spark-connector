@@ -10,7 +10,9 @@ import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.BaseHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.client.io.marker.GenericWriteHandle;
 import com.marklogic.spark.ConnectorException;
@@ -347,17 +349,32 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
         try {
             GenericWriteHandle content = (GenericWriteHandle) writeOp.getContent();
-            if (this.serverTransformForStreaming != null) {
+
+            if (applyTransformWhenStreaming(uri, content)) {
+                Util.MAIN_LOGGER.debug("Applying transform {} to document with URI {} during streaming write",
+                    serverTransformForStreaming.getName(), uri);
                 this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content, serverTransformForStreaming);
             } else {
                 this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content);
             }
+
             writeContext.logBatchOnSuccess(1, 0);
             this.successItemCount.incrementAndGet();
         } catch (RuntimeException ex) {
             captureFailure(ex.getMessage(), uri);
             this.writeFailure.compareAndSet(null, ex);
         }
+    }
+
+    private boolean applyTransformWhenStreaming(String uri, GenericWriteHandle content) {
+        if (this.serverTransformForStreaming == null) {
+            return false;
+        }
+        Format format = null;
+        if (content instanceof BaseHandle<?, ?> baseHandle) {
+            format = baseHandle.getFormat();
+        }
+        return writeContext.shouldApplyStreamingTransform(uri, format);
     }
 
     /**
