@@ -32,11 +32,16 @@ public class WriteContext extends ContextSupport {
     private final boolean usingFileSchema;
     private final int batchSize;
 
+    // When streaming to MarkLogic with a transform, the optional list of extensions to require in order for the
+    // transform to be applied if the document has format of "binary".
+    private final Set<String> streamTransformBinaryExtensions;
+
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
 
     // This unfortunately is not final as we don't know it when this object is created.
     private int numPartitions;
+
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
@@ -53,6 +58,8 @@ public class WriteContext extends ContextSupport {
             this.fileSchemaPathPosition = names.indexOf("path");
             this.fileSchemaContentPosition = names.indexOf("content");
         }
+
+        this.streamTransformBinaryExtensions = parseStreamTransformBinaryExtensions();
     }
 
     public StructType getSchema() {
@@ -322,5 +329,61 @@ public class WriteContext extends ContextSupport {
 
     public void setNumPartitions(int numPartitions) {
         this.numPartitions = numPartitions;
+    }
+
+    /**
+     * Parses the option into a set of lowercase extensions without dots.
+     *
+     * @return a set of extensions, or null if the option is not configured
+     */
+    private Set<String> parseStreamTransformBinaryExtensions() {
+        if (!hasOption(Options.STREAM_TRANSFORM_BINARY_EXTENSIONS)) {
+            return null;
+        }
+        String extensions = getStringOption(Options.STREAM_TRANSFORM_BINARY_EXTENSIONS);
+        Set<String> result = new HashSet<>();
+        for (String ext : extensions.split(",")) {
+            String trimmed = ext.trim().toLowerCase(Locale.ROOT);
+            if (trimmed.startsWith(".")) {
+                trimmed = trimmed.substring(1);
+            }
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    /**
+     * Determines if a streaming transform should be applied based on document format and URI extension.
+     * Transform is applied if STREAM_TRANSFORM_BINARY_EXTENSIONS is not configured, OR if it is configured
+     * and the document has format=BINARY and a URI extension matching one of the configured extensions.
+     *
+     * @param uri    the document URI
+     * @param format the document format (e.g., Format.BINARY, Format.JSON, Format.XML)
+     * @return true if the transform should be applied, false otherwise
+     */
+    boolean shouldApplyStreamingTransform(String uri, Format format) {
+        // If no extensions configured, always apply transform (backward compatible behavior). It is a little odd to use
+        // a transform during streaming as that forces every document to be loaded into memory in MarkLogic, but the
+        // user must have a reason for configuring a transform.
+        if (streamTransformBinaryExtensions == null) {
+            return true;
+        }
+
+        // If extensions are configured, only apply transform if format is BINARY and URI matches. This supports the
+        // use case of writing e.g. JSON/XML documents from a Flux archive as binaries via a transform while streaming.
+        if (format != Format.BINARY) {
+            return false;
+        }
+
+        // Extract extension from URI
+        int lastDot = uri.lastIndexOf('.');
+        if (lastDot == -1 || lastDot == uri.length() - 1) {
+            return false;
+        }
+
+        String extension = uri.substring(lastDot + 1).toLowerCase(Locale.ROOT);
+        return streamTransformBinaryExtensions.contains(extension);
     }
 }
