@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.document;
 
@@ -31,7 +31,7 @@ class DocumentRow {
     }
 
     String getFormat() {
-        return row.isNullAt(2) ? null : row.getString(2);
+        return DocumentRowSchema.getFormat(row);
     }
 
     DocumentMetadataHandle getMetadata() {
