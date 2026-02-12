@@ -149,7 +149,7 @@ class ContentWriter implements Closeable {
     private void prettyPrintContent(InternalRow row, OutputStream outputStream) throws IOException {
         final byte[] content = row.getBinary(1);
         Objects.requireNonNull(content);
-        final String format = row.isNullAt(2) ? null : row.getString(2);
+        final String format = DocumentRowSchema.getFormat(row);
         if ("JSON".equalsIgnoreCase(format)) {
             prettyPrintJson(content, outputStream);
         } else if ("XML".equalsIgnoreCase(format)) {

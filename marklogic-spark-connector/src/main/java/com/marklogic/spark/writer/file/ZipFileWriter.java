@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -7,6 +7,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -112,15 +113,30 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName) throws IOException {
+        final String metadataEntryName = buildMetadataEntryName(row, entryName);
         if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
-            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadataWhileStreaming(uri, zipOutputStream);
             zipEntryCounter++;
         } else if (hasMetadata(row)) {
-            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
         }
+    }
+
+    /**
+     * Builds a metadata entry name encoding the document format.
+     * This allows import logic to detect the format during import.
+     *
+     * @param row       the document row containing format information
+     * @param entryName the document URI/entry name
+     * @return the metadata entry name (e.g., "/doc.xml.BINARY.metadata")
+     */
+    private String buildMetadataEntryName(InternalRow row, String entryName) {
+        String format = DocumentRowSchema.getFormat(row);
+        MetadataEntryName metadataEntryName = new MetadataEntryName(entryName, format);
+        return metadataEntryName.makeMetadataEntryName();
     }
 
     private boolean hasMetadata(InternalRow row) {
