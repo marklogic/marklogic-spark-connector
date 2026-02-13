@@ -173,11 +173,14 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
         metadata.fromBuffer(metadataBytes);
 
-        MetadataEntryName metadataEntryName = MetadataEntryName.parse(metadataZipEntryName);
-
         // We still do this to get the stream ready to read the next entry.
         ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
         Objects.requireNonNull(contentZipEntry);
+
+        // Parse the metadata entry name with the actual document entry name to validate our parsing.
+        // This helps distinguish pre-3.1.0 archives from 3.1.0+ archives.
+        MetadataEntryName metadataEntryName = MetadataEntryName.parse(metadataZipEntryName, contentZipEntry.getName());
+
         DocumentRowBuilder rowBuilder = new DocumentRowBuilder(this.metadataCategories)
             .withUri(contentZipEntry.getName())
             .withFormat(metadataEntryName.format())
