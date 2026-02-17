@@ -6,6 +6,7 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.datamovement.filter.FilterException;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -74,6 +76,10 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
+
+    // Used to ensure that if a FilterException is encountered, the error message is logged only once per
+    // writer instance, as it's very likely the same exception will occur for every batch.
+    private final AtomicBoolean hasLoggedFilterError = new AtomicBoolean(false);
 
     private final List<DocumentInputs> documentInputsBatch = new ArrayList<>();
     private final int pipelineBatchSize;
@@ -237,7 +243,18 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 this.writeFailure.compareAndSet(null, failure);
             });
         } else {
-            writeBatcher.onBatchFailure(this.batchRetrier::retryBatch);
+            writeBatcher.onBatchFailure((batch, failure) -> {
+                if (failure instanceof FilterException) {
+                    // Log the error only once per writer to avoid flooding the logs with identical messages.
+                    // This is likely a configuration issue (e.g., missing index) that affects all batches.
+                    if (hasLoggedFilterError.compareAndSet(false, true)) {
+                        Util.MAIN_LOGGER.error("Could not write documents due to filter error: {}", failure.getMessage());
+                    }
+                    failedItemCount.getAndAdd(batch.getItems().length);
+                } else {
+                    this.batchRetrier.retryBatch(batch, failure);
+                }
+            });
         }
     }
 
