@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.writer.file;
 
+import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
@@ -75,9 +76,17 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // As of 2.7.0, not doing any special handling for an "opaque" URI which appears to be fine as a zip entry name.
         final String entryName = uri;
 
-        writeMetadataEntryIfNecessary(row, uri, entryName);
+        String format = null;
+        InputStreamHandle streamingContentHandle = null;
+        if (contentWriter.isStreamingFiles()) {
+            // When streaming, we need to open the content handle before writing the metadata entry so that the
+            // document format can be obtained and used in the metadata entry name.
+            streamingContentHandle = contentWriter.readContent(uri);
+            format = streamingContentHandle.getFormat() != null ? streamingContentHandle.getFormat().toString() : null;
+        }
+        writeMetadataEntryIfNecessary(row, uri, entryName, format);
         zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        this.contentWriter.writeContent(row, zipOutputStream);
+        this.contentWriter.writeContent(row, zipOutputStream, streamingContentHandle);
         zipEntryCounter++;
         logThresholdWarningIfNecessary();
     }
@@ -112,13 +121,17 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         }
     }
 
-    private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName) throws IOException {
-        final String metadataEntryName = buildMetadataEntryName(row, entryName);
+    private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName, String format) throws IOException {
+        if (format == null) {
+            format = DocumentRowSchema.getFormat(row);
+        }
         if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
+            final String metadataEntryName = buildMetadataEntryName(entryName, format);
             zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadataWhileStreaming(uri, zipOutputStream);
             zipEntryCounter++;
         } else if (hasMetadata(row)) {
+            final String metadataEntryName = buildMetadataEntryName(entryName, format);
             zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
@@ -129,12 +142,11 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
      * Builds a metadata entry name encoding the document format.
      * This allows import logic to detect the format during import.
      *
-     * @param row       the document row containing format information
      * @param entryName the document URI/entry name
+     * @param format    the document format, which can be null
      * @return the metadata entry name (e.g., "/doc.xml.BINARY.metadata")
      */
-    private String buildMetadataEntryName(InternalRow row, String entryName) {
-        String format = DocumentRowSchema.getFormat(row);
+    private String buildMetadataEntryName(String entryName, String format) {
         MetadataEntryName metadataEntryName = new MetadataEntryName(entryName, format);
         return metadataEntryName.makeMetadataEntryName();
     }
