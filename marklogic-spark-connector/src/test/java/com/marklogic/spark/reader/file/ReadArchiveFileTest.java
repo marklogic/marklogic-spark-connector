@@ -50,6 +50,31 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         verifyAllMetadata(tempDir, 2);
     }
 
+    /**
+     * Verifies that the metadata entry names contain the document format when streaming. That requires special
+     * handling where the content handle is opened before writing the metadata entry so that the document format can
+     * be obtained from the content handle. The content is still streamed.
+     */
+    @Test
+    void allMetadataWithStreaming(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "collection1")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .option(Options.STREAM_FILES, true)
+            .load()
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        verifyAllMetadata(tempDir, 2);
+    }
+
     @Test
     void testCollectionsAndPermissions(@TempDir Path tempDir) {
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
