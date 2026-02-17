@@ -7,8 +7,10 @@ import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import nl.altindag.log.LogCaptor;
+import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,6 +84,43 @@ class IncrementalWriteTest extends AbstractWriteTest {
             .save();
 
         verifyDefaultMetadataKeys();
+    }
+
+    @Test
+    void filterErrorShouldNotBeRetried() {
+        AtomicInteger successCount = new AtomicInteger();
+        AtomicInteger failureCount = new AtomicInteger();
+        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
+        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+
+        try {
+            newSparkSession().read()
+                .parquet("src/test/resources/cars.parquet")
+                .write()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_INCREMENTAL_HASH_KEY_NAME, "invalid-key-name-should-cause-error")
+                // Ensure we get many batches so that we can verify that all rows fail and not a single batch succeeds.
+                .option(Options.WRITE_BATCH_SIZE, 2)
+                .option(Options.CLIENT_URI, makeClientUri())
+                .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+                .option(Options.WRITE_COLLECTIONS, "parquet-test")
+                // Setting this to false normally causes the BatchRetrier to kick in and retry failed batches,
+                // but it shouldn't due to the filter error being non-retryable.
+                .option(Options.WRITE_ABORT_ON_FAILURE, false)
+                .mode(SaveMode.Append)
+                .save();
+
+            assertEquals(0, successCount.get());
+            assertEquals(32, failureCount.get(), "All rows in the test file should have failed.");
+            assertCollectionSize(
+                "No data should have been written due to the filter error",
+                "parquet-test", 0
+            );
+        } finally {
+            MarkLogicWrite.setFailureCountConsumer(null);
+            MarkLogicWrite.setSuccessCountConsumer(null);
+        }
     }
 
     private void verifyMessageWasLogged(LogCaptor logCaptor, String message) {
