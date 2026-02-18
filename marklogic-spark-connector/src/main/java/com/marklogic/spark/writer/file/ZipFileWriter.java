@@ -3,6 +3,9 @@
  */
 package com.marklogic.spark.writer.file;
 
+import com.marklogic.client.document.DocumentPage;
+import com.marklogic.client.document.DocumentRecord;
+import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
@@ -42,6 +45,7 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     // These can be instantiated lazily depending on which constructor is used.
     private ContentWriter contentWriter;
+    private GenericDocumentManager documentManagerThatWillOnlyRetrieveContent;
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
@@ -76,18 +80,35 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // As of 2.7.0, not doing any special handling for an "opaque" URI which appears to be fine as a zip entry name.
         final String entryName = uri;
 
-        String format = null;
-        InputStreamHandle streamingContentHandle = null;
         if (contentWriter.isStreamingFiles()) {
             // When streaming, we need to open the content handle before writing the metadata entry so that the
-            // document format can be obtained and used in the metadata entry name.
-            streamingContentHandle = contentWriter.readContent(uri);
-            format = streamingContentHandle.getFormat() != null ? streamingContentHandle.getFormat().toString() : null;
+            // document format can be obtained and used in the metadata entry name. And we need to use a
+            // DocumentManager that hasn't had its metadata categories modified - we only want the content returned.
+            // This, along with a multipart request, helps us steer clear of server bug MLE-27191.
+            // Note that we don't retain a server transform if the user configured one, as using a server transform
+            // while exporting defeats the purpose of streaming files to reduce memory usage.
+            if (documentManagerThatWillOnlyRetrieveContent == null) {
+                documentManagerThatWillOnlyRetrieveContent = contentWriter.getDatabaseClient().newDocumentManager();
+            }
+            try (DocumentPage page = documentManagerThatWillOnlyRetrieveContent.read(uri)) {
+                if (page.hasNext()) {
+                    DocumentRecord record = page.next();
+                    String format = record.getFormat() != null ? record.getFormat().toString() : null;
+                    // The ContentWriter will access the InputStream and will handle closing it.
+                    InputStreamHandle contentHandle = record.getContent(new InputStreamHandle());
+
+                    writeMetadataEntryIfNecessary(row, uri, entryName, format);
+                    zipOutputStream.putNextEntry(new ZipEntry(entryName));
+                    this.contentWriter.writeContent(row, zipOutputStream, contentHandle);
+                    zipEntryCounter++;
+                }
+            }
+        } else {
+            writeMetadataEntryIfNecessary(row, uri, entryName, null);
+            zipOutputStream.putNextEntry(new ZipEntry(entryName));
+            this.contentWriter.writeContent(row, zipOutputStream, null);
+            zipEntryCounter++;
         }
-        writeMetadataEntryIfNecessary(row, uri, entryName, format);
-        zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        this.contentWriter.writeContent(row, zipOutputStream, streamingContentHandle);
-        zipEntryCounter++;
         logThresholdWarningIfNecessary();
     }
 

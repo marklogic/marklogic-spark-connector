@@ -29,8 +29,8 @@ class StreamArchiveWithBinaryExtensionsTest extends AbstractIntegrationTest {
     @BeforeEach
     void setupThreeDocumentsToExportToArchive() {
         // Doc 1: Use existing JSON document (/author/author1.json) - already in database
-        // Doc 3: Use existing binary document (/binary/hello-world.docx) - already in database
         // Doc 2: Create a JSON document as BINARY using the toBinary transform
+        // Doc 3: Use existing binary document (/binary/hello-world.docx) - already in database
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
             .load("src/test/resources/mixed-files/hello.json")
             .write().format(CONNECTOR_IDENTIFIER)
@@ -48,7 +48,7 @@ class StreamArchiveWithBinaryExtensionsTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void importArchiveWithoutBinaryExtensionsOption(@TempDir Path tempDir) {
+    void withoutBinaryExtensionsOption(@TempDir Path tempDir) {
         exportTheThreeDocumentsToAnArchive(tempDir);
 
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
@@ -72,9 +72,54 @@ class StreamArchiveWithBinaryExtensionsTest extends AbstractIntegrationTest {
     }
 
     @Test
-    void importArchiveWithBinaryExtensionsOption(@TempDir Path tempDir) {
+    void withBinaryExtensionsOption(@TempDir Path tempDir) {
         exportTheThreeDocumentsToAnArchive(tempDir);
 
+        importArchiveWithBinaryExtensionsOption(tempDir);
+
+        verifyBinaryJsonHasBinaryFormat();
+    }
+
+    @Test
+    void withBinaryExtensionsOptionAndExportArchiveViaStreaming(@TempDir Path tempDir) {
+        exportTheThreeDocumentsByStreamingToAnArchive(tempDir);
+
+        importArchiveWithBinaryExtensionsOption(tempDir);
+
+        verifyBinaryJsonHasBinaryFormat();
+    }
+
+    private void exportTheThreeDocumentsToAnArchive(Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, NORMAL_JSON_URI + "\n" + BINARY_JSON_URI + "\n" + BINARY_DOC_URI)
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+    }
+
+    private void exportTheThreeDocumentsByStreamingToAnArchive(Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, NORMAL_JSON_URI + "\n" + BINARY_JSON_URI + "\n" + BINARY_DOC_URI)
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.STREAM_FILES, true)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+    }
+
+    private void importArchiveWithBinaryExtensionsOption(Path tempDir) {
         // Import archive with STREAM_TRANSFORM_BINARY_EXTENSIONS=json
         // Transform should ONLY be applied to documents with format=BINARY and URI ending in .json
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
@@ -91,27 +136,19 @@ class StreamArchiveWithBinaryExtensionsTest extends AbstractIntegrationTest {
             .option(Options.WRITE_COLLECTIONS, "binary-test")
             .mode(SaveMode.Append)
             .save();
-
-        // With the option, transform should only be applied to doc 2 (format=BINARY + .json extension)
-        assertEquals("JSON", readDocumentFormat("/binary-test" + NORMAL_JSON_URI),
-            "Doc 1 (normal JSON with format=JSON) should remain JSON - transform not applied");
-        assertEquals("BINARY", readDocumentFormat("/binary-test" + BINARY_JSON_URI),
-            "Doc 2 (format=BINARY with .json extension) should be BINARY - transform was applied");
-        assertEquals("BINARY", readDocumentFormat("/binary-test" + BINARY_DOC_URI),
-            "Doc 3 (actual binary without .json extension) should remain BINARY - transform not applied");
     }
 
-    private void exportTheThreeDocumentsToAnArchive(Path tempDir) {
-        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
-            .option(Options.CLIENT_URI, makeClientUri())
-            .option(Options.READ_DOCUMENTS_URIS, NORMAL_JSON_URI + "\n" + BINARY_JSON_URI + "\n" + BINARY_DOC_URI)
-            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
-            .load()
-            .repartition(1)
-            .write().format(CONNECTOR_IDENTIFIER)
-            .option(Options.WRITE_FILES_COMPRESSION, "zip")
-            .mode(SaveMode.Append)
-            .save(tempDir.toFile().getAbsolutePath());
+    private void verifyBinaryJsonHasBinaryFormat() {
+        // With the binary extension option, transform should only be applied to doc 2 (format=BINARY + .json extension).
+        // And that binary JSON should have a binary format.
+        assertEquals("JSON", readDocumentFormat("/binary-test" + NORMAL_JSON_URI),
+            "Doc 1 (normal JSON with format=JSON) should remain JSON - transform not applied");
+
+        assertEquals("BINARY", readDocumentFormat("/binary-test" + BINARY_JSON_URI),
+            "Doc 2 (format=BINARY with .json extension) should be BINARY - transform was applied");
+
+        assertEquals("BINARY", readDocumentFormat("/binary-test" + BINARY_DOC_URI),
+            "Doc 3 (actual binary without .json extension) should remain BINARY - transform not applied");
     }
 
     private String readDocumentFormat(String uri) {

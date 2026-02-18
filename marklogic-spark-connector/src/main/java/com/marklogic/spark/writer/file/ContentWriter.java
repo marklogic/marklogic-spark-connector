@@ -195,7 +195,7 @@ class ContentWriter implements Closeable {
         if (contentHandle == null) {
             // For an archive, the content handle will have already been opened so that the document format can be
             // obtained. For a regular zip file, the content handle won't have been opened yet.
-            contentHandle = readContent(uri);
+            contentHandle = documentManager.read(uri, new InputStreamHandle());
         }
         InputStream inputStream = null;
         // Not using try-with-resources in case the inputStream is null.
@@ -214,11 +214,11 @@ class ContentWriter implements Closeable {
         }
     }
 
-    public InputStreamHandle readContent(String uri) {
-        return documentManager.read(uri, new InputStreamHandle());
+    DatabaseClient getDatabaseClient() {
+        return databaseClient;
     }
 
-    public boolean isStreamingFiles() {
+    boolean isStreamingFiles() {
         return isStreamingFiles;
     }
 }
