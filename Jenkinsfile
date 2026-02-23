@@ -9,7 +9,6 @@ def runtests(){
     export PATH=$JAVA_HOME/bin:$PATH
     cd marklogic-spark-connector
     ./gradlew -i mlWaitTillReady
-    sleep 3
     ./gradlew -i mlWaitTillReady
     ./gradlew mlTestConnections
     ./gradlew -i mlDeploy
