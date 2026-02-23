@@ -33,15 +33,13 @@
   ],
   "range-field-index": [
     {
-      "scalar-type": "string",
-      "collation": "http://marklogic.com/collation/",
+      "scalar-type": "unsignedLong",
       "field-name": "incrementalWriteHash",
       "range-value-positions": false,
       "invalid-values": "reject"
     },
     {
-      "scalar-type": "string",
-      "collation": "http://marklogic.com/collation/",
+      "scalar-type": "unsignedLong",
       "field-name": "customWriteHash",
       "range-value-positions": false,
       "invalid-values": "reject"
