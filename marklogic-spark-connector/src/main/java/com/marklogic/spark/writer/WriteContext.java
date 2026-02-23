@@ -127,7 +127,6 @@ public class WriteContext extends ContextSupport {
 
     protected final IncrementalWriteFilter buildIncrementalWriteFilter() {
         IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
-            .useEvalQuery("eval".equalsIgnoreCase(getStringOption(Options.WRITE_INCREMENTAL_QUERY_TYPE)))
             .fromView(
                 getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
                 getStringOption(Options.WRITE_INCREMENTAL_VIEW)

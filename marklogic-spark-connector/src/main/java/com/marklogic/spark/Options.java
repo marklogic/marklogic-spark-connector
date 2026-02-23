@@ -589,32 +589,31 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
 
     /**
+     * Enables the incremental write feature, defaulting to an Optic query that uses fromLexicons and depends on a
+     * field range index.
+     *
      * @since 3.1.0
      */
     public static final String WRITE_INCREMENTAL = "spark.marklogic.write.incremental";
 
     /**
-     * Whether to use an Optic query or an eval call to identify documents that have changed since the last write.
-     * Defaults to null, meaning an Optic query is used.
+     * Alters the incremental write feature to use fromView with the given schema name.
      *
-     * @since 3.1.0
-     */
-    public static final String WRITE_INCREMENTAL_QUERY_TYPE = WRITE_INCREMENTAL + ".queryType";
-
-    /**
      * @since 3.1.0
      */
     public static final String WRITE_INCREMENTAL_SCHEMA = WRITE_INCREMENTAL + ".schema";
 
     /**
+     * Alters the incremental write feature to use fromView with the given view name.
+     *
      * @since 3.1.0
      */
     public static final String WRITE_INCREMENTAL_VIEW = WRITE_INCREMENTAL + ".view";
 
-
     /**
      * Name of the MarkLogic metadata key that holds the hash value for identifying changed documents.
-     * Defaults to "incrementalWriteHash".
+     * Defaults to "incrementalWriteHash". When specifying a schema and view for incremental write, this also specifies
+     * the name of the view column that holds the hash value.
      *
      * @since 3.1.0
      */
