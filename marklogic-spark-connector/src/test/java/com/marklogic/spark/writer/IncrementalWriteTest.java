@@ -35,7 +35,10 @@ class IncrementalWriteTest extends AbstractWriteTest {
             });
         }
 
-        verifyDefaultMetadataKeys();
+        DocumentMetadataHandle metadata = getDatabaseClient().newDocumentManager().readMetadata("/test/1.json", new DocumentMetadataHandle());
+        assertNotNull(metadata.getMetadataValues().get("incrementalWriteHash"));
+        assertFalse(metadata.getMetadataValues().containsKey("incrementalWriteTimestamp"));
+        assertEquals(1, metadata.getMetadataValues().size());
 
         // Write the same documents again and verify documents are skipped instead of written.
         try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
@@ -83,7 +86,11 @@ class IncrementalWriteTest extends AbstractWriteTest {
             .option(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME, null)
             .save();
 
-        verifyDefaultMetadataKeys();
+        DocumentMetadataHandle metadata = getDatabaseClient().newDocumentManager().readMetadata("/test/1.json", new DocumentMetadataHandle());
+        // These are the defaults as defined by the Java Client.
+        assertNotNull(metadata.getMetadataValues().get("incrementalWriteHash"));
+        assertFalse(metadata.getMetadataValues().containsKey("incrementalWriteTimestamp"));
+        assertEquals(1, metadata.getMetadataValues().size());
     }
 
     @Test
@@ -135,12 +142,5 @@ class IncrementalWriteTest extends AbstractWriteTest {
             logCaptor.getInfoLogs().stream().anyMatch(log -> log.contains(message)),
             "Found unexpected log message containing: " + message + "; log messages: " + logCaptor.getInfoLogs()
         );
-    }
-
-    private void verifyDefaultMetadataKeys() {
-        DocumentMetadataHandle metadata = getDatabaseClient().newDocumentManager().readMetadata("/test/1.json", new DocumentMetadataHandle());
-        // These are the default names as defined by the Java Client.
-        assertNotNull(metadata.getMetadataValues().get("incrementalWriteHash"));
-        assertNotNull(metadata.getMetadataValues().get("incrementalWriteTimestamp"));
     }
 }

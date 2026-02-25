@@ -620,8 +620,8 @@ public abstract class Options {
     public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = WRITE_INCREMENTAL + ".hashKeyName";
 
     /**
-     * Name of the MarkLogic metadata key that holds the timestamp value for identifying changed documents.
-     * Defaults to "incrementalWriteTimestamp".
+     * Name of the optional MarkLogic metadata key that holds the timestamp value for identifying changed documents.
+     * No default value.
      *
      * @since 3.1.0
      */
