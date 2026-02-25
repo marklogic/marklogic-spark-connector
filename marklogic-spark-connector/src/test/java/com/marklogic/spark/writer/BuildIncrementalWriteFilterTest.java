@@ -37,7 +37,7 @@ class BuildIncrementalWriteFilterTest {
 
         IncrementalWriteConfig config = filter.getConfig();
         assertEquals("incrementalWriteHash", config.getHashKeyName());
-        assertEquals("incrementalWriteTimestamp", config.getTimestampKeyName());
+        assertNull(config.getTimestampKeyName());
         assertNotNull(config.getSkippedDocumentsConsumer(), "By default, the connector should configure a " +
             "consumer that can keep track of the count of skipped documents so that can be logged later.");
         assertTrue(config.isCanonicalizeJson());
