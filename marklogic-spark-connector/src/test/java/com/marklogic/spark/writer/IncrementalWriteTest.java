@@ -32,7 +32,11 @@ class IncrementalWriteTest extends AbstractWriteTest {
             Stream.of(50, 100, 150, 200).forEach(count -> {
                 String message = "Documents written: " + count;
                 verifyMessageWasLogged(logCaptor, message);
+                verifyNoMessageContains(logCaptor, "Documents skipped");
             });
+
+            verifyMessageWasLogged(logCaptor, "Success count: 200");
+            verifyNoMessageContains(logCaptor, "Skipped count");
         }
 
         DocumentMetadataHandle metadata = getDatabaseClient().newDocumentManager().readMetadata("/test/1.json", new DocumentMetadataHandle());
@@ -57,6 +61,8 @@ class IncrementalWriteTest extends AbstractWriteTest {
             });
 
             verifyNoMessageContains(logCaptor, "Documents written");
+            verifyMessageWasLogged(logCaptor, "Success count: 0");
+            verifyMessageWasLogged(logCaptor, "Skipped count: 200");
         }
     }
 

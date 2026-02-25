@@ -22,6 +22,7 @@ import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -112,11 +113,6 @@ public class WriteContext extends ContextSupport {
             .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
             .onBatchSuccess(this::logBatchOnSuccess);
 
-        if (getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
-            IncrementalWriteFilter filter = buildIncrementalWriteFilter();
-            writeBatcher.withDocumentWriteSetFilter(filter);
-        }
-
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
@@ -125,7 +121,7 @@ public class WriteContext extends ContextSupport {
         return writeBatcher;
     }
 
-    protected final IncrementalWriteFilter buildIncrementalWriteFilter() {
+    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {
         IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
             .fromView(
                 getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
@@ -134,7 +130,10 @@ public class WriteContext extends ContextSupport {
             .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
             .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
             .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
-            .onDocumentsSkipped(skippedDocs -> WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length))
+            .onDocumentsSkipped(skippedDocs -> {
+                WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
+                skippedCountConsumer.accept(skippedDocs.length);
+            })
             .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
 
         if (hasOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS)) {
