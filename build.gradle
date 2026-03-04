@@ -19,12 +19,12 @@ subprojects {
 
   group = "com.marklogic"
 
-  // Defaults to the Java 11 toolchain. Overridden by subprojects that require Java 17.
-  // See https://docs.gradle.org/current/userguide/toolchains.html .
   java {
     toolchain {
       languageVersion = JavaLanguageVersion.of(17)
     }
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
 
   // Allows for quickly identifying compiler warnings.
