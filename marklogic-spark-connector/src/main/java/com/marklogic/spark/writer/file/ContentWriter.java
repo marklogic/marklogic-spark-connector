@@ -73,15 +73,13 @@ class ContentWriter implements Closeable {
     }
 
     /**
-     * @param row                    the row representing a document read from MarkLogic
-     * @param outputStream           the stream to write the document content to
-     * @param streamingContentHandle when streaming, the content handle that was opened already so that the document
-     *                               format could be obtained and used to build the metadata entry name; can be null.
+     * @param row          the row representing a document read from MarkLogic
+     * @param outputStream the stream to write the document content to
      * @throws IOException
      */
-    void writeContent(InternalRow row, OutputStream outputStream, InputStreamHandle streamingContentHandle) throws IOException {
+    void writeContent(InternalRow row, OutputStream outputStream) throws IOException {
         if (this.isStreamingFiles) {
-            streamDocumentToFile(row, outputStream, streamingContentHandle);
+            streamDocumentToFile(row, outputStream);
         } else if (this.prettyPrint) {
             prettyPrintContent(row, outputStream);
         } else {
@@ -190,13 +188,9 @@ class ContentWriter implements Closeable {
         }
     }
 
-    private void streamDocumentToFile(InternalRow row, OutputStream outputStream, InputStreamHandle contentHandle) throws IOException {
+    private void streamDocumentToFile(InternalRow row, OutputStream outputStream) throws IOException {
         String uri = row.getString(0);
-        if (contentHandle == null) {
-            // For an archive, the content handle will have already been opened so that the document format can be
-            // obtained. For a regular zip file, the content handle won't have been opened yet.
-            contentHandle = documentManager.read(uri, new InputStreamHandle());
-        }
+        InputStreamHandle contentHandle = documentManager.read(uri, new InputStreamHandle());
         InputStream inputStream = null;
         // Not using try-with-resources in case the inputStream is null.
         try {

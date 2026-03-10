@@ -3,10 +3,6 @@
  */
 package com.marklogic.spark.writer.file;
 
-import com.marklogic.client.document.DocumentPage;
-import com.marklogic.client.document.DocumentRecord;
-import com.marklogic.client.document.GenericDocumentManager;
-import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
@@ -36,6 +32,16 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     // That is a reasonable time to log a warning about potential heap space usage.
     private static final int DEFAULT_WARN_THRESHOLD = 500000;
 
+    // XQuery to check if document is binary format via indexes without loading document content.
+    // Works on all MarkLogic versions, while the simpler cts:document-format-query requires MarkLogic 11 or later.
+    private static final String IS_BINARY_QUERY = """
+        declare variable $URI external;
+        xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('binaryFormat()'))
+        ))))
+        """;
+
     private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
 
@@ -45,7 +51,6 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     // These can be instantiated lazily depending on which constructor is used.
     private ContentWriter contentWriter;
-    private GenericDocumentManager documentManagerThatWillOnlyRetrieveContent;
     private ZipOutputStream zipOutputStream;
 
     private int zipEntryCounter;
@@ -80,33 +85,25 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // As of 2.7.0, not doing any special handling for an "opaque" URI which appears to be fine as a zip entry name.
         final String entryName = uri;
 
-        if (contentWriter.isStreamingFiles()) {
-            // When streaming, we need to open the content handle before writing the metadata entry so that the
-            // document format can be obtained and used in the metadata entry name. And we need to use a
-            // DocumentManager that hasn't had its metadata categories modified - we only want the content returned.
-            // This, along with a multipart request, helps us steer clear of server bug MLE-27191.
-            // Note that we don't retain a server transform if the user configured one, as using a server transform
-            // while exporting defeats the purpose of streaming files to reduce memory usage.
-            if (documentManagerThatWillOnlyRetrieveContent == null) {
-                documentManagerThatWillOnlyRetrieveContent = contentWriter.getDatabaseClient().newDocumentManager();
-            }
-            try (DocumentPage page = documentManagerThatWillOnlyRetrieveContent.read(uri)) {
-                if (page.hasNext()) {
-                    DocumentRecord record = page.next();
-                    String format = record.getFormat() != null ? record.getFormat().toString() : null;
-                    // The ContentWriter will access the InputStream and will handle closing it.
-                    InputStreamHandle contentHandle = record.getContent(new InputStreamHandle());
+        String format = DocumentRowSchema.getFormat(row);
+        Util.MAIN_LOGGER.warn("FORMAT: " + format + " for URI: " + uri);
 
-                    writeMetadataEntryIfNecessary(row, uri, entryName, format);
-                    zipOutputStream.putNextEntry(new ZipEntry(entryName));
-                    this.contentWriter.writeContent(row, zipOutputStream, contentHandle);
-                    zipEntryCounter++;
-                }
+        if (contentWriter.isStreamingFiles()) {
+            // Check if document is binary via eval to avoid loading the entire document into memory via DocumentPage.
+            // This is a workaround for server bug MLE-27191 where the format header is incorrect in multipart responses
+            // for binary documents that contain JSON/XML content.
+            if (isDocumentFormatBinary(uri)) {
+                format = "BINARY";
             }
-        } else {
-            writeMetadataEntryIfNecessary(row, uri, entryName, null);
+
+            writeMetadataEntryIfNecessary(row, uri, entryName, format);
             zipOutputStream.putNextEntry(new ZipEntry(entryName));
-            this.contentWriter.writeContent(row, zipOutputStream, null);
+            this.contentWriter.writeContent(row, zipOutputStream);
+            zipEntryCounter++;
+        } else {
+            writeMetadataEntryIfNecessary(row, uri, entryName, format);
+            zipOutputStream.putNextEntry(new ZipEntry(entryName));
+            this.contentWriter.writeContent(row, zipOutputStream);
             zipEntryCounter++;
         }
         logThresholdWarningIfNecessary();
@@ -143,9 +140,6 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName, String format) throws IOException {
-        if (format == null) {
-            format = DocumentRowSchema.getFormat(row);
-        }
         if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
             final String metadataEntryName = buildMetadataEntryName(entryName, format);
             zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
@@ -195,6 +189,30 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // Using File.separator on Windows would result in a "\" in an S3 URL, which is awkward for a user to work with,
         // and appears buggy and unexpected.
         return new Path(path, zipFilename);
+    }
+
+    /**
+     * Checks if the document at the given URI is binary format.
+     * Returns true if binary, false otherwise (so caller can use format from reading the document).
+     * Uses cts:term-query with xdmp:hash64("binaryFormat()") to check via indexes without loading document.
+     * This works on all MarkLogic versions and is needed as a workaround for server bug MLE-27191
+     * where binary documents report incorrect format headers in multipart responses.
+     */
+    private boolean isDocumentFormatBinary(String uri) {
+        try {
+            String isBinary = contentWriter.getDatabaseClient()
+                .newServerEval()
+                .xquery(IS_BINARY_QUERY)
+                .addVariable("URI", uri)
+                .evalAs(String.class);
+
+            return "true".equalsIgnoreCase(isBinary);
+        } catch (Exception e) {
+            // Document doesn't exist, permissions issue, etc. - return false
+            Util.MAIN_LOGGER.debug("Unexpected error when trying to determine if document format for {} is binary; cause: {}",
+                uri, e.getMessage());
+            return false;
+        }
     }
 
     private void logThresholdWarningIfNecessary() {
