@@ -44,7 +44,7 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
         }
         OutputStream outputStream = makeOutputStream(filePath);
         try {
-            this.contentWriter.writeContent(row, outputStream, null);
+            this.contentWriter.writeContent(row, outputStream);
             fileCounter++;
         } finally {
             IOUtils.closeQuietly(outputStream);
