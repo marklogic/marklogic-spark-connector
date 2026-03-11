@@ -47,7 +47,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save(tempDir.toFile().getAbsolutePath());
 
-        verifyAllMetadata(tempDir, 2, false);
+        verifyAllMetadata(tempDir, 2);
     }
 
     /**
@@ -72,7 +72,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save(tempDir.toFile().getAbsolutePath());
 
-        verifyAllMetadata(tempDir, 2, true);
+        verifyAllMetadata(tempDir, 2);
     }
 
     @Test
@@ -329,7 +329,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(0, content.length, "Verifying that an empty doc can be streamed to a zip.");
     }
 
-    private void verifyAllMetadata(Path tempDir, int rowCount, boolean streaming) {
+    private void verifyAllMetadata(Path tempDir, int rowCount) {
         List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "archive")
             .load(tempDir.toFile().getAbsolutePath())
@@ -340,17 +340,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             Row row = rows.get(i);
             assertTrue(row.getString(0).endsWith("/test/" + (i + 1) + ".xml"));
             verifyContent(row);
-            if (streaming) {
-                assertTrue(row.isNullAt(2), "When streaming, we don't have a way of obtaining the format " +
-                    "before writing the metadata entry name without first accessing the content handle. The only " +
-                    "time we need to know the format though is when the document has been stored as a binary, which " +
-                    "is important for JSON/XML documents that need to be imported later as binary documents. " +
-                    "So unless the document is a binary, the format should be null which will result in the " +
-                    "metadata entry name not containing the format. That is fine - it just means that MarkLogic " +
-                    "will use the URI extension to determine the document format.");
-            } else {
-                assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
-            }
+            assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
             verifyCollections(row);
             verifyPermissions(row);
             assertEquals(10, row.get(5));

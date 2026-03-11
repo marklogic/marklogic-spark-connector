@@ -32,14 +32,29 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     // That is a reasonable time to log a warning about potential heap space usage.
     private static final int DEFAULT_WARN_THRESHOLD = 500000;
 
-    // XQuery to check if document is binary format via indexes without loading document content.
+    // XQuery to determine document format via indexes without loading document content.
     // Works on all MarkLogic versions, while the simpler cts:document-format-query requires MarkLogic 11 or later.
-    private static final String IS_BINARY_QUERY = """
+    // This is only used when streaming, when the small cost of doing these queries is likely to be negligible compared
+    // to the overhead of retrieving each document one at a time.
+    private static final String GET_DOCUMENT_FORMAT_QUERY = """
         declare variable $URI external;
-        xdmp:exists(cts:search(/, cts:and-query((
+        if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('jsonFormat()'))
+        ))))) then "JSON"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('xmlFormat()'))
+        ))))) then "XML"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
           cts:document-query($URI),
           cts:term-query(xdmp:hash64('binaryFormat()'))
-        ))))
+        ))))) then "BINARY"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('textFormat()'))
+        ))))) then "TEXT"
+        else ""
         """;
 
     private final ContextSupport context;
@@ -86,14 +101,14 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         final String entryName = uri;
 
         String format = DocumentRowSchema.getFormat(row);
-        Util.MAIN_LOGGER.warn("FORMAT: " + format + " for URI: " + uri);
 
         if (contentWriter.isStreamingFiles()) {
-            // Check if document is binary via eval to avoid loading the entire document into memory via DocumentPage.
+            // Determine document format via indexes to avoid loading the entire document into memory via DocumentPage.
             // This is a workaround for server bug MLE-27191 where the format header is incorrect in multipart responses
             // for binary documents that contain JSON/XML content.
-            if (isDocumentFormatBinary(uri)) {
-                format = "BINARY";
+            String detectedFormat = getDocumentFormatViaIndexes(uri);
+            if (!detectedFormat.isEmpty()) {
+                format = detectedFormat;
             }
 
             writeMetadataEntryIfNecessary(row, uri, entryName, format);
@@ -140,6 +155,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName, String format) throws IOException {
+        // Always encode format for consistency, whether streaming or not.
+        // For streaming, format is detected via indexes. For non-streaming, format comes from the row.
         if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
             final String metadataEntryName = buildMetadataEntryName(entryName, format);
             zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
@@ -192,26 +209,23 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     }
 
     /**
-     * Checks if the document at the given URI is binary format.
-     * Returns true if binary, false otherwise (so caller can use format from reading the document).
-     * Uses cts:term-query with xdmp:hash64("binaryFormat()") to check via indexes without loading document.
-     * This works on all MarkLogic versions and is needed as a workaround for server bug MLE-27191
-     * where binary documents report incorrect format headers in multipart responses.
+     * Determines the document format at the given URI via indexes without loading document content.
+     * Returns "JSON", "XML", "BINARY", "TEXT", or empty string if format cannot be determined.
      */
-    private boolean isDocumentFormatBinary(String uri) {
+    private String getDocumentFormatViaIndexes(String uri) {
         try {
-            String isBinary = contentWriter.getDatabaseClient()
+            String format = contentWriter.getDatabaseClient()
                 .newServerEval()
-                .xquery(IS_BINARY_QUERY)
+                .xquery(GET_DOCUMENT_FORMAT_QUERY)
                 .addVariable("URI", uri)
                 .evalAs(String.class);
 
-            return "true".equalsIgnoreCase(isBinary);
+            return format != null ? format : "";
         } catch (Exception e) {
-            // Document doesn't exist, permissions issue, etc. - return false
-            Util.MAIN_LOGGER.debug("Unexpected error when trying to determine if document format for {} is binary; cause: {}",
+            // Document doesn't exist, permissions issue, etc. - return empty string
+            Util.MAIN_LOGGER.debug("Unexpected error when trying to determine document format for {}; cause: {}",
                 uri, e.getMessage());
-            return false;
+            return "";
         }
     }
 
