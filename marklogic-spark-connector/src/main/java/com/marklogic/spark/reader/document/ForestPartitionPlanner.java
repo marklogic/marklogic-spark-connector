@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -17,6 +17,8 @@ class ForestPartitionPlanner {
     }
 
     ForestPartition[] makePartitions(long estimate, long serverTimestamp, Forest... forests) {
+        if (forests == null || forests.length == 0) return new ForestPartition[0];
+
         final long urisPerForest = (long) (Math.ceil((double) estimate / forests.length));
         final long urisPerPartition = (long) (Math.ceil((double) urisPerForest / partitionsPerForest));
 

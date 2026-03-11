@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -63,6 +63,13 @@ class MakeForestPartitionsTest {
         assertEquals(200, partitions.length, "If the user asks for more partitions than there are results, the " +
             "planner is expected to create at most N partitions per forest, where N is 100 since that's the estimate " +
             "of all matching results.");
+    }
+
+    @Test
+    void noForests() {
+        partitions = new ForestPartitionPlanner(1).makePartitions(100, FAKE_SERVER_TIMESTAMP);
+        assertEquals(0, partitions.length, "Verifying that an error does not occur when no forests are passed in, " +
+            "though this should not happen in practice.");
     }
 
     private Forest forest(String name) {
