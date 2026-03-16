@@ -35,7 +35,9 @@ subprojects {
 
   repositories {
     mavenCentral()
-    mavenLocal()
+
+    // Commenting out temporarily while preparing for a release.
+//    mavenLocal()
     maven {
       url = "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
     }
