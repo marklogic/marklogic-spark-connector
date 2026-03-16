@@ -27,7 +27,7 @@ dependencies {
   // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
-  implementation "com.marklogic:marklogic-client-api:8.1-SNAPSHOT"
+  implementation "com.marklogic:marklogic-client-api:8.1.0"
 
   // For logging.
   implementation "org.slf4j:jcl-over-slf4j:2.0.17"
