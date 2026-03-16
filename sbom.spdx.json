@@ -1,0 +1,1613 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "spdxVersion": "2.3",
+  "creationInfo": {
+    "comment": "Progress MarkLogic Spark Connector 3.1.0\nCopyright (c) 2026 Progress Software Corporation and/or its subsidiaries or affiliates. All rights reserved.",
+    "created": "2026-03-16T21:35:02+0000",
+    "creators": [
+      "Tool: SBOMinator-1.1.0.617",
+      "Organization: Progress Software Corporation"
+    ]
+  },
+  "name": "MarkLogic-DevExp-spark-connector.spark connector-3.1.0.0",
+  "documentName": "spark connector-3.1.0.spdx",
+  "documentNamespace": "https://www.progress.com/spdx/MarkLogic/DevExp/spark/connector/spark connector-3.1.0.0-d08d1fee-6c90-31b2-bd19-20835b614251",
+  "hasExtractedLicensingInfos": [
+    {
+      "licenseId": "LicenseRef-Apache-2.0-fab41b7c",
+      "extractedText": "Apache License\nVersion 2.0, January 2004\n=========================\n\n\nhttp://www.apache.org/licenses/\n\nTERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION\n\n1. Definitions.\n\n\"License\" shall mean the terms and conditions for use, reproduction, and\ndistribution as defined by Sections 1 through 9 of this document.\n\n\"Licensor\" shall mean the copyright owner or entity authorized by the copyright\nowner that is granting the License.\n\n\"Legal Entity\" shall mean the union of the acting entity and all other entities\nthat control, are controlled by, or are under common control with that entity.\nFor the purposes of this definition, \"control\" means (i) the power, direct or\nindirect, to cause the direction or management of such entity, whether by\ncontract or otherwise, or (ii) ownership of fifty percent (50%) or more of the\noutstanding shares, or (iii) beneficial ownership of such entity.\n\n\"You\" (or \"Your\") shall mean an individual or Legal Entity exercising permissions\ngranted by this License.\n\n\"Source\" form shall mean the preferred form for making modifications, including\nbut not limited to software source code, documentation source, and configuration\nfiles.\n\n\"Object\" form shall mean any form resulting from mechanical transformation or\ntranslation of a Source form, including but not limited to compiled object code,\ngenerated documentation, and conversions to other media types.\n\n\"Work\" shall mean the work of authorship, whether in Source or Object form, made\navailable under the License, as indicated by a copyright notice that is included\nin or attached to the work (an example is provided in the Appendix below).\n\n\"Derivative Works\" shall mean any work, whether in Source or Object form, that is\nbased on (or derived from) the Work and for which the editorial revisions,\nannotations, elaborations, or other modifications represent, as a whole, an\noriginal work of authorship. For the purposes of this License, Derivative Works\nshall not include works that remain separable from, or merely link (or bind by\nname) to the interfaces of, the Work and Derivative Works thereof.\n\n\"Contribution\" shall mean any work of authorship, including the original version\nof the Work and any modifications or additions to that Work or Derivative Works\nthereof, that is intentionally submitted to Licensor for inclusion in the Work by\nthe copyright owner or by an individual or Legal Entity authorized to submit on\nbehalf of the copyright owner. For the purposes of this definition, \"submitted\"\nmeans any form of electronic, verbal, or written communication sent to the\nLicensor or its representatives, including but not limited to communication on\nelectronic mailing lists, source code control systems, and issue tracking systems\nthat are managed by, or on behalf of, the Licensor for the purpose of discussing\nand improving the Work, but excluding communication that is conspicuously marked\nor otherwise designated in writing by the copyright owner as \"Not a\nContribution.\"\n\n\"Contributor\" shall mean Licensor and any individual or Legal Entity on behalf of\nwhom a Contribution has been received by Licensor and subsequently incorporated\nwithin the Work.\n\n2. Grant of Copyright License. Subject to the terms and conditions of this\nLicense, each Contributor hereby grants to You a perpetual, worldwide,\nnon-exclusive, no-charge, royalty-free, irrevocable copyright license to\nreproduce, prepare Derivative Works of, publicly display, publicly perform,\nsublicense, and distribute the Work and such Derivative Works in Source or Object\nform.\n\n3. Grant of Patent License. Subject to the terms and conditions of this License,\neach Contributor hereby grants to You a perpetual, worldwide, non-exclusive,\nno-charge, royalty-free, irrevocable (except as stated in this section) patent\nlicense to make, have made, use, offer to sell, sell, import, and otherwise\ntransfer the Work, where such license applies only to those patent claims\nlicensable by such Contributor that are necessarily infringed by their\nContribution(s) alone or by combination of their Contribution(s) with the Work to\nwhich such Contribution(s) was submitted. If You institute patent litigation\nagainst any entity (including a cross-claim or counterclaim in a lawsuit)\nalleging that the Work or a Contribution incorporated within the Work constitutes\ndirect or contributory patent infringement, then any patent licenses granted to\nYou under this License for that Work shall terminate as of the date such\nlitigation is filed.\n\n4. Redistribution. You may reproduce and distribute copies of the Work or\nDerivative Works thereof in any medium, with or without modifications, and in\nSource or Object form, provided that You meet the following conditions:\n\n  a. You must give any other recipients of the Work or Derivative Works a copy of\n    this License; and\n\n  b. You must cause any modified files to carry prominent notices stating that\n    You changed the files; and\n\n  c. You must retain, in the Source form of any Derivative Works that You\n    distribute, all copyright, patent, trademark, and attribution notices from\n    the Source form of the Work, excluding those notices that do not pertain to\n    any part of the Derivative Works; and\n\n  d. If the Work includes a \"NOTICE\" text file as part of its distribution, then\n    any Derivative Works that You distribute must include a readable copy of the\n    attribution notices contained within such NOTICE file, excluding those\n    notices that do not pertain to any part of the Derivative Works, in at least\n    one of the following places: within a NOTICE text file distributed as part of\n    the Derivative Works; within the Source form or documentation, if provided\n    along with the Derivative Works; or, within a display generated by the\n    Derivative Works, if and wherever such third-party notices normally appear.\n    The contents of the NOTICE file are for informational purposes only and do\n    not modify the License. You may add Your own attribution notices within\n    Derivative Works that You distribute, alongside or as an addendum to the\n    NOTICE text from the Work, provided that such additional attribution notices\n    cannot be construed as modifying the License.\n\nYou may add Your own copyright statement to Your modifications and may provide\nadditional or different license terms and conditions for use, reproduction, or\ndistribution of Your modifications, or for any such Derivative Works as a whole,\nprovided Your use, reproduction, and distribution of the Work otherwise complies\nwith the conditions stated in this License.\n\n5. Submission of Contributions. Unless You explicitly state otherwise, any\nContribution intentionally submitted for inclusion in the Work by You to the\nLicensor shall be under the terms and conditions of this License, without any\nadditional terms or conditions. Notwithstanding the above, nothing herein shall\nsupersede or modify the terms of any separate license agreement you may have\nexecuted with Licensor regarding such Contributions.\n\n6. Trademarks. This License does not grant permission to use the trade names,\ntrademarks, service marks, or product names of the Licensor, except as required\nfor reasonable and customary use in describing the origin of the Work and\nreproducing the content of the NOTICE file.\n\n7. Disclaimer of Warranty. Unless required by applicable law or agreed to in\nwriting, Licensor provides the Work (and each Contributor provides its\nContributions) on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,\neither express or implied, including, without limitation, any warranties or\nconditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A\nPARTICULAR PURPOSE. You are solely responsible for determining the\nappropriateness of using or redistributing the Work and assume any risks\nassociated with Your exercise of permissions under this License.\n\n8. Limitation of Liability. In no event and under no legal theory, whether in\ntort (including negligence), contract, or otherwise, unless required by\napplicable law (such as deliberate and grossly negligent acts) or agreed to in\nwriting, shall any Contributor be liable to You for damages, including any\ndirect, indirect, special, incidental, or consequential damages of any character\narising as a result of this License or out of the use or inability to use the\nWork (including but not limited to damages for loss of goodwill, work stoppage,\ncomputer failure or malfunction, or any and all other commercial damages or\nlosses), even if such Contributor has been advised of the possibility of such\ndamages.\n\n9. Accepting Warranty or Additional Liability. While redistributing the Work or\nDerivative Works thereof, You may choose to offer, and charge a fee for,\nacceptance of support, warranty, indemnity, or other liability obligations and/or\nrights consistent with this License. However, in accepting such obligations, You\nmay act only on Your own behalf and on Your sole responsibility, not on behalf of\nany other Contributor, and only if You agree to indemnify, defend, and hold each\nContributor harmless for any liability incurred by, or claims asserted against,\nsuch Contributor by reason of your accepting any such warranty or additional\nliability.\n\nEND OF TERMS AND CONDITIONS\n\nAPPENDIX: How to apply the Apache License to your work\n\nTo apply the Apache License to your work, attach the following boilerplate\nnotice, with the fields enclosed by brackets \"[]\" replaced with your own\nidentifying information. (Don't include the brackets!) The text should be\nenclosed in the appropriate comment syntax for the file format. We also recommend\nthat a file or class name and description of purpose be included on the same\n\"printed page\" as the copyright notice for easier identification within\nthird-party archives.\n\n  Copyright [yyyy] [name of copyright owner] Licensed under the Apache License,\n  Version 2.0 (the \"License\"); you may not use this file except in compliance\n  with the License. You may obtain a copy of the License at\n  http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law\n  or agreed to in writing, software distributed under the License is\n  distributed on an \"AS IS\" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY\n  KIND, either express or implied. See the License for the specific language\n  governing permissions and limitations under the License."
+    },
+    {
+      "licenseId": "LicenseRef-Eclipse-Distribution-License-v-1.0-ca2a15f3",
+      "extractedText": "Eclipse Distribution License - v 1.0\n====================================\n\nCopyright (c) 2007, Eclipse Foundation, Inc. and its licensors.\n\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  * Redistributions of source code must retain the above copyright notice, this\n    list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions and the following disclaimer in the documentation\n    and/or other materials provided with the distribution.\n\n  * Neither the name of the Eclipse Foundation, Inc. nor the names of its\n    contributors may be used to endorse or promote products derived from this\n    software without specific prior written permission.\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS\nOF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN\nIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+    },
+    {
+      "licenseId": "LicenseRef-MIT-15f41ca9",
+      "extractedText": "The MIT License\n===============\nCopyright (c) Andrew O'Malley\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in the\nSoftware without restriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell copies of the\nSoftware, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN\nAN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+    },
+    {
+      "licenseId": "LicenseRef-BSD-3-Clause-5d30dc65",
+      "extractedText": "Copyright (c) , The Werken Company\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  * Redistributions of source code must retain the above copyright notice, this\n    list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions and the following disclaimer in the documentation\n    and/or other materials provided with the distribution.\n\n  * Neither the name of the jaxen nor the names of its contributors may\n    be used to endorse or promote products derived from this software without\n    specific prior written permission.\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS\nOF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN\nIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+    },
+    {
+      "licenseId": "LicenseRef-BSD-3-Clause-2c466246",
+      "extractedText": "Copyright (c) , Google LLC\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  * Redistributions of source code must retain the above copyright notice, this\n    list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions and the following disclaimer in the documentation\n    and/or other materials provided with the distribution.\n\n  * Neither the name of the google nor the names of its contributors may\n    be used to endorse or promote products derived from this software without\n    specific prior written permission.\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS\nOF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN\nIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+    },
+    {
+      "licenseId": "LicenseRef-BSD-3-Clause-52a414cd",
+      "extractedText": "Copyright (c) , Oracle and/or its affiliates\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  * Redistributions of source code must retain the above copyright notice, this\n    list of conditions and the following disclaimer.\n\n  * Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions and the following disclaimer in the documentation\n    and/or other materials provided with the distribution.\n\n  * Neither the name of the com.sun.activation nor the names of its contributors may\n    be used to endorse or promote products derived from this software without\n    specific prior written permission.\n\n\nTHIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND\nANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED\nWARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\nDISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR\nANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES\n(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS\nOF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN\nIF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE."
+    },
+    {
+      "licenseId": "LicenseRef-MIT-244c96f8",
+      "extractedText": "The MIT License\n===============\nCopyright (c) 2004-2025 QOS.ch\n\nPermission is hereby granted, free of charge, to any person obtaining a copy of\nthis software and associated documentation files (the \"Software\"), to deal in the\nSoftware without restriction, including without limitation the rights to use,\ncopy, modify, merge, publish, distribute, sublicense, and/or sell copies of the\nSoftware, and to permit persons to whom the Software is furnished to do so,\nsubject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS\nFOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR\nCOPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN\nAN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION\nWITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE."
+    },
+    {
+      "licenseId": "LicenseRef-EPL-2.0-e7a7fa30",
+      "extractedText": "Eclipse Public License - v 2.0\n==============================\n\nTHE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THIS ECLIPSE PUBLIC\nLICENSE (\u201CAGREEMENT\u201D). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM\nCONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT.\n\n\n1. DEFINITIONS\n--------------\n\n\u201CContribution\u201D means:\n\n  a) in the case of the initial Contributor, the initial content Distributed\n  under this Agreement, and\n  b) in the case of each subsequent Contributor:\n\n    i) changes to the Program, and\n    ii) additions to the Program;\n\n  where such changes and/or additions to the Program originate from and are\n  Distributed by that particular Contributor. A Contribution \u201Coriginates\u201D from a\n  Contributor if it was added to the Program by such Contributor itself or anyone\n  acting on such Contributor's behalf. Contributions do not include changes or\n  additions to the Program that are not Modified Works.\n\n\u201CContributor\u201D means any person or entity that Distributes the Program.\n\n\u201CLicensed Patents\u201D mean patent claims licensable by a Contributor which are\nnecessarily infringed by the use or sale of its Contribution alone or when\ncombined with the Program.\n\n\u201CProgram\u201D means the Contributions Distributed in accordance with this Agreement.\n\n\u201CRecipient\u201D means anyone who receives the Program under this Agreement or any\nSecondary License (as applicable), including Contributors.\n\n\u201CDerivative Works\u201D shall mean any work, whether in Source Code or other form,\nthat is based on (or derived from) the Program and for which the editorial\nrevisions, annotations, elaborations, or other modifications represent, as a\nwhole, an original work of authorship.\n\n\u201CModified Works\u201D shall mean any work in Source Code or other form that results\nfrom an addition to, deletion from, or modification of the contents of the\nProgram, including, for purposes of clarity any new file in Source Code form that\ncontains any contents of the Program. Modified Works shall not include works that\ncontain only declarations, interfaces, types, classes, structures, or files of\nthe Program solely in each case in order to link to, bind by name, or subclass\nthe Program or Modified Works thereof.\n\n\u201CDistribute\u201D means the acts of a) distributing or b) making available in any\nmanner that enables the transfer of a copy.\n\n\u201CSource Code\u201D means the form of a Program preferred for making modifications,\nincluding but not limited to software source code, documentation source, and\nconfiguration files.\n\n\u201CSecondary License\u201D means either the GNU General Public License, Version 2.0, or\nany later versions of that license, including any exceptions or additional\npermissions as identified by the initial Contributor.\n\n\n2. GRANT OF RIGHTS\n------------------\n\n  a) Subject to the terms of this Agreement, each Contributor hereby grants\n  Recipient a non-exclusive, worldwide, royalty-free copyright license to\n  reproduce, prepare Derivative Works of, publicly display, publicly perform,\n  Distribute and sublicense the Contribution of such Contributor, if any, and\n  such Derivative Works.\n  b) Subject to the terms of this Agreement, each Contributor hereby grants\n  Recipient a non-exclusive, worldwide, royalty-free patent license under\n  Licensed Patents to make, use, sell, offer to sell, import and otherwise\n  transfer the Contribution of such Contributor, if any, in Source Code or other\n  form. This patent license shall apply to the combination of the Contribution\n  and the Program if, at the time the Contribution is added by the Contributor,\n  such addition of the Contribution causes such combination to be covered by the\n  Licensed Patents. The patent license shall not apply to any other combinations\n  which include the Contribution. No hardware per se is licensed hereunder.\n  c) Recipient understands that although each Contributor grants the licenses to\n  its Contributions set forth herein, no assurances are provided by any\n  Contributor that the Program does not infringe the patent or other intellectual\n  property rights of any other entity. Each Contributor disclaims any liability\n  to Recipient for claims brought by any other entity based on infringement of\n  intellectual property rights or otherwise. As a condition to exercising the\n  rights and licenses granted hereunder, each Recipient hereby assumes sole\n  responsibility to secure any other intellectual property rights needed, if any.\n  For example, if a third party patent license is required to allow Recipient to\n  Distribute the Program, it is Recipient's responsibility to acquire that\n  license before distributing the Program.\n  d) Each Contributor represents that to its knowledge it has sufficient\n  copyright rights in its Contribution, if any, to grant the copyright license\n  set forth in this Agreement.\n  e) Notwithstanding the terms of any Secondary License, no Contributor makes\n  additional grants to any Recipient (other than those set forth in this\n  Agreement) as a result of such Recipient's receipt of the Program under the\n  terms of a Secondary License (if permitted under the terms of Section 3).\n\n\n3. REQUIREMENTS\n---------------\n\n3.1 If a Contributor Distributes the Program in any form, then:\n\n  a) the Program must also be made available as Source Code, in accordance with\n  section 3.2, and the Contributor must accompany the Program with a statement\n  that the Source Code for the Program is available under this Agreement, and\n  informs Recipients how to obtain it in a reasonable manner on or through a\n  medium customarily used for software exchange; and\n  b) the Contributor may Distribute the Program under a license different than\n  this Agreement, provided that such license:\n\n    i) effectively disclaims on behalf of all other Contributors all warranties\n    and conditions, express and implied, including warranties or conditions of\n    title and non-infringement, and implied warranties or conditions of\n    merchantability and fitness for a particular purpose;\n    ii) effectively excludes on behalf of all other Contributors all liability\n    for damages, including direct, indirect, special, incidental and\n    consequential damages, such as lost profits;\n    iii) does not attempt to limit or alter the recipients' rights in the Source\n    Code under section 3.2; and\n    iv) requires any subsequent distribution of the Program by any party to be\n    under a license that satisfies the requirements of this section 3.\n\n3.2 When the Program is Distributed as Source Code:\n\n  a) it must be made available under this Agreement, or if the Program\n\n    (i) is combined with other material in a separate file or files made\n    available under a Secondary License, and\n    (ii) the initial Contributor attached to the Source Code the notice described\n    in Exhibit A of this Agreement, then the Program may be made available under\n    the terms of such Secondary Licenses, and\n\n  b) a copy of this Agreement must be included with each copy of the Program.\n\n3.3 Contributors may not remove or alter any copyright, patent, trademark,\nattribution notices, disclaimers of warranty, or limitations of liability\n(\u2018notices\u2019) contained within the Program from any copy of the Program which they\nDistribute, provided that Contributors may add their own appropriate notices.\n\n\n4. COMMERCIAL DISTRIBUTION\n--------------------------\n\nCommercial distributors of software may accept certain responsibilities with\nrespect to end users, business partners and the like. While this license is\nintended to facilitate the commercial use of the Program, the Contributor who\nincludes the Program in a commercial product offering should do so in a manner\nwhich does not create potential liability for other Contributors. Therefore, if a\nContributor includes the Program in a commercial product offering, such\nContributor (\u201CCommercial Contributor\u201D) hereby agrees to defend and indemnify\nevery other Contributor (\u201CIndemnified Contributor\u201D) against any losses, damages\nand costs (collectively \u201CLosses\u201D) arising from claims, lawsuits and other legal\nactions brought by a third party against the Indemnified Contributor to the\nextent caused by the acts or omissions of such Commercial Contributor in\nconnection with its distribution of the Program in a commercial product offering.\nThe obligations in this section do not apply to any claims or Losses relating to\nany actual or alleged intellectual property infringement. In order to qualify, an\nIndemnified Contributor must: a) promptly notify the Commercial Contributor in\nwriting of such claim, and b) allow the Commercial Contributor to control, and\ncooperate with the Commercial Contributor in, the defense and any related\nsettlement negotiations. The Indemnified Contributor may participate in any such\nclaim at its own expense.\n\nFor example, a Contributor might include the Program in a commercial product\noffering, Product X. That Contributor is then a Commercial Contributor. If that\nCommercial Contributor then makes performance claims, or offers warranties\nrelated to Product X, those performance claims and warranties are such Commercial\nContributor's responsibility alone. Under this section, the Commercial\nContributor would have to defend claims against the other Contributors related to\nthose performance claims and warranties, and if a court requires any other\nContributor to pay any damages as a result, the Commercial Contributor must pay\nthose damages.\n\n\n5. NO WARRANTY\n--------------\n\nEXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, AND TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW, THE PROGRAM IS PROVIDED ON AN \u201CAS IS\u201D BASIS, WITHOUT WARRANTIES\nOR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED INCLUDING, WITHOUT\nLIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,\nMERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE. Each Recipient is solely\nresponsible for determining the appropriateness of using and distributing the\nProgram and assumes all risks associated with its exercise of rights under this\nAgreement, including but not limited to the risks and costs of program errors,\ncompliance with applicable laws, damage to or loss of data, programs or\nequipment, and unavailability or interruption of operations.\n\n\n6. DISCLAIMER OF LIABILITY\n--------------------------\n\nEXCEPT AS EXPRESSLY SET FORTH IN THIS AGREEMENT, AND TO THE EXTENT PERMITTED BY\nAPPLICABLE LAW, NEITHER RECIPIENT NOR ANY CONTRIBUTORS SHALL HAVE ANY LIABILITY\nFOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\nDAMAGES (INCLUDING WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND ON ANY\nTHEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING\nNEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OR DISTRIBUTION OF THE\nPROGRAM OR THE EXERCISE OF ANY RIGHTS GRANTED HEREUNDER, EVEN IF ADVISED OF THE\nPOSSIBILITY OF SUCH DAMAGES.\n\n\n7. GENERAL\n----------\n\nIf any provision of this Agreement is invalid or unenforceable under applicable\nlaw, it shall not affect the validity or enforceability of the remainder of the\nterms of this Agreement, and without further action by the parties hereto, such\nprovision shall be reformed to the minimum extent necessary to make such\nprovision valid and enforceable.\n\nIf Recipient institutes patent litigation against any entity (including a\ncross-claim or counterclaim in a lawsuit) alleging that the Program itself\n(excluding combinations of the Program with other software or hardware) infringes\nsuch Recipient's patent(s), then such Recipient's rights granted under Section\n2(b) shall terminate as of the date such litigation is filed.\n\nAll Recipient's rights under this Agreement shall terminate if it fails to comply\nwith any of the material terms or conditions of this Agreement and does not cure\nsuch failure in a reasonable period of time after becoming aware of such\nnoncompliance. If all Recipient's rights under this Agreement terminate,\nRecipient agrees to cease use and distribution of the Program as soon as\nreasonably practicable. However, Recipient's obligations under this Agreement and\nany licenses granted by Recipient relating to the Program shall continue and\nsurvive.\n\nEveryone is permitted to copy and distribute copies of this Agreement, but in\norder to avoid inconsistency the Agreement is copyrighted and may only be\nmodified in the following manner. The Agreement Steward reserves the right to\npublish new versions (including revisions) of this Agreement from time to time.\nNo one other than the Agreement Steward has the right to modify this Agreement.\nThe Eclipse Foundation is the initial Agreement Steward. The Eclipse Foundation\nmay assign the responsibility to serve as the Agreement Steward to a suitable\nseparate entity. Each new version of the Agreement will be given a distinguishing\nversion number. The Program (including Contributions) may always be Distributed\nsubject to the version of the Agreement under which it was received. In addition,\nafter a new version of the Agreement is published, Contributor may elect to\nDistribute the Program (including its Contributions) under the new version.\n\nExcept as expressly stated in Sections 2(a) and 2(b) above, Recipient receives no\nrights or licenses to the intellectual property of any Contributor under this\nAgreement, whether expressly, by implication, estoppel or otherwise. All rights\nin the Program not expressly granted under this Agreement are reserved. Nothing\nin this Agreement is intended to be enforceable by any entity that is not a\nContributor or Recipient. No third-party beneficiary rights are created under\nthis Agreement.\n\n\nExhibit A \u2013 Form of Secondary Licenses Notice\n---------------------------------------------\n\n\u201CThis Source Code may also be made available under the following Secondary\nLicenses when the conditions for such availability set forth in the Eclipse\nPublic License, v. 2.0 are satisfied: {name license(s), version(s), and\nexceptions or additional permissions here}.\u201D\n\n  Simply including a copy of this Agreement, including this Exhibit A is not\n  sufficient to license the Source Code under Secondary Licenses.\n\n  If it is not possible or desirable to put the notice in a particular file,\n  then You may include the notice in a location (such as a LICENSE file in a\n  relevant directory) where a recipient would be likely to look for such a\n  notice.\n\n  You may add additional accurate notices of copyright ownership."
+    },
+    {
+      "licenseId": "LicenseRef-BSD-2-Clause-a357de0f",
+      "extractedText": "BSD Two Clause License\n======================\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.\n\n  2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.\n\nTHIS SOFTWARE IS PROVIDED BY THE AUTHOR \"AS IS\" AND ANY EXPRESS OR IMPLIED\nWARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF\nMERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT\nSHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,\nEXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT\nOF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS\nINTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,\nSTRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY\nOUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH\nDAMAGE."
+    },
+    {
+      "licenseId": "LicenseRef-Jdom-License-1d623486",
+      "extractedText": "jdom License\n============\n\nCopyright (C) 2000-2004 Jason Hunter & Brett McLaughlin.\nAll rights reserved.\n\nRedistribution and use in source and binary forms, with or without modification,\nare permitted provided that the following conditions are met:\n\n  1. Redistributions of source code must retain the above copyright notice, this\n    list of conditions, and the following disclaimer.\n\n  2. Redistributions in binary form must reproduce the above copyright notice,\n    this list of conditions, and the disclaimer that follows these conditions in\n    the documentation and/or other materials provided with the distribution.\n\n  3. The name \"JDOM\" must not be used to endorse or promote products derived from\n    this software without prior written permission. For written permission,\n    please contact {request_AT_jdom_DOT_org}.\n\n  4.  Products derived from this software may not be called \"JDOM\", nor may\n    \"JDOM\" appear in their name, without prior written permission from the JDOM\n    Project Management {request_AT_jdom_DOT_org}.\n\nIn addition, we request (but do not require) that you include in the end-user\ndocumentation provided with the redistribution and/or in the software itself an\nacknowledgement equivalent to the following:\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\"This product includes software developed by the JDOM Project\n(http://www.jdom.org/).\"\nAlternatively, the acknowledgment may be graphical using the logos available at\nhttp://www.jdom.org/images/logos.\n\nTHIS SOFTWARE IS PROVIDED \"AS IS\" AND ANY EXPRESSED OR IMPLIED WARRANTIES,\nINCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND\nFITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE JDOM\nAUTHORS OR THE PROJECT CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,\nINCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT\nLIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR\nPROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,\nWHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR\nOTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF\nTHE POSSIBILITY OF SUCH DAMAGE."
+    }
+  ],
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-C23:com.squareup.okio:okio-jvm:3.16.4",
+      "name": "okio-jvm",
+      "versionInfo": "3.16.4",
+      "copyrightText": "Square",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "34d866f45bb2a65bf601cde52b72d096"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "ceb794cf0bbf8d0d20f49aa91ce20db7fd77675d"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2196b993cd34dbbd919e7e01f57a4781b58bee80f86106163e287c20343a96a7"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "1a7158538ae341b8a61fe7292506e12ca6063c5a51a1c122d0e934164395c7da585dc31b26ed88a993c47aeca89f6a854042c67a4bc7d771d35a0ece6c4dbde0"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/squareup/okio/okio-jvm/3.16.4/okio-jvm-3.16.4.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C53:org.glassfish.jaxb:jaxb-core:4.0.6",
+      "name": "jaxb-core",
+      "versionInfo": "4.0.6",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "e36c915cf47342b4fe31ffba3407b928"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "8e61282303777fc98a00cc3affd0560d68748a75"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ebbd274207b4860d0dc6e2d44d6dbdb5945cede01222d2e50661d45f5d46c0f7"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f6ed3cc73361794a8e35fc04f09212aa21af9575f36f6440bf33a6d43708ded6142a9be51d9d08d6e5debc262d87c158f0e199ed041a78fb1e0086fd02868a28"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/glassfish/jaxb/jaxb-core/4.0.6/jaxb-core-4.0.6.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C14:com.github.ben-manes.caffeine:caffeine:3.2.2",
+      "name": "caffeine",
+      "versionInfo": "3.2.2",
+      "copyrightText": "Ben Manes",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "202a61e2492ad488df931367241a110c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "8b0a31cb57ac00e18161d5586759912bd2637398"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c74a6c72221dfb76eb92f2bb40108ea561a7da2f315dc3b1e64afa8f077f210c"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "94179e3a03e58e292632d58036149438be2d9fd6156187650828868f05964f4ecd39bb6e788d9fb71a76cab9421a324aa62b2909aef850d9c48042ff497ee0d1"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/github/ben-manes/caffeine/caffeine/3.2.2/caffeine-3.2.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C42:org.apache.jena:jena-arq:5.6.0",
+      "name": "jena-arq",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "1148cc92efe6df012cfd6168d774edfe"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5e0d157ebc6b66c00eaac269ddf1509c1a273b9d"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2064266fe7c9667f9243d711709e21f7fd592ea2027ceda16a23cb1b9cd6eb90"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "88821188483e2bc604866ccd39368fe416cc2535a4e5957d8a662cd03f40667858d5eb39637d1725d260a80b3527a3064e17b54ce14cb5d59ec4a9078248b351"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-arq/5.6.0/jena-arq-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C46:org.apache.jena:jena-iri:5.6.0",
+      "name": "jena-iri",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "f6b1ec73b2d4a20e1e512c8fc8eda32e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "ab51dc4ba00557c2d579f435d22f98fa663f909e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "62b12322ae793b43efa7ba4c458d69246c4fc0094f4f6b7999c879521a627f79"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "35985adbd7fcd4839836c930a60eb296712796518451ed9ee171b76a8b44d83b8a914c21188fa1cf22defa3ca2245998b027e270fc7ccd95c55ac5cd82ce0821"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-iri/5.6.0/jena-iri-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C48:org.apache.opennlp:opennlp-tools:2.5.4",
+      "name": "opennlp-tools",
+      "versionInfo": "2.5.4",
+      "copyrightText": "2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "9933d46a4cc7c691aa274154344aa97b"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "11a7671f2169280c0e24b979cb326833b96ca246"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5efedb26d0e97e53707a8d2f0e2e28f05fcf654fce2a33f8bfe11c2d4c2a4fe9"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "8e7171a6a6482bccd48b2fd14622af678a9fe68071fd1791684963ec4c71044664633cf5c4f441b7c61acd247b5e2a47034261abeeb8827771802807747b5fe3"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/opennlp/opennlp-tools/2.5.4/opennlp-tools-2.5.4.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C31:dev.langchain4j:langchain4j:1.11.0",
+      "name": "langchain4j",
+      "versionInfo": "1.11.0",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "43dd929773a10ad5c789bbae39f1168a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "70363a151c3ae5403922e4800abc8e9a4fcde276"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "291de21604ba08ce9dc927eede233c523a3a4e93a60d6df63f05c5264fa0558f"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "16185d9ccc1bbf7eeea5a07193fcb4e3cf1778a7bc0f09392173d03e856b4697c4274af70fa7a812e95a0bc4b2137935c06e9b532a24a7aba1f51b8ba84ca720"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/dev/langchain4j/langchain4j/1.11.0/langchain4j-1.11.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C60:org.jspecify:jspecify:1.0.0",
+      "name": "jspecify",
+      "versionInfo": "1.0.0",
+      "copyrightText": "Kevin Bourrillion",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "9133aba420d0ca3b001dbb6ae9992cf6"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7425a601c1c7ec76645a78d22b8c6a627edee507"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1fad6e6be7557781e4d33729d49ae1cdc8fdda6fe477bb0cc68ce351eafdfbab"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "efded31ef5b342f09422935076e599789076431e93a746685c0607e7de5592719ba6aacde0be670b3f064d1e85630d58d5bce6b34aed2a288fdb34f745efb7bc"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/jspecify/jspecify/1.0.0/jspecify-1.0.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C50:org.apache.tika:tika-core:3.2.3",
+      "name": "tika-core",
+      "versionInfo": "3.2.3",
+      "copyrightText": "2007-2021 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "f88924fff844cb961c02f622861c3cbb"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "4b1b82f8cce72c9bd3676532c8b613e24041d96c"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4b697ae09a76b50102750816e9bd3ad26d89161ba65ddabdeee7ef3830428fd1"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "fb46e62391d6cba9e17b0bfa81e01d06fcae4f8611f66e335189ba8f1ce3cf389b6e87f6c9d7a4bfee8dc294c3932f1b0ea7d30ce950cb1f8ece787fe084e596"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/tika/tika-core/3.2.3/tika-core-3.2.3.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C13:com.github.andrewoma.dexx:collection:0.7",
+      "name": "collection",
+      "versionInfo": "0.7",
+      "copyrightText": "Andrew O'Malley",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "6e1baaccf9e57842c7e944cef39bc680"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "264efc08bdcd22126bd429aaea9efaf5158b2b90"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e50cbc8379325ee17e8127eed7eb88fb70b94ba16e5e3d97e12401a1fc248fb8"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "0708323a51db1dd3b4768ee844be5c83523ebc61c4e2ff07e6f952d8891dbc0f8e499f5d9bfb09bf48c99e492dc1804807a2e518b464d1a986407522e9dfea0d"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/github/andrewoma/dexx/collection/0.7/collection-0.7.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C35:jakarta.xml.bind:jakarta.xml.bind-api:4.0.5",
+      "name": "jakarta.xml.bind-api",
+      "versionInfo": "4.0.5",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "935053b2c792f34c7ea3a238ea96f3ac"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "161811f36cad3c65991502e80317f2f6703361df"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5e489b6c874c4119e003ff1403db523ee3a8959ec499f3de29e77245efccf216"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "3f3e522bd716ab6842ba2eed8bd44fc7d859ca5a3798e5adf2447eabde1c5d3b74b6f58d217d6cd772cbb034e4f003d9f9e10fafa15f4e108ea802548d1e5044"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/jakarta/xml/bind/jakarta.xml.bind-api/4.0.5/jakarta.xml.bind-api-4.0.5.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C7:com.fasterxml.jackson.core:jackson-databind:2.21.1",
+      "name": "jackson-databind",
+      "versionInfo": "2.21.1",
+      "copyrightText": "2007-, FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "35fe6cc9ff7990e67f86a92092aa0569"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5615fb77652bfd386d87b95a1d663e1c0e38b372"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b011eb5202d9ec889e27f1dcbdf6c63f06a76e7a16c0a1b30c6048d556c9a28e"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "837a94e20474d0ad3630663c0112e982914e5cfa3bbf397b8c31d00b68d7fc8e4514458b75dd39cf74edda7e33339504fa845864476786e94812bd36a5a428ee"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.21.1/jackson-databind-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C39:org.apache.commons:commons-compress:1.28.0",
+      "name": "commons-compress",
+      "versionInfo": "1.28.0",
+      "copyrightText": "2002-2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "f33efe616d561f8281ef7bf9f2576ad0"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "e482f2c7a88dac3c497e96aa420b6a769f59c8d7"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e1522945218456f3649a39bc4afd70ce4bd466221519dba7d378f2141a4642ca"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f1f140f4f40ab3cf3265919db9dbb95a631a29aa784e305f291de4e68876bb711d9217d62d7937cddddd393982decdf71a608b4b3ab7f4e6375cf28af2893d7f"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/commons/commons-compress/1.28.0/commons-compress-1.28.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C40:org.apache.commons:commons-csv:1.14.1",
+      "name": "commons-csv",
+      "versionInfo": "1.14.1",
+      "copyrightText": "2005-2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "b8119900179992cf139005db63481103"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "467354980fade8528b6a9f9bdf7f4f19ab9b3373"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "32be0e1e76673092f5d12cb790bd2acb6c2ab04c4ea6efc69ea5ee17911c24fe"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f64fb9c4895532dd9f6cd448dfb4b35bfe9c4a81afc61e5bb13121f5142330ae97447200022b03988967a7cb89d3f48ce76e253238eb9f0bea57c09b352ac27b"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/commons/commons-csv/1.14.1/commons-csv-1.14.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C36:jaxen:jaxen:2.0.0",
+      "name": "jaxen",
+      "versionInfo": "2.0.0",
+      "copyrightText": "The Werken Company",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "674d5bd86b7838fe431b0277856e97ae"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "bd6a33b0fda054a5678010df843cc999f288dc6c"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9499e487a66268f47b8307d130cd1e13a58392105e98a51f6a525db79c615cc5"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "dc4d2686c65bfb0c2936e8c0eb4d517152aa284ed28a7880165a4247564823f34e1e9f06785a9dbad7b4cbe90486d3e9aed4c32c75d485d29bd15b8d7642b6f9"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/jaxen/jaxen/2.0.0/jaxen-2.0.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C12:com.fasterxml.woodstox:woodstox-core:7.1.1",
+      "name": "woodstox-core",
+      "versionInfo": "7.1.1",
+      "copyrightText": "FasterXML, LLC",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "971ff236679f7b35a7c13c0d02c0170e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "76baad1b94513ea896e0a17388890a4c81edd0e0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "02b9d022e9d47704ff8a7a859a0dbfd3b2882a8311eb7ff1e180f760ccda2712"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "28105d6409766966123d4e212dba555c4776bfeb538093d3739ef113de5c6d6e92453aabc16915bfb76124a5dcc82b57f3cd13b42ea2e4038a4495285c642d3a"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/woodstox/woodstox-core/7.1.1/woodstox-core-7.1.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C19:com.smartlogic.csclient:Semaphore-CS-Client:5.10.0",
+      "name": "Semaphore-CS-Client",
+      "versionInfo": "5.10.0",
+      "copyrightText": "Progress Semaphore",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "49da3a06a81079f6046895d924c116a8"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2a5f0bfb1a242412fafcc9b76195093ad3513f2e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9cfbd6d00d06c1a5b4eee8b20283e1b5002b69cbedcc62c0d7d5a10eadcb1386"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "eae80c6e197bee57678884c9c60dd9446938298722fdbb5252b502cc1bc5025030acd59812eb6d26a70a443fb8c764ddb4fad90838a5e04abb131eef10476eaa"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/smartlogic/csclient/Semaphore-CS-Client/5.10.0/Semaphore-CS-Client-5.10.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C22:com.squareup.okhttp3:okhttp:5.3.2",
+      "name": "okhttp",
+      "versionInfo": "5.3.2",
+      "copyrightText": "Square",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "7cefaebda364337f3770168187124f31"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "6891a4fd19bcab6f69fe091c2bc6077edec5258e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "e720a383fdc3eb1df4aac77a085e61b7730837364151de867093fdbcafcb44aa"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "165c65503bded11490b09c46935864aa71ee8b9fc4ea1c01e1cb91b209a64af97e92d5d8fd9b4bc78209a8949a79f37ff49edd992171d25ba6f7e0d968cee87c"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp/5.3.2/okhttp-5.3.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C15:com.google.code.gson:gson:2.13.2",
+      "name": "gson",
+      "versionInfo": "2.13.2",
+      "copyrightText": "Google Inc.",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "a2c47e14ce5e956105458fe455f5d542"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "48b8230771e573b54ce6e867a9001e75977fe78e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dd0ce1b55a3ed2080cb70f9c655850cda86c206862310009dcb5e5c95265a5e0"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "8974a052656d2e5ec968b6bac2edf51413ffc62040fdc65f14f00597e738ab544d22487f8579ba90618b5a7f94ef33773510fac67b408fee6ed274b38f3d9947"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/google/code/gson/gson/2.13.2/gson-2.13.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C25:com.sun.istack:istack-commons-runtime:4.1.2",
+      "name": "istack-commons-runtime",
+      "versionInfo": "4.1.2",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "535154ef647af2a52478c4debec93659"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "18ec117c85f3ba0ac65409136afa8e42bc74e739"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7fd6792361f4dd00f8c56af4a20cecc0066deea4a8f3dec38348af23fc2296ee"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "c3b191409b9ace8cccca6be103b684a25f10675977d38f608036ffb687651a74fd4581a66e1c38e588e77165d32614e4b547bff412379f7a84b926ccb93515bb"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/sun/istack/istack-commons-runtime/4.1.2/istack-commons-runtime-4.1.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C17:com.google.protobuf:protobuf-java:4.33.0",
+      "name": "protobuf-java",
+      "versionInfo": "4.33.0",
+      "copyrightText": "Google LLC",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "21e99d7cd67288277331e29583448db2"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5f82a81e6e7b6b7434d05a7bdd666b84d9eb0bc5"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6c50b4323a101dfd7b8aea209337ac49ecf5d8e33e0b210b196fc654291ed2cc"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "3e872f8422cc53641cb10be6fc23a1583b0ad5177b8dbd327119c074c3023e4d5794afbdd1cfd17675bdcc78f0c43da11ace9ba333f31ef8ed8ec5353882e0cc"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/google/protobuf/protobuf-java/4.33.0/protobuf-java-4.33.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C43:org.apache.jena:jena-base:5.6.0",
+      "name": "jena-base",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "066e2a3a68d069dccc5640c09e225e3f"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "777e58aa2ce7ff4fd1c789d225d1b6987b0cbf17"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "27ab8f4f6b074e6ee748edd1773d4d1562b98ff7a76cf8cbd5614eee02654d50"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "bef77470c73b09269efc500e3ec7e64387d25bd6cf9291c36ce25f07b7e29f55e36a8b514ec215a74c7baf3d902fe997f018226d1e1b24bb5ce2352bedc416e9"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-base/5.6.0/jena-base-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C1:com.apicatalog:titanium-jcs:1.1.1",
+      "name": "titanium-jcs",
+      "versionInfo": "1.1.1",
+      "copyrightText": "Filip Kolarik",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "021aa8464f354289e6a6c1c3c8ec068d"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "be9703f65289fa1c3bd4e32ae7eaa1084e4a6de3"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "2e10d36721b19957ef414555b79507364a31554d282b5e41a54b0108cec8939a"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "039f480f2f3f7a4719d3d26b97fc2fccd9651f3cf7c4fd22096491a1268ef2b8aac52f8a8735208df3e2e3d19c23e67a9fbe753910253866cf75ce6a72780ce7"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/apicatalog/titanium-jcs/1.1.1/titanium-jcs-1.1.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C24:com.sun.activation:jakarta.activation:2.0.1",
+      "name": "jakarta.activation",
+      "versionInfo": "2.0.1",
+      "copyrightText": "Oracle and/or its affiliates",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "39228ac67f033514a0ccb3360ac461f3"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "828b80e886a52bb09fe41ff410b10b342f533ce1"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "b9e24b7dd6e07495562ea96531be3130c96dba4d78e1dfd88adbbdebf4332871"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "d1c214d2d6ecc61bba396d913c66c977418e74dfe96e5558951ccf99a60cfca6adfea3fc64b6e2d15f698e30dac870b8f6e8d7a22e0dff975f8dd83864714fc5"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/sun/activation/jakarta.activation/2.0.1/jakarta.activation-2.0.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C11:com.fasterxml.jackson:jackson-bom:2.21.1",
+      "name": "jackson-bom",
+      "versionInfo": "2.21.1",
+      "copyrightText": "FasterXML",
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/jackson-bom/2.21.1/jackson-bom-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C37:net.openhft:zero-allocation-hashing:2026.0",
+      "name": "zero-allocation-hashing",
+      "versionInfo": "2026.0",
+      "copyrightText": "Chronicle Software : Open Source",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "9f1ecd845fe93004aa6170d7dc90c47f"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2447494f7842ca377b4ccdba2089a8da5c1d1b50"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "22b4328b4cd751790ba3222320c7aae3f7927e6cdd064cd8a60d2a179be4ada3"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "32006a9caddb63b72f7f49c3bb314511fd1c04b974bc5608ad4c3d46ad876039137b0e7705dbda7a2dd506a08d41987bed8fc5b3027abd4e34108b5553e80379"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/net/openhft/zero-allocation-hashing/2026.0/zero-allocation-hashing-2026.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C6:com.fasterxml.jackson.core:jackson-core:2.21.1",
+      "name": "jackson-core",
+      "versionInfo": "2.21.1",
+      "copyrightText": "2007-, FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "a526a530a07fd25140dee4695e686051"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "47b013fc85dbb819f3ba51e95a5560d0f1c4121c"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1edd5f2e49dca5f8e4519957c24b7b3050bd1c7ee883920da33cff031ff1f7c0"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "f4b153a0a7c974620dec3fcfe4a4869c2632ab97f73c2662041af7d0eb0c42ad462bfee8cdcab5542842175b96197df1d910a8841067654f6e763b370c18ccfa"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.21.1/jackson-core-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C63:org.slf4j:slf4j-api:2.0.17",
+      "name": "slf4j-api",
+      "versionInfo": "2.0.17",
+      "copyrightText": "2004-2025 QOS.ch",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "b6480d114a23683498ac3f746f959d2f"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "d9e58ac9c7779ba3bf8142aff6c830617a7fe60f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7b751d952061954d5abfed7181c1f645d336091b679891591d63329c622eb832"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "9a3e79db6666a6096a3021bb2e1d918f30f589d8de51d6b600f8ebd92515a510ae2d8f87919cc2dfa8365d64f10194cac8dfa0fb950160eef0e9da06f6caaeb9"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.17/slf4j-api-2.0.17.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C61:org.roaringbitmap:RoaringBitmap:1.3.0",
+      "name": "RoaringBitmap",
+      "versionInfo": "1.3.0",
+      "copyrightText": "the RoaringBitmap authors",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "5ea65118238dc208252d95ff1868599c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a46ce7a2dc494da69700ab421f081b1583857f6d"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "73443a71a2e2401c7d518a487983539fcaf5f9652efbd178f929e7b6d36881d0"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "1134d4e3c9bb8ff130583e10d00487131c1aab456b625f9289935b660046b07c9acdee0a1dbe9c1fae145c2b1b9897460b1aa3cc0574fc2be976a9781965d7c1"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/roaringbitmap/RoaringBitmap/1.3.0/RoaringBitmap-1.3.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C56:org.glassfish:jakarta.json:2.0.1",
+      "name": "jakarta.json",
+      "versionInfo": "2.0.1",
+      "copyrightText": "Oracle Inc.",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "217370baa683188d6085c079a0988909"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "da6c75e591cf2a89ddc479cbdbd8fe5f41d3efc9"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "52539b39498b86ca9910b0eacc608a8c78de8db3842caa84bc87169372202cc0"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "3a7240c34098be4fc81769ec528a5afcc90e509d092a5e4edca27b2e92a3edfd6814bf60598fe6b856bec42c3002e64af286b6b8cae90cad06db276c6cbc10dc"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/glassfish/jakarta.json/2.0.1/jakarta.json-2.0.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C27:commons-codec:commons-codec:1.19.0",
+      "name": "commons-codec",
+      "versionInfo": "1.19.0",
+      "copyrightText": "2002-2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "e46fa78c69544eb6239c4e8447e72544"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "8c0dbe3ae883fceda9b50a6c76e745e548073388"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "5c3881e4f556855e9c532927ee0c9dfde94cc66760d5805c031a59887070af5f"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "d98a7a1cfcc08aa9cce4f7778e3f37ecb99da7b1da01944e5fa8faf06fbf9f969f2efb0b416832f419d53085250f711c071f1dac9fa0968483c37034198367fb"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/commons-codec/commons-codec/1.19.0/commons-codec-1.19.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C10:com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.21.1",
+      "name": "jackson-datatype-jsr310",
+      "versionInfo": "2.21.1",
+      "copyrightText": "FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "5c77b5a5e1a82559ab88920c54ae8203"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "115f5b1786b36e20a2b1108099f6b77617fb42ec"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "4d63378b0a6b53733f086ebd301023ba211b9387e417bd584a5400320cd08b8d"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "07113e899d0141df04b6f1183aff73cc58a411a19133b39352bc221ae58d28251ef114e48e039c938760b30c5e217a5bd443eac86fd607445f573cb290a0188b"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.21.1/jackson-datatype-jsr310-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C58:org.jetbrains.kotlin:kotlin-stdlib:2.2.21",
+      "name": "kotlin-stdlib",
+      "versionInfo": "2.2.21",
+      "copyrightText": "JetBrains",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "493bc156c79fe10064e9f6b605c8297c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "fa374a986e128314c3db00a20aae55f72a258511"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6558a3d233da56a20934b32159f9db5f86ed5816ef098f78a2c223dc6abb79dd"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "cb7f62e2eb4c13f7a9873876f19d9dcb69c33d5e963c7cd87178f3789d65f29d2b6cf697573c04758428d2da6e26f2fdd3f0af46dedd8d04ad81d331e95859d7"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/2.2.21/kotlin-stdlib-2.2.21.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C54:org.glassfish.jaxb:jaxb-runtime:4.0.6",
+      "name": "jaxb-runtime",
+      "versionInfo": "4.0.6",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "0e600d639f3a09ddd6fa91623a12b634"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "fb95ebb62564657b2fedfe165b859789ef3a8711"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1c0d57f8c25f9605d5a2f7ad0a87581893776ac85b00b101b2651258edaa9118"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "e19db2669e916992ea6acc75174070a4b5f04bb7788df03b1ede3340f5d63cf1c5055568ba1d7738e9e018716d10c3f6b26d1951faf8bba75f6ebb6ac6b16314"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/glassfish/jaxb/jaxb-runtime/4.0.6/jaxb-runtime-4.0.6.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C26:com.sun.mail:jakarta.mail:2.0.2",
+      "name": "jakarta.mail",
+      "versionInfo": "2.0.2",
+      "copyrightText": "Oracle",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "69753278ed0fa13af0a627de3df5d8b0"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "6dfe5d279fb579a41baa84a7728e31a40a50d90e"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "536f0ae5dd774e257f3064f19a2b982aa56072c07c675c70f98cdc262047b4b5"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "2f11a49f1afa5d86a31647e2a00632fadd98eb755e08c7cbc3eb1b0de584499dd8c0923b68d6c4cb3a8abeb383d35d6b02a43fd06da1fe0223c1589ec934e87d"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/sun/mail/jakarta.mail/2.0.2/jakarta.mail-2.0.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C29:commons-logging:commons-logging:1.3.5",
+      "name": "commons-logging",
+      "versionInfo": "1.3.5",
+      "copyrightText": "2001-2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "9ca067b073153c86c2da350c0f2cdf70"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "a3fcc5d3c29b2b03433aa2d2f2d2c1b1638924a1"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "6d7a744e4027649fbb50895df9497d109f98c766a637062fe8d2eabbb3140ba4"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "b6d66333cec2746cc410ca3b27099c4647618a1855783bac064c75eec95c643dab184010e5c875aca3c7fa827aed144488a1820604a043bbff93116de509f915"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/commons-logging/commons-logging/1.3.5/commons-logging-1.3.5.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C51:org.codehaus.woodstox:stax2-api:4.2.2",
+      "name": "stax2-api",
+      "versionInfo": "4.2.2",
+      "copyrightText": "2008+ FasterXML.com",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "6949cace015c0f408f0b846e3735d301"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "b0d746cadea928e5264f2ea294ea9a1bf815bbde"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a61c48d553efad78bc01fffc4ac528bebbae64cbaec170b2a5e39cf61eb51abe"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "1c0587ecb4c5a659ce2ae1fe36ffc12636a8ecba549a29f2cf91cb4d1d36a335c05f35776f480488d40d894230389f76aeeb363887026c6ef5c565995c17b7c6"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/codehaus/woodstox/stax2-api/4.2.2/stax2-api-4.2.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C8:com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.21.1",
+      "name": "jackson-dataformat-csv",
+      "versionInfo": "2.21.1",
+      "copyrightText": "2007-, FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "334e2d7f64aa1553feda4e2f975244b2"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "b62877fbda7385a2ec4059f5cb2d54f8d323dad0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "33e58728b1df1c8d59638a9c3c8750b9543655b8fb837712c22ce8e6395f4978"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "ff4e3878ce96a1e354da1138b1d78e10215db3f954fcc830473afd469c737d0caf6246c5bb1f12a98fe9d71dbb3c5dac5812e6fcd2791f46704925b4b931127a"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-csv/2.21.1/jackson-dataformat-csv-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C55:org.glassfish.jaxb:txw2:4.0.6",
+      "name": "txw2",
+      "versionInfo": "4.0.6",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "0bf7070aee3bb53640d2ea6441e059fb"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "4f4cd53b5ff9a2c5aa1211f15ed2569c57dfb044"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "fcc749785412ef3806fde1ce70f93ef5a0065dcc47fe449bc871db0795cb11af"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "47eb0e4b199bb12804da94cf8a81a1e652e8ca31af68b65d52f1a0cda6e1c9b41276e4bc1e4ea510f83ecccff9978ff8bd05a56c5b16a4181d8e0673d608b2c4"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/glassfish/jaxb/txw2/4.0.6/txw2-4.0.6.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C18:com.smartlogic.cloud:Semaphore-Cloud-Client:5.10.0",
+      "name": "Semaphore-Cloud-Client",
+      "versionInfo": "5.10.0",
+      "copyrightText": "Progress Software Corporation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "1bc784040c44e661d44ef19f1d99325a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "702afa2c99fc3de0712a140aa24556bd72d80629"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a10fe630c82c2b93e350c7ff847dadacd8507c68f7deda740ec304b90e9b3c34"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "9f27bbbcba3ef1894bc0cbc4c09e5583bd84eb1f05df4c0005879f1ffedd0db254652a37f44922eb4b8610654174434d5380b5382bfc01f1ccab841072ef67eb"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/smartlogic/cloud/Semaphore-Cloud-Client/5.10.0/Semaphore-Cloud-Client-5.10.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C59:org.jetbrains:annotations:13.0",
+      "name": "annotations",
+      "versionInfo": "13.0",
+      "copyrightText": "Jetbrains",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "f4fb462172517b46b6cd90003508515a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "919f0dfe192fb4e063e7dacadee7f8bb9a2672a9"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ace2a10dc8e2d5fd34925ecac03e4988b2c0f851650c94b8cef49ba1bd111478"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "5622d0ffe410e7272e2bb9fae1006caedeb86d0c62d2d9f3929a3b3cdcdef1963218fcf0cede82e95ef9f4da3ed4a173fa055ee6e4038886376181e0423e02ff"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C5:com.fasterxml.jackson.core:jackson-annotations:2.21",
+      "name": "jackson-annotations",
+      "versionInfo": "2.21",
+      "copyrightText": "2007-, FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "e0d0c3e7300954f73e43c67d933aaea4"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "b1bc1868bf02dc0bd6c7836257a036a331005309"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "53ca085f4a150f703f49e1aabd935bd03b43e1ea3d55d135438292af22cef56b"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "d832a99867acc2d5afb2596da760c50e6a6b54c1bbc8e6c4186f267a16e1d55c7a916ef8b034ad6b277c41e3342b91dcdc2e3dcea8bdccfe89e7c147894591be"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.21/jackson-annotations-2.21.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C45:org.apache.jena:jena-iri3986:5.6.0",
+      "name": "jena-iri3986",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "64c416d97d9f3487b2462bf70602437d"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "6b2bd497573cc9aa613a82aeb857b3cdb1c5a802"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ac7f3b57e19164517c1afae085623843c8584f0d4b75fa1d080f99211e89e61d"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "624fee74cc76c588412324f9b6854d725731d35dbbb76ff7782dc4e865c2614381e41159675143f62169ab7acc8db565237b01e1fb97209815bc728446912d4f"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-iri3986/5.6.0/jena-iri3986-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C9:com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.21.1",
+      "name": "jackson-dataformat-xml",
+      "versionInfo": "2.21.1",
+      "copyrightText": "2007-, FasterXML",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "d9120cfeab371bded24af440a8f6415a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "73226950371cac1fb361b7ea217db52f9f3fdfb6"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "93b9fb7d4d3f8b0f6876f50f3bf4931c28ed1a6aedbce93c52749068c38ab092"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "b2cc9fb0d3816368d6601fc4bdbc0cbb9a02757c4637a0aa53dd4f1872bf3719956d6bdd46ad4e5e822b5219ff3957882a36fc55bcf91340a2c781b5d4d971cc"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/fasterxml/jackson/dataformat/jackson-dataformat-xml/2.21.1/jackson-dataformat-xml-2.21.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C20:com.squareup.okhttp3:logging-interceptor:5.3.2",
+      "name": "logging-interceptor",
+      "versionInfo": "5.3.2",
+      "copyrightText": "Square",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "afaee5dc0f5adb6013b7fb6a20ed7430"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "c3e383f1e11079b94509f025628959ebf7742d92"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86574a5e35f483e6d6ba97beaf84420996dffca19f4d5cf3a41636365d403239"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "88a2411d54fda221560a9ce70362a572f434881cbe1e047ae3b268798fa83475884d1e8fdd7cda5ed04bbbdf621b7d538e3f9672499960180dfca30ac65827fc"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/squareup/okhttp3/logging-interceptor/5.3.2/logging-interceptor-5.3.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C44:org.apache.jena:jena-core:5.6.0",
+      "name": "jena-core",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "23fdf6f1bb742f8607afa43343c05b74"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "c50ff7db17871ff0d3332e871674f73e49cbb02c"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "82aa954c7e8e3c786bb654259d73ce93f4d47abf4b98d9596a7353b9fd877633"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "6eb956f0e95499df76a0946453fd12016b45b553a4773d7228a9428acb389d25eb0c6704cde99fe9ccce8ad8f7bef2f19918418b169caf480f9d4aa0b2acea85"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-core/5.6.0/jena-core-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C3:com.apicatalog:titanium-rdf-api:1.0.0",
+      "name": "titanium-rdf-api",
+      "versionInfo": "1.0.0",
+      "copyrightText": "Filip filip",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "cb1d28dd49c5fdd68c4cac303e7c049e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5367b3ddc236368906749407aa4b2b4900752404"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "1c414428e51cc08f3147f154d955860422e491c4856d2613bb63797a0450b161"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "569f4f3dedd79d981046d680bdf0274c8e235c585b875a924cbfc0a5cedbd54a25ea16405e447a9dba0794d37d0bcd5728f8f1322bb48bf74d6242f55c2a949b"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/apicatalog/titanium-rdf-api/1.0.0/titanium-rdf-api-1.0.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C21:com.squareup.okhttp3:okhttp-sse:5.3.2",
+      "name": "okhttp-sse",
+      "versionInfo": "5.3.2",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "c20fb764f0077a3466693a7a8455d7c7"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5e21d25808bc853079b9aabeaca9f998a24cbf6c"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "3f1e0001ab6ae0f8e33c9c10a1243810fffb96418d23b193c11aeebd72bcf0fb"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "516ce63e5f17f1ee7e4d85dc04d47611e5238828d6663858dfcc06305789cedaf1e79a99a19434b54be5b3fbdfd27dda3f282c042e9c5e2552fd455ce756bc40"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/squareup/okhttp3/okhttp-sse/5.3.2/okhttp-sse-5.3.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C38:org.apache.commons:commons-collections4:4.5.0",
+      "name": "commons-collections4",
+      "versionInfo": "4.5.0",
+      "copyrightText": "2001-2025 Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "d564105594035b363b193d8ce3c18b98"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "e5cf89f0c6e132fc970bd9a465fdcb8dbe94f75a"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "00f93263c267be201b8ae521b44a7137271b16688435340bf629db1bac0a5845"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "ee43c513ac9dcbd7dd23b5cbb4ea5f65a2e10cdfbb403d080b87e778b3b45062315522297c41eca514a9a946228ad7650f0a572d5b78effb8260dd8084131988"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/commons/commons-collections4/4.5.0/commons-collections4-4.5.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C57:org.jdom:jdom2:2.0.6.1",
+      "name": "jdom2",
+      "versionInfo": "2.0.6.1",
+      "copyrightText": "Jason Hunter & Brett McLaughlin",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "5be72710c66f3c9ba71f8009e92597d1"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "dc15dff8f701b227ee523eeb7a17f77c10eafe2f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0b20f45e3a0fd8f0d12cdc5316b06776e902b1365db00118876f9175c60f302c"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "81642db76358fbf131dfe9c2f1d9c280fc23b6bfde6a16a2d36dacc490a1a2af4e0fb4abb5cd78005718bb1d158a42fd6834cd2bfe616ec59625df01951f2478"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/jdom/jdom2/2.0.6.1/jdom2-2.0.6.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C2:com.apicatalog:titanium-json-ld:1.7.0",
+      "name": "titanium-json-ld",
+      "versionInfo": "1.7.0",
+      "copyrightText": "Filip Kolarik",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "883518afe76acf7446eb6c419756a2b3"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "466235cca04238bb070e86635feab2a512b496d6"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "739918b6618da79d99bd39bcf4f9d16cbcb2147a44b686ca8bdb9e4fed2ed231"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "7842110bac46b3129100b47fc1ccd2f20274a66164557b7ccb1faea23ddddc33bcfc76c7adb967849e996a204c65d0a7fb2168722446302c2832c183af15e4d2"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/apicatalog/titanium-json-ld/1.7.0/titanium-json-ld-1.7.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C49:org.apache.thrift:libthrift:0.22.0",
+      "name": "libthrift",
+      "versionInfo": "0.22.0",
+      "copyrightText": "2006 - 2019, Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "3537832acee011a73666b9855eaba7b4"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "81ad6824994b2908eee1bc0c855e462816293c79"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "dfd26d55b0c88e065ec795cdf8a823128021eebd310e4895cbb4289b56445383"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "cebd7c4f24c2dc4893cf89f2f7b74175ab3c0c049e89c926e7f46cf40ab8bf396f6e53c84e75c3d35daf562224c6cfe12ba181e8535672e7a46a78865de29eb4"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/thrift/libthrift/0.22.0/libthrift-0.22.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C33:io.github.rburgst:okhttp-digest:3.1.1",
+      "name": "okhttp-digest",
+      "versionInfo": "3.1.1",
+      "copyrightText": "github.com/rburgst",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "273d1f50be9bc156c2110dd315b7370c"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "c076a26e02cb44b414459cdc1ae62b2b587f4bb0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "86c3e09d956cd0b7b785472adfc650e7e87d381cc06ba6f77e48501896f1515a"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "e4fc133a8093e72a1d0d58c6525019c355a9f0a2dd4785e6a969502dbe07d538cf21930e2eb6cb7fb231caec9c9b66034661bc1ec11a7fe7c09726745a100654"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/io/github/rburgst/okhttp-digest/3.1.1/okhttp-digest-3.1.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C28:commons-io:commons-io:2.21.0",
+      "name": "commons-io",
+      "versionInfo": "2.21.0",
+      "copyrightText": "2002-2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "bc7e020873f086ede85f97bd9f013215"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "52a6f68fe5afe335cde95461dd5c3412f04996f7"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "7d643a2afea8b058b762aa6fb90e5b256f6c729739f8b3784c3370ddc609e88d"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "7ac1aa4d834cd7cdecaee223a64c63d481810c73dfdb5109f402234a05cadf754e414cead99072f5140d4f7042ee084161935fb28129a631d908d989c5bbac5d"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/commons-io/commons-io/2.21.0/commons-io-2.21.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C30:dev.langchain4j:langchain4j-core:1.11.0",
+      "name": "langchain4j-core",
+      "versionInfo": "1.11.0",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "ed5559e09204bc6052596dc45f47586e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "2f3601d0edd4e5339af31f6610b3faaeaf374530"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "9e2452198541aad86efc096356a3f0ca334dc1b44f9aa332384c10de3a8373e6"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "b04ee92c9722f99716268f441cc28b50402d975482a89f867078f01dbb592d8328fbf91f6b50ad0fd70057e385cf96f17d052194d5543dbfde43351c967096d9"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/dev/langchain4j/langchain4j-core/1.11.0/langchain4j-core-1.11.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C4:com.apicatalog:titanium-rdf-n-quads:1.0.2",
+      "name": "titanium-rdf-n-quads",
+      "versionInfo": "1.0.2",
+      "copyrightText": "Filip Kolarik",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "4b01a665ab934a2bb16e378e565c281e"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "5a5fc67507faa2da41adc2a0be1aa013f9cb37cf"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "325ba3413deb96b7cf7f8c64cd6ed23035e3f8133a7ebb401cd6b763dff889c6"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "247c25a1ac2f735e56e05bf24a8a3105b47c45c6fd4b8f8560cbbbbd76a72937741e86af9037badac838c3028e94dc0c2e2a8361444ad3445da13fa07cd769f1"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/apicatalog/titanium-rdf-n-quads/1.0.2/titanium-rdf-n-quads-1.0.2.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C34:jakarta.activation:jakarta.activation-api:2.1.4",
+      "name": "jakarta.activation-api",
+      "versionInfo": "2.1.4",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "bc1602eee7bc61a0b86f14bbbb0cc794"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "9e5c2a0d75dde71a0bedc4dbdbe47b78a5dc50f8"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "c9db52100ce6c8aac95cc39075f95720d2e561b11f8051b81c121ad4effd7004"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "cd078772acb5ebf1f90f7c737f372b7e86a5ce31b995ed759526a9eee73fd89f97e506f9a208ba3b73e757cb78830b829733411cf7989680aea2272abba7323b"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/jakarta/activation/jakarta.activation-api/2.1.4/jakarta.activation-api-2.1.4.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C16:com.google.errorprone:error_prone_annotations:2.41.0",
+      "name": "error_prone_annotations",
+      "versionInfo": "2.41.0",
+      "copyrightText": "Google LLC.",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "75e3b25da8b8a2136463c4674f5e49bf"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "4381275efdef6ddfae38f002c31e84cd001c97f0"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a56e782b5b50811ac204073a355a21d915a2107fce13ec711331ad036f660fcc"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "e2eb4bf9f36f95a4d4c5ea344db5cd90a456e63bef8e52932b8f6f4ecfdd59cb2f6c2ce9e67b0070c82177e42885688b95afef591b16001f789b378f18afdf30"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/com/google/errorprone/error_prone_annotations/2.41.0/error_prone_annotations-2.41.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C62:org.slf4j:jcl-over-slf4j:2.0.17",
+      "name": "jcl-over-slf4j",
+      "versionInfo": "2.0.17",
+      "copyrightText": "QOS.ch Sarl (Switzerland)",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "4fcd46ca51e55b9fd9b0db34474927e0"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "76ea503eb688f06556a9ba69995d7eab63e34531"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "affd06771589ebfe454bb11315a4f466ecaa135b95f3e7939534cf1d2fd7064c"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "7efb2771bad2e643b0e814cd78ab4f9af3ea166643700776618c397e9755ca11f4b7c00030562a619932c9d2ec5114fd253ece3abbc3db2f1a064431d8990733"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/slf4j/jcl-over-slf4j/2.0.17/jcl-over-slf4j-2.0.17.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C32:io.github.erdtman:java-json-canonicalization:1.1",
+      "name": "java-json-canonicalization",
+      "versionInfo": "1.1",
+      "copyrightText": "Samuel Erdtman",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "eb0d5f9152537adc89496b3a09792df4"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "605be827a90e12a465bbc30fcc5c775a1eb38f8f"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "ed12a01f28d147898312963a1f704e90290b67a61f34fa3a761f41c134f4e691"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "8c30197c069e27d33704aa69029a122d3a528235ab8baf5c7af22ebb13ff29d8d1888542bc5e29f4d2df654bc65b00a6777abe6d00e14a4589c2c75935c5466c"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/io/github/erdtman/java-json-canonicalization/1.1/java-json-canonicalization-1.1.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C47:org.apache.jena:jena-langtag:5.6.0",
+      "name": "jena-langtag",
+      "versionInfo": "5.6.0",
+      "copyrightText": "2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "c5fd7bde81d7de62e089680311765b62"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "c63e4832a92d2a076b3c12bb7027bfcc9f97a014"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "0ffb632a70ec4178d76bcae508ea9653d6f14117ab2eae9d2c70721321a710d0"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "179df8e7972ae890c8357eea94b99c963564b6e2468235e4b754c76827057cdf5725aa101d668013640de8102d064ebd25a98a3f0d7374512c913880fa1988c5"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/jena/jena-langtag/5.6.0/jena-langtag-5.6.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C41:org.apache.commons:commons-lang3:3.20.0",
+      "name": "commons-lang3",
+      "versionInfo": "3.20.0",
+      "copyrightText": "2001-2025 The Apache Software Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "4b29562ded527aa074e1d44f8646dac5"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "65897b3e5731220962e659e001904af3c3cbeba9"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "69e5c9fa35da7a51a5fd2099dfe56a2d8d32cf233e2f6d770e796146440263f4"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "1c72db334ea44f932c35e602b78907865f5bab43e30c871c9be67c8184eaa778f32d7bc3ab525d5921cd28619d3f9babfd483f17de54f007ee07db2e074b0307"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.20.0/commons-lang3-3.20.0.jar"
+    },
+    {
+      "SPDXID": "SPDXRef-C52:org.eclipse.angus:angus-activation:2.0.3",
+      "name": "angus-activation",
+      "versionInfo": "2.0.3",
+      "copyrightText": "Eclipse Foundation",
+      "checksums": [
+        {
+          "algorithm": "MD5",
+          "checksumValue": "ad20392145690b36b4f950fe31a31a2a"
+        },
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7f80607ea5014fef0b1779e6c33d63a88a45a563"
+        },
+        {
+          "algorithm": "SHA256",
+          "checksumValue": "a6bd35c538cf90fff941ad6258c40c08fca0b5c9c3f536c657114f27ce0527a7"
+        },
+        {
+          "algorithm": "SHA512",
+          "checksumValue": "efb987b781f665589b2a524d86826ffcf37eaf105b2f823be124fded85bd118098c0749b5d268373d00b1d3b8bf0f89f86670444f9990b91948704a7052376e1"
+        }
+      ],
+      "downloadLocation": "https://repo1.maven.org/maven2/org/eclipse/angus/angus-activation/2.0.3/angus-activation-2.0.3.jar"
+    }
+  ]
+}
