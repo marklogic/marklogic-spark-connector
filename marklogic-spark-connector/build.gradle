@@ -75,7 +75,7 @@ dependencies {
   // Supports testing the embedder feature.
   testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.11.0-beta19"
 
-  testImplementation "com.marklogic:ml-app-deployer:6.2-SNAPSHOT"
+  testImplementation "com.marklogic:ml-app-deployer:6.2.0"
   testImplementation "com.marklogic:marklogic-junit5:2.0.0"
 
   // For asserting on log messages.
