@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -15,6 +15,7 @@ import org.apache.spark.sql.catalyst.InternalRow;
 
 import java.io.Closeable;
 import java.util.Iterator;
+import java.util.Locale;
 
 /**
  * Provides an {@code Iterator} interface on top of an {@code ArchiveFileReader}, thereby allowing a
@@ -48,9 +49,20 @@ public class ArchiveFileIterator implements Iterator<DocumentInputs>, Closeable 
         }
         InputStreamHandle contentHandle = archiveFileReader.getContentHandleForCurrentZipEntry();
         DocumentMetadataHandle metadata = DocumentRowSchema.makeDocumentMetadata(row);
+
         if (this.documentFormat != null) {
             contentHandle.withFormat(this.documentFormat);
+        } else {
+            String format = DocumentRowSchema.getFormat(row);
+            if (format != null && !format.trim().isEmpty()) {
+                try {
+                    contentHandle.withFormat(Format.valueOf(format.toUpperCase(Locale.ROOT)));
+                } catch (IllegalArgumentException e) {
+                    Util.MAIN_LOGGER.warn("Invalid format '{}' for archive file entry: {}; cause: {}", format, uri, e.getMessage());
+                }
+            }
         }
+
         return new DocumentInputs(uri, contentHandle, null, metadata);
     }
 

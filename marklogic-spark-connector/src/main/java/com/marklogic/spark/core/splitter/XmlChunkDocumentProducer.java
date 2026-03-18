@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.splitter;
 
@@ -9,6 +9,7 @@ import com.marklogic.client.io.DOMHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.core.ChunkInputs;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DOMChunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
@@ -24,7 +25,6 @@ import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
@@ -36,8 +36,8 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final DocumentBuilderFactory documentBuilderFactory;
 
     XmlChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                             List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
+                             List<ChunkInputs> chunkInputsList, ChunkConfig chunkConfig) {
+        super(sourceDocument, sourceDocumentFormat, chunkInputsList, chunkConfig);
 
         // Namespaces aren't needed for producing chunks.
         this.domHelper = new DOMHelper(null);
@@ -65,18 +65,18 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element chunksElement = doc.createElementNS(chunkConfig.getXmlNamespace(), DEFAULT_CHUNKS_ELEMENT_NAME);
         root.appendChild(chunksElement);
 
-        List<Chunk> chunks = new ArrayList<>();
-        int chunksCounter = 0;
+        List<Chunk> addedChunks = new ArrayList<>();
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            Element classificationReponseNode = getNthClassificationResponseElement(chunksCounter++);
-            float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
-            addChunk(doc, textSegments.get(listIndex++), chunksElement, chunks, classificationReponseNode, embedding);
+            ChunkInputs chunkInputs = chunkInputsList.get(listIndex);
+            DOMChunk chunk = addChunk(doc, chunkInputs, chunksElement);
+            addedChunks.add(chunk);
+            listIndex++;
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
         return new DocumentAndChunks(
             new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new DOMHandle(doc)),
-            chunks
+            addedChunks
         );
     }
 
@@ -86,45 +86,38 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         Element chunksElement = doc.createElementNS(chunkConfig.getXmlNamespace(), determineChunksElementName(doc));
         doc.getDocumentElement().appendChild(chunksElement);
 
-        List<Chunk> chunks = new ArrayList<>();
-        AtomicInteger ct = new AtomicInteger(0);
-        for (String textSegment : textSegments) {
-            int segCounter = ct.getAndIncrement();
-            Element classificationReponseNode = getNthClassificationResponseElement(segCounter);
-            float[] embedding = getEmbeddingIfExists(embeddings, segCounter);
-            addChunk(doc, textSegment, chunksElement, chunks, classificationReponseNode, embedding);
+        List<Chunk> addedChunks = new ArrayList<>();
+        for (ChunkInputs chunkInputs : chunkInputsList) {
+            DOMChunk chunk = addChunk(doc, chunkInputs, chunksElement);
+            addedChunks.add(chunk);
         }
 
         return new DocumentAndChunks(
             new DocumentWriteOperationImpl(sourceDocument.getUri(), sourceDocument.getMetadata(), new DOMHandle(doc)),
-            chunks
+            addedChunks
         );
     }
 
-    private Element getNthClassificationResponseElement(int n) {
-        if (classifications != null && !classifications.isEmpty()) {
-            byte[] classificationBytes = classifications.get(n);
-            try {
-                DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
-                Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
-                return classificationResponse.getDocumentElement();
-            } catch (Exception e) {
-                throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
-            }
-        } else {
-            return null;
+    private Element getClassificationResponseElement(byte[] classificationBytes) {
+        try {
+            DocumentBuilder builder = documentBuilderFactory.newDocumentBuilder();
+            Document classificationResponse = builder.parse(new ByteArrayInputStream(classificationBytes));
+            return classificationResponse.getDocumentElement();
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
         }
     }
 
-    private void addChunk(Document doc, String textSegment, Element chunksElement, List<Chunk> chunks, Element classificationResponse, float[] embedding) {
+    private DOMChunk addChunk(Document doc, ChunkInputs chunkInputs, Element chunksElement) {
         Element chunk = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk");
         chunksElement.appendChild(chunk);
 
         Element text = doc.createElementNS(chunkConfig.getXmlNamespace(), "text");
-        text.setTextContent(textSegment);
+        text.setTextContent(chunkInputs.getText());
         chunk.appendChild(text);
 
-        if (classificationResponse != null) {
+        if (chunkInputs.getClassification() != null) {
+            Element classificationResponse = getClassificationResponseElement(chunkInputs.getClassification());
             Node classificationNode = doc.createElement("classification");
             chunk.appendChild(classificationNode);
             for (int i = 0; i < classificationResponse.getChildNodes().getLength(); i++) {
@@ -133,11 +126,21 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
             }
         }
 
-        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
-        if (embedding != null) {
-            domChunk.addEmbedding(embedding);
+        if (chunkInputs.getMetadata() != null) {
+            Element metadataElement = doc.createElementNS(chunkConfig.getXmlNamespace(), "chunk-metadata");
+            // Re: possibly converting JSON to XML - Copilot recommends using the serialized string, as there's no
+            // "correct" way for converting JSON to XML, particularly in regard to arrays. If the user wants XML
+            // documents, they can always e.g. use a REST transform to determine how they want to represent the JSON
+            // as XML.
+            metadataElement.setTextContent(chunkInputs.getMetadata().toString());
+            chunk.appendChild(metadataElement);
         }
-        chunks.add(domChunk);
+
+        var domChunk = new DOMChunk(doc, chunk, this.xmlChunkConfig, this.xPathFactory);
+        if (chunkInputs.getEmbedding() != null) {
+            domChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
+        }
+        return domChunk;
     }
 
     private String determineChunksElementName(Document doc) {

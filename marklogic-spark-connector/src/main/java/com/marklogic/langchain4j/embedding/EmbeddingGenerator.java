@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.langchain4j.embedding;
 
@@ -29,6 +29,7 @@ public class EmbeddingGenerator implements EmbeddingProducer {
     private final EmbeddingModel embeddingModel;
     private final int batchSize;
     private final String prompt;
+    private final String modelName;
 
     // Only used for debug logging.
     private static final AtomicLong tokenCount = new AtomicLong(0);
@@ -38,6 +39,7 @@ public class EmbeddingGenerator implements EmbeddingProducer {
         this.embeddingModel = embeddingModel;
         this.batchSize = batchSize;
         this.prompt = prompt;
+        this.modelName = embeddingModel.modelName();
     }
 
     @Override
@@ -62,7 +64,7 @@ public class EmbeddingGenerator implements EmbeddingProducer {
         List<Embedding> embeddings = generateEmbeddings(segments);
         for (int i = 0; i < embeddings.size(); i++) {
             Embedding embedding = embeddings.get(i);
-            chunks.get(chunkCounter).addEmbedding(embedding.vector());
+            chunks.get(chunkCounter).addEmbedding(embedding.vector(), modelName);
             chunkCounter++;
         }
         return chunkCounter;

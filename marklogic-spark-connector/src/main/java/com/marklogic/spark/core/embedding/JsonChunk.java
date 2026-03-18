@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.embedding;
 
@@ -34,7 +34,11 @@ public class JsonChunk implements Chunk {
     }
 
     @Override
-    public void addEmbedding(float[] embedding) {
+    public void addEmbedding(float[] embedding, String modelName) {
+        if (modelName != null) {
+            chunk.put("model-name", modelName);
+        }
+
         if (base64EncodeVectors) {
             String base64Vector = VectorUtil.base64Encode(embedding);
             chunk.put(this.embeddingArrayName, base64Vector);

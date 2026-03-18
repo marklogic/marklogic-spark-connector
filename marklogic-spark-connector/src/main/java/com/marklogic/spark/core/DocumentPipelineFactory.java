@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core;
 
+import com.marklogic.langchain4j.Langchain4jFactory;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import com.marklogic.spark.core.embedding.ChunkSelector;
@@ -15,19 +15,28 @@ import com.marklogic.spark.core.embedding.EmbeddingProducer;
 import com.marklogic.spark.core.embedding.EmbeddingProducerFactory;
 import com.marklogic.spark.core.extraction.TextExtractor;
 import com.marklogic.spark.core.extraction.TikaTextExtractor;
+import com.marklogic.spark.core.nuclia.DefaultNuaClient;
+import com.marklogic.spark.core.nuclia.MockNuaClient;
+import com.marklogic.spark.core.nuclia.NuaClient;
 import com.marklogic.spark.core.splitter.TextSplitter;
 import com.marklogic.spark.core.splitter.TextSplitterFactory;
 
-import java.lang.reflect.InvocationTargetException;
-
 public abstract class DocumentPipelineFactory {
 
-    private static final String FACTORY_CLASS_NAME = "com.marklogic.langchain4j.Langchain4jFactory";
+    private static final String MOCK_NUA_CLIENT_OPTION = "spark.marklogic.testing.mockNuaClientResponse";
 
     // For some reason, Sonar thinks the check for four nulls always resolves to false, even though it's definitely
     // possible. So ignoring that warning.
     @SuppressWarnings("java:S2589")
     public static DocumentPipeline newDocumentPipeline(Context context) {
+        // Check for Nuclia configuration first
+        NuaClient nuaClient = newNuaClient(context);
+        if (nuaClient != null) {
+            TextClassifier textClassifier = TextClassifierFactory.newTextClassifier(context);
+            return new DocumentPipeline(nuaClient, textClassifier);
+        }
+
+        // Standard pipeline with separate components
         final TextExtractor textExtractor = context.getBooleanOption(Options.WRITE_EXTRACTED_TEXT, false) ?
             new TikaTextExtractor() : null;
         final TextSplitter textSplitter = newTextSplitter(context);
@@ -52,6 +61,31 @@ public abstract class DocumentPipelineFactory {
             new DocumentPipeline(textExtractor, textSplitter, textClassifier, embeddingProducer, chunkSelector);
     }
 
+    private static NuaClient newNuaClient(Context context) {
+        // Check for mock option first (for testing)
+        if (context.hasOption(MOCK_NUA_CLIENT_OPTION)) {
+            String mockResponseJson = context.getStringOption(MOCK_NUA_CLIENT_OPTION);
+            return new MockNuaClient(mockResponseJson);
+        }
+
+        String nuaKey = context.getProperties().get(Options.WRITE_NUCLIA_NUA_KEY);
+        if (nuaKey == null || nuaKey.trim().isEmpty()) {
+            return null;
+        }
+
+        DefaultNuaClient.Builder builder = DefaultNuaClient.builder(nuaKey);
+
+        int timeout = context.getIntOption(Options.WRITE_NUCLIA_TIMEOUT, 120, 1);
+        builder.withTimeout(timeout);
+
+        String apiUrl = context.getProperties().get(Options.WRITE_NUCLIA_API_URL);
+        if (apiUrl != null && !apiUrl.trim().isEmpty()) {
+            builder.withApiUrl(apiUrl);
+        }
+
+        return builder.build();
+    }
+
     private static TextSplitter newTextSplitter(Context context) {
         boolean shouldSplit = context.getProperties().keySet().stream().anyMatch(key -> key.startsWith(Options.WRITE_SPLITTER_PREFIX));
         if (!shouldSplit) {
@@ -73,24 +107,7 @@ public abstract class DocumentPipelineFactory {
     }
 
     private static Object newLangchain4jProcessorFactory() {
-        try {
-            return Class.forName(FACTORY_CLASS_NAME).getDeclaredConstructor().newInstance();
-        } catch (UnsupportedClassVersionError e) {
-            throw new ConnectorException("Unable to configure support for splitting documents and/or generating embeddings. " +
-                "Please ensure you are using Java 17 or higher for these operations.", e);
-        }
-        // Catch every checked exception from trying to instantiate the class. Any exception from the factory class
-        // itself is expected to be a RuntimeException that should bubble up.
-        catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException |
-               InvocationTargetException ex) {
-            if (Util.MAIN_LOGGER.isDebugEnabled()) {
-                Util.MAIN_LOGGER.debug(
-                    "Unable to instantiate factory class {}; this is expected when the marklogic-langchain4j module is not on the classpath. Cause: {}",
-                    FACTORY_CLASS_NAME, ex.getMessage()
-                );
-            }
-            return null;
-        }
+        return new Langchain4jFactory();
     }
 
     private DocumentPipelineFactory() {

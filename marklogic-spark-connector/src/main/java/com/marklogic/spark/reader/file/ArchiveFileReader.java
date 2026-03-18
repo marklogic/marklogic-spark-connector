@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
@@ -9,6 +9,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
+import com.marklogic.spark.writer.file.MetadataEntryName;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
 import org.apache.spark.sql.connector.read.PartitionReader;
@@ -74,7 +75,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
                 logArchiveFormat();
             }
 
-            return isLegacyFormat ? readContentFollowedByMetadata(nextZipEntry) : readMetadataFollowedByContent();
+            return isLegacyFormat ? readContentFollowedByMetadata(nextZipEntry) : readMetadataFollowedByContent(nextZipEntry.getName());
         } catch (IOException e) {
             String message = String.format("Unable to read archive file at %s; cause: %s", this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
@@ -163,7 +164,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
      * This is where we implement streaming-during-write-to-MarkLogic. We read the metadata entry as normal - good.
      * Then we build everything in our row except the content.
      */
-    private boolean readMetadataFollowedByContent() throws IOException {
+    private boolean readMetadataFollowedByContent(String metadataZipEntryName) throws IOException {
         byte[] metadataBytes = fileContext.readBytes(currentZipInputStream);
         if (metadataBytes == null || metadataBytes.length == 0) {
             return openNextFileAndReadNextEntry();
@@ -175,8 +176,14 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
         // We still do this to get the stream ready to read the next entry.
         ZipEntry contentZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
         Objects.requireNonNull(contentZipEntry);
+
+        // Parse the metadata entry name with the actual document entry name to validate our parsing.
+        // This helps distinguish pre-3.1.0 archives from 3.1.0+ archives.
+        MetadataEntryName metadataEntryName = MetadataEntryName.parse(metadataZipEntryName, contentZipEntry.getName());
+
         DocumentRowBuilder rowBuilder = new DocumentRowBuilder(this.metadataCategories)
             .withUri(contentZipEntry.getName())
+            .withFormat(metadataEntryName.format())
             .withMetadata(metadata);
 
         if (!StreamingMode.STREAM_DURING_WRITER_PHASE.equals(this.streamingMode)) {

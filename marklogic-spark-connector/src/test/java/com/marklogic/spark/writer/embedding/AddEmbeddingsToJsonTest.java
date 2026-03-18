@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.embedding;
 
@@ -11,27 +11,18 @@ import com.marklogic.client.row.RowManager;
 import com.marklogic.client.row.RowRecord;
 import com.marklogic.client.row.RowSet;
 import com.marklogic.junit5.RequiresMarkLogic12;
-import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
-
-    private static final String TEST_EMBEDDING_FUNCTION_CLASS = "com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction";
-
-    @AfterEach
-    void teardown() {
-        TestEmbeddingModel.reset();
-    }
+class AddEmbeddingsToJsonTest extends AbstractEmbeddingTest {
 
     /**
      * Tests the use case where a user wants to split the text into chunks and generate embeddings for each chunk, all
@@ -223,6 +214,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             assertTrue(firstChunk.has("text"));
             assertTrue(firstChunk.has("embedding"), "Verifies that a user can override the default of '_vector' in the 3.0 " +
                 "release to be the default value of 'embedding' from the 2.x releases. Actual chunk doc: " + firstChunk.toPrettyString());
+
+            assertEquals(EXPECTED_MODEL_NAME, firstChunk.get("model-name").asText(), "Model name should be stored as of 3.1.0");
         }
     }
 
@@ -242,6 +235,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         JsonNode doc = readJsonDocument("/custom-path-test.json");
         assertTrue(doc.has("_vector"));
         assertEquals(JsonNodeType.ARRAY, doc.get("_vector").getNodeType());
+        assertEquals(EXPECTED_MODEL_NAME, doc.get("model-name").asText(), "Model name should be stored as of 3.1.0");
     }
 
     @Test
@@ -267,6 +261,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
         for (int i = 0; i < chunks.size(); i++) {
             JsonNode chunk = chunks.get(i);
             assertTrue(chunk.has("_vector"), "No embedding found in chunk " + i);
+            assertEquals(EXPECTED_MODEL_NAME, chunk.get("model-name").asText(), "Model name should be stored as of 3.1.0");
         }
 
         assertEquals(3, TestEmbeddingModel.batchCounter, "Expecting 3 batches to be sent to the test " +
@@ -371,6 +366,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
                 "that URI caused the construction of a DocumentWriteOperationImpl to fail. The fix - providing a " +
                 "temporary initial URI - avoids this bug, with the real URI being set after the embedding " +
                 "generation process.");
+
+        assertEquals(EXPECTED_MODEL_NAME, doc.get("model-name").asText(), "Model name should be stored as of 3.1.0");
     }
 
     @Test
@@ -463,6 +460,7 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             assertTrue(node.has("text"));
             assertTrue(node.has("_vector"));
             assertEquals(JsonNodeType.ARRAY, node.get("_vector").getNodeType());
+            assertEquals(EXPECTED_MODEL_NAME, node.get("model-name").asText(), "Model name should be stored as of 3.1.0");
         });
     }
 
@@ -501,6 +499,8 @@ class AddEmbeddingsToJsonTest extends AbstractIntegrationTest {
             assertFalse(chunk.has("lang"), "Due to MLE-22918, the 'lang' field is not set to 'zxx' since this " +
                 "will disable stemming on data outside the intended scope of the 'lang' field. A user is free to " +
                 "e.g. use a REST transform to add this if desired.");
+
+            assertEquals(EXPECTED_MODEL_NAME, chunk.get("model-name").asText(), "Model name should be stored as of 3.1.0");
         }
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.splitter;
 
@@ -14,6 +14,7 @@ import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.core.ChunkInputs;
 import com.marklogic.spark.core.embedding.Chunk;
 import com.marklogic.spark.core.embedding.DocumentAndChunks;
 import com.marklogic.spark.core.embedding.JsonChunk;
@@ -30,8 +31,8 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
     private final XmlMapper xmlMapper;
 
     JsonChunkDocumentProducer(DocumentWriteOperation sourceDocument, Format sourceDocumentFormat,
-                              List<String> textSegments, ChunkConfig chunkConfig, List<byte[]> classifications, List<float[]> embeddings) {
-        super(sourceDocument, sourceDocumentFormat, textSegments, chunkConfig, classifications, embeddings);
+                              List<ChunkInputs> chunkInputsList, ChunkConfig chunkConfig) {
+        super(sourceDocument, sourceDocumentFormat, chunkInputsList, chunkConfig);
         xmlMapper = new XmlMapper();
     }
 
@@ -42,24 +43,24 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = doc.putArray(determineChunksArrayName(doc));
         List<Chunk> chunks = new ArrayList<>();
-        int chunksCounter = 0;
-        for (String text : textSegments) {
+        for (ChunkInputs chunkInputs : chunkInputsList) {
             ObjectNode chunk = chunksArray.addObject();
-            chunk.put("text", text);
-            if (classifications != null && classifications.size() > chunksCounter) {
+            chunk.put("text", chunkInputs.getText());
+            if (chunkInputs.getClassification() != null) {
                 try {
-                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter));
+                    JsonNode classification = xmlMapper.readTree(chunkInputs.getClassification());
                     chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", sourceDocument.getUri(), e.getMessage()), e);
                 }
             }
-            float[] embedding = getEmbeddingIfExists(embeddings, chunksCounter);
-            var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
-            if (embedding != null) {
-                jsonChunk.addEmbedding(embedding);
+            if (chunkInputs.getMetadata() != null) {
+                chunk.set("chunk-metadata", chunkInputs.getMetadata());
             }
-            chunksCounter++;
+            var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
+            if (chunkInputs.getEmbedding() != null) {
+                jsonChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
+            }
             chunks.add(jsonChunk);
         }
 
@@ -81,26 +82,26 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
 
         ArrayNode chunksArray = rootField.putArray(DEFAULT_CHUNKS_ARRAY_NAME);
         List<Chunk> chunks = new ArrayList<>();
-        int chunksCounter = 0;
         for (int i = 0; i < this.maxChunksPerDocument && hasNext(); i++) {
-            String text = textSegments.get(listIndex);
+            ChunkInputs chunkInputs = chunkInputsList.get(listIndex);
             ObjectNode chunk = chunksArray.addObject();
-            chunk.put("text", text);
-            if (classifications != null && classifications.size() > chunksCounter) {
+            chunk.put("text", chunkInputs.getText());
+            if (chunkInputs.getClassification() != null) {
                 try {
-                    JsonNode classification = xmlMapper.readTree(classifications.get(chunksCounter));
+                    JsonNode classification = xmlMapper.readTree(chunkInputs.getClassification());
                     chunk.set("classification", classification);
                 } catch (IOException e) {
                     throw new ConnectorException(String.format("Unable to classify data from document with URI: %s; cause: %s", uri, e.getMessage()), e);
                 }
             }
-            float[] embedding = getEmbeddingIfExists(embeddings, listIndex);
+            if (chunkInputs.getMetadata() != null) {
+                chunk.set("chunk-metadata", chunkInputs.getMetadata());
+            }
             var jsonChunk = new JsonChunk(chunk, null, chunkConfig.getEmbeddingName(), chunkConfig.isBase64EncodeVectors());
-            if (embedding != null) {
-                jsonChunk.addEmbedding(embedding);
+            if (chunkInputs.getEmbedding() != null) {
+                jsonChunk.addEmbedding(chunkInputs.getEmbedding(), chunkInputs.getModelName());
             }
             chunks.add(jsonChunk);
-            chunksCounter++;
             listIndex++;
         }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -308,15 +308,13 @@ public class DocBuilder {
 
     private List<DocumentWriteOperation> buildChunkDocuments(DocumentInputs inputs, DocumentWriteOperation mainDocument, DocumentWriteOperation extractedTextDocument) {
         List<DocumentWriteOperation> chunkDocuments = new ArrayList<>();
-        if (inputs.getChunks() != null && !inputs.getChunks().isEmpty()) {
+        if (inputs.getChunkInputsList() != null && !inputs.getChunkInputsList().isEmpty()) {
             // If there's an extracted doc, we want to use that as the source document so that the user has the option
             // of adding chunks to it.
             DocumentWriteOperation sourceDocument = extractedTextDocument != null ? extractedTextDocument : mainDocument;
             Iterator<DocumentWriteOperation> iterator = chunkAssembler.assembleChunks(
                 sourceDocument,
-                inputs.getChunks(),
-                inputs.getClassifications(),
-                inputs.getEmbeddings());
+                inputs.getChunkInputsList());
             while (iterator.hasNext()) {
                 DocumentWriteOperation doc = iterator.next();
                 chunkDocuments.add(doc);

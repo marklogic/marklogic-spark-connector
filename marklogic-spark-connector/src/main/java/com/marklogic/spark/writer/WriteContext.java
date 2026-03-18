@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -8,18 +8,21 @@ import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatch;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.WriteEvent;
+import com.marklogic.client.datamovement.filter.IncrementalWriteFilter;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
 import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
+import com.marklogic.spark.dom.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.IntConsumer;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -30,11 +33,16 @@ public class WriteContext extends ContextSupport {
     private final boolean usingFileSchema;
     private final int batchSize;
 
+    // When streaming to MarkLogic with a transform, the optional list of extensions to require in order for the
+    // transform to be applied if the document has format of "binary".
+    private final Set<String> streamTransformBinaryExtensions;
+
     private int fileSchemaContentPosition;
     private int fileSchemaPathPosition;
 
     // This unfortunately is not final as we don't know it when this object is created.
     private int numPartitions;
+
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
@@ -51,6 +59,8 @@ public class WriteContext extends ContextSupport {
             this.fileSchemaPathPosition = names.indexOf("path");
             this.fileSchemaContentPosition = names.indexOf("content");
         }
+
+        this.streamTransformBinaryExtensions = parseStreamTransformBinaryExtensions();
     }
 
     public StructType getSchema() {
@@ -109,6 +119,34 @@ public class WriteContext extends ContextSupport {
         }
 
         return writeBatcher;
+    }
+
+    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {
+        IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
+            .fromView(
+                getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
+                getStringOption(Options.WRITE_INCREMENTAL_VIEW)
+            )
+            .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
+            .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
+            .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
+            .onDocumentsSkipped(skippedDocs -> {
+                WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
+                skippedCountConsumer.accept(skippedDocs.length);
+            })
+            .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
+
+        if (hasOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS)) {
+            String[] jsonExclusions = getStringOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS).split("\\r?\\n");
+            builder.jsonExclusions(jsonExclusions);
+        }
+
+        if (hasOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS)) {
+            String[] xmlExclusions = getStringOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS).split("\\r?\\n");
+            builder.xmlExclusions(xmlExclusions);
+        }
+
+        return builder.build();
     }
 
     /**
@@ -227,7 +265,7 @@ public class WriteContext extends ContextSupport {
         ));
     }
 
-    private Optional<ServerTransform> makeRestTransform() {
+    Optional<ServerTransform> makeRestTransform() {
         String transformName = getProperties().get(Options.WRITE_TRANSFORM_NAME);
         if (transformName != null && !transformName.trim().isEmpty()) {
             ServerTransform transform = new ServerTransform(transformName);
@@ -289,5 +327,61 @@ public class WriteContext extends ContextSupport {
 
     public void setNumPartitions(int numPartitions) {
         this.numPartitions = numPartitions;
+    }
+
+    /**
+     * Parses the option into a set of lowercase extensions without dots.
+     *
+     * @return a set of extensions, or null if the option is not configured
+     */
+    private Set<String> parseStreamTransformBinaryExtensions() {
+        if (!hasOption(Options.STREAM_TRANSFORM_BINARY_EXTENSIONS)) {
+            return null;
+        }
+        String extensions = getStringOption(Options.STREAM_TRANSFORM_BINARY_EXTENSIONS);
+        Set<String> result = new HashSet<>();
+        for (String ext : extensions.split(",")) {
+            String trimmed = ext.trim().toLowerCase(Locale.ROOT);
+            if (trimmed.startsWith(".")) {
+                trimmed = trimmed.substring(1);
+            }
+            if (!trimmed.isEmpty()) {
+                result.add(trimmed);
+            }
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    /**
+     * Determines if a streaming transform should be applied based on document format and URI extension.
+     * Transform is applied if STREAM_TRANSFORM_BINARY_EXTENSIONS is not configured, OR if it is configured
+     * and the document has format=BINARY and a URI extension matching one of the configured extensions.
+     *
+     * @param uri    the document URI
+     * @param format the document format (e.g., Format.BINARY, Format.JSON, Format.XML)
+     * @return true if the transform should be applied, false otherwise
+     */
+    boolean shouldApplyStreamingTransform(String uri, Format format) {
+        // If no extensions configured, always apply transform (backward compatible behavior). It is a little odd to use
+        // a transform during streaming as that forces every document to be loaded into memory in MarkLogic, but the
+        // user must have a reason for configuring a transform.
+        if (streamTransformBinaryExtensions == null) {
+            return true;
+        }
+
+        // If extensions are configured, only apply transform if format is BINARY and URI matches. This supports the
+        // use case of writing e.g. JSON/XML documents from a Flux archive as binaries via a transform while streaming.
+        if (format != Format.BINARY) {
+            return false;
+        }
+
+        // Extract extension from URI
+        int lastDot = uri.lastIndexOf('.');
+        if (lastDot == -1 || lastDot == uri.length() - 1) {
+            return false;
+        }
+
+        String extension = uri.substring(lastDot + 1).toLowerCase(Locale.ROOT);
+        return streamTransformBinaryExtensions.contains(extension);
     }
 }

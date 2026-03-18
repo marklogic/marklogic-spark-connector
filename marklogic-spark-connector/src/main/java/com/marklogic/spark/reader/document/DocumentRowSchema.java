@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
@@ -49,6 +49,10 @@ public abstract class DocumentRowSchema {
             }
         }
         return true;
+    }
+
+    public static String getFormat(InternalRow row) {
+        return row.isNullAt(2) ? null : row.getString(2);
     }
 
     /**

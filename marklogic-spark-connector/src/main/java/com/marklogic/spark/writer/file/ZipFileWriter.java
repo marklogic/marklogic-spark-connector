@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -7,6 +7,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -30,6 +31,31 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     // With a default of 10 Spark tasks per executor, that would be ~700MB of heap usage if all tasks hit the threshold.
     // That is a reasonable time to log a warning about potential heap space usage.
     private static final int DEFAULT_WARN_THRESHOLD = 500000;
+
+    // XQuery to determine document format via indexes without loading document content.
+    // Works on all MarkLogic versions, while the simpler cts:document-format-query requires MarkLogic 11 or later.
+    // This is only used when streaming, when the small cost of doing these queries is likely to be negligible compared
+    // to the overhead of retrieving each document one at a time.
+    private static final String GET_DOCUMENT_FORMAT_QUERY = """
+        declare variable $URI external;
+        if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('jsonFormat()'))
+        ))))) then "JSON"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('xmlFormat()'))
+        ))))) then "XML"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('binaryFormat()'))
+        ))))) then "BINARY"
+        else if (xdmp:exists(cts:search(/, cts:and-query((
+          cts:document-query($URI),
+          cts:term-query(xdmp:hash64('textFormat()'))
+        ))))) then "TEXT"
+        else ""
+        """;
 
     private final ContextSupport context;
     private final SerializableConfiguration hadoopConfiguration;
@@ -74,10 +100,27 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // As of 2.7.0, not doing any special handling for an "opaque" URI which appears to be fine as a zip entry name.
         final String entryName = uri;
 
-        writeMetadataEntryIfNecessary(row, uri, entryName);
-        zipOutputStream.putNextEntry(new ZipEntry(entryName));
-        this.contentWriter.writeContent(row, zipOutputStream);
-        zipEntryCounter++;
+        String format = DocumentRowSchema.getFormat(row);
+
+        if (contentWriter.isStreamingFiles()) {
+            // Determine document format via indexes to avoid loading the entire document into memory via DocumentPage.
+            // This is a workaround for server bug MLE-27191 where the format header is incorrect in multipart responses
+            // for binary documents that contain JSON/XML content.
+            String detectedFormat = getDocumentFormatViaIndexes(uri);
+            if (!detectedFormat.isEmpty()) {
+                format = detectedFormat;
+            }
+
+            writeMetadataEntryIfNecessary(row, uri, entryName, format);
+            zipOutputStream.putNextEntry(new ZipEntry(entryName));
+            this.contentWriter.writeContent(row, zipOutputStream);
+            zipEntryCounter++;
+        } else {
+            writeMetadataEntryIfNecessary(row, uri, entryName, format);
+            zipOutputStream.putNextEntry(new ZipEntry(entryName));
+            this.contentWriter.writeContent(row, zipOutputStream);
+            zipEntryCounter++;
+        }
         logThresholdWarningIfNecessary();
     }
 
@@ -111,16 +154,33 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         }
     }
 
-    private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName) throws IOException {
+    private void writeMetadataEntryIfNecessary(InternalRow row, String uri, String entryName, String format) throws IOException {
+        // Always encode format for consistency, whether streaming or not.
+        // For streaming, format is detected via indexes. For non-streaming, format comes from the row.
         if (this.context.isStreamingFiles() && context.hasOption(Options.READ_DOCUMENTS_CATEGORIES)) {
-            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            final String metadataEntryName = buildMetadataEntryName(entryName, format);
+            zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadataWhileStreaming(uri, zipOutputStream);
             zipEntryCounter++;
         } else if (hasMetadata(row)) {
-            zipOutputStream.putNextEntry(new ZipEntry(entryName + ".metadata"));
+            final String metadataEntryName = buildMetadataEntryName(entryName, format);
+            zipOutputStream.putNextEntry(new ZipEntry(metadataEntryName));
             this.contentWriter.writeMetadata(row, zipOutputStream);
             zipEntryCounter++;
         }
+    }
+
+    /**
+     * Builds a metadata entry name encoding the document format.
+     * This allows import logic to detect the format during import.
+     *
+     * @param entryName the document URI/entry name
+     * @param format    the document format, which can be null
+     * @return the metadata entry name (e.g., "/doc.xml.BINARY.metadata")
+     */
+    private String buildMetadataEntryName(String entryName, String format) {
+        MetadataEntryName metadataEntryName = new MetadataEntryName(entryName, format);
+        return metadataEntryName.makeMetadataEntryName();
     }
 
     private boolean hasMetadata(InternalRow row) {
@@ -146,6 +206,27 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         // Using File.separator on Windows would result in a "\" in an S3 URL, which is awkward for a user to work with,
         // and appears buggy and unexpected.
         return new Path(path, zipFilename);
+    }
+
+    /**
+     * Determines the document format at the given URI via indexes without loading document content.
+     * Returns "JSON", "XML", "BINARY", "TEXT", or empty string if format cannot be determined.
+     */
+    private String getDocumentFormatViaIndexes(String uri) {
+        try {
+            String format = contentWriter.getDatabaseClient()
+                .newServerEval()
+                .xquery(GET_DOCUMENT_FORMAT_QUERY)
+                .addVariable("URI", uri)
+                .evalAs(String.class);
+
+            return format != null ? format : "";
+        } catch (Exception e) {
+            // Document doesn't exist, permissions issue, etc. - return empty string
+            Util.MAIN_LOGGER.debug("Unexpected error when trying to determine document format for {}; cause: {}",
+                uri, e.getMessage());
+            return "";
+        }
     }
 
     private void logThresholdWarningIfNecessary() {

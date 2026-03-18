@@ -3,6 +3,18 @@ plugins {
   id 'maven-publish'
 }
 
+configurations {
+  all {
+    resolutionStrategy {
+      // Compile-only/test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-24281
+      force "org.apache.zookeeper:zookeeper:3.9.5"
+
+      // Test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-23907
+      force "org.apache.pdfbox:pdfbox:3.0.7"
+    }
+  }
+}
+
 dependencies {
   // Need to compile against Spark, but its libraries are not part of the connector jar.
   // CVEs recorded in Black Duck against Spark and its dependencies will be remediated as "not affected" because this
@@ -15,11 +27,7 @@ dependencies {
   // This is compileOnly as Spark will provide its own copy at runtime.
   compileOnly "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
 
-  implementation("com.marklogic:marklogic-client-api:8.0.0") {
-    // Need to use the versions of Jackson preferred by Spark.
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
+  implementation "com.marklogic:marklogic-client-api:8.1.0"
 
   // For logging.
   implementation "org.slf4j:jcl-over-slf4j:2.0.17"
@@ -28,12 +36,8 @@ dependencies {
   implementation "jaxen:jaxen:2.0.0"
 
   // Needed for classifying documents via Semaphore.
-  implementation("com.smartlogic.csclient:Semaphore-CS-Client:${semaphoreVersion}") {
-    exclude group: "com.fasterxml.jackson.core"
-  }
-  implementation("com.smartlogic.cloud:Semaphore-Cloud-Client:${semaphoreVersion}") {
-    exclude group: "com.fasterxml.jackson.core"
-  }
+  implementation "com.smartlogic.csclient:Semaphore-CS-Client:${semaphoreVersion}"
+  implementation "com.smartlogic.cloud:Semaphore-Cloud-Client:${semaphoreVersion}"
 
   // Adding this in 2.6.0. tika-core is very small and only brings in commons-io and and slf4j-api. Flux can then
   // include the necessary parsers.
@@ -44,51 +48,40 @@ dependencies {
 
   // Supports reading and writing RDF data.
   // Bumped to 5.x, which requires Java 17, while upgrading Spark to 4.x.
-  implementation("org.apache.jena:jena-arq:5.6.0") {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
+  implementation "org.apache.jena:jena-arq:5.6.0"
 
   // Needed for some XML operations that are far easier with JDOM2 than with DOM.
   implementation "org.jdom:jdom2:2.0.6.1"
 
-  implementation("dev.langchain4j:langchain4j:${langchain4jVersion}") {
-    exclude group: "com.fasterxml.jackson.core"
-  }
+  implementation "dev.langchain4j:langchain4j:${langchain4jVersion}"
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:5.2.0'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.3.2'
+
+  // For Nuclia support
+  implementation 'com.squareup.okhttp3:okhttp-sse:5.3.2'
 
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
   // Without this, once using JUnit 5.12 or higher, Gradle will not find any tests and report an error of:
   // org.junit.platform.commons.JUnitException: TestEngine with ID 'junit-jupiter' failed to discover tests
-  testRuntimeOnly "org.junit.platform:junit-platform-launcher:6.0.1"
+  testRuntimeOnly "org.junit.platform:junit-platform-launcher:6.0.3"
 
   testImplementation("org.apache.spark:spark-sql_2.13:${sparkVersion}") {
     exclude module: "rocksdbjni"
   }
 
   // Supports testing the embedder feature.
-  testImplementation("dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.10.0-beta18") {
-    exclude group: "com.fasterxml.jackson.core"
-  }
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.11.0-beta19"
 
-  testImplementation('com.marklogic:ml-app-deployer:6.2-SNAPSHOT') {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
-
-  testImplementation('com.marklogic:marklogic-junit5:2.0.0') {
-    exclude group: "com.fasterxml.jackson.core"
-    exclude group: "com.fasterxml.jackson.dataformat"
-  }
+  testImplementation "com.marklogic:ml-app-deployer:6.2.0"
+  testImplementation "com.marklogic:marklogic-junit5:2.0.0"
 
   // For asserting on log messages.
-  testImplementation "io.github.hakky54:logcaptor:2.12.1"
+  testImplementation "io.github.hakky54:logcaptor:2.12.5"
 
-  testImplementation "ch.qos.logback:logback-classic:1.5.23"
+  testImplementation "ch.qos.logback:logback-classic:1.5.32"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"

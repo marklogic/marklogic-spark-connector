@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.customcode;
 
@@ -89,7 +89,7 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
     @Override
     public WriterCommitMessage commit() {
         flush();
-        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, null);
+        CommitMessage message = new CommitMessage(successItemCount, failedItemCount, 0, null);
         if (logger.isDebugEnabled()) {
             logger.debug("Committing {}", message);
         }

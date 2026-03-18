@@ -1,15 +1,19 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.datamovement.filter.FilterException;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.document.GenericDocumentManager;
+import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.HandleAccessor;
+import com.marklogic.client.io.BaseHandle;
 import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.Format;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
 import com.marklogic.client.io.marker.GenericWriteHandle;
 import com.marklogic.spark.ConnectorException;
@@ -37,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -63,13 +68,19 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private final boolean isStreamingFiles;
     // Only initialized if streaming files.
-    private final GenericDocumentManager documentManager;
+    private final GenericDocumentManager documentManagerForStreaming;
+    private final ServerTransform serverTransformForStreaming;
 
     private final DocumentPipeline documentPipeline;
 
     // Updated as batches are processed.
     private final AtomicInteger successItemCount = new AtomicInteger(0);
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
+    private final AtomicInteger skippedItemCount = new AtomicInteger(0);
+
+    // Used to ensure that if a FilterException is encountered, the error message is logged only once per
+    // writer instance, as it's very likely the same exception will occur for every batch.
+    private final AtomicBoolean hasLoggedFilterError = new AtomicBoolean(false);
 
     private final List<DocumentInputs> documentInputsBatch = new ArrayList<>();
     private final int pipelineBatchSize;
@@ -80,8 +91,17 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.docBuilder = this.writeContext.newDocBuilder();
         this.databaseClient = writeContext.connectToMarkLogic();
         this.rowConverter = determineRowConverter();
+
         this.isStreamingFiles = writeContext.isStreamingFiles();
-        this.documentManager = this.isStreamingFiles ? databaseClient.newDocumentManager() : null;
+        if (this.isStreamingFiles) {
+            this.documentManagerForStreaming = databaseClient.newDocumentManager();
+            Optional<ServerTransform> transform = writeContext.makeRestTransform();
+            this.serverTransformForStreaming = transform.orElse(null);
+        } else {
+            this.documentManagerForStreaming = null;
+            this.serverTransformForStreaming = null;
+        }
+
         this.documentPipeline = DocumentPipelineFactory.newDocumentPipeline(writeContext);
         this.pipelineBatchSize = writeContext.getIntOption(Options.WRITE_PIPELINE_BATCH_SIZE, 1, 1);
 
@@ -97,6 +117,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
         this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
         addBatchListeners(this.writeBatcher);
+        applyIncrementalWriteFilter(this.writeBatcher);
         this.dataMovementManager.startJob(this.writeBatcher);
     }
 
@@ -122,7 +143,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
 
         Set<String> graphs = getGraphNames();
-        return new CommitMessage(successItemCount.get(), failedItemCount.get(), graphs);
+        return new CommitMessage(successItemCount.get(), failedItemCount.get(), skippedItemCount.get(), graphs);
     }
 
     @Override
@@ -213,6 +234,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             null;
     }
 
+    private void applyIncrementalWriteFilter(WriteBatcher writeBatcher) {
+        if (writeContext.getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
+            writeBatcher.withDocumentWriteSetFilter(
+                writeContext.buildIncrementalWriteFilter(n -> skippedItemCount.addAndGet(n))
+            );
+        }
+    }
+
     private void addBatchListeners(WriteBatcher writeBatcher) {
         writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
         if (writeContext.isAbortOnFailure()) {
@@ -224,7 +253,18 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
                 this.writeFailure.compareAndSet(null, failure);
             });
         } else {
-            writeBatcher.onBatchFailure(this.batchRetrier::retryBatch);
+            writeBatcher.onBatchFailure((batch, failure) -> {
+                if (failure instanceof FilterException) {
+                    // Log the error only once per writer to avoid flooding the logs with identical messages.
+                    // This is likely a configuration issue (e.g., missing index) that affects all batches.
+                    if (hasLoggedFilterError.compareAndSet(false, true)) {
+                        Util.MAIN_LOGGER.error("Could not write documents due to filter error: {}", failure.getMessage());
+                    }
+                    failedItemCount.getAndAdd(batch.getItems().length);
+                } else {
+                    this.batchRetrier.retryBatch(batch, failure);
+                }
+            });
         }
     }
 
@@ -335,13 +375,33 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void writeDocumentViaPutOperation(DocumentWriteOperation writeOp) {
         final String uri = replaceSpacesInUriForPutEndpoint(writeOp.getUri());
         try {
-            this.documentManager.write(uri, writeOp.getMetadata(), (GenericWriteHandle) writeOp.getContent());
+            GenericWriteHandle content = (GenericWriteHandle) writeOp.getContent();
+
+            if (applyTransformWhenStreaming(uri, content)) {
+                Util.MAIN_LOGGER.debug("Applying transform {} to document with URI {} during streaming write",
+                    serverTransformForStreaming.getName(), uri);
+                this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content, serverTransformForStreaming);
+            } else {
+                this.documentManagerForStreaming.write(uri, writeOp.getMetadata(), content);
+            }
+
             writeContext.logBatchOnSuccess(1, 0);
             this.successItemCount.incrementAndGet();
         } catch (RuntimeException ex) {
             captureFailure(ex.getMessage(), uri);
             this.writeFailure.compareAndSet(null, ex);
         }
+    }
+
+    private boolean applyTransformWhenStreaming(String uri, GenericWriteHandle content) {
+        if (this.serverTransformForStreaming == null) {
+            return false;
+        }
+        Format format = null;
+        if (content instanceof BaseHandle<?, ?> baseHandle) {
+            format = baseHandle.getFormat();
+        }
+        return writeContext.shouldApplyStreamingTransform(uri, format);
     }
 
     /**

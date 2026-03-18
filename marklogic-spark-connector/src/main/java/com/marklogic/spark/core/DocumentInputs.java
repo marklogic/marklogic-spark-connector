@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core;
 
@@ -30,11 +30,7 @@ public class DocumentInputs {
     private Map<String, String> extractedMetadata;
 
     private byte[] documentClassification;
-    private List<byte[]> chunkClassifications;
-    private List<float[]> embeddings;
-
-    // These will be created via a splitter.
-    private List<String> chunks;
+    private List<ChunkInputs> chunkInputsList;
 
     public DocumentInputs(String initialUri, AbstractWriteHandle content, JsonNode columnValuesForUriTemplate,
                           DocumentMetadataHandle initialMetadata) {
@@ -77,20 +73,6 @@ public class DocumentInputs {
         return content;
     }
 
-    public void addChunkClassification(byte[] classification) {
-        if (chunkClassifications == null) {
-            chunkClassifications = new ArrayList<>();
-        }
-        chunkClassifications.add(classification);
-    }
-
-    public void addEmbedding(float[] embedding) {
-        if (embeddings == null) {
-            embeddings = new ArrayList<>();
-        }
-        embeddings.add(embedding);
-    }
-
     public String getInitialUri() {
         return initialUri;
     }
@@ -123,16 +105,37 @@ public class DocumentInputs {
         this.extractedMetadata = extractedMetadata;
     }
 
-    public List<String> getChunks() {
-        return chunks;
-    }
-
     public void setChunks(List<String> chunks) {
-        this.chunks = chunks;
+        if (chunks == null) {
+            this.chunkInputsList = null;
+        } else {
+            this.chunkInputsList = new ArrayList<>(chunks.size());
+            for (String text : chunks) {
+                this.chunkInputsList.add(new ChunkInputs(text));
+            }
+        }
     }
 
-    public List<byte[]> getClassifications() {
-        return chunkClassifications;
+    /**
+     * Adds a chunk with its embedding, model name, and metadata. This is useful for workflows like Nuclia where
+     * chunks and embeddings are received together.
+     *
+     * @param text      the chunk text
+     * @param embedding the embedding vector (can be null)
+     * @param modelName the model name (can be null)
+     * @param metadata  the metadata as a JsonNode (can be null)
+     */
+    public void addChunk(String text, float[] embedding, String modelName, JsonNode metadata) {
+        if (chunkInputsList == null) {
+            chunkInputsList = new ArrayList<>();
+        }
+        ChunkInputs chunkInputs = new ChunkInputs(text);
+        if (embedding != null) {
+            chunkInputs.setEmbedding(embedding);
+            chunkInputs.setModelName(modelName);
+        }
+        chunkInputs.setMetadata(metadata);
+        chunkInputsList.add(chunkInputs);
     }
 
     public byte[] getDocumentClassification() {
@@ -143,7 +146,7 @@ public class DocumentInputs {
         this.documentClassification = documentClassification;
     }
 
-    public List<float[]> getEmbeddings() {
-        return embeddings;
+    public List<ChunkInputs> getChunkInputsList() {
+        return chunkInputsList;
     }
 }

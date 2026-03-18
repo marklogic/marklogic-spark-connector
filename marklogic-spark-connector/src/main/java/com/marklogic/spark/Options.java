@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -191,6 +191,7 @@ public abstract class Options {
     public static final String WRITE_TRANSFORM_NAME = "spark.marklogic.write.transform";
     public static final String WRITE_TRANSFORM_PARAMS = "spark.marklogic.write.transformParams";
     public static final String WRITE_TRANSFORM_PARAMS_DELIMITER = "spark.marklogic.write.transformParamsDelimiter";
+
     public static final String WRITE_XML_ROOT_NAME = "spark.marklogic.write.xmlRootName";
     public static final String WRITE_XML_NAMESPACE = "spark.marklogic.write.xmlNamespace";
 
@@ -406,6 +407,17 @@ public abstract class Options {
     public static final String STREAM_FILES = "spark.marklogic.streamFiles";
 
     /**
+     * Comma-delimited list of file extensions (without dots) that should trigger transform application
+     * during streaming import when the document format is BINARY. Only used during streaming imports, and only
+     * relevant when importing an archive where the metadata entry name captures the expected document format.
+     * When set, transforms will ONLY be applied to documents with format=BINARY and a URI extension
+     * matching one of the configured extensions (e.g., "json,xml,txt").
+     *
+     * @since 3.1.0
+     */
+    public static final String STREAM_TRANSFORM_BINARY_EXTENSIONS = "spark.marklogic.streamTransformBinaryExtensions";
+
+    /**
      * Prefix for registering XML namespace prefixes and URIs that can be reused in any connector
      * feature that accepts an XPath expression.
      *
@@ -496,6 +508,30 @@ public abstract class Options {
      */
     public static final String WRITE_EMBEDDER_BASE64_ENCODE = WRITE_EMBEDDER_PREFIX + "base64Encode";
 
+    private static final String WRITE_NUCLIA_PREFIX = "spark.marklogic.write.nuclia.";
+
+    /**
+     * Nuclia NUA key for authentication. Required if any Nuclia options are used.
+     * See https://docs.rag.progress.cloud/docs/develop/python-sdk/nua/ for more information.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_NUA_KEY = WRITE_NUCLIA_PREFIX + "nuaKey";
+
+    /**
+     * Nuclia API URL. Defaults to "https://aws-us-east-2-1.rag.progress.cloud/api/v1" if not specified.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_API_URL = WRITE_NUCLIA_PREFIX + "apiUrl";
+
+    /**
+     * Maximum number of seconds to wait for Nuclia processing to complete. Defaults to 120 seconds.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_NUCLIA_TIMEOUT = WRITE_NUCLIA_PREFIX + "timeout";
+
     /**
      * Defines the host for classification requests
      *
@@ -551,6 +587,81 @@ public abstract class Options {
      * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
+
+    /**
+     * Enables the incremental write feature, defaulting to an Optic query that uses fromLexicons and depends on a
+     * field range index.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL = "spark.marklogic.write.incremental";
+
+    /**
+     * Alters the incremental write feature to use fromView with the given schema name.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_SCHEMA = WRITE_INCREMENTAL + ".schema";
+
+    /**
+     * Alters the incremental write feature to use fromView with the given view name.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_VIEW = WRITE_INCREMENTAL + ".view";
+
+    /**
+     * Name of the MarkLogic metadata key that holds the hash value for identifying changed documents.
+     * Defaults to "incrementalWriteHash". When specifying a schema and view for incremental write, this also specifies
+     * the name of the view column that holds the hash value.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = WRITE_INCREMENTAL + ".hashKeyName";
+
+    /**
+     * Name of the optional MarkLogic metadata key that holds the timestamp value for identifying changed documents.
+     * No default value.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME = WRITE_INCREMENTAL + ".timestampKeyName";
+
+    /**
+     * Whether to canonicalize JSON content before hashing to identify changed documents. Defaults to true.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_CANONICALIZE_JSON = WRITE_INCREMENTAL + ".canonicalizeJson";
+
+    /**
+     * Defines JSON data to exclude from the hash calculation when incremental write is enabled. Must be a
+     * newline-delimited list of JSON Pointer expressions.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_JSON_EXCLUSIONS = WRITE_INCREMENTAL + ".jsonExclusions";
+
+    /**
+     * Defines XML data to exclude from the hash calculation when incremental write is enabled. Must be a
+     * newline-delimited list of XPath expressions. Namespace prefixes can be registered via the
+     * XPATH_NAMESPACE_PREFIX option.
+     * <p>
+     * Contrary to use of a single XPath options for selecting nodes when splitting documents, this option supports
+     * multiple values for ease of use when there are multiple sections of a document to exclude from hashing
+     * that are difficult to reference in a single XPath expression.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_INCREMENTAL_XML_EXCLUSIONS = WRITE_INCREMENTAL + ".xmlExclusions";
+
+    /**
+     * Similar to {@code WRITE_LOG_PROGRESS}, but for logging the number of documents that were skipped during an
+     * import operation.
+     *
+     * @since 3.1.0
+     */
+    public static final String WRITE_LOG_SKIPPED_DOCUMENTS = "spark.marklogic.write.logSkippedDocuments";
 
     private Options() {
     }

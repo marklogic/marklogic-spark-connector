@@ -1,8 +1,9 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
+import com.marklogic.client.io.StringHandle;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.ConnectorException;
@@ -49,6 +50,31 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         verifyAllMetadata(tempDir, 2);
     }
 
+    /**
+     * Verifies that the metadata entry names contain the document format when streaming. That requires special
+     * handling where the content handle is opened before writing the metadata entry so that the document format can
+     * be obtained from the content handle. The content is still streamed.
+     */
+    @Test
+    void allMetadataWithStreaming(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_COLLECTIONS, "collection1")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .option(Options.STREAM_FILES, true)
+            .load()
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        verifyAllMetadata(tempDir, 2);
+    }
+
     @Test
     void testCollectionsAndPermissions(@TempDir Path tempDir) {
         newSparkSession().read().format(CONNECTOR_IDENTIFIER)
@@ -72,7 +98,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertTrue(row.isNullAt(2));
+            assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
             verifyCollections(row);
             verifyPermissions(row);
             assertNull(row.get(5), "Quality column should be null.");
@@ -103,7 +129,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertTrue(row.isNullAt(2));
+            assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
             assertNull(row.get(3), "Collections column should be null.");
             assertNull(row.get(4), "Permissions column should be null.");
             assertEquals(10, row.get(5));
@@ -134,7 +160,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertEquals(2, rows.size(), "Expecting 2 rows in the zip.");
         rows.forEach(row -> {
             verifyContent(row);
-            assertTrue(row.isNullAt(2));
+            assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
             verifyCollections(row);
             assertNull(row.get(4), "Permissions column should be null.");
             assertNull(row.get(5), "Quality column should be null.");
@@ -233,6 +259,76 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
         assertTrue(ex.getMessage().contains("Path does not exist"), "Unexpected error: " + ex.getMessage());
     }
 
+    @Test
+    void emptyDoc(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/empty-file.txt")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("/empty-file.txt", rows.get(0).getString(0));
+
+        byte[] content = (byte[]) rows.get(0).get(1);
+        assertEquals(0, content.length, "The empty doc should have been written as an empty zip entry " +
+            "to the archive zip, and it can then be read back as a row with an empty content column.");
+
+        // Make sure the empty doc can be written to MarkLogic as well
+        sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.WRITE_URI_TEMPLATE, "/empty-file-from-archive.txt")
+            .option(Options.WRITE_PERMISSIONS, DEFAULT_PERMISSIONS)
+            .mode(SaveMode.Append)
+            .save();
+
+        String text = getDatabaseClient().newTextDocumentManager().read(
+            "/empty-file-from-archive.txt", new StringHandle()).get();
+        assertNull(text);
+    }
+
+    /**
+     * Same as the above test, verifies that streaming - which uses a different call to v1/documents - works fine for
+     * empty documents.
+     */
+    @Test
+    void emptyDocWithStreaming(@TempDir Path tempDir) {
+        newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.READ_DOCUMENTS_URIS, "/empty-file.txt")
+            .option(Options.READ_DOCUMENTS_CATEGORIES, "content,metadata")
+            .load()
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.CLIENT_URI, makeClientUri())
+            .option(Options.STREAM_FILES, true)
+            .mode(SaveMode.Append)
+            .save(tempDir.toFile().getAbsolutePath());
+
+        List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_TYPE, "archive")
+            .load(tempDir.toFile().getAbsolutePath())
+            .collectAsList();
+
+        assertEquals(1, rows.size());
+        assertEquals("/empty-file.txt", rows.get(0).getString(0));
+
+        byte[] content = (byte[]) rows.get(0).get(1);
+        assertEquals(0, content.length, "Verifying that an empty doc can be streamed to a zip.");
+    }
+
     private void verifyAllMetadata(Path tempDir, int rowCount) {
         List<Row> rows = sparkSession.read().format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_TYPE, "archive")
@@ -244,8 +340,7 @@ class ReadArchiveFileTest extends AbstractIntegrationTest {
             Row row = rows.get(i);
             assertTrue(row.getString(0).endsWith("/test/" + (i + 1) + ".xml"));
             verifyContent(row);
-            assertTrue(row.isNullAt(2), "There's no indication in an archive file as to what the format of a " +
-                "content entry is, so the 'format' column should always be null.");
+            assertEquals("XML", row.getString(2), "As of 3.1.0, the format is now captured in the metadata entry name.");
             verifyCollections(row);
             verifyPermissions(row);
             assertEquals(10, row.get(5));

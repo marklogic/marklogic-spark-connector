@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -73,6 +73,9 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Success count: {}", commitResults.successCount);
+                if (commitResults.skippedCount > 0) {
+                    Util.MAIN_LOGGER.info("Skipped count: {}", commitResults.skippedCount);
+                }
             }
             if (commitResults.failureCount > 0) {
                 Util.MAIN_LOGGER.error("Failure count: {}", commitResults.failureCount);
@@ -127,31 +130,24 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
         int successCount = 0;
         int failureCount = 0;
+        int skippedCount = 0;
         Set<String> graphs = new HashSet<>();
         for (WriterCommitMessage message : messages) {
             CommitMessage msg = (CommitMessage) message;
-            successCount += msg.getSuccessItemCount();
-            failureCount += msg.getFailedItemCount();
-            if (msg.getGraphs() != null) {
-                graphs.addAll(msg.getGraphs());
+            successCount += msg.successItemCount();
+            failureCount += msg.failedItemCount();
+            skippedCount += msg.skippedItemCount();
+            if (msg.graphs() != null) {
+                graphs.addAll(msg.graphs());
             }
         }
-        return new CommitResults(successCount, failureCount, graphs);
+        return new CommitResults(successCount, failureCount, skippedCount, graphs);
     }
 
     /**
      * Aggregates the results of each CommitMessage.
      */
-    private static class CommitResults {
-        final int successCount;
-        final int failureCount;
-        final Set<String> graphs;
-
-        public CommitResults(int successCount, int failureCount, Set<String> graphs) {
-            this.successCount = successCount;
-            this.failureCount = failureCount;
-            this.graphs = graphs;
-        }
+    private record CommitResults(int successCount, int failureCount, int skippedCount, Set<String> graphs) {
     }
 
     public static void setSuccessCountConsumer(Consumer<Integer> consumer) {

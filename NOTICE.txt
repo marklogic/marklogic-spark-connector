@@ -1,4 +1,4 @@
-Progress MarkLogic Connector for Apache Spark 3.0.0
+Progress MarkLogic Connector for Apache Spark 3.1.0
 
 Portions of the Products include certain open source and commercial third-party
 components listed below ("Third-Party Components"). The authors of the
@@ -19,55 +19,58 @@ SUMMARY OF COMPONENTS:
 Vendor Name | Product Name | Version
 
 Apache License 2.0:
-  Apache Software Foundation     | Apache Commons Codec                  | 1.19.0
-  Apache Software Foundation     | Apache Commons Collections            | 4.5.0
-  Apache Software Foundation     | Apache Commons Logging                | 1.3.5
-  Apache Software Foundation     | Apache Tika                           | 3.2.3
-  Apache Software Foundation     | commons-csv                           | 1.14.1
-  Ben Manes                      | Caffeine cache                        | 3.2.2
-  FasterXML                      | jackson-annotations                   | 2.20
-  FasterXML                      | jackson-bom                           | 2.20.0
-  FasterXML                      | jackson-core                          | 2.20.0
-  FasterXML                      | jackson-dataformat-xml                | 2.20.0
-  FasterXML, LLC                 | Woodstox                              | 7.1.1
-  Filip Kolarik                  | Titanium JCS                          | 1.1.1
-  Filip Kolarik                  | Titanium JSON-LD 1.1                  | 1.7.0
-  Filip Kolarik                  | Titanium RDF N-QUADS                  | 1.0.2
-  Filip filip                    | Titanium RDF API                      | 1.0.0
-  Google Inc.                    | googlegson                            | 2.13.2
-  Google LLC.                    | error-prone annotations               | 2.41.0
-  JetBrains                      | Kotlin                                | 2.2.20
-  Jetbrains                      | Jetbrains annotations                 | 13.0
-  Kevin Bourrillion              | JSpecify annotations                  | 1.0.0
-  LangChain                      | langchain4j                           | 1.10.0
-  LangChain                      | langchain4j-core                      | 1.10.0
-  Progress                       | Cloud Client                          | 5.10.0
-  Progress MarkLogic             | MarkLogic Java Client API             | 8.0.0
-  Progress Semaphore             | CS Client                             | 5.10.0
-  QOS.ch Sarl (Switzerland)      | JCL 1.2 Implemented Over SLF4J        | 2.0.17
-  Square                         | OkHttp                                | 5.2.0
-  Square                         | OkHttp Logging Interceptor            | 5.2.0
-  Square                         | okhttp                                | 5.2.0
-  Square                         | squareokio                            | 3.16.0
-  The Apache Software Foundation | ARQ                                   | 5.6.0
-  The Apache Software Foundation | Apache Commons Compress               | 1.28.0
-  The Apache Software Foundation | Apache Commons IO                     | 2.21.0
-  The Apache Software Foundation | Apache Commons Lang                   | 3.19.0
-  The Apache Software Foundation | Apache Jena - Base Common Environment | 5.6.0
-  The Apache Software Foundation | Apache Jena - IRI3986                 | 5.6.0
-  The Apache Software Foundation | Apache Jena - Language tags           | 5.6.0
-  The Apache Software Foundation | Apache Thrift                         | 0.22.0
-  The Apache Software Foundation | IRI                                   | 5.6.0
-  The Apache Software Foundation | Jena                                  | 5.6.0
-  The Apache Software Foundation | OpenNLP Tools                         | 2.5.4
-  github.com/rburgst             | okhttp-digest                         | 3.1.1
-  the RoaringBitmap authors      | RoaringBitmap                         | 1.3.0
+  Apache Software Foundation       | Apache Commons Codec                  | 1.19.0
+  Apache Software Foundation       | Apache Commons Collections            | 4.5.0
+  Apache Software Foundation       | Apache Commons Compress               | 1.28.0
+  Apache Software Foundation       | Apache Commons Logging                | 1.3.5
+  Apache Software Foundation       | Apache Thrift                         | 0.22.0
+  Apache Software Foundation       | Apache Tika                           | 3.2.3
+  Apache Software Foundation       | OpenNLP Tools                         | 2.5.4
+  Apache Software Foundation       | commons-csv                           | 1.14.1
+  Ben Manes                        | Caffeine cache                        | 3.2.2
+  Chronicle Software : Open Source | Zero-allocation Hashing               | 2026.0
+  FasterXML                        | Jackson-Datatype-JSR310               | 2.21.1
+  FasterXML                        | jackson-annotations                   | 2.21
+  FasterXML                        | jackson-bom                           | 2.21.1
+  FasterXML                        | jackson-core                          | 2.21.1
+  FasterXML                        | jackson-databind                      | 2.21.1
+  FasterXML                        | jackson-dataformat-csv                | 2.21.1
+  FasterXML                        | jackson-dataformat-xml                | 2.21.1
+  FasterXML, LLC                   | Woodstox                              | 7.1.1
+  Filip Kolarik                    | Titanium JCS                          | 1.1.1
+  Filip Kolarik                    | Titanium JSON-LD 1.1                  | 1.7.0
+  Filip Kolarik                    | Titanium RDF N-QUADS                  | 1.0.2
+  Filip filip                      | Titanium RDF API                      | 1.0.0
+  Google Inc.                      | googlegson                            | 2.13.2
+  Google LLC.                      | error-prone annotations               | 2.41.0
+  JetBrains                        | Kotlin                                | 2.2.21
+  Jetbrains                        | Jetbrains annotations                 | 13.0
+  Kevin Bourrillion                | JSpecify annotations                  | 1.0.0
+  LangChain                        | langchain4j                           | 1.11.0
+  LangChain                        | langchain4j-core                      | 1.11.0
+  Progress Semaphore               | CS Client                             | 5.10.0
+  Progress Software Corporation    | Cloud Client                          | 5.10.0
+  QOS.ch Sarl (Switzerland)        | JCL 1.2 Implemented Over SLF4J        | 2.0.17
+  Samuel Erdtman                   | java-json-canonicalization            | 1.1
+  Square                           | OkHttp                                | 5.3.2
+  Square                           | OkHttp Logging Interceptor            | 5.3.2
+  Square                           | OkHttp Server-Sent Events             | 5.3.2
+  Square                           | squareokio                            | 3.16.4
+  The Apache Software Foundation   | ARQ                                   | 5.6.0
+  The Apache Software Foundation   | Apache Commons IO                     | 2.21.0
+  The Apache Software Foundation   | Apache Commons Lang                   | 3.20.0
+  The Apache Software Foundation   | Apache Jena - Base Common Environment | 5.6.0
+  The Apache Software Foundation   | Apache Jena - IRI3986                 | 5.6.0
+  The Apache Software Foundation   | Apache Jena - Language tags           | 5.6.0
+  The Apache Software Foundation   | IRI                                   | 5.6.0
+  The Apache Software Foundation   | Jena                                  | 5.6.0
+  github.com/rburgst               | okhttp-digest                         | 3.1.1
+  the RoaringBitmap authors        | RoaringBitmap                         | 1.3.0
 
 BSD 2-Clause "Simplified" License:
   FasterXML.com | stax2-api | 4.2.2
 
 BSD 3-Clause "New" or "Revised" License:
-  Google LLC                   | protobuf-java      | 4.32.1
   Google LLC                   | protobuf-java      | 4.33.0
   Oracle and/or its affiliates | Jakarta Activation | 2.0.1
   The Werken Company           | jaxen              | 2.0.0
@@ -79,18 +82,14 @@ Eclipse Distribution License - v 1.0:
   Eclipse Foundation | Jakarta Activation API                | 2.1.4
   Eclipse Foundation | TXW2 Runtime                          | 4.0.6
   Eclipse Foundation | istack common utility code runtime    | 4.1.2
-  Eclipse Foundation | jakarta.xml.bind:jakarta.xml.bind-api | 4.0.4
+  Eclipse Foundation | jakarta.xml.bind:jakarta.xml.bind-api | 4.0.5
 
 Eclipse Public License 2.0:
-  Apache Jakarta | jakartaee/rest                             | 3.0.0
-  Oracle         | JSR 374 (JSON Processing) Default Provider | 2.0.1
-  Oracle         | Jakarta Mail                               | 2.0.2
-
-Internal Progress Product License: (*)
-  Progress MarkLogic | MarkLogic XCC | 12.0.0
+  Oracle Inc. | JSR 374 (JSON Processing) Default Provider | 2.0.1
+  Oracle      | Jakarta Mail                               | 2.0.2
 
 Jdom License:
-  Jason Hunter & Brett McLaughlin. | JDOM | 2.0.6.1
+  Jason Hunter & Brett McLaughlin | JDOM | 2.0.6.1
 
 MIT License:
   Andrew O'Malley | dexx             | 0.7
@@ -98,16 +97,16 @@ MIT License:
 
 ================================================================================
 
-The Product contains JSR 374 (JSON Processing) Default Provider 2.0.1, Jakarta
-Mail 2.0.2, and jakartaee/rest 3.0.0. These third-party technologies are
-licensed to PSC and User is subject to the terms of a third-party license, a
-copy of which is included herein. PSC will, at Licensee's request, provide a
-copy of the source code for this third-party technology, including
-modifications, if any, made by PSC. PSC may charge reasonable shipping and
-handling charges for such distribution. Licensee may also obtain the source
-code for these third-party technologies through
-http://iue.progress.com/3dpartysoftwares/Pages/default.aspx by following the
-instructions set forth therein.
+The Product contains JSR 374 (JSON Processing) Default Provider 2.0.1 and
+Jakarta Mail 2.0.2. These third-party technologies are licensed to PSC and User
+is subject to the terms of a third-party license, a copy of which is included
+herein. PSC will, at Licensee's request, provide a copy of the source code for
+this third-party technology, including modifications, if any, made by PSC. PSC
+may charge reasonable shipping and handling charges for such distribution.
+Licensee may also obtain the source code for these third-party technologies
+through http://iue.progress.com/3dpartysoftwares/Pages/default.aspx by following
+the instructions set forth therein.
+
 
 1. Special Notices Regarding Open-Source Third-Party Components incorporated
 into the Product. Such technology is subject to the following terms and
@@ -115,21 +114,23 @@ conditions:
 
 (1) Apache License 2.0:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates ARQ 5.6.0,
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates ARQ 5.6.0,
 Apache Commons Codec 1.19.0, Apache Commons Collections 4.5.0, Apache Commons
-Compress 1.28.0, Apache Commons IO 2.21.0, Apache Commons Lang 3.19.0, Apache
+Compress 1.28.0, Apache Commons IO 2.21.0, Apache Commons Lang 3.20.0, Apache
 Commons Logging 1.3.5, Apache Jena - Base Common Environment 5.6.0, Apache Jena
 - IRI3986 5.6.0, Apache Jena - Language tags 5.6.0, Apache Thrift 0.22.0,
 Apache Tika 3.2.3, CS Client 5.10.0, Caffeine cache 3.2.2, Cloud Client 5.10.0,
 IRI 5.6.0, JCL 1.2 Implemented Over SLF4J 2.0.17, JSpecify annotations 1.0.0,
-Jena 5.6.0, Jetbrains annotations 13.0, Kotlin 2.2.20, MarkLogic Java Client
-API 8.0.0, OkHttp 5.2.0, OkHttp Logging Interceptor 5.2.0, OpenNLP Tools 2.5.4,
-RoaringBitmap 1.3.0, Titanium JCS 1.1.1, Titanium JSON-LD 1.1 1.7.0, Titanium
-RDF API 1.0.0, Titanium RDF N-QUADS 1.0.2, Woodstox 7.1.1, commons-csv 1.14.1,
-error-prone annotations 2.41.0, googlegson 2.13.2, jackson-annotations 2.20,
-jackson-bom 2.20.0, jackson-core 2.20.0, jackson-dataformat-xml 2.20.0,
-langchain4j 1.10.0, langchain4j-core 1.10.0, okhttp 5.2.0, okhttp-digest 3.1.1,
-and squareokio 3.16.0.
+Jackson-Datatype-JSR310 2.21.1, Jena 5.6.0, Jetbrains annotations 13.0, Kotlin
+2.2.21, OkHttp 5.3.2, OkHttp Logging Interceptor 5.3.2, OkHttp Server-Sent
+Events 5.3.2, OpenNLP Tools 2.5.4, RoaringBitmap 1.3.0, Titanium JCS 1.1.1,
+Titanium JSON-LD 1.1 1.7.0, Titanium RDF API 1.0.0, Titanium RDF N-QUADS 1.0.2,
+Woodstox 7.1.1, Zero-allocation Hashing 2026.0, commons-csv 1.14.1, error-prone
+annotations 2.41.0, googlegson 2.13.2, jackson-annotations 2.21, jackson-bom
+2.21.1, jackson-core 2.21.1, jackson-databind 2.21.1, jackson-dataformat-csv
+2.21.1, jackson-dataformat-xml 2.21.1, java-json-canonicalization 1.1,
+langchain4j 1.11.0, langchain4j-core 1.11.0, okhttp-digest 3.1.1, and
+squareokio 3.16.4.
 
   Apache License Version 2.0, January 2004
   =========================
@@ -320,7 +321,8 @@ and squareokio 3.16.0.
     governing permissions and limitations under the License.
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Contents of NOTICE text file for jackson-annotations 2.20:
+Contents of NOTICE text file for jackson-annotations 2.21 and jackson-databind
+2.21.1:
 
   # Jackson JSON processor
 
@@ -346,7 +348,7 @@ Contents of NOTICE text file for jackson-annotations 2.20:
   available from the source code management (SCM) system project uses.
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Contents of NOTICE text file for jackson-core 2.20.0:
+Contents of NOTICE text file for jackson-core 2.21.1:
 
   # Jackson JSON processor
 
@@ -384,7 +386,8 @@ Contents of NOTICE text file for jackson-core 2.20.0:
   FastDoubleParser and the licenses and copyrights that apply to that code.
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Contents of NOTICE text file for jackson-dataformat-xml 2.20.0:
+Contents of NOTICE text file for jackson-dataformat-csv 2.21.1 and
+jackson-dataformat-xml 2.21.1:
 
   # Jackson JSON processor
 
@@ -396,6 +399,27 @@ Contents of NOTICE text file for jackson-dataformat-xml 2.20.0:
   ## Copyright
 
   Copyright 2007-, Tatu Saloranta (tatu.saloranta@iki.fi)
+
+  ## Licensing
+
+  Jackson components are licensed under Apache (Software) License, version 2.0,
+  as per accompanying LICENSE file.
+
+  ## Credits
+
+  A list of contributors may be found from CREDITS file, which is included in
+  some artifacts (usually source distributions); but is always available from
+  the source code management (SCM) system project uses.
+
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Contents of NOTICE text file for Jackson-Datatype-JSR310 2.21.1:
+
+  # Jackson JSON processor
+
+  Jackson is a high-performance, Free/Open Source JSON processing library. It
+  was originally written by Tatu Saloranta (tatu.saloranta@iki.fi), and has
+  been in development since 2007. It is currently developed by a community of
+  developers.
 
   ## Licensing
 
@@ -457,7 +481,7 @@ Contents of NOTICE text file for commons-csv 1.14.1:
   (https://www.apache.org/).
 
  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Contents of NOTICE text file for Apache Commons Lang 3.19.0:
+Contents of NOTICE text file for Apache Commons Lang 3.20.0:
 
   Apache Commons Lang Copyright 2001-2025 The Apache Software Foundation
 
@@ -546,7 +570,7 @@ Contents of NOTICE text file for Apache Tika 3.2.3:
 
 (2) BSD 2-Clause "Simplified" License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates stax2-api
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates stax2-api
 4.2.2.
 
   BSD Two Clause License
@@ -556,12 +580,11 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates stax2-api
   modification, are permitted provided that the following conditions are met:
 
     1. Redistributions of source code must retain the above copyright notice,
-    this
-      list of conditions and the following disclaimer.
+    this list of conditions and the following disclaimer.
 
-    2. Redistributions in binary form must reproduce the above copyright notice,
-      this list of conditions and the following disclaimer in the documentation
-      and/or other materials provided with the distribution.
+    2. Redistributions in binary form must reproduce the above copyright
+    notice, this list of conditions and the following disclaimer in the
+    documentation and/or other materials provided with the distribution.
 
   THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
@@ -576,7 +599,7 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates stax2-api
 
 (3) BSD 3-Clause "New" or "Revised" License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates Jakarta
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates Jakarta
 Activation 2.0.1.
 
   Copyright (c) , Oracle and/or its affiliates All rights reserved.
@@ -612,7 +635,7 @@ Activation 2.0.1.
 
 (4) BSD 3-Clause "New" or "Revised" License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates jaxen 2.0.0.
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates jaxen 2.0.0.
 
   Copyright (c) , The Werken Company All rights reserved.
 
@@ -646,8 +669,8 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates jaxen 2.0.0.
 
 (5) BSD 3-Clause "New" or "Revised" License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates protobuf-java
-4.32.1 and protobuf-java 4.33.0.
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates protobuf-java
+4.33.0.
 
   Copyright (c) , Google LLC All rights reserved.
 
@@ -681,10 +704,10 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates protobuf-java
 
 (6) Eclipse Distribution License - v 1.0:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates Angus
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates Angus
 Activation Registries 2.0.3, JAXB CORE 4.0.6, JAXB Runtime 4.0.6, Jakarta
 Activation API 2.1.4, TXW2 Runtime 4.0.6, istack common utility code runtime
-4.1.2, and jakarta.xml.bind:jakarta.xml.bind-api 4.0.4.
+4.1.2, and jakarta.xml.bind:jakarta.xml.bind-api 4.0.5.
 
   Eclipse Distribution License - v 1.0
   ====================================
@@ -722,9 +745,8 @@ Activation API 2.1.4, TXW2 Runtime 4.0.6, istack common utility code runtime
 
 (7) Eclipse Public License 2.0:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates JSR 374 (JSON
-Processing) Default Provider 2.0.1, Jakarta Mail 2.0.2, and jakartaee/rest
-3.0.0.
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates JSR 374 (JSON
+Processing) Default Provider 2.0.1 and Jakarta Mail 2.0.2.
 
   Eclipse Public License - v 2.0
   ==============================
@@ -998,7 +1020,7 @@ Processing) Default Provider 2.0.1, Jakarta Mail 2.0.2, and jakartaee/rest
 
 (8) Jdom License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates JDOM 2.0.6.1.
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates JDOM 2.0.6.1.
 
   jdom License
   ============
@@ -1046,7 +1068,7 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates JDOM 2.0.6.1.
 
 (9) MIT License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates dexx 0.7.
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates dexx 0.7.
 
   The MIT License
   ===============
@@ -1072,7 +1094,7 @@ Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates dexx 0.7.
 
 (10) MIT License:
 
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates SLF4J API
+Progress MarkLogic Connector for Apache Spark 3.1.0 incorporates SLF4J API
 Module 2.0.17.
 
   The MIT License
@@ -1097,18 +1119,8 @@ Module 2.0.17.
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   SOFTWARE.
 
-2. Special Notices Regarding Progress Product Components incorporated into the
-Product:
-
-(1) Internal Progress Product License:
-
-Progress MarkLogic Connector for Apache Spark 3.0.0 incorporates MarkLogic XCC
-12.0.0.
-
-  See Progress License
-
 NOTICE FROM PROGRESS SOFTWARE CORPORATION: Additional notices may be included
 in the release notes or other documentation that accompanies updates received
 in connection with support of the Product.
 
-Updated January 12, 2026
+Updated March 17, 2026
