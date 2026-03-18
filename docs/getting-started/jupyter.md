@@ -38,7 +38,7 @@ connector and also to initialize Spark:
 
 ```
 import os
-os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars "/path/to/marklogic-spark-connector-3.0.0.jar" pyspark-shell'
+os.environ['PYSPARK_SUBMIT_ARGS'] = '--jars "/path/to/marklogic-spark-connector-3.1.0.jar" pyspark-shell'
 
 from pyspark.sql import SparkSession
 spark = SparkSession.builder.master("local[*]").appName('My Notebook').getOrCreate()
@@ -46,7 +46,7 @@ spark.sparkContext.setLogLevel("WARN")
 spark
 ```
 
-The path of `/path/to/marklogic-spark-connector-3.0.0.jar` should be changed to match the location of the connector 
+The path of `/path/to/marklogic-spark-connector-3.1.0.jar` should be changed to match the location of the connector 
 jar on your filesystem. You are free to customize the `spark` variable in any manner you see fit as well. 
 
 Now that you have an initialized Spark session, you can run any of the examples found in the 
