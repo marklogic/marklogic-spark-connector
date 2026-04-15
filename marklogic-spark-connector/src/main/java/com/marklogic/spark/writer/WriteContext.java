@@ -4,10 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.datamovement.DataMovementManager;
-import com.marklogic.client.datamovement.WriteBatch;
-import com.marklogic.client.datamovement.WriteBatcher;
-import com.marklogic.client.datamovement.WriteEvent;
+import com.marklogic.client.datamovement.*;
 import com.marklogic.client.datamovement.filter.IncrementalWriteFilter;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
@@ -116,6 +113,23 @@ public class WriteContext extends ContextSupport {
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
+        }
+
+        if (hasOption(Options.WRITE_BATCH_LISTENER_CLASSNAME)) {
+            String className = getStringOption(Options.WRITE_BATCH_LISTENER_CLASSNAME);
+            try {
+                Class<?> clazz = Class.forName(className);
+                // Will likely need constructor args
+                Object instance = clazz.getDeclaredConstructor().newInstance();
+                if (instance instanceof WriteBatchListener writeBatchListener) {
+                    Util.MAIN_LOGGER.info("Registering batch listener: {}", className);
+                    writeBatcher.onBatchSuccess(writeBatchListener);
+                } else {
+                    throw new ConnectorException(String.format("Class %s does not implement WriteBatchListener", className));
+                }
+            } catch (Exception e) {
+                throw new ConnectorException(String.format("Failed to instantiate WriteBatchListener class: %s", className), e);
+            }
         }
 
         return writeBatcher;
