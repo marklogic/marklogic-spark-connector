@@ -20,6 +20,7 @@ import org.apache.spark.sql.types.StructType;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -116,23 +117,40 @@ public class WriteContext extends ContextSupport {
         }
 
         if (hasOption(Options.WRITE_BATCH_LISTENER_CLASSNAME)) {
-            String className = getStringOption(Options.WRITE_BATCH_LISTENER_CLASSNAME);
-            try {
-                Class<?> clazz = Class.forName(className);
-                // Will likely need constructor args
-                Object instance = clazz.getDeclaredConstructor().newInstance();
-                if (instance instanceof WriteBatchListener writeBatchListener) {
-                    Util.MAIN_LOGGER.info("Registering batch listener: {}", className);
-                    writeBatcher.onBatchSuccess(writeBatchListener);
-                } else {
-                    throw new ConnectorException(String.format("Class %s does not implement WriteBatchListener", className));
-                }
-            } catch (Exception e) {
-                throw new ConnectorException(String.format("Failed to instantiate WriteBatchListener class: %s", className), e);
-            }
+            WriteBatchListener listener = buildBatchSuccessListener();
+            Util.MAIN_LOGGER.info("Registering batch listener: {}", listener.getClass().getName());
+            writeBatcher.onBatchSuccess(listener);
         }
 
         return writeBatcher;
+    }
+
+    private WriteBatchListener buildBatchSuccessListener() {
+        final String className = getStringOption(Options.WRITE_BATCH_LISTENER_CLASSNAME);
+        Object listenerInstance;
+        try {
+            Class<?> clazz = Class.forName(className);
+            Map<String, String> params = buildBatchListenerParamsMap();
+            listenerInstance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Failed to instantiate WriteBatchListener class: %s", className), e);
+        }
+
+        if (listenerInstance instanceof WriteBatchListener writeBatchListener) {
+            return writeBatchListener;
+        } else {
+            throw new ConnectorException(String.format("Class %s does not implement WriteBatchListener", className));
+        }
+    }
+
+    private Map<String, String> buildBatchListenerParamsMap() {
+        Map<String, String> properties = getProperties();
+        return properties.keySet().stream()
+            .filter(key -> key.startsWith(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX))
+            .collect(Collectors.toMap(
+                key -> key.substring(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX.length()),
+                properties::get
+            ));
     }
 
     protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {

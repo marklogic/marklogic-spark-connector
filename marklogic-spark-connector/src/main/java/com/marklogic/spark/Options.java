@@ -151,6 +151,11 @@ public abstract class Options {
      */
     public static final String WRITE_BATCH_LISTENER_CLASSNAME = "spark.marklogic.write.batchListener.className";
 
+    /**
+     * @since 3.2.0
+     */
+    public static final String WRITE_BATCH_LISTENER_PARAM_PREFIX = "spark.marklogic.write.batchListener.param.";
+
     // For logging progress when writing documents or processing with custom code. Defines the interval at which
     // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
     // being written/processed.
