@@ -10,7 +10,6 @@ import nl.altindag.log.LogCaptor;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -101,10 +100,7 @@ class IncrementalWriteTest extends AbstractWriteTest {
 
     @Test
     void filterErrorShouldNotBeRetried() {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
-        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+        CommitResultsTestConsumer.reset();
 
         try {
             newSparkSession().read()
@@ -121,18 +117,18 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 // Setting this to false normally causes the BatchRetrier to kick in and retry failed batches,
                 // but it shouldn't due to the filter error being non-retryable.
                 .option(Options.WRITE_ABORT_ON_FAILURE, false)
+                .option(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .mode(SaveMode.Append)
                 .save();
 
-            assertEquals(0, successCount.get());
-            assertEquals(32, failureCount.get(), "All rows in the test file should have failed.");
+            assertEquals(0, CommitResultsTestConsumer.successCount.get());
+            assertEquals(32, CommitResultsTestConsumer.failureCount.get(), "All rows in the test file should have failed.");
             assertCollectionSize(
                 "No data should have been written due to the filter error",
                 "parquet-test", 0
             );
         } finally {
-            MarkLogicWrite.setFailureCountConsumer(null);
-            MarkLogicWrite.setSuccessCountConsumer(null);
+            CommitResultsTestConsumer.reset();
         }
     }
 
