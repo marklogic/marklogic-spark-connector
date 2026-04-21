@@ -154,6 +154,11 @@ public abstract class Options {
     /**
      * @since 3.2.0
      */
+    public static final String WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME = "spark.marklogic.write.commitResultsConsumer.className";
+
+    /**
+     * @since 3.2.0
+     */
     public static final String WRITE_BATCH_LISTENER_PARAM_PREFIX = "spark.marklogic.write.batchListener.param.";
 
     // For logging progress when writing documents or processing with custom code. Defines the interval at which
