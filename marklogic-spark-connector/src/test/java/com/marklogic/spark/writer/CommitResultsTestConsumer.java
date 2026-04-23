@@ -16,6 +16,12 @@ public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> 
     public static final AtomicInteger failureCount = new AtomicInteger(0);
     public static final AtomicInteger skippedCount = new AtomicInteger(0);
 
+    public static Map<String, String> params;
+
+    public CommitResultsTestConsumer(Map<String, String> params) {
+        CommitResultsTestConsumer.params = params;
+    }
+
     @Override
     public void accept(Map<String, Object> results) {
         successCount.set((Integer) results.get("successCount"));
@@ -27,5 +33,6 @@ public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> 
         successCount.set(0);
         failureCount.set(0);
         skippedCount.set(0);
+        params = null;
     }
 }

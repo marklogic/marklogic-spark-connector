@@ -175,7 +175,7 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
         newWriterWithDefaultConfig("three-uris.csv", 2)
             .option(Options.WRITE_JAVASCRIPT, "var URI; throw Error('Boom!');")
             .option(Options.WRITE_ABORT_ON_FAILURE, "false")
-            .option(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
             .save();
 
         assertEquals(3, CommitResultsTestConsumer.failureCount.get());

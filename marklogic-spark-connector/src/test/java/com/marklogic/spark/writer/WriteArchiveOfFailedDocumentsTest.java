@@ -38,7 +38,7 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
             .option(Options.WRITE_URI_SUFFIX, ".json")
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
             .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
-            .option(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
         );
 
         assertCollectionSize("Only the JSON document should have succeeded; error messages should have been logged " +
