@@ -25,15 +25,16 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     private final WriteContext writeContext;
-    private final Consumer<Map<String, Object>> commitResultsConsumer;
+    private final Consumer<Map<String, Object>> commitListener;
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
-        this.commitResultsConsumer = instantiateCommitResultsConsumer();
+        this.commitListener = instantiateCommitListener();
     }
 
     @Override
@@ -65,13 +66,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
                 }
             }
 
-            if (commitResultsConsumer != null) {
-                Map<String, Object> resultsMap = new HashMap<>();
-                resultsMap.put("successCount", commitResults.successCount);
-                resultsMap.put("failureCount", commitResults.failureCount);
-                resultsMap.put("skippedCount", commitResults.skippedCount);
-                commitResultsConsumer.accept(resultsMap);
-            }
+            invokeCommitListener(commitResults);
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
                 Util.MAIN_LOGGER.info("Success count: {}", commitResults.successCount);
@@ -153,27 +148,52 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     @SuppressWarnings("unchecked")
-    private Consumer<Map<String, Object>> instantiateCommitResultsConsumer() {
-        String className = writeContext.getProperties().get(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME);
+    private Consumer<Map<String, Object>> instantiateCommitListener() {
+        String className = writeContext.getProperties().get(Options.WRITE_COMMIT_LISTENER_CLASSNAME);
         String trimmedClassName = className != null ? className.trim() : null;
         if (trimmedClassName != null && !trimmedClassName.isEmpty()) {
             try {
                 Class<?> clazz = Class.forName(trimmedClassName);
-                Object instance = clazz.getDeclaredConstructor().newInstance();
+                Map<String, String> params = buildCommitListenerParamsMap();
+                Object instance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
                 if (instance instanceof Consumer) {
                     return (Consumer<Map<String, Object>>) instance;
                 } else {
                     throw new ConnectorException(String.format(
-                        "Class %s does not implement Consumer interface", trimmedClassName));
+                        "Commit listener %s does not implement Consumer interface", trimmedClassName));
                 }
             } catch (ConnectorException ce) {
                 throw ce;
             } catch (Exception e) {
                 throw new ConnectorException(String.format(
-                    "Unable to instantiate commit results consumer: %s; cause: %s", trimmedClassName, e.getMessage()), e);
+                    "Unable to instantiate commit listener: %s; cause: %s", trimmedClassName, e.getMessage()), e);
             }
         }
         return null;
     }
 
+    private Map<String, String> buildCommitListenerParamsMap() {
+        return writeContext.getProperties().entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX))
+            .filter(entry -> entry.getValue() != null)
+            .collect(Collectors.toMap(
+                entry -> entry.getKey().substring(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX.length()),
+                Map.Entry::getValue
+            ));
+    }
+
+    private void invokeCommitListener(CommitResults commitResults) {
+        if (commitListener != null) {
+            Map<String, Object> resultsMap = new HashMap<>();
+            resultsMap.put("successCount", commitResults.successCount);
+            resultsMap.put("failureCount", commitResults.failureCount);
+            resultsMap.put("skippedCount", commitResults.skippedCount);
+            try {
+                commitListener.accept(resultsMap);
+            } catch (Exception e) {
+                final String message = "Commit listener failed; cause: ".formatted(e.getMessage());
+                Util.MAIN_LOGGER.warn(message, e);
+            }
+        }
+    }
 }
