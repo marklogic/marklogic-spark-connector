@@ -5,7 +5,6 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
-import com.marklogic.client.datamovement.WriteBatchListener;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.filter.FilterException;
 import com.marklogic.client.document.DocumentWriteOperation;
@@ -300,14 +299,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void stopJobAndRelease() {
         if (this.writeBatcher != null && this.dataMovementManager != null) {
             this.dataMovementManager.stopJob(this.writeBatcher);
-
-            for (WriteBatchListener batchSuccessListener : this.writeBatcher.getBatchSuccessListeners()) {
-                if (batchSuccessListener instanceof Closeable) {
-                    IOUtils.closeQuietly((Closeable) batchSuccessListener);
-                }
-            }
         }
-
         if (this.databaseClient != null) {
             this.databaseClient.release();
         }
