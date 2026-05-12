@@ -11,6 +11,16 @@ configurations {
 
       // Test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-23907
       force "org.apache.pdfbox:pdfbox:3.0.7"
+
+      // jena-arq dependency; resolves several CVEs in 0.22.0
+      force "org.apache.thrift:libthrift:0.23.0"
+
+      // Test-only dependencies of Tika, resolves CVEs from 1.81
+      force "org.bouncycastle:bcprov-jdk18on:1.84"
+      force "org.bouncycastle:bcjmail-jdk18on:1.84"
+
+      // Compile-only dependency, resolves CVE in 2.24.3
+      force "org.apache.logging.log4j:log4j-layout-template-json:2.26.0"
     }
   }
 }
@@ -20,7 +30,7 @@ configurations.configureEach {
      // This is a test-only / compile-only dependency, but doing this as it helps ensure tests pass as Flux
      // will need it bumped for sure.
      if (details.requested.group.equals("io.netty") and (details.requested.version.startsWith("4.1.") || details.requested.version.startsWith("4.2."))) {
-       details.useVersion "4.2.12.Final"
+       details.useVersion "4.2.13.Final"
        details.because "Forcing Spark 4.1.x to use latest Netty to minimize CVEs"
      }
    }
