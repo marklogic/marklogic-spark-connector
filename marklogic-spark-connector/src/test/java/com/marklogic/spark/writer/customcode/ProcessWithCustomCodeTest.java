@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.customcode;
 
@@ -7,12 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.XmlNode;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.writer.AbstractWriteTest;
-import com.marklogic.spark.writer.MarkLogicWrite;
+import com.marklogic.spark.writer.CommitResultsTestConsumer;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -169,20 +168,18 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
 
     @Test
     void dontAbortOnFailure() {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
-        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+        CommitResultsTestConsumer.reset();
 
         // The lack of an error here indicates that the job did not abort. The connector is expected to have logged
         // each error instead.
         newWriterWithDefaultConfig("three-uris.csv", 2)
             .option(Options.WRITE_JAVASCRIPT, "var URI; throw Error('Boom!');")
             .option(Options.WRITE_ABORT_ON_FAILURE, "false")
+            .option(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
             .save();
 
-        assertEquals(3, failureCount.get());
-        assertEquals(0, successCount.get());
+        assertEquals(3, CommitResultsTestConsumer.failureCount.get());
+        assertEquals(0, CommitResultsTestConsumer.successCount.get());
     }
 
     private void verifyThreeJsonDocumentsWereWritten() {
