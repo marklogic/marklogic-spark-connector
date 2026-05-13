@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -11,8 +11,6 @@ import com.marklogic.spark.Options;
 import org.apache.spark.SparkException;
 import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -262,10 +260,7 @@ class WriteRowsTest extends AbstractWriteTest {
 
     @Test
     void dontAbortOnFailure() {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
-        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+        CommitResultsTestConsumer.reset();
 
         newWriterWithDefaultConfig("temporal-data-with-invalid-rows.csv", 1)
             .option(Options.WRITE_TEMPORAL_COLLECTION, TEMPORAL_COLLECTION)
@@ -273,11 +268,12 @@ class WriteRowsTest extends AbstractWriteTest {
             // will in fact succeed (if it's stuck in a batch with other bad rows, it'll fail too).
             .option(Options.WRITE_BATCH_SIZE, 1)
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
             .save();
 
         assertCollectionSize("9 of the batches should have failed, with the 10th batch succeeding", COLLECTION, 1);
-        assertEquals(9, failureCount.get());
-        assertEquals(1, successCount.get());
+        assertEquals(9, CommitResultsTestConsumer.failureCount.get());
+        assertEquals(1, CommitResultsTestConsumer.successCount.get());
     }
 
     private void verifyFailureIsDueToLackOfPermission(SparkException ex) {

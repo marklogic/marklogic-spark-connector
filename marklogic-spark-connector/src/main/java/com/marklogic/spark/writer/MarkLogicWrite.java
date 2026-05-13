@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
@@ -19,20 +20,20 @@ import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory
 import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
-    private WriteContext writeContext;
-
-    // Used solely for testing. Will never be populated in a real world scenario.
-    private static Consumer<Integer> successCountConsumer;
-    private static Consumer<Integer> failureCountConsumer;
+    private final WriteContext writeContext;
+    private final Consumer<Map<String, Object>> commitResultsConsumer;
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
+        this.commitResultsConsumer = instantiateCommitResultsConsumer();
     }
 
     @Override
@@ -64,11 +65,12 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
                 }
             }
 
-            if (successCountConsumer != null) {
-                successCountConsumer.accept(commitResults.successCount);
-            }
-            if (failureCountConsumer != null) {
-                failureCountConsumer.accept(commitResults.failureCount);
+            if (commitResultsConsumer != null) {
+                Map<String, Object> resultsMap = new HashMap<>();
+                resultsMap.put("successCount", commitResults.successCount);
+                resultsMap.put("failureCount", commitResults.failureCount);
+                resultsMap.put("skippedCount", commitResults.skippedCount);
+                commitResultsConsumer.accept(resultsMap);
             }
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
@@ -150,12 +152,27 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     private record CommitResults(int successCount, int failureCount, int skippedCount, Set<String> graphs) {
     }
 
-    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
-        successCountConsumer = consumer;
-    }
-
-    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
-        failureCountConsumer = consumer;
+    @SuppressWarnings("unchecked")
+    private Consumer<Map<String, Object>> instantiateCommitResultsConsumer() {
+        String className = writeContext.getProperties().get(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME);
+        if (className != null && !className.trim().isEmpty()) {
+            try {
+                Class<?> clazz = Class.forName(className);
+                Object instance = clazz.getDeclaredConstructor().newInstance();
+                if (instance instanceof Consumer) {
+                    return (Consumer<Map<String, Object>>) instance;
+                } else {
+                    throw new ConnectorException(String.format(
+                        "Class %s does not implement Consumer interface", className));
+                }
+            } catch (ConnectorException ce) {
+                throw ce;
+            } catch (Exception e) {
+                throw new ConnectorException(String.format(
+                    "Unable to instantiate commit results consumer: %s; cause: %s", className, e.getMessage()), e);
+            }
+        }
+        return null;
     }
 
 }
