@@ -155,21 +155,22 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @SuppressWarnings("unchecked")
     private Consumer<Map<String, Object>> instantiateCommitResultsConsumer() {
         String className = writeContext.getProperties().get(Options.WRITE_COMMIT_RESULTS_CONSUMER_CLASSNAME);
-        if (className != null && !className.trim().isEmpty()) {
+        String trimmedClassName = className != null ? className.trim() : null;
+        if (trimmedClassName != null && !trimmedClassName.isEmpty()) {
             try {
-                Class<?> clazz = Class.forName(className);
+                Class<?> clazz = Class.forName(trimmedClassName);
                 Object instance = clazz.getDeclaredConstructor().newInstance();
                 if (instance instanceof Consumer) {
                     return (Consumer<Map<String, Object>>) instance;
                 } else {
                     throw new ConnectorException(String.format(
-                        "Class %s does not implement Consumer interface", className));
+                        "Class %s does not implement Consumer interface", trimmedClassName));
                 }
             } catch (ConnectorException ce) {
                 throw ce;
             } catch (Exception e) {
                 throw new ConnectorException(String.format(
-                    "Unable to instantiate commit results consumer: %s; cause: %s", className, e.getMessage()), e);
+                    "Unable to instantiate commit results consumer: %s; cause: %s", trimmedClassName, e.getMessage()), e);
             }
         }
         return null;

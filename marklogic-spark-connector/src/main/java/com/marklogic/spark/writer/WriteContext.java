@@ -145,11 +145,12 @@ public class WriteContext extends ContextSupport {
 
     private Map<String, String> buildBatchListenerParamsMap() {
         Map<String, String> properties = getProperties();
-        return properties.keySet().stream()
-            .filter(key -> key.startsWith(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX))
+        return properties.entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX))
+            .filter(entry -> entry.getValue() != null)
             .collect(Collectors.toMap(
-                key -> key.substring(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX.length()),
-                properties::get
+                entry -> entry.getKey().substring(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX.length()),
+                Map.Entry::getValue
             ));
     }
 
