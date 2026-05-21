@@ -159,7 +159,7 @@ public abstract class Options {
     /**
      * Class name of an implementation of the Java Consumer interface that receives a map of commit results after
      * the write process has finished. The implementation must declare a constructor that receives a
-     * Map<String, String> of parameters, which can be passed via options with the prefix defined
+     * {@code Map<String, String>} of parameters, which can be passed via options with the prefix defined
      * by WRITE_COMMIT_LISTENER_PARAM_PREFIX.
      *
      * @since 3.2.0
@@ -167,7 +167,7 @@ public abstract class Options {
     public static final String WRITE_COMMIT_LISTENER_CLASSNAME = "spark.marklogic.write.commitListener.className";
 
     /**
-     * Prefix for params to pass in a Map<String, String> to the constructor of the commit listener class.
+     * Prefix for params to pass in a {@code Map<String, String>} to the constructor of the commit listener class.
      *
      * @since 3.2.0
      */

@@ -4,7 +4,7 @@
 package com.marklogic.spark.writer;
 
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
@@ -12,9 +12,9 @@ import java.util.function.Consumer;
  */
 public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> {
 
-    public static final AtomicInteger successCount = new AtomicInteger(0);
-    public static final AtomicInteger failureCount = new AtomicInteger(0);
-    public static final AtomicInteger skippedCount = new AtomicInteger(0);
+    public static final AtomicLong successCount = new AtomicLong(0);
+    public static final AtomicLong failureCount = new AtomicLong(0);
+    public static final AtomicLong skippedCount = new AtomicLong(0);
 
     public static Map<String, String> params;
 
@@ -24,9 +24,9 @@ public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> 
 
     @Override
     public void accept(Map<String, Object> results) {
-        successCount.set((Integer) results.get("successCount"));
-        failureCount.set((Integer) results.get("failureCount"));
-        skippedCount.set((Integer) results.get("skippedCount"));
+        successCount.set((Long) results.get("successCount"));
+        failureCount.set((Long) results.get("failureCount"));
+        skippedCount.set((Long) results.get("skippedCount"));
     }
 
     public static void reset() {
