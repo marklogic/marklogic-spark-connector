@@ -125,9 +125,9 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     }
 
     private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
-        int successCount = 0;
-        int failureCount = 0;
-        int skippedCount = 0;
+        long successCount = 0;
+        long failureCount = 0;
+        long skippedCount = 0;
         Set<String> graphs = new HashSet<>();
         for (WriterCommitMessage message : messages) {
             CommitMessage msg = (CommitMessage) message;
@@ -144,7 +144,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     /**
      * Aggregates the results of each CommitMessage.
      */
-    private record CommitResults(int successCount, int failureCount, int skippedCount, Set<String> graphs) {
+    private record CommitResults(long successCount, long failureCount, long skippedCount, Set<String> graphs) {
     }
 
     @SuppressWarnings("unchecked")
@@ -157,6 +157,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
                 Map<String, String> params = buildCommitListenerParamsMap();
                 Object instance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
                 if (instance instanceof Consumer) {
+                    Util.MAIN_LOGGER.info("Instantiated commit listener: {}", trimmedClassName);
                     return (Consumer<Map<String, Object>>) instance;
                 } else {
                     throw new ConnectorException(String.format(
@@ -188,6 +189,7 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
             resultsMap.put("successCount", commitResults.successCount);
             resultsMap.put("failureCount", commitResults.failureCount);
             resultsMap.put("skippedCount", commitResults.skippedCount);
+            Util.MAIN_LOGGER.info("Invoking commit listener with results: {}", resultsMap);
             try {
                 commitListener.accept(resultsMap);
             } catch (Exception e) {
