@@ -5,51 +5,48 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.api.WriteListener;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class MarkLogicWriteTest {
+class WriteContextTest {
 
     @Test
     void commitListenerNotImplementingConsumerInterface() {
         Map<String, String> props = new HashMap<>();
-        props.put(Options.WRITE_COMMIT_LISTENER_CLASSNAME, NotAConsumer.class.getName());
+        props.put(Options.WRITE_LISTENER_CLASS_NAME, NotAConsumer.class.getName());
 
         WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> new MarkLogicWrite(writeContext));
-        assertTrue(ex.getMessage().contains("does not implement Consumer interface"),
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writeContext.makeWriteListener());
+        assertTrue(ex.getMessage().contains("does not implement WriteListener"),
             "Unexpected error message: " + ex.getMessage());
     }
 
     @Test
     void commitListenerWithNoMapConstructor() {
         Map<String, String> props = new HashMap<>();
-        props.put(Options.WRITE_COMMIT_LISTENER_CLASSNAME, NoMapConstructor.class.getName());
+        props.put(Options.WRITE_LISTENER_CLASS_NAME, NoMapConstructor.class.getName());
 
         WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> new MarkLogicWrite(writeContext));
-        assertTrue(ex.getMessage().contains("Unable to instantiate commit listener"),
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writeContext.makeWriteListener());
+        assertTrue(ex.getMessage().contains("Failed to instantiate WriteListener class"),
             "Unexpected error message: " + ex.getMessage());
     }
 
     @Test
     void commitListenerNotFound() {
         Map<String, String> props = new HashMap<>();
-        props.put(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.example.NonExistentClass");
+        props.put(Options.WRITE_LISTENER_CLASS_NAME, "com.example.NonExistentClass");
 
         WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-
-        ConnectorException ex = assertThrows(ConnectorException.class, () -> new MarkLogicWrite(writeContext));
-        assertTrue(ex.getMessage().contains("Unable to instantiate commit listener"),
+        ConnectorException ex = assertThrows(ConnectorException.class, () -> writeContext.makeWriteListener());
+        assertTrue(ex.getMessage().contains("Failed to instantiate WriteListener class"),
             "Unexpected error message: " + ex.getMessage());
     }
 
@@ -57,32 +54,27 @@ class MarkLogicWriteTest {
     void commitListenerNotSpecified() {
         Map<String, String> props = new HashMap<>();
         WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-
-        // Should not throw an exception when the option is not specified
-        assertDoesNotThrow(() -> new MarkLogicWrite(writeContext));
+        assertNull(writeContext.makeWriteListener());
     }
 
     @Test
     void commitListenerWithEmptyString() {
         Map<String, String> props = new HashMap<>();
-        props.put(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "   ");
+        props.put(Options.WRITE_LISTENER_CLASS_NAME, "   ");
 
         WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-
-        // Should not throw an exception when the option is empty/whitespace
-        assertDoesNotThrow(() -> new MarkLogicWrite(writeContext));
+        assertNull(writeContext.makeWriteListener());
     }
 
     @Test
     void commitListenerWithParams() {
         Map<String, String> props = new HashMap<>();
-        props.put(Options.WRITE_COMMIT_LISTENER_CLASSNAME, CommitResultsTestConsumer.class.getName());
-        props.put(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX + "param1", "value1");
-        props.put(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX + "param2", "value2");
+        props.put(Options.WRITE_LISTENER_CLASS_NAME, CommitResultsTestConsumer.class.getName());
+        props.put(Options.WRITE_LISTENER_PARAM_PREFIX + "param1", "value1");
+        props.put(Options.WRITE_LISTENER_PARAM_PREFIX + "param2", "value2");
 
         try {
-            WriteContext writeContext = new WriteContext(new StructType().add("test", DataTypes.StringType), props);
-            new MarkLogicWrite(writeContext);
+            new WriteContext(new StructType().add("test", DataTypes.StringType), props).makeWriteListener();
             Map<String, String> params = CommitResultsTestConsumer.params;
             assertEquals(2, params.size());
             assertEquals("value1", params.get("param1"));
@@ -99,12 +91,12 @@ class MarkLogicWriteTest {
         }
     }
 
-    public static class NoMapConstructor implements Consumer<Map<String, Object>> {
+    public static class NoMapConstructor implements WriteListener {
         public NoMapConstructor() {
         }
 
         @Override
-        public void accept(Map<String, Object> results) {
+        public void onWriteCommit(CommitResults commitResults) {
         }
     }
 }

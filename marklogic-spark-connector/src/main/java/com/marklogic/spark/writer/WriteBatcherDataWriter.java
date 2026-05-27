@@ -5,7 +5,6 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.datamovement.DataMovementManager;
-import com.marklogic.client.datamovement.WriteBatchListener;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.filter.FilterException;
 import com.marklogic.client.document.DocumentWriteOperation;
@@ -42,9 +41,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 /**
  * Uses the Java Client's WriteBatcher to handle writing rows as documents to MarkLogic.
@@ -79,6 +80,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final AtomicInteger failedItemCount = new AtomicInteger(0);
     private final AtomicInteger skippedItemCount = new AtomicInteger(0);
 
+    private final Map<String, String> failedDocuments = new ConcurrentHashMap<>();
+
     // Used to ensure that if a FilterException is encountered, the error message is logged only once per
     // writer instance, as it's very likely the same exception will occur for every batch.
     private final AtomicBoolean hasLoggedFilterError = new AtomicBoolean(false);
@@ -105,6 +108,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
         this.documentPipeline = DocumentPipelineFactory.newDocumentPipeline(writeContext);
         this.pipelineBatchSize = writeContext.getIntOption(Options.WRITE_PIPELINE_BATCH_SIZE, 1, 1);
+
 
         if (writeContext.isAbortOnFailure()) {
             this.batchRetrier = null;
@@ -144,7 +148,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         throwWriteFailureIfExists();
 
         Set<String> graphs = getGraphNames();
-        return new CommitMessage(successItemCount.get(), failedItemCount.get(), skippedItemCount.get(), graphs);
+        return new CommitMessage(successItemCount.get(), failedItemCount.get(), skippedItemCount.get(), graphs, failedDocuments);
     }
 
     @Override
@@ -245,6 +249,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
 
     private void addBatchListeners(WriteBatcher writeBatcher) {
         writeBatcher.onBatchSuccess(batch -> this.successItemCount.getAndAdd(batch.getItems().length));
+
         if (writeContext.isAbortOnFailure()) {
             // WriteBatcherImpl has its own warn-level logging which is a bit verbose, including more than just the
             // message from the server. This is intended to always show up and be associated with our Spark connector
@@ -300,12 +305,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private void stopJobAndRelease() {
         if (this.writeBatcher != null && this.dataMovementManager != null) {
             this.dataMovementManager.stopJob(this.writeBatcher);
-
-            for (WriteBatchListener batchSuccessListener : this.writeBatcher.getBatchSuccessListeners()) {
-                if (batchSuccessListener instanceof Closeable) {
-                    IOUtils.closeQuietly((Closeable) batchSuccessListener);
-                }
-            }
         }
 
         if (this.databaseClient != null) {
@@ -318,13 +317,20 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             writeContext.newDocumentManager(this.databaseClient),
             writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
             successfulBatch -> successItemCount.getAndAdd(successfulBatch.size()),
-            (failedDoc, failure) -> {
-                captureFailure(failure.getMessage(), failedDoc.getUri());
-                if (this.archiveWriter != null) {
-                    writeFailedDocumentToArchive(failedDoc);
-                }
-            }
+            makeFailureListener()
         );
+    }
+
+    private BiConsumer<DocumentWriteOperation, Throwable> makeFailureListener() {
+        return (failedDoc, failure) -> {
+            captureFailure(failure.getMessage(), failedDoc.getUri());
+            if (failedDocuments.size() < writeContext.getMaxFailedDocumentCount() && failure.getMessage() != null) {
+                failedDocuments.put(failedDoc.getUri(), failure.getMessage());
+            }
+            if (this.archiveWriter != null) {
+                writeFailedDocumentToArchive(failedDoc);
+            }
+        };
     }
 
     /**

@@ -18,6 +18,8 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -37,14 +39,22 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
             .option(Options.WRITE_COLLECTIONS, "partial-batch")
             .option(Options.WRITE_URI_SUFFIX, ".json")
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_URI_REPLACE, ".*/mixed-files,''")
             .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
-            .option(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_LISTENER_MAX_FAILED_DOCUMENTS, 5)
         );
 
         assertCollectionSize("Only the JSON document should have succeeded; error messages should have been logged " +
             "for the other 3 documents.", "partial-batch", 1);
         assertEquals(1, CommitResultsTestConsumer.successCount.get());
         assertEquals(3, CommitResultsTestConsumer.failureCount.get());
+
+        assertEquals(3, CommitResultsTestConsumer.failedDocuments.size(),
+            "The onWriteCommit method should have captured the 3 failures and their URIs.");
+        Set<String> failedUris = CommitResultsTestConsumer.failedDocuments.keySet();
+        Stream.of("/hello.txt.json", "/hello.xml.json", "/hello2.txt.gz.json").forEach(uri ->
+            assertTrue(failedUris.contains(uri), "Expected failed URI not found: " + uri + "; URIs: " + failedUris));
 
         // Read the archive file back in and verify the contents.
         List<Row> rows = session.read().format(CONNECTOR_IDENTIFIER)

@@ -3,18 +3,20 @@
  */
 package com.marklogic.spark.writer;
 
+import com.marklogic.spark.api.WriteListener;
+
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 /**
  * Test-only consumer for capturing commit results. Tests can access the static fields to verify counts.
  */
-public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> {
+public class CommitResultsTestConsumer implements WriteListener {
 
     public static final AtomicLong successCount = new AtomicLong(0);
     public static final AtomicLong failureCount = new AtomicLong(0);
     public static final AtomicLong skippedCount = new AtomicLong(0);
+    public static Map<String, String> failedDocuments;
 
     public static Map<String, String> params;
 
@@ -23,10 +25,11 @@ public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> 
     }
 
     @Override
-    public void accept(Map<String, Object> results) {
-        successCount.set((Long) results.get("successCount"));
-        failureCount.set((Long) results.get("failureCount"));
-        skippedCount.set((Long) results.get("skippedCount"));
+    public void onWriteCommit(CommitResults commitResults) {
+        successCount.set(commitResults.getSuccessCount());
+        failureCount.set(commitResults.getFailureCount());
+        skippedCount.set(commitResults.getSkippedCount());
+        failedDocuments = commitResults.getFailedDocuments();
     }
 
     public static void reset() {
@@ -34,5 +37,6 @@ public class CommitResultsTestConsumer implements Consumer<Map<String, Object>> 
         failureCount.set(0);
         skippedCount.set(0);
         params = null;
+        failedDocuments = null;
     }
 }

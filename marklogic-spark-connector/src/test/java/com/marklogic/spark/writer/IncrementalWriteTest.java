@@ -117,7 +117,7 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 // Setting this to false normally causes the BatchRetrier to kick in and retry failed batches,
                 // but it shouldn't due to the filter error being non-retryable.
                 .option(Options.WRITE_ABORT_ON_FAILURE, false)
-                .option(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .mode(SaveMode.Append)
                 .save();
 

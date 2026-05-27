@@ -149,29 +149,20 @@ public abstract class Options {
     /**
      * @since 3.2.0
      */
-    public static final String WRITE_BATCH_LISTENER_CLASSNAME = "spark.marklogic.write.batchListener.className";
+    public static final String WRITE_LISTENER_CLASS_NAME = "spark.marklogic.write.listener.className";
 
     /**
      * @since 3.2.0
      */
-    public static final String WRITE_BATCH_LISTENER_PARAM_PREFIX = "spark.marklogic.write.batchListener.param.";
+    public static final String WRITE_LISTENER_PARAM_PREFIX = "spark.marklogic.write.listener.param.";
 
     /**
-     * Class name of an implementation of the Java Consumer interface that receives a map of commit results after
-     * the write process has finished. The implementation must declare a constructor that receives a
-     * {@code Map<String, String>} of parameters, which can be passed via options with the prefix defined
-     * by WRITE_COMMIT_LISTENER_PARAM_PREFIX.
+     * Max number of failed documents to include in the message sent to the write listener when commit is called on
+     * {@code MarkLogicWrite}.
      *
      * @since 3.2.0
      */
-    public static final String WRITE_COMMIT_LISTENER_CLASSNAME = "spark.marklogic.write.commitListener.className";
-
-    /**
-     * Prefix for params to pass in a {@code Map<String, String>} to the constructor of the commit listener class.
-     *
-     * @since 3.2.0
-     */
-    public static final String WRITE_COMMIT_LISTENER_PARAM_PREFIX = "spark.marklogic.write.commitListener.param.";
+    public static final String WRITE_LISTENER_MAX_FAILED_DOCUMENTS = "spark.marklogic.write.listener.maxFailedDocuments";
 
     // For logging progress when writing documents or processing with custom code. Defines the interval at which
     // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
