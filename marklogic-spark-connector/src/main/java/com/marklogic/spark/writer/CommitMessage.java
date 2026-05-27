@@ -5,6 +5,7 @@ package com.marklogic.spark.writer;
 
 import org.apache.spark.sql.connector.write.WriterCommitMessage;
 
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -16,6 +17,7 @@ public record CommitMessage(
     int successItemCount,
     int failedItemCount,
     int skippedItemCount,
-    Set<String> graphs
+    Set<String> graphs,
+    Map<String, String> failedDocuments
 ) implements WriterCommitMessage {
 }

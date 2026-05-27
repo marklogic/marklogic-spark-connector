@@ -4,9 +4,9 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.api.WriteListener;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import com.marklogic.spark.writer.rdf.GraphWriter;
@@ -20,21 +20,18 @@ import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory
 import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.io.Closeable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
     private final WriteContext writeContext;
-    private final Consumer<Map<String, Object>> commitListener;
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
-        this.commitListener = instantiateCommitListener();
     }
 
     @Override
@@ -58,24 +55,24 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void commit(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            final CommitResults commitResults = aggregateCommitMessages(messages);
-            if (!commitResults.graphs.isEmpty()) {
+            final WriteListener.CommitResults commitResults = aggregateCommitMessages(messages);
+            if (!commitResults.getGraphs().isEmpty()) {
                 try (DatabaseClient client = writeContext.connectToMarkLogic()) {
                     GraphWriter graphWriter = new GraphWriter(client, writeContext.getProperties().get(Options.WRITE_PERMISSIONS));
-                    graphWriter.createGraphs(commitResults.graphs);
+                    graphWriter.createGraphs(commitResults.getGraphs());
                 }
             }
 
             invokeCommitListener(commitResults);
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Success count: {}", commitResults.successCount);
-                if (commitResults.skippedCount > 0) {
-                    Util.MAIN_LOGGER.info("Skipped count: {}", commitResults.skippedCount);
+                Util.MAIN_LOGGER.info("Success count: {}", commitResults.getSuccessCount());
+                if (commitResults.getSkippedCount() > 0) {
+                    Util.MAIN_LOGGER.info("Skipped count: {}", commitResults.getSkippedCount());
                 }
             }
-            if (commitResults.failureCount > 0) {
-                Util.MAIN_LOGGER.error("Failure count: {}", commitResults.failureCount);
+            if (commitResults.getFailureCount() > 0) {
+                Util.MAIN_LOGGER.error("Failure count: {}", commitResults.getFailureCount());
             }
         }
     }
@@ -124,11 +121,15 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         }
     }
 
-    private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
+    private WriteListener.CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
         long successCount = 0;
         long failureCount = 0;
         long skippedCount = 0;
         Set<String> graphs = new HashSet<>();
+
+        final int maxFailedDocumentCount = writeContext.getMaxFailedDocumentCount();
+        final Map<String, String> failedDocuments = new HashMap<>();
+
         for (WriterCommitMessage message : messages) {
             CommitMessage msg = (CommitMessage) message;
             successCount += msg.successItemCount();
@@ -137,64 +138,34 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
             if (msg.graphs() != null) {
                 graphs.addAll(msg.graphs());
             }
-        }
-        return new CommitResults(successCount, failureCount, skippedCount, graphs);
-    }
-
-    /**
-     * Aggregates the results of each CommitMessage.
-     */
-    private record CommitResults(long successCount, long failureCount, long skippedCount, Set<String> graphs) {
-    }
-
-    @SuppressWarnings("unchecked")
-    private Consumer<Map<String, Object>> instantiateCommitListener() {
-        String className = writeContext.getProperties().get(Options.WRITE_COMMIT_LISTENER_CLASSNAME);
-        String trimmedClassName = className != null ? className.trim() : null;
-        if (trimmedClassName != null && !trimmedClassName.isEmpty()) {
-            try {
-                Class<?> clazz = Class.forName(trimmedClassName);
-                Map<String, String> params = buildCommitListenerParamsMap();
-                Object instance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
-                if (instance instanceof Consumer) {
-                    Util.MAIN_LOGGER.info("Instantiated commit listener: {}", trimmedClassName);
-                    return (Consumer<Map<String, Object>>) instance;
-                } else {
-                    throw new ConnectorException(String.format(
-                        "Commit listener %s does not implement Consumer interface", trimmedClassName));
-                }
-            } catch (ConnectorException ce) {
-                throw ce;
-            } catch (Exception e) {
-                throw new ConnectorException(String.format(
-                    "Unable to instantiate commit listener: %s; cause: %s", trimmedClassName, e.getMessage()), e);
+            if (msg.failedDocuments() != null) {
+                msg.failedDocuments().forEach((key, value) -> {
+                    if (failedDocuments.size() < maxFailedDocumentCount) {
+                        failedDocuments.put(key, value);
+                    }
+                });
             }
         }
-        return null;
+
+        return new WriteListener.CommitResults(successCount, skippedCount, failureCount, graphs, failedDocuments);
     }
 
-    private Map<String, String> buildCommitListenerParamsMap() {
-        return writeContext.getProperties().entrySet().stream()
-            .filter(entry -> entry.getKey().startsWith(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX))
-            .filter(entry -> entry.getValue() != null)
-            .collect(Collectors.toMap(
-                entry -> entry.getKey().substring(Options.WRITE_COMMIT_LISTENER_PARAM_PREFIX.length()),
-                Map.Entry::getValue
-            ));
-    }
-
-    private void invokeCommitListener(CommitResults commitResults) {
-        if (commitListener != null) {
-            Map<String, Object> resultsMap = new HashMap<>();
-            resultsMap.put("successCount", commitResults.successCount);
-            resultsMap.put("failureCount", commitResults.failureCount);
-            resultsMap.put("skippedCount", commitResults.skippedCount);
-            Util.MAIN_LOGGER.info("Invoking commit listener with results: {}", resultsMap);
+    private void invokeCommitListener(WriteListener.CommitResults commitResults) {
+        final WriteListener writeListener = writeContext.makeWriteListener();
+        if (writeListener != null) {
+            Util.MAIN_LOGGER.debug("Invoking commit listener: {}", writeListener.getClass().getName());
             try {
-                commitListener.accept(resultsMap);
+                writeListener.onWriteCommit(commitResults);
             } catch (Exception e) {
-                final String message = "Commit listener failed; cause: ".formatted(e.getMessage());
-                Util.MAIN_LOGGER.warn(message, e);
+                Util.MAIN_LOGGER.warn("Commit listener failed; cause: " + e.getMessage(), e);
+            }
+
+            if (writeListener instanceof Closeable) {
+                try {
+                    ((Closeable) writeListener).close();
+                } catch (Exception e) {
+                    Util.MAIN_LOGGER.warn("Failed to close write listener; cause: " + e.getMessage(), e);
+                }
             }
         }
     }

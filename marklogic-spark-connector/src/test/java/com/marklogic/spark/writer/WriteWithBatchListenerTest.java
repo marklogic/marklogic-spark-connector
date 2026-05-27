@@ -4,9 +4,9 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.datamovement.WriteBatch;
-import com.marklogic.client.datamovement.WriteBatchListener;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.api.WriteListener;
 import org.apache.spark.sql.DataFrameWriter;
 import org.junit.jupiter.api.Test;
 
@@ -14,8 +14,7 @@ import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class WriteWithBatchListenerTest extends AbstractWriteTest {
 
@@ -24,9 +23,9 @@ class WriteWithBatchListenerTest extends AbstractWriteTest {
         MyBatchListener.reset();
 
         newWriter()
-            .option(Options.WRITE_BATCH_LISTENER_CLASSNAME, MyBatchListener.class.getName())
-            .option(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX + "param1", "value1")
-            .option(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX + "param2", "value2")
+            .option(Options.WRITE_LISTENER_CLASS_NAME, MyBatchListener.class.getName())
+            .option(Options.WRITE_LISTENER_PARAM_PREFIX + "param1", "value1")
+            .option(Options.WRITE_LISTENER_PARAM_PREFIX + "param2", "value2")
             .save();
 
         assertCollectionSize(COLLECTION, 200);
@@ -46,7 +45,7 @@ class WriteWithBatchListenerTest extends AbstractWriteTest {
     @Test
     void batchListenerThrowsAnError() {
         newWriter()
-            .option(Options.WRITE_BATCH_LISTENER_CLASSNAME, UnhappyBatchListener.class.getName())
+            .option(Options.WRITE_LISTENER_CLASS_NAME, UnhappyBatchListener.class.getName())
             .save();
 
         assertCollectionSize(
@@ -58,15 +57,15 @@ class WriteWithBatchListenerTest extends AbstractWriteTest {
     @Test
     void notABatchListener() {
         DataFrameWriter<?> writer = newWriter()
-            .option(Options.WRITE_BATCH_LISTENER_CLASSNAME, NotABatchListener.class.getName());
+            .option(Options.WRITE_LISTENER_CLASS_NAME, NotABatchListener.class.getName());
 
         ConnectorException ex = assertThrowsConnectorException(() -> writer.save());
-        assertTrue(ex.getMessage().contains("does not implement WriteBatchListener"),
+        assertTrue(ex.getMessage().contains("does not implement WriteListener"),
             "Should get an immediate failure if the class isn't actually a valid listener; actual error: " + ex.getMessage());
         assertCollectionSize(COLLECTION, 0);
     }
 
-    public static class MyBatchListener implements WriteBatchListener, Closeable {
+    public static class MyBatchListener implements WriteListener, Closeable {
 
         public static AtomicInteger itemCount = new AtomicInteger(0);
         public static boolean wasClosed;
@@ -83,7 +82,7 @@ class WriteWithBatchListenerTest extends AbstractWriteTest {
         }
 
         @Override
-        public void processEvent(WriteBatch batch) {
+        public void onBatchSuccess(WriteBatch batch) {
             itemCount.addAndGet(batch.getItems().length);
         }
 
@@ -93,13 +92,13 @@ class WriteWithBatchListenerTest extends AbstractWriteTest {
         }
     }
 
-    public static class UnhappyBatchListener implements WriteBatchListener {
+    public static class UnhappyBatchListener implements WriteListener {
 
         public UnhappyBatchListener(Map<String, String> params) {
         }
 
         @Override
-        public void processEvent(WriteBatch batch) {
+        public void onBatchSuccess(WriteBatch batch) {
             throw new RuntimeException("I am not happy.");
         }
     }

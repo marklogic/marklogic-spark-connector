@@ -268,7 +268,7 @@ class WriteRowsTest extends AbstractWriteTest {
             // will in fact succeed (if it's stuck in a batch with other bad rows, it'll fail too).
             .option(Options.WRITE_BATCH_SIZE, 1)
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
-            .option(Options.WRITE_COMMIT_LISTENER_CLASSNAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
             .save();
 
         assertCollectionSize("9 of the batches should have failed, with the 10th batch succeeding", COLLECTION, 1);

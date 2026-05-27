@@ -4,13 +4,17 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
-import com.marklogic.client.datamovement.*;
+import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.WriteBatch;
+import com.marklogic.client.datamovement.WriteBatcher;
+import com.marklogic.client.datamovement.WriteEvent;
 import com.marklogic.client.datamovement.filter.IncrementalWriteFilter;
 import com.marklogic.client.document.GenericDocumentManager;
 import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
+import com.marklogic.spark.api.WriteListener;
 import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
 import com.marklogic.spark.dom.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -18,9 +22,7 @@ import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.function.IntConsumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class WriteContext extends ContextSupport {
@@ -40,7 +42,6 @@ public class WriteContext extends ContextSupport {
 
     // This unfortunately is not final as we don't know it when this object is created.
     private int numPartitions;
-
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
@@ -116,42 +117,12 @@ public class WriteContext extends ContextSupport {
             writeBatcher.withTransform(transform.get());
         }
 
-        if (hasOption(Options.WRITE_BATCH_LISTENER_CLASSNAME)) {
-            WriteBatchListener listener = buildBatchSuccessListener();
-            Util.MAIN_LOGGER.info("Registering batch listener: {}", listener.getClass().getName());
-            writeBatcher.onBatchSuccess(listener);
+        WriteListener writeListener = makeWriteListener();
+        if (writeListener != null) {
+            writeBatcher.onBatchSuccess(batch -> writeListener.onBatchSuccess(batch));
         }
 
         return writeBatcher;
-    }
-
-    private WriteBatchListener buildBatchSuccessListener() {
-        final String className = getStringOption(Options.WRITE_BATCH_LISTENER_CLASSNAME);
-        Object listenerInstance;
-        try {
-            Class<?> clazz = Class.forName(className);
-            Map<String, String> params = buildBatchListenerParamsMap();
-            listenerInstance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
-        } catch (Exception e) {
-            throw new ConnectorException(String.format("Failed to instantiate WriteBatchListener class: %s", className), e);
-        }
-
-        if (listenerInstance instanceof WriteBatchListener writeBatchListener) {
-            return writeBatchListener;
-        } else {
-            throw new ConnectorException(String.format("Class %s does not implement WriteBatchListener", className));
-        }
-    }
-
-    private Map<String, String> buildBatchListenerParamsMap() {
-        Map<String, String> properties = getProperties();
-        return properties.entrySet().stream()
-            .filter(entry -> entry.getKey().startsWith(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX))
-            .filter(entry -> entry.getValue() != null)
-            .collect(Collectors.toMap(
-                entry -> entry.getKey().substring(Options.WRITE_BATCH_LISTENER_PARAM_PREFIX.length()),
-                Map.Entry::getValue
-            ));
     }
 
     protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {
@@ -218,21 +189,6 @@ public class WriteContext extends ContextSupport {
         forEachOptionStartingWith(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX, factory::withDocumentProperty);
 
         return factory.newDocBuilder();
-    }
-
-    /**
-     * Convenience for finding and processing dynamic options that start with a certain prefix.
-     *
-     * @param prefix
-     * @param consumer processes the name (the option minus the prefix) and the option value
-     */
-    private void forEachOptionStartingWith(final String prefix, BiConsumer<String, String> consumer) {
-        getProperties().entrySet().stream()
-            .filter(entry -> entry.getKey().startsWith(prefix))
-            .forEach(entry -> {
-                String name = entry.getKey().substring(prefix.length());
-                consumer.accept(name, entry.getValue());
-            });
     }
 
     public Format getDocumentFormat() {
@@ -416,5 +372,32 @@ public class WriteContext extends ContextSupport {
 
         String extension = uri.substring(lastDot + 1).toLowerCase(Locale.ROOT);
         return streamTransformBinaryExtensions.contains(extension);
+    }
+
+    public WriteListener makeWriteListener() {
+        if (!hasOption(Options.WRITE_LISTENER_CLASS_NAME)) {
+            return null;
+        }
+
+        final String className = getStringOption(Options.WRITE_LISTENER_CLASS_NAME);
+        Object listenerInstance;
+        try {
+            Class<?> clazz = Class.forName(className);
+            Map<String, String> params = new HashMap<>();
+            forEachOptionStartingWith(Options.WRITE_LISTENER_PARAM_PREFIX, params::put);
+            listenerInstance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Failed to instantiate WriteListener class: %s", className), e);
+        }
+
+        if (listenerInstance instanceof WriteListener writeListener) {
+            return writeListener;
+        } else {
+            throw new ConnectorException(String.format("Class %s does not implement WriteListener", className));
+        }
+    }
+
+    public int getMaxFailedDocumentCount() {
+        return getIntOption(Options.WRITE_LISTENER_MAX_FAILED_DOCUMENTS, 0, 0);
     }
 }

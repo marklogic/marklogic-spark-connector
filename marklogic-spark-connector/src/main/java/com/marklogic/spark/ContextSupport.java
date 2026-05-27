@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 public class ContextSupport extends Context implements Serializable {
 
@@ -152,5 +153,20 @@ public class ContextSupport extends Context implements Serializable {
             }
         }
         return set;
+    }
+
+    /**
+     * Convenience for finding and processing dynamic options that start with a certain prefix.
+     *
+     * @param prefix
+     * @param consumer processes the name (the option minus the prefix) and the option value
+     */
+    protected final void forEachOptionStartingWith(final String prefix, BiConsumer<String, String> consumer) {
+        getProperties().entrySet().stream()
+            .filter(entry -> entry.getKey().startsWith(prefix) && entry.getValue() != null)
+            .forEach(entry -> {
+                String name = entry.getKey().substring(prefix.length());
+                consumer.accept(name, entry.getValue());
+            });
     }
 }
