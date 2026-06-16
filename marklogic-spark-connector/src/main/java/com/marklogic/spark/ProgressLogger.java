@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -24,13 +24,16 @@ class ProgressLogger implements Serializable {
         this.nextProgressInterval = progressInterval;
     }
 
-    void logProgressIfNecessary(long itemCount) {
+    long logProgressIfNecessary(long itemCount) {
         if (Util.MAIN_LOGGER.isInfoEnabled() && progressInterval > 0) {
             this.progressCounter += itemCount;
             if (progressCounter >= nextProgressInterval) {
+                final long intervalToReturn = nextProgressInterval;
                 Util.MAIN_LOGGER.info(message, nextProgressInterval);
                 nextProgressInterval += progressInterval;
+                return intervalToReturn;
             }
         }
+        return 0;
     }
 }
