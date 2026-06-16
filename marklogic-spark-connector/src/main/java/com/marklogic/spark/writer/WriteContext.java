@@ -22,6 +22,7 @@ import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
 import java.util.stream.Stream;
 
@@ -95,7 +96,14 @@ public class WriteContext extends ContextSupport {
         return getIntOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
     }
 
-    WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
+    /**
+     * @param dataMovementManager
+     * @param skippedItemCount    This was added to support the WriteListener interface. The split of BatchListener
+     *                            construction between WriteBatcherDataWriter and this class is not ideal, but is fine
+     *                            for now.
+     * @return
+     */
+    WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager, AtomicInteger skippedItemCount) {
         // If the user told us how many threads they want per partition (we expect this to be rare), then use that.
         // Otherwise, use the calculated number of threads per partition based on the total thread count that either
         // the user configured or using the default value for that option.
@@ -105,27 +113,43 @@ public class WriteContext extends ContextSupport {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
         }
+
+        final WriteListener writeListener = makeWriteListener();
+
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize(batchSize)
             .withThreadCount(threadCount)
-            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
-            .onBatchSuccess(this::logBatchOnSuccess);
+            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
+
+        if (writeListener != null) {
+            writeBatcher.onBatchSuccess(batch -> {
+                long totalSuccessCount = this.logBatchOnSuccess(batch);
+                if (totalSuccessCount > 0) {
+                    writeListener.onSuccessCountLogged(totalSuccessCount);
+                }
+                writeListener.onBatchSuccess(batch);
+            });
+        } else {
+            writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
+        }
+
+        if (getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
+            writeBatcher.withDocumentWriteSetFilter(
+                buildIncrementalWriteFilter(n -> skippedItemCount.addAndGet(n), writeListener)
+            );
+        }
 
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
         }
 
-        WriteListener writeListener = makeWriteListener();
-        if (writeListener != null) {
-            writeBatcher.onBatchSuccess(batch -> writeListener.onBatchSuccess(batch));
-        }
 
         return writeBatcher;
     }
 
-    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {
+    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer, WriteListener writeListener) {
         IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
             .fromView(
                 getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
@@ -135,8 +159,11 @@ public class WriteContext extends ContextSupport {
             .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
             .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
             .onDocumentsSkipped(skippedDocs -> {
-                WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
+                long totalSkippedCount = WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
                 skippedCountConsumer.accept(skippedDocs.length);
+                if (writeListener != null) {
+                    writeListener.onSkippedCountLogged(totalSkippedCount);
+                }
             })
             .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
 
@@ -282,7 +309,7 @@ public class WriteContext extends ContextSupport {
         }
     }
 
-    private void logBatchOnSuccess(WriteBatch batch) {
+    private long logBatchOnSuccess(WriteBatch batch) {
         int documentCount = batch.getItems().length;
         if (documentCount > 0) {
             WriteEvent firstEvent = batch.getItems()[0];
@@ -292,14 +319,15 @@ public class WriteContext extends ContextSupport {
                 documentCount--;
             }
         }
-        logBatchOnSuccess(documentCount, batch.getJobBatchNumber());
+        return logBatchOnSuccess(documentCount, batch.getJobBatchNumber());
     }
 
-    public void logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
-        WriteProgressLogger.logProgressIfNecessary(documentCount);
+    long logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
+        long returnValue = WriteProgressLogger.logProgressIfNecessary(documentCount);
         if (Util.MAIN_LOGGER.isTraceEnabled() && optionalJobBatchNumber > 0) {
             Util.MAIN_LOGGER.trace("Wrote batch; length: {}; job batch number: {}", documentCount, optionalJobBatchNumber);
         }
+        return returnValue;
     }
 
     boolean isUsingFileSchema() {

@@ -30,19 +30,21 @@ public class WriteProgressLogger implements Serializable {
         }
     }
 
-    public static void logProgressIfNecessary(long itemCount) {
+    public static long logProgressIfNecessary(long itemCount) {
         if (progressLogger != null && Util.MAIN_LOGGER.isInfoEnabled()) {
             synchronized (lock) {
-                progressLogger.logProgressIfNecessary(itemCount);
+                return progressLogger.logProgressIfNecessary(itemCount);
             }
         }
+        return 0;
     }
 
-    public static void logSkippedProgressIfNecessary(long itemCount) {
+    public static long logSkippedProgressIfNecessary(long itemCount) {
         if (skippedProgressLogger != null && Util.MAIN_LOGGER.isInfoEnabled()) {
             synchronized (lock) {
-                skippedProgressLogger.logProgressIfNecessary(itemCount);
+                return skippedProgressLogger.logProgressIfNecessary(itemCount);
             }
         }
+        return 0;
     }
 }

@@ -16,15 +16,19 @@ import java.util.Set;
 public interface WriteListener {
 
     default void onBatchSuccess(WriteBatch batch) {
+    }
 
+    default void onSuccessCountLogged(long itemCount) {
+    }
+
+    default void onSkippedCountLogged(long itemCount) {
     }
 
     default void onWriteCommit(CommitResults commitResults) {
-
     }
 
     class CommitResults {
-        
+
         private final long successCount;
         private final long skippedCount;
         private final long failureCount;

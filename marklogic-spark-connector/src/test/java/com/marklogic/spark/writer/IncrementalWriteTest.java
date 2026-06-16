@@ -21,6 +21,7 @@ class IncrementalWriteTest extends AbstractWriteTest {
         try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             newWriter(1)
                 .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .option(Options.WRITE_BATCH_SIZE, 20)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .option(Options.WRITE_LOG_PROGRESS, 50)
@@ -28,10 +29,15 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 .option(Options.WRITE_LOG_SKIPPED_DOCUMENTS, 50)
                 .save();
 
+            assertEquals(200, CommitResultsTestConsumer.successCount.get());
+            assertEquals(0, CommitResultsTestConsumer.skippedCount.get());
+            assertEquals(0, CommitResultsTestConsumer.loggedSkippedCounts.size());
             Stream.of(50, 100, 150, 200).forEach(count -> {
                 String message = "Documents written: " + count;
                 verifyMessageWasLogged(logCaptor, message);
                 verifyNoMessageContains(logCaptor, "Documents skipped");
+                assertTrue(CommitResultsTestConsumer.loggedSuccessCounts.contains(Long.valueOf(count)),
+                    "Did not find count " + count + " in " + CommitResultsTestConsumer.loggedSuccessCounts);
             });
 
             verifyMessageWasLogged(logCaptor, "Success count: 200");
@@ -43,10 +49,13 @@ class IncrementalWriteTest extends AbstractWriteTest {
         assertFalse(metadata.getMetadataValues().containsKey("incrementalWriteTimestamp"));
         assertEquals(1, metadata.getMetadataValues().size());
 
+        CommitResultsTestConsumer.reset();
+
         // Write the same documents again and verify documents are skipped instead of written.
         try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             newWriter(1)
                 .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .option(Options.WRITE_BATCH_SIZE, 20)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}.json")
@@ -54,9 +63,15 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 .option(Options.WRITE_LOG_SKIPPED_DOCUMENTS, 50)
                 .save();
 
+            assertEquals(0, CommitResultsTestConsumer.successCount.get());
+            assertEquals(200, CommitResultsTestConsumer.skippedCount.get());
+            assertEquals(0, CommitResultsTestConsumer.loggedSuccessCounts.size());
+
             Stream.of(50, 100, 150, 200).forEach(count -> {
                 String message = "Documents skipped: " + count;
                 verifyMessageWasLogged(logCaptor, message);
+                assertTrue(CommitResultsTestConsumer.loggedSkippedCounts.contains(Long.valueOf(count)),
+                    "Did not find count " + count + " in " + CommitResultsTestConsumer.loggedSkippedCounts);
             });
 
             verifyNoMessageContains(logCaptor, "Documents written");

@@ -120,9 +120,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         }
 
         this.dataMovementManager = this.databaseClient.newDataMovementManager();
-        this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager);
+        this.writeBatcher = writeContext.newWriteBatcher(this.dataMovementManager, this.skippedItemCount);
         addBatchListeners(this.writeBatcher);
-        applyIncrementalWriteFilter(this.writeBatcher);
         this.dataMovementManager.startJob(this.writeBatcher);
     }
 
@@ -237,14 +236,6 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return this.rowConverter instanceof RdfRowConverter ?
             ((RdfRowConverter) rowConverter).getGraphs() :
             null;
-    }
-
-    private void applyIncrementalWriteFilter(WriteBatcher writeBatcher) {
-        if (writeContext.getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
-            writeBatcher.withDocumentWriteSetFilter(
-                writeContext.buildIncrementalWriteFilter(n -> skippedItemCount.addAndGet(n))
-            );
-        }
     }
 
     private void addBatchListeners(WriteBatcher writeBatcher) {
