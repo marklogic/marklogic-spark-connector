@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -81,5 +81,30 @@ class ConfigHelperTest {
         Map<String, String> additionalParams = config.getAdditionalParameters();
         assertEquals("17", additionalParams.get("threshold"));
         assertEquals("ch1", additionalParams.get("language"));
+    }
+
+    @Test
+    void defaultSocketTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+        }};
+
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
+        assertEquals(10000, config.getSocketTimeoutMS(),
+            "When no socket timeout option is provided, the Semaphore library default of 10000 ms should be preserved.");
+    }
+
+    @Test
+    void customSocketTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+            put(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, "30000");
+        }};
+
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
+        assertEquals(30000, config.getSocketTimeoutMS(),
+            "When a socket timeout option is provided, the configured value should be set on ClassificationConfiguration.");
     }
 }

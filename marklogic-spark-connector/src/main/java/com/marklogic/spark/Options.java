@@ -600,6 +600,14 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_BATCH_SIZE = "spark.marklogic.write.classifier.batchSize";
 
     /**
+     * Defines the socket timeout in milliseconds for classification requests.
+     * Defaults to 10000 (10 seconds).
+     *
+     * @since 3.1.2
+     */
+    public static final String WRITE_CLASSIFIER_SOCKET_TIMEOUT = "spark.marklogic.write.classifier.socketTimeout";
+
+    /**
      * Allows for passing any additional options to the text classifier.
      *
      * @since 2.6.0
