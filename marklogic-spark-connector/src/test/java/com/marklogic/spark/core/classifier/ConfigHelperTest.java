@@ -102,13 +102,13 @@ class ConfigHelperTest {
     void customSocketTimeout() {
         Map<String, String> properties = new HashMap<>() {{
             put(Options.WRITE_CLASSIFIER_HOST, "somehost");
-            put(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, "30000");
+            put(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, "30");
         }};
 
         ConfigHelper helper = new ConfigHelper(new Context(properties));
         ClassificationConfiguration config = helper.buildClassificationConfiguration();
-        assertEquals(30000, config.getSocketTimeoutMS(),
-            "When a socket timeout option is provided, the configured value should be set on ClassificationConfiguration.");
+        assertEquals(30_000, config.getSocketTimeoutMS(),
+            "Socket timeout of 30 seconds should be applied as 30000 ms.");
     }
 
     @Test
@@ -120,5 +120,42 @@ class ConfigHelperTest {
 
         assertThrows(ConnectorException.class, () -> new ConfigHelper(new Context(properties)),
             "A socket timeout of 0 should be rejected with a clear error rather than silently ignored.");
+    }
+
+    @Test
+    void defaultConnectionTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+        }};
+
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
+        int defaultConnectionTimeout = new ClassificationConfiguration().getConnectionTimeoutMS();
+        assertEquals(defaultConnectionTimeout, config.getConnectionTimeoutMS(),
+            "When no connection timeout option is provided, the Semaphore library default should be preserved.");
+    }
+
+    @Test
+    void customConnectionTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+            put(Options.WRITE_CLASSIFIER_CONNECTION_TIMEOUT, "15");
+        }};
+
+        ConfigHelper helper = new ConfigHelper(new Context(properties));
+        ClassificationConfiguration config = helper.buildClassificationConfiguration();
+        assertEquals(15_000, config.getConnectionTimeoutMS(),
+            "Connection timeout of 15 seconds should be applied as 15000 ms.");
+    }
+
+    @Test
+    void invalidConnectionTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+            put(Options.WRITE_CLASSIFIER_CONNECTION_TIMEOUT, "0");
+        }};
+
+        assertThrows(ConnectorException.class, () -> new ConfigHelper(new Context(properties)),
+            "A connection timeout of 0 should be rejected with a clear error.");
     }
 }

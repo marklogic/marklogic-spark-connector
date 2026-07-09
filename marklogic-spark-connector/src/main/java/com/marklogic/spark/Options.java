@@ -600,12 +600,18 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_BATCH_SIZE = "spark.marklogic.write.classifier.batchSize";
 
     /**
-     * Defines the socket timeout in milliseconds for classification requests.
-     * When not set, the Semaphore library default is used (currently 10000 ms / 10 seconds).
+     * Defines the socket timeout in seconds for classification requests.
      *
      * @since 3.1.2
      */
     public static final String WRITE_CLASSIFIER_SOCKET_TIMEOUT = "spark.marklogic.write.classifier.socketTimeout";
+
+    /**
+     * Defines the connection timeout in seconds for classification requests.
+     *
+     * @since 3.1.2
+     */
+    public static final String WRITE_CLASSIFIER_CONNECTION_TIMEOUT = "spark.marklogic.write.classifier.connectionTimeout";
 
     /**
      * Allows for passing any additional options to the text classifier.
