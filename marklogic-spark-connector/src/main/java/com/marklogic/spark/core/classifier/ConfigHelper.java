@@ -31,7 +31,7 @@ class ConfigHelper {
         this.protocol = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_CLASSIFIER_HTTP)) ? "http" : "https";
         this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH, "/"));
         this.tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
-        this.socketTimeoutMs = context.getIntOption(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, -1, -1);
+        this.socketTimeoutMs = context.getIntOption(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, -1, 1);
 
         context.getProperties().forEach((key, value) -> {
             if (key.startsWith(Options.WRITE_CLASSIFIER_OPTION_PREFIX)) {

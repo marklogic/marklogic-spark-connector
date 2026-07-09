@@ -3,6 +3,7 @@
  */
 package com.marklogic.spark.core.classifier;
 
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
 import com.smartlogic.classificationserver.client.ClassificationConfiguration;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ConfigHelperTest {
 
@@ -106,5 +108,16 @@ class ConfigHelperTest {
         ClassificationConfiguration config = helper.buildClassificationConfiguration();
         assertEquals(30000, config.getSocketTimeoutMS(),
             "When a socket timeout option is provided, the configured value should be set on ClassificationConfiguration.");
+    }
+
+    @Test
+    void invalidSocketTimeout() {
+        Map<String, String> properties = new HashMap<>() {{
+            put(Options.WRITE_CLASSIFIER_HOST, "somehost");
+            put(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, "0");
+        }};
+
+        assertThrows(ConnectorException.class, () -> new ConfigHelper(new Context(properties)),
+            "A socket timeout of 0 should be rejected with a clear error rather than silently ignored.");
     }
 }
