@@ -601,7 +601,7 @@ public abstract class Options {
 
     /**
      * Defines the socket timeout in milliseconds for classification requests.
-     * Defaults to 10000 (10 seconds).
+     * When not set, the Semaphore library default is used (currently 10000 ms / 10 seconds).
      *
      * @since 3.1.2
      */
