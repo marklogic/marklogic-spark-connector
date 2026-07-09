@@ -96,6 +96,7 @@ class ConfigHelperTest {
         int defaultSocketTimeout = new ClassificationConfiguration().getSocketTimeoutMS();
         assertEquals(defaultSocketTimeout, config.getSocketTimeoutMS(),
             "When no socket timeout option is provided, the Semaphore library default should be preserved.");
+    }
 
     @Test
     void customSocketTimeout() {
