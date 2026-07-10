@@ -108,7 +108,7 @@ dependencies {
   // For asserting on log messages.
   testImplementation "io.github.hakky54:logcaptor:2.12.5"
 
-  testImplementation "ch.qos.logback:logback-classic:1.5.32"
+  testImplementation "ch.qos.logback:logback-classic:1.5.37"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
