@@ -27,7 +27,7 @@ configurations.configureEach {
      // This is a test-only / compile-only dependency, but doing this as it helps ensure tests pass as Flux
      // will need it bumped for sure.
      if (details.requested.group.equals("io.netty") and (details.requested.version.startsWith("4.1.") || details.requested.version.startsWith("4.2."))) {
-       details.useVersion "4.2.13.Final"
+       details.useVersion "4.2.16.Final"
        details.because "Forcing Spark 4.1.x to use latest Netty to minimize CVEs"
      }
    }
