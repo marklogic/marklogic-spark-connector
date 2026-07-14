@@ -82,10 +82,10 @@ dependencies {
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:5.3.2'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.4.0'
 
   // For Nuclia support
-  implementation 'com.squareup.okhttp3:okhttp-sse:5.3.2'
+  implementation 'com.squareup.okhttp3:okhttp-sse:5.4.0'
 
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
