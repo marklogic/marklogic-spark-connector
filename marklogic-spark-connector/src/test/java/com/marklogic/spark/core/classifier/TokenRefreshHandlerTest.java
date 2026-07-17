@@ -120,7 +120,7 @@ class TokenRefreshHandlerTest {
 
         // Exact server format
         assertTrue(handler.isTokenExpired(new ClassificationException("401 received from classification server")));
-        // "401" anywhere in the message, surrounded by non-digit characters
+        // "401" anywhere in the message, delimited by non-word characters (word-boundary match)
         assertTrue(handler.isTokenExpired(new ClassificationException("Noise.. 401 Noise...")));
 
         assertFalse(handler.isTokenExpired(new ClassificationException("Some other error")));
