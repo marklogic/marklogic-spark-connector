@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -9,6 +9,7 @@ import com.smartlogic.classificationserver.client.ClassificationException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * Handles token refresh logic when a 401 error is received from the classification server.
@@ -16,6 +17,10 @@ import java.util.function.Supplier;
  * the ClassificationClient.
  */
 record TokenRefreshHandler(Supplier<String> tokenGenerator, Consumer<String> tokenSetter) {
+
+    // Word-boundary regex ensures "401" matches only as a standalone token, not as part of
+    // a longer number such as "4010".
+    private static final Pattern HTTP_401_PATTERN = Pattern.compile("\\b401\\b");
 
     <T> T executeWithTokenRefresh(SupplierWithException<T> operation, String errorContext) throws ClassificationException {
         try {
@@ -32,11 +37,11 @@ record TokenRefreshHandler(Supplier<String> tokenGenerator, Consumer<String> tok
 
     boolean isTokenExpired(ClassificationException ex) {
         // The Classification server currently - December 2025 - responds with "401 received from classification server".
-        // Looking for that entire message is likely brittle as it could change at any time. So just checking for the
-        // presence of "401". Worst case, we may attempt a token refresh when not needed.
+        // A word-boundary match on "401" avoids false positives from error codes that merely contain
+        // "401" as a substring (e.g. "Error 4010: invalid parameter").
         return tokenGenerator != null &&
             ex.getMessage() != null &&
-            ex.getMessage().contains("401");
+            HTTP_401_PATTERN.matcher(ex.getMessage()).find();
     }
 
     private void refreshToken() {

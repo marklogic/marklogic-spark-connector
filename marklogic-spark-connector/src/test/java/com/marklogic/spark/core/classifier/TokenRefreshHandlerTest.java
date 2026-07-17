@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -118,13 +118,26 @@ class TokenRefreshHandlerTest {
         TokenRefreshHandler handler = new TokenRefreshHandler(() -> "token", token -> {
         });
 
-        ClassificationException ex401 = new ClassificationException("Noise.. 401 Noise...");
-        assertTrue(handler.isTokenExpired(ex401), "The expectation is that the presence of just '401' " +
-            "in the message indicates an expired token. This avoids checking a much longer message that could change " +
-            "at any time. And worst case, we may attempt a token refresh when not needed.");
+        // Exact server format
+        assertTrue(handler.isTokenExpired(new ClassificationException("401 received from classification server")));
+        // "401" anywhere in the message, surrounded by non-digit characters
+        assertTrue(handler.isTokenExpired(new ClassificationException("Noise.. 401 Noise...")));
 
-        ClassificationException exOther = new ClassificationException("Some other error");
-        assertFalse(handler.isTokenExpired(exOther));
+        assertFalse(handler.isTokenExpired(new ClassificationException("Some other error")));
+    }
+
+    @Test
+    void partialNumberDoesNotTriggerTokenRefresh() {
+        // "4010" contains "401" as a substring but must NOT be treated as an HTTP 401.
+        TokenRefreshHandler handler = new TokenRefreshHandler(() -> "token", token -> {
+        });
+
+        assertFalse(handler.isTokenExpired(new ClassificationException("Error 4010: invalid parameter")),
+            "A message containing '401' only as part of a longer number should not trigger a token refresh");
+        assertFalse(handler.isTokenExpired(new ClassificationException("4010")),
+            "'4010' with no surrounding text should not match the word-boundary pattern for 401");
+        assertFalse(handler.isTokenExpired(new ClassificationException("x4010x")),
+            "'4010' embedded in alphanumeric text should not trigger a token refresh");
     }
 
     @Test
