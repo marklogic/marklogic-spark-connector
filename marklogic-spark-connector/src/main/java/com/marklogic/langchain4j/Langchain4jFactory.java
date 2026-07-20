@@ -69,7 +69,11 @@ public class Langchain4jFactory implements TextSplitterFactory, EmbeddingProduce
 
         final String className = context.getStringOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME);
         try {
-            Class<?> clazz = Class.forName(className, false, Thread.currentThread().getContextClassLoader());
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader == null) {
+                classLoader = Langchain4jFactory.class.getClassLoader();
+            }
+            Class<?> clazz = Class.forName(className, false, classLoader);
             if (!Function.class.isAssignableFrom(clazz)) {
                 throw new ConnectorException(String.format(
                     "Class '%s' specified for option '%s' does not implement java.util.function.Function; " +
