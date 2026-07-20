@@ -179,6 +179,10 @@ public abstract class Options {
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
+    // Semicolon-separated list of absolute directory paths that are permitted when reading script files.
+    // When set, the connector allows paths within these directories in addition to the JVM working directory.
+    public static final String SCRIPT_FILE_ALLOWED_PATHS = "spark.marklogic.scriptFile.allowedPaths";
+
     // For writing documents to MarkLogic.
     public static final String WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS = "spark.marklogic.write.archivePathForFailedDocuments";
     public static final String WRITE_COLLECTIONS = "spark.marklogic.write.collections";

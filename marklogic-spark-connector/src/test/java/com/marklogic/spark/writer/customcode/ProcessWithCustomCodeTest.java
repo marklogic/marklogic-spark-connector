@@ -5,6 +5,7 @@ package com.marklogic.spark.writer.customcode;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.junit5.XmlNode;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.writer.AbstractWriteTest;
 import com.marklogic.spark.writer.CommitResultsTestConsumer;
@@ -180,6 +181,19 @@ class ProcessWithCustomCodeTest extends AbstractWriteTest {
 
         assertEquals(3, CommitResultsTestConsumer.failureCount.get());
         assertEquals(0, CommitResultsTestConsumer.successCount.get());
+    }
+
+    @Test
+    void writeJavascriptFileWithPathTraversalRejected() {
+        ConnectorException ex = assertThrowsConnectorException(() ->
+            newWriterWithDefaultConfig("three-uris.csv", 2)
+                .option(Options.WRITE_JAVASCRIPT_FILE, "../../secret.js")
+                .save());
+
+        assertTrue(ex.getMessage().contains("is not within the permitted directory"),
+            "Expected path traversal error, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(Options.SCRIPT_FILE_ALLOWED_PATHS),
+            "Error message should mention the SCRIPT_FILE_ALLOWED_PATHS option");
     }
 
     private void verifyThreeJsonDocumentsWereWritten() {

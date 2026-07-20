@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core;
 
@@ -7,13 +7,17 @@ import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
+import com.marklogic.spark.Options;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -121,24 +125,45 @@ public class ServerEvaluationCallFactory {
                 String xquery = properties.get(this.xqueryOptionName);
                 return client -> client.newServerEval().xquery(xquery);
             } else if (context.hasOption(this.javascriptFileOptionName)) {
-                String content = readFileToString(properties.get(this.javascriptFileOptionName));
+                List<Path> allowedPaths = buildAllowedPaths(context);
+                String content = readFileToString(properties.get(this.javascriptFileOptionName), allowedPaths);
                 return client -> client.newServerEval().javascript(content);
             } else if (context.hasOption(this.xqueryFileOptionName)) {
-                String content = readFileToString(properties.get(this.xqueryFileOptionName));
+                List<Path> allowedPaths = buildAllowedPaths(context);
+                String content = readFileToString(properties.get(this.xqueryFileOptionName), allowedPaths);
                 return client -> client.newServerEval().xquery(content);
             }
             return null;
         }
 
-        private static String readFileToString(String file) {
+        private List<Path> buildAllowedPaths(Context context) {
+            List<Path> paths = new ArrayList<>();
+            paths.add(Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize());
+            if (context.hasOption(Options.SCRIPT_FILE_ALLOWED_PATHS)) {
+                String[] extra = context.getStringOption(Options.SCRIPT_FILE_ALLOWED_PATHS).split(";");
+                for (String p : extra) {
+                    String trimmed = p.trim();
+                    if (!trimmed.isEmpty()) {
+                        paths.add(Paths.get(trimmed).toAbsolutePath().normalize());
+                    }
+                }
+            }
+            return paths;
+        }
+
+        private static String readFileToString(String file, List<Path> allowedPaths) {
+            Path canonical = Paths.get(file).toAbsolutePath().normalize();
+            boolean permitted = allowedPaths.stream().anyMatch(canonical::startsWith);
+            if (!permitted) {
+                throw new ConnectorException(String.format(
+                    "File path '%s' is not within the permitted directory. If this path is intentional, set the '%s' option to include the allowed directory.",
+                    canonical, Options.SCRIPT_FILE_ALLOWED_PATHS));
+            }
             try {
                 // commons-io is a Spark dependency, so safe to use.
-                return FileUtils.readFileToString(new File(file), Charset.defaultCharset());
+                return FileUtils.readFileToString(canonical.toFile(), Charset.defaultCharset());
             } catch (IOException e) {
-                String message = e.getMessage();
-                if (e instanceof NoSuchFileException) {
-                    message += " was not found.";
-                }
+                String message = e instanceof NoSuchFileException ? file + " was not found." : e.getMessage();
                 throw new ConnectorException(String.format("Cannot read from file %s; cause: %s", file, message), e);
             }
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.customcode;
 
@@ -195,6 +195,28 @@ class ReadWithCustomCodeTest extends AbstractIntegrationTest {
                 "Actual message: " + ex.getCause().getMessage());
     }
 
+
+    @Test
+    void readJavascriptFileWithPathTraversalRejected() {
+        ConnectorException ex = assertThrowsConnectorException(
+            () -> readRows(Options.READ_JAVASCRIPT_FILE, "../../secret.js"));
+
+        assertTrue(ex.getMessage().contains("is not within the permitted directory"),
+            "Expected path traversal error, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(Options.SCRIPT_FILE_ALLOWED_PATHS),
+            "Error message should mention the SCRIPT_FILE_ALLOWED_PATHS option");
+    }
+
+    @Test
+    void readXQueryFileWithPathTraversalRejected() {
+        ConnectorException ex = assertThrowsConnectorException(
+            () -> readRows(Options.READ_XQUERY_FILE, "../../secret.xqy"));
+
+        assertTrue(ex.getMessage().contains("is not within the permitted directory"),
+            "Expected path traversal error, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(Options.SCRIPT_FILE_ALLOWED_PATHS),
+            "Error message should mention the SCRIPT_FILE_ALLOWED_PATHS option");
+    }
 
     private List<Row> readRows(String option, String value) {
         return startRead()
