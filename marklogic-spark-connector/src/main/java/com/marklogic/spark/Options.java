@@ -179,8 +179,21 @@ public abstract class Options {
     public static final String WRITE_EXTERNAL_VARIABLE_DELIMITER = "spark.marklogic.write.externalVariableDelimiter";
     public static final String WRITE_VARS_PREFIX = "spark.marklogic.write.vars.";
 
-    // Semicolon-separated list of absolute directory paths that are permitted when reading script files.
-    // When set, the connector allows paths within these directories in addition to the JVM working directory.
+    /**
+     * Semicolon-separated list of absolute directory paths that are permitted when reading local script files
+     * via options such as {@code READ_JAVASCRIPT_FILE}, {@code READ_XQUERY_FILE}, {@code WRITE_JAVASCRIPT_FILE},
+     * and {@code WRITE_XQUERY_FILE}.
+     * <p>
+     * By default, only paths within the JVM working directory are allowed. Setting this option extends the
+     * permit list to include additional directories. For example:
+     * {@code /opt/scripts;/mnt/shared/code} allows files under either directory.
+     * <p>
+     * This option exists to prevent path-traversal attacks (CWE-22) on shared Spark clusters, where a malicious
+     * job operator could otherwise supply a path such as {@code ../../.aws/credentials} to exfiltrate files
+     * readable by the Spark executor's OS user.
+     *
+     * @since 3.1.2
+     */
     public static final String SCRIPT_FILE_ALLOWED_PATHS = "spark.marklogic.scriptFile.allowedPaths";
 
     // For writing documents to MarkLogic.
