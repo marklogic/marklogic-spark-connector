@@ -77,7 +77,7 @@ public class Langchain4jFactory implements TextSplitterFactory, EmbeddingProduce
             if (!Function.class.isAssignableFrom(clazz)) {
                 throw new ConnectorException(String.format(
                     "Class '%s' specified for option '%s' does not implement java.util.function.Function; " +
-                    "the class must implement Function<Map<String, String>, EmbeddingModel>.",
+                    "expected a Function whose apply(Map<String, String> options) method returns an EmbeddingModel.",
                     className, Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME));
             }
             Object instance = clazz.getDeclaredConstructor().newInstance();
