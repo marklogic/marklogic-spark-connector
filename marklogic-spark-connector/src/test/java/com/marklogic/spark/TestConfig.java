@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -16,7 +16,11 @@ public class TestConfig extends SimpleTestConfig {
 
     @Override
     public Integer getRestPort() {
-        // Use the Caddy port to avoid connection failures on Jenkins.
-        return 8116;
+        // Allow local runs to override the default Caddy port when a direct MarkLogic port is healthier.
+        String restPort = System.getProperty("mlRestPort");
+        if (restPort == null || restPort.isBlank()) {
+            restPort = System.getenv("ML_REST_PORT");
+        }
+        return restPort != null && !restPort.isBlank() ? Integer.parseInt(restPort) : 8116;
     }
 }

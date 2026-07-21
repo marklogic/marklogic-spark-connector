@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.filter;
 
@@ -9,6 +9,7 @@ import com.marklogic.client.expression.PlanBuilder;
 import org.apache.spark.sql.sources.Filter;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -23,9 +24,13 @@ class ParentFilter implements OpticFilter {
     private List<OpticFilter> filters;
 
     ParentFilter(String functionName, Filter... childFilters) {
+        this(functionName, null, childFilters);
+    }
+
+    ParentFilter(String functionName, Set<String> knownColumnNames, Filter... childFilters) {
         this(functionName, Stream.of(childFilters)
             .map(childFilter -> {
-                OpticFilter opticFilter = FilterFactory.toPlanFilter(childFilter);
+                OpticFilter opticFilter = FilterFactory.toPlanFilter(childFilter, knownColumnNames);
                 if (opticFilter == null) {
                     throw new UnsupportedOperationException("Cannot support query; child query is not supported: " + childFilter);
                 }
