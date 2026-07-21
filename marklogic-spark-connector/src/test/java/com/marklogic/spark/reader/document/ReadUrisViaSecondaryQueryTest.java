@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.document;
 
 import com.marklogic.spark.AbstractIntegrationTest;
 import com.marklogic.spark.Options;
+import org.apache.spark.sql.DataFrameReader;
 import org.apache.spark.sql.Row;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -62,7 +63,8 @@ class ReadUrisViaSecondaryQueryTest extends AbstractIntegrationTest {
         File tempFile = new File(tempDir.toFile(), "findAuthorUrisViaCitationId.js");
         FileCopyUtils.copy(JAVASCRIPT_QUERY.getBytes(StandardCharsets.UTF_8), tempFile);
 
-        verifySecondaryQuery(Options.READ_SECONDARY_URIS_JAVASCRIPT_FILE, tempFile.getAbsolutePath());
+        verifySecondaryQuery(Options.READ_SECONDARY_URIS_JAVASCRIPT_FILE, tempFile.getAbsolutePath(),
+            tempDir.toAbsolutePath().toString());
     }
 
     @Test
@@ -70,7 +72,8 @@ class ReadUrisViaSecondaryQueryTest extends AbstractIntegrationTest {
         File tempFile = new File(tempDir.toFile(), "findAuthorUrisViaCitationId.xqy");
         FileCopyUtils.copy(XQUERY_QUERY.getBytes(StandardCharsets.UTF_8), tempFile);
 
-        verifySecondaryQuery(Options.READ_SECONDARY_URIS_XQUERY_FILE, tempFile.getAbsolutePath());
+        verifySecondaryQuery(Options.READ_SECONDARY_URIS_XQUERY_FILE, tempFile.getAbsolutePath(),
+            tempDir.toAbsolutePath().toString());
     }
 
     @Test
@@ -93,14 +96,21 @@ class ReadUrisViaSecondaryQueryTest extends AbstractIntegrationTest {
     }
 
     private void verifySecondaryQuery(String optionName, String optionValue) {
-        List<Row> rows = newSparkSession().read()
+        verifySecondaryQuery(optionName, optionValue, null);
+    }
+
+    private void verifySecondaryQuery(String optionName, String optionValue, String allowedPaths) {
+        DataFrameReader reader = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.READ_DOCUMENTS_URIS, """
                 /author/author1.json
                 /author/author2.json""")
-            .option(optionName, optionValue)
-            .load()
+            .option(optionName, optionValue);
+        if (allowedPaths != null) {
+            reader.option(Options.SCRIPT_FILE_ALLOWED_PATHS, allowedPaths);
+        }
+        List<Row> rows = reader.load()
             .select("uri")
             .collectAsList();
 
