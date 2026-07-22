@@ -61,6 +61,10 @@ must be a file path that can be resolved by the Spark environment running the co
 into your application's modules database. Its content will be read in and then evaluated in the same fashion as
 when specifying code via `spark.marklogic.read.javascript` or `spark.marklogic.read.xquery`.
 
+**Security note:** These options read files from the local filesystem of the Spark executor process. The connector
+does not restrict which paths may be specified. Access to files on the executor host is determined by the OS-level
+file permissions of the user running the Spark executor; ensure appropriate permissions are in place on the executor host.
+
 
 ## Custom code schemas
 
@@ -115,6 +119,9 @@ your query into many smaller queries, you can use one of the following options t
 - `spark.marklogic.read.partitions.xquery`
 - `spark.marklogic.read.partitions.xqueryFile` (New in 2.3.0)
 - `spark.marklogic.read.partitions.vars.` (New in 3.0.0)
+
+**Security note:** The `*File` options above read files from the local filesystem of the Spark executor process. Access
+to files on the executor host is determined by the OS-level file permissions of the user running the Spark executor.
 
 If one of the above options is defined, the connector will execute the code associated with the option and expect a
 sequence of values to be returned. You can return any values you want to define partitions; the connector does not care
