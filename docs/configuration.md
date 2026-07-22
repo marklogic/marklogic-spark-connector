@@ -107,6 +107,25 @@ which may be appropriate in a development or test environment. The
 [MarkLogic Java Client documentation](https://docs.marklogic.com/javadoc/client/com/marklogic/client/DatabaseClientFactory.SSLHostnameVerifier.html)
 describes the other choices for this option.
 
+## Security considerations
+
+Some connector options can contain credential or secret values, including connection-related options such as
+`spark.marklogic.client.password`.
+
+Spark may expose connector options in Spark UI pages and event logs consumed by the Spark History Server. In many
+cluster environments, the History Server is reachable by all cluster users unless additional access controls are
+configured. Without Spark redaction, credential values may appear in job metadata and error output.
+
+To reduce this risk, configure Spark redaction so that sensitive option keys are masked (such as option names
+containing `password`, `apikey`, `connectionString`, `secret`, or `token`):
+
+```
+spark.redaction.regex=(?i).*password.*|.*apikey.*|.*connectionstring.*|.*secret.*|.*token.*
+```
+
+You can apply this in Spark defaults, via `spark-submit --conf`, or in session configuration before loading data.
+This is a defense-in-depth measure; operators should also enable Spark UI authentication and TLS.
+
 ## Read options
 
 See [the guide on reading](reading-data/reading.md) for more information on how data is read from MarkLogic.

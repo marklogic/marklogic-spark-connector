@@ -27,6 +27,7 @@ public class ContextSupport extends Context implements Serializable {
 
     public ContextSupport(Map<String, String> properties) {
         super(properties);
+        RedactionUtil.warnIfSensitiveMarkLogicOptionsMayNotBeRedacted(this);
         this.configuratorWasAdded = addOkHttpConfiguratorIfNecessary();
     }
 
