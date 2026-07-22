@@ -45,6 +45,28 @@ class MaxBytesInputStream extends FilterInputStream {
     }
 
     /**
+     * Overrides {@link FilterInputStream#skip} to route skipped bytes through {@link #read} so
+     * the byte counter is kept up to date. The default {@code FilterInputStream.skip} delegates
+     * directly to the underlying stream and would bypass limit enforcement.
+     */
+    @Override
+    public long skip(long n) throws IOException {
+        byte[] buffer = new byte[(int) Math.min(n, 4096L)];
+        long remaining = n;
+        long totalSkipped = 0;
+        while (remaining > 0) {
+            int toRead = (int) Math.min(remaining, buffer.length);
+            int bytesRead = read(buffer, 0, toRead);
+            if (bytesRead == -1) {
+                break;
+            }
+            totalSkipped += bytesRead;
+            remaining -= bytesRead;
+        }
+        return totalSkipped;
+    }
+
+    /**
      * Intentionally does not close the underlying stream. The caller (e.g. a zip-reading loop) retains
      * ownership of the {@link java.util.zip.ZipInputStream} and is responsible for closing it.
      */

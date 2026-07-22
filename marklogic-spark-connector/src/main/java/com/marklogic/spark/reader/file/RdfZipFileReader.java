@@ -91,6 +91,10 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
             if (fileContext.isReadAbortOnFailure()) {
                 throw cex;
             }
+            // Clear the current reader before retrying. Without this, next() would call
+            // currentRdfStreamReader.hasNext() again on the same exhausted/limited stream,
+            // causing MaxBytesInputStream to throw again immediately and loop forever.
+            currentRdfStreamReader = null;
             Util.MAIN_LOGGER.warn(cex.getMessage());
             return next();
         } catch (Exception ex) {

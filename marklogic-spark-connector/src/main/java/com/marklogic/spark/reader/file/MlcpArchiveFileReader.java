@@ -179,6 +179,18 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             Util.MAIN_LOGGER.warn(message);
             return null;
         }
+
+        // Count the content entry so the limit reflects the true raw zip entry count, not just
+        // the number of metadata entries (which would effectively limit documents, not entries).
+        zipEntryCount++;
+        int maxEntryCount = fileContext.getZipMaxEntryCount();
+        if (maxEntryCount >= 0 && zipEntryCount > maxEntryCount) {
+            throw new ConnectorException(String.format(
+                "Zip archive entry count exceeds the maximum of %d entries. " +
+                    "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",
+                maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
+        }
+
         return contentZipEntry;
     }
 

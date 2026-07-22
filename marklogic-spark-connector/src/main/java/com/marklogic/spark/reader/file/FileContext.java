@@ -6,7 +6,6 @@ package com.marklogic.spark.reader.file;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
-import com.marklogic.spark.Util;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -82,32 +81,38 @@ public class FileContext extends ContextSupport implements Serializable {
 
     /**
      * @return the maximum number of uncompressed bytes to read from a single zip entry;
-     *         -1 means unlimited. Defaults to 256 MB.
+     *         -1 means unlimited (the default). Zip bomb protection is opt-in: set a positive
+     *         integer to enable the limit.
+     * @throws ConnectorException if the configured value is 0 or a negative number other than -1,
+     *         since those values have no meaningful interpretation.
      */
     public long getZipMaxUncompressedEntryBytes() {
         String val = getStringOption(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES);
-        if (val != null && Long.parseLong(val) < 0) {
-            Util.MAIN_LOGGER.warn("Zip bomb protection is disabled (option '{}' = {}). " +
-                "Only set this on sources you fully trust.",
-                Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, val);
-            return -1L;
+        long limit = val != null ? Long.parseLong(val) : -1L;
+        if (limit == 0 || (limit < 0 && limit != -1L)) {
+            throw new ConnectorException(String.format(
+                "Invalid value '%s' for option '%s': must be -1 (disabled) or a positive integer.",
+                val, Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES));
         }
-        return val != null ? Long.parseLong(val) : 268_435_456L;
+        return limit;
     }
 
     /**
      * @return the maximum number of entries to iterate in a single zip archive;
-     *         -1 means unlimited. Defaults to 100,000.
+     *         -1 means unlimited (the default). Zip bomb protection is opt-in: set a positive
+     *         integer to enable the limit.
+     * @throws ConnectorException if the configured value is 0 or a negative number other than -1,
+     *         since those values have no meaningful interpretation.
      */
     public int getZipMaxEntryCount() {
         String val = getStringOption(Options.READ_ZIP_MAX_ENTRY_COUNT);
-        if (val != null && Integer.parseInt(val) < 0) {
-            Util.MAIN_LOGGER.warn("Zip bomb protection is disabled (option '{}' = {}). " +
-                "Only set this on sources you fully trust.",
-                Options.READ_ZIP_MAX_ENTRY_COUNT, val);
-            return -1;
+        int limit = val != null ? Integer.parseInt(val) : -1;
+        if (limit == 0 || (limit < 0 && limit != -1)) {
+            throw new ConnectorException(String.format(
+                "Invalid value '%s' for option '%s': must be -1 (disabled) or a positive integer.",
+                val, Options.READ_ZIP_MAX_ENTRY_COUNT));
         }
-        return val != null ? Integer.parseInt(val) : 100_000;
+        return limit;
     }
 
     /**
@@ -125,8 +130,24 @@ public class FileContext extends ContextSupport implements Serializable {
     }
 
     byte[] readBytes(InputStream inputStream) throws IOException {
-        byte[] bytes = FileUtil.readBytes(inputStream, getZipMaxUncompressedEntryBytes());
+        // Only apply the zip entry byte limit when reading from a zip-based format
+        // (compression=zip, type=archive, or type=mlcp_archive). Non-zip callers such as
+        // GenericFileReader and GzipFileReader must not be subject to the zip-specific limit.
+        long maxBytes = isZipBasedRead() ? getZipMaxUncompressedEntryBytes() : -1L;
+        byte[] bytes = FileUtil.readBytes(inputStream, maxBytes);
         return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
+    }
+
+    /**
+     * @return true when the current read context is a zip-based format — i.e. compression=zip,
+     *         type=archive, or type=mlcp_archive. Used to scope the zip byte limit to zip readers only.
+     */
+    private boolean isZipBasedRead() {
+        if (isZip()) {
+            return true;
+        }
+        String fileType = getStringOption(Options.READ_FILES_TYPE);
+        return "archive".equalsIgnoreCase(fileType) || "mlcp_archive".equalsIgnoreCase(fileType);
     }
 
     private boolean isFileGzipped(String filePath, boolean guessIfGzipped) {
