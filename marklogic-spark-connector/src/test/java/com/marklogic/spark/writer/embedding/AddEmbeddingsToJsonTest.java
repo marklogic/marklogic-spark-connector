@@ -105,7 +105,7 @@ class AddEmbeddingsToJsonTest extends AbstractEmbeddingTest {
 
     @Test
     void passOptionsToEmbeddingModelFunction() {
-        DataFrameWriter writer = readDocument("/marklogic-docs/java-client-intro.json")
+        DataFrameWriter<Row> writer = readDocument("/marklogic-docs/java-client-intro.json")
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             .option(Options.WRITE_SPLITTER_JSON_POINTERS, "/text")
@@ -116,10 +116,10 @@ class AddEmbeddingsToJsonTest extends AbstractEmbeddingTest {
             .mode(SaveMode.Append);
 
         ConnectorException ex = assertThrowsConnectorException(writer::save);
-        assertEquals("Unable to instantiate class for creating an embedding model; class name: com.marklogic.spark.writer.embedding.MinilmEmbeddingModelFunction; " +
-                "cause: Intentional error.", ex.getMessage(),
+        assertEquals("Intentional error.", ex.getMessage(),
             "This test verifies that a custom option can be sent to the embedding model function class. In this " +
-                "case, we expect our custom class to throw an error when it receives the 'throwError' option.");
+                "case, we expect our custom class to throw an error when it receives the 'throwError' option. " +
+                "A ConnectorException thrown by the function's apply() method is re-thrown directly without wrapping.");
     }
 
     @Test
