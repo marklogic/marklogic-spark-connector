@@ -46,7 +46,7 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         this.xmlChunkConfig = new XmlChunkConfig(null, chunkConfig.getEmbeddingName(),
             chunkConfig.getEmbeddingXmlNamespace(), null, chunkConfig.isBase64EncodeVectors());
 
-        documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        documentBuilderFactory = DOMHelper.newSecureDocumentBuilderFactory();
     }
 
     @Override

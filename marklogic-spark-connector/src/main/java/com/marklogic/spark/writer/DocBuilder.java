@@ -27,7 +27,6 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.*;
@@ -153,7 +152,7 @@ public class DocBuilder {
     public void addClassificationToXmlDocument(Document document, String uri, byte[] classification) {
         try {
             if (documentBuilder == null) {
-                documentBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+                documentBuilder = DOMHelper.newSecureDocumentBuilderFactory().newDocumentBuilder();
             }
             Document classificationXml = documentBuilder.parse(new ByteArrayInputStream(classification));
             Node classificationNode = document.createElementNS(Util.DEFAULT_XML_NAMESPACE, "classification");

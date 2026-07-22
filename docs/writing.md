@@ -211,6 +211,11 @@ Please see the [Flux import guide](https://marklogic.github.io/flux/import/impor
 features. While the features are primarily intended for use in Flux, they can both be used with the connector as well
 via the options described below. 
 
+**Security note:** To protect against XML External Entity (XXE) injection attacks (CWE-611), the connector's XML
+parser rejects any XML document that contains a `DOCTYPE` declaration. Attempting to write or split an XML document
+with a `DOCTYPE` declaration will result in an error. If your source XML uses a DTD, you must remove the `DOCTYPE`
+declaration before processing it with the connector.
+
 The options controlling the splitter feature are:
 
 | Option | Description | 
