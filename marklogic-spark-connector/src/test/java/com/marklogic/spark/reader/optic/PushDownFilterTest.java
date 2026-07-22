@@ -1,17 +1,24 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.marklogic.client.io.DocumentMetadataHandle;
+import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.TestUtil;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.AnalysisException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * As of 2024-10-29, this is mysteriously failing with 8016 connection issues on Jenkins. Does not fail on MarkLogic
@@ -250,6 +257,47 @@ class PushDownFilterTest extends AbstractPushDownTest {
     }
 
     @Test
+    void stringContainsLiteralPercent() {
+        insertAuthor(90009, "FIND%003_PERCENT_MATCH", "Literal", "/author/find-003-percent-match.json");
+        insertAuthor(90010, "FINDX003_PERCENT_CONTROL", "Literal", "/author/find-003-percent-control.json");
+
+        List<Row> rows = newDataset().filter(new Column("LastName").contains("FIND%003")).collectAsList();
+        assertEquals(1, rows.size(), "Percent must be treated literally, not as a wildcard.");
+        assertEquals("FIND%003_PERCENT_MATCH", rows.get(0).getAs("LastName"));
+        assertRowsReadFromMarkLogic(1);
+    }
+
+    @Test
+    void stringContainsInjectionPayloadDoesNotReturnExtraRows() {
+        assertEquals(0,
+            newDataset().filter(new Column("LastName").contains("x%' OR 1=1 OR name LIKE '%")).collectAsList().size());
+        assertRowsReadFromMarkLogic(0,
+            "An injected payload must be treated as literal text and must not create a tautology.");
+    }
+
+    @Test
+    void stringContainsLiteralUnderscoreMatchesOnlyLiteral() {
+        insertAuthor(90001, "FIND_003_UNDERSCORE_MATCH", "Literal", "/author/find-003-underscore-match.json");
+        insertAuthor(90002, "FINDX003_UNDERSCORE_MATCH", "Literal", "/author/find-003-underscore-control.json");
+
+        List<Row> rows = newDataset().filter(new Column("LastName").contains("FIND_003")).collectAsList();
+        assertEquals(1, rows.size(), "Underscore must be treated literally, not as a wildcard.");
+        assertEquals("FIND_003_UNDERSCORE_MATCH", rows.get(0).getAs("LastName"));
+        assertRowsReadFromMarkLogic(1);
+    }
+
+    @Test
+    void stringContainsLiteralSingleQuoteMatchesOnlyLiteral() {
+        insertAuthor(90003, "O'FIND003_MATCH", "Literal", "/author/find-003-quote-match.json");
+        insertAuthor(90004, "OFIND003_MATCH", "Literal", "/author/find-003-quote-control.json");
+
+        List<Row> rows = newDataset().filter(new Column("LastName").contains("O'FIND003")).collectAsList();
+        assertEquals(1, rows.size(), "Single quote must be treated literally and not break SQL condition syntax.");
+        assertEquals("O'FIND003_MATCH", rows.get(0).getAs("LastName"));
+        assertRowsReadFromMarkLogic(1);
+    }
+
+    @Test
     void stringStartsWith() {
         List<Row> rows = newDataset().filter(new Column("LastName").startsWith("Humb")).collectAsList();
         assertEquals(1, rows.size());
@@ -264,6 +312,17 @@ class PushDownFilterTest extends AbstractPushDownTest {
     }
 
     @Test
+    void stringStartsWithLiteralPercentMatchesOnlyLiteral() {
+        insertAuthor(90005, "%FIND003_START", "Literal", "/author/find-003-start-percent-match.json");
+        insertAuthor(90006, "XFIND003_START", "Literal", "/author/find-003-start-percent-control.json");
+
+        List<Row> rows = newDataset().filter(new Column("LastName").startsWith("%FIND003")).collectAsList();
+        assertEquals(1, rows.size(), "Percent must be treated literally in a StringStartsWith filter.");
+        assertEquals("%FIND003_START", rows.get(0).getAs("LastName"));
+        assertRowsReadFromMarkLogic(1);
+    }
+
+    @Test
     void stringEndsWith() {
         List<Row> rows = newDataset().filter(new Column("LastName").endsWith("bee")).collectAsList();
         assertEquals(1, rows.size());
@@ -275,6 +334,39 @@ class PushDownFilterTest extends AbstractPushDownTest {
     void stringEndsWithNoMatch() {
         assertEquals(0, newDataset().filter(new Column("LastName").endsWith("umbe")).collectAsList().size());
         assertRowsReadFromMarkLogic(0);
+    }
+
+    @Test
+    void stringEndsWithLiteralUnderscoreMatchesOnlyLiteral() {
+        insertAuthor(90007, "FIND003_END_", "Literal", "/author/find-003-end-underscore-match.json");
+        insertAuthor(90008, "FIND003_ENDX", "Literal", "/author/find-003-end-underscore-control.json");
+
+        List<Row> rows = newDataset().filter(new Column("LastName").endsWith("END_")).collectAsList();
+        assertEquals(1, rows.size(), "Underscore must be treated literally in a StringEndsWith filter.");
+        assertEquals("FIND003_END_", rows.get(0).getAs("LastName"));
+        assertRowsReadFromMarkLogic(1);
+    }
+
+    @Test
+    void injectedColumnNameInStringContainsIsRejected() {
+        AnalysisException ex = assertThrows(AnalysisException.class,
+            () -> newDataset().filter(new Column("`LastName OR 1=1`").contains("x")).collectAsList());
+        assertTrue(ex.getMessage().contains("LastName OR 1=1"));
+    }
+
+    private void insertAuthor(int citationId, String lastName, String foreName, String uri) {
+        ObjectNode doc = objectMapper.createObjectNode();
+        doc.put("CitationID", citationId);
+        doc.put("LastName", lastName);
+        doc.put("ForeName", foreName);
+        doc.put("Date", "2022-06-10");
+        doc.put("DateTime", "2022-06-10 12:00:00");
+        doc.put("LuckyNumber", 13);
+
+        DocumentMetadataHandle metadata = TestUtil.withDefaultPermissions(new DocumentMetadataHandle());
+        metadata.getCollections().add("author");
+
+        getDatabaseClient().newJSONDocumentManager().write(uri, metadata, new JacksonHandle(doc));
     }
 
     private Dataset<Row> newDataset() {
