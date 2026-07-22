@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import org.apache.commons.io.IOUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -27,6 +28,7 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
     private CustomZipInputStream currentZipInputStream;
     private RdfStreamReader currentRdfStreamReader;
     private int nextFilePathIndex;
+    private int zipEntryCount = 0;
 
     RdfZipFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
@@ -52,12 +54,23 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
                     currentZipInputStream = null;
                     return next();
                 }
+
+                zipEntryCount++;
+                int maxEntryCount = fileContext.getZipMaxEntryCount();
+                if (maxEntryCount >= 0 && zipEntryCount > maxEntryCount) {
+                    throw new ConnectorException(String.format(
+                        "Zip archive entry count exceeds the maximum of %d entries. " +
+                            "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",
+                        maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
+                }
+
                 if (logger.isTraceEnabled()) {
                     logger.trace("Reading entry {} in {}", zipEntry.getName(), this.currentFilePath);
                 }
+                InputStream entryStream = fileContext.boundedZipEntryStream(this.currentZipInputStream);
                 this.currentRdfStreamReader = RdfUtil.isQuadsFile(zipEntry.getName()) ?
-                    new QuadStreamReader(zipEntry.getName(), currentZipInputStream) :
-                    new TripleStreamReader(zipEntry.getName(), currentZipInputStream);
+                    new QuadStreamReader(zipEntry.getName(), entryStream) :
+                    new TripleStreamReader(zipEntry.getName(), entryStream);
                 return next();
             }
 
@@ -70,6 +83,15 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
             this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
             nextFilePathIndex++;
             this.currentZipInputStream = new CustomZipInputStream(fileContext.openFile(currentFilePath));
+            this.zipEntryCount = 0;
+            return next();
+        } catch (ConnectorException cex) {
+            // Re-throw our own ConnectorException directly to preserve the descriptive error message.
+            // Wrapping it in a second ConnectorException would bury the actionable limit message.
+            if (fileContext.isReadAbortOnFailure()) {
+                throw cex;
+            }
+            Util.MAIN_LOGGER.warn(cex.getMessage());
             return next();
         } catch (Exception ex) {
             if (fileContext.isReadAbortOnFailure()) {

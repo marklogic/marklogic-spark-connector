@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
@@ -29,6 +29,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     private ZipInputStream currentZipInputStream;
     private int nextFilePathIndex;
     private InternalRow nextRowToReturn;
+    private int zipEntryCount = 0;
 
     MlcpArchiveFileReader(FilePartition filePartition, FileContext fileContext) {
         this.filePartition = filePartition;
@@ -102,6 +103,7 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
         this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+        this.zipEntryCount = 0;
     }
 
     private boolean openNextFileAndReadNextEntry() {
@@ -116,8 +118,9 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
     private ZipEntry getNextMetadataEntry() {
         // MLCP always includes a metadata entry, even if the user asks for no metadata. And the metadata entry is
         // always first.
+        ZipEntry entry;
         try {
-            return FileUtil.findNextFileEntry(currentZipInputStream);
+            entry = FileUtil.findNextFileEntry(currentZipInputStream);
         } catch (IOException e) {
             String message = String.format("Unable to read from zip file: %s; cause: %s", this.currentFilePath, e.getMessage());
             if (fileContext.isReadAbortOnFailure()) {
@@ -126,6 +129,17 @@ class MlcpArchiveFileReader implements PartitionReader<InternalRow> {
             Util.MAIN_LOGGER.warn(message);
             return null;
         }
+        if (entry != null) {
+            zipEntryCount++;
+            int maxEntryCount = fileContext.getZipMaxEntryCount();
+            if (maxEntryCount >= 0 && zipEntryCount > maxEntryCount) {
+                throw new ConnectorException(String.format(
+                    "Zip archive entry count exceeds the maximum of %d entries. " +
+                        "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",
+                    maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
+            }
+        }
+        return entry;
     }
 
     private MlcpMetadata readMetadataEntry(ZipEntry metadataZipEntry) {

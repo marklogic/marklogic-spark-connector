@@ -133,6 +133,22 @@ public abstract class Options {
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
     public static final String READ_ARCHIVES_CATEGORIES = "spark.marklogic.read.archives.categories";
 
+    /**
+     * Maximum number of uncompressed bytes that may be read from a single zip archive entry.
+     * Defaults to 268,435,456 (256 MB). Set to -1 to disable the limit.
+     *
+     * @since 3.1.2
+     */
+    public static final String READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES = "spark.marklogic.read.zip.maxUncompressedEntryBytes";
+
+    /**
+     * Maximum number of entries that may be iterated in a single zip archive.
+     * Defaults to 100,000. Set to -1 to disable the limit.
+     *
+     * @since 3.1.2
+     */
+    public static final String READ_ZIP_MAX_ENTRY_COUNT = "spark.marklogic.read.zip.maxEntryCount";
+
     // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.
     // "xml" is included in the name in anticipation of eventually supporting "aggregate JSON" - i.e. an array of N
     // objects, where each object should become a row / document (this is different from JSON lines format).
