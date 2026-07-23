@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Verifies that the zip bomb protection limits — READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES and
  * READ_ZIP_MAX_ENTRY_COUNT — are enforced across all zip-reading code paths when explicitly enabled.
- * Both limits default to -1 (disabled) and are opt-in.
+ * Both limits default to 0 (disabled) and are opt-in.
  *
  * <p>Test zip files used:
  * <ul>
@@ -79,7 +79,7 @@ class ReadZipBombProtectionTest extends AbstractIntegrationTest {
 
     @Test
     void genericZip_defaultBehaviorAllowsUnlimitedRead() {
-        // Both limits default to -1 (disabled), so all entries must be read without any configuration.
+        // Both limits default to 0 (disabled), so all entries must be read without any configuration.
         List<?> rows = newSparkSession().read()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.READ_FILES_COMPRESSION, "zip")

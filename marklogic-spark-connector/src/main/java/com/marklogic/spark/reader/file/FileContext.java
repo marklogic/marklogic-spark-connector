@@ -106,7 +106,7 @@ public class FileContext extends ContextSupport implements Serializable {
      * class is package-private to {@code com.marklogic.spark.reader.file}.
      *
      * @param in the raw zip entry stream
-     * @return a byte-limited wrapper, or {@code in} if the limit is disabled (-1)
+     * @return a byte-limited wrapper, or {@code in} if the limit is disabled (any value less than 1)
      */
     public InputStream boundedZipEntryStream(InputStream in) {
         long maxBytes = getZipMaxUncompressedEntryBytes();

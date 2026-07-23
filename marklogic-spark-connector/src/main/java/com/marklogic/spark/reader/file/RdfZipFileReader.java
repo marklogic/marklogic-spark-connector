@@ -60,7 +60,7 @@ class RdfZipFileReader implements PartitionReader<InternalRow> {
                 if (maxEntryCount > 0 && zipEntryCount > maxEntryCount) {
                     throw new ConnectorException(String.format(
                         "Zip archive entry count exceeds the maximum of %d entries. " +
-                            "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",
+                            "Use connector option '%s' to increase the limit. Set to 0 or less to disable.",
                         maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
                 }
 

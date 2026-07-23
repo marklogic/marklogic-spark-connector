@@ -80,7 +80,7 @@ class MaxBytesInputStream extends FilterInputStream {
         if (bytesRead > maxBytes) {
             throw new ConnectorException(String.format(
                 "Zip entry uncompressed size exceeds the maximum of %d bytes. " +
-                    "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",
+                    "Use connector option '%s' to increase the limit. Set to 0 or less to disable.",
                 maxBytes, Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES));
         }
     }
