@@ -81,38 +81,22 @@ public class FileContext extends ContextSupport implements Serializable {
 
     /**
      * @return the maximum number of uncompressed bytes to read from a single zip entry;
-     *         -1 means unlimited (the default). Zip bomb protection is opt-in: set a positive
-     *         integer to enable the limit.
-     * @throws ConnectorException if the configured value is 0 or a negative number other than -1,
-     *         since those values have no meaningful interpretation.
+     *         any value less than 1 means unlimited (the default is 0). Zip bomb protection
+     *         is opt-in: set a positive integer to enable the limit.
      */
     public long getZipMaxUncompressedEntryBytes() {
         String val = getStringOption(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES);
-        long limit = val != null ? Long.parseLong(val) : -1L;
-        if (limit == 0 || (limit < 0 && limit != -1L)) {
-            throw new ConnectorException(String.format(
-                "Invalid value '%s' for option '%s': must be -1 (disabled) or a positive integer.",
-                val, Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES));
-        }
-        return limit;
+        return val != null ? Long.parseLong(val) : 0L;
     }
 
     /**
      * @return the maximum number of entries to iterate in a single zip archive;
-     *         -1 means unlimited (the default). Zip bomb protection is opt-in: set a positive
-     *         integer to enable the limit.
-     * @throws ConnectorException if the configured value is 0 or a negative number other than -1,
-     *         since those values have no meaningful interpretation.
+     *         any value less than 1 means unlimited (the default is 0). Zip bomb protection
+     *         is opt-in: set a positive integer to enable the limit.
      */
     public int getZipMaxEntryCount() {
         String val = getStringOption(Options.READ_ZIP_MAX_ENTRY_COUNT);
-        int limit = val != null ? Integer.parseInt(val) : -1;
-        if (limit == 0 || (limit < 0 && limit != -1)) {
-            throw new ConnectorException(String.format(
-                "Invalid value '%s' for option '%s': must be -1 (disabled) or a positive integer.",
-                val, Options.READ_ZIP_MAX_ENTRY_COUNT));
-        }
-        return limit;
+        return val != null ? Integer.parseInt(val) : 0;
     }
 
     /**
@@ -126,14 +110,14 @@ public class FileContext extends ContextSupport implements Serializable {
      */
     public InputStream boundedZipEntryStream(InputStream in) {
         long maxBytes = getZipMaxUncompressedEntryBytes();
-        return maxBytes >= 0 ? new MaxBytesInputStream(in, maxBytes) : in;
+        return maxBytes > 0 ? new MaxBytesInputStream(in, maxBytes) : in;
     }
 
     byte[] readBytes(InputStream inputStream) throws IOException {
         // Only apply the zip entry byte limit when reading from a zip-based format
         // (compression=zip, type=archive, or type=mlcp_archive). Non-zip callers such as
         // GenericFileReader and GzipFileReader must not be subject to the zip-specific limit.
-        long maxBytes = isZipBasedRead() ? getZipMaxUncompressedEntryBytes() : -1L;
+        long maxBytes = isZipBasedRead() ? getZipMaxUncompressedEntryBytes() : 0L;
         byte[] bytes = FileUtil.readBytes(inputStream, maxBytes);
         return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
     }

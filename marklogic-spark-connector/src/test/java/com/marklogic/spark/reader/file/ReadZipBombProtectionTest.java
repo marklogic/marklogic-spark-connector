@@ -172,70 +172,32 @@ class ReadZipBombProtectionTest extends AbstractIntegrationTest {
     }
 
     // -----------------------------------------------------------------------
-    // Input validation — invalid option values
+    // Zero and negative values are treated as "disabled" (same as default)
     // -----------------------------------------------------------------------
 
     @Test
-    void invalidByteLimitZero_throwsConnectorException() {
-        ConnectorException ex = assertThrowsConnectorException(() ->
-            newSparkSession().read()
-                .format(CONNECTOR_IDENTIFIER)
-                .option(Options.READ_FILES_COMPRESSION, "zip")
-                .option(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, "0")
-                .load("src/test/resources/zip-files/mixed-files.zip")
-                .collectAsList()
-        );
-        assertTrue(ex.getMessage().contains("Invalid value '0'"),
-            "Expected invalid-value message for 0, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES),
-            "Error message should include the option name.");
+    void genericZip_zeroValueTreatedAsDisabled() {
+        // 0 is semantically equivalent to the default (disabled). All 4 entries must be read.
+        List<?> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, "0")
+            .option(Options.READ_ZIP_MAX_ENTRY_COUNT, "0")
+            .load("src/test/resources/zip-files/mixed-files.zip")
+            .collectAsList();
+        assertEquals(4, rows.size(), "A value of 0 should disable the limit: all 4 entries should be read.");
     }
 
     @Test
-    void invalidByteLimitNegative_throwsConnectorException() {
-        ConnectorException ex = assertThrowsConnectorException(() ->
-            newSparkSession().read()
-                .format(CONNECTOR_IDENTIFIER)
-                .option(Options.READ_FILES_COMPRESSION, "zip")
-                .option(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, "-5")
-                .load("src/test/resources/zip-files/mixed-files.zip")
-                .collectAsList()
-        );
-        assertTrue(ex.getMessage().contains("Invalid value '-5'"),
-            "Expected invalid-value message for -5, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES),
-            "Error message should include the option name.");
-    }
-
-    @Test
-    void invalidEntryCountZero_throwsConnectorException() {
-        ConnectorException ex = assertThrowsConnectorException(() ->
-            newSparkSession().read()
-                .format(CONNECTOR_IDENTIFIER)
-                .option(Options.READ_FILES_COMPRESSION, "zip")
-                .option(Options.READ_ZIP_MAX_ENTRY_COUNT, "0")
-                .load("src/test/resources/zip-files/mixed-files.zip")
-                .collectAsList()
-        );
-        assertTrue(ex.getMessage().contains("Invalid value '0'"),
-            "Expected invalid-value message for 0, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_ENTRY_COUNT),
-            "Error message should include the option name.");
-    }
-
-    @Test
-    void invalidEntryCountNegative_throwsConnectorException() {
-        ConnectorException ex = assertThrowsConnectorException(() ->
-            newSparkSession().read()
-                .format(CONNECTOR_IDENTIFIER)
-                .option(Options.READ_FILES_COMPRESSION, "zip")
-                .option(Options.READ_ZIP_MAX_ENTRY_COUNT, "-5")
-                .load("src/test/resources/zip-files/mixed-files.zip")
-                .collectAsList()
-        );
-        assertTrue(ex.getMessage().contains("Invalid value '-5'"),
-            "Expected invalid-value message for -5, got: " + ex.getMessage());
-        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_ENTRY_COUNT),
-            "Error message should include the option name.");
+    void genericZip_negativeValueTreatedAsDisabled() {
+        // Any value < 1 (including -1 and -5) disables the limit. All 4 entries must be read.
+        List<?> rows = newSparkSession().read()
+            .format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .option(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, "-1")
+            .option(Options.READ_ZIP_MAX_ENTRY_COUNT, "-5")
+            .load("src/test/resources/zip-files/mixed-files.zip")
+            .collectAsList();
+        assertEquals(4, rows.size(), "Any negative value should disable the limit: all 4 entries should be read.");
     }
 }

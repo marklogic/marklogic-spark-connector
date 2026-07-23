@@ -63,7 +63,7 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
         if (currentZipEntry != null) {
             zipEntryCount++;
             int maxEntryCount = fileContext.getZipMaxEntryCount();
-            if (maxEntryCount >= 0 && zipEntryCount > maxEntryCount) {
+            if (maxEntryCount > 0 && zipEntryCount > maxEntryCount) {
                 throw new ConnectorException(String.format(
                     "Zip archive entry count exceeds the maximum of %d entries. " +
                         "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",

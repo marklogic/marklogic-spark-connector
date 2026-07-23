@@ -49,7 +49,7 @@ public interface FileUtil {
         int read;
         while ((read = inputStream.read(buffer)) != -1) {
             totalRead += read;
-            if (maxBytes >= 0 && totalRead > maxBytes) {
+            if (maxBytes > 0 && totalRead > maxBytes) {
                 throw new ConnectorException(String.format(
                     "Zip entry uncompressed size exceeds the maximum of %d bytes. " +
                         "Use connector option '%s' to increase or disable this limit (set to -1 to disable).",

@@ -135,8 +135,9 @@ public abstract class Options {
 
     /**
      * Maximum number of uncompressed bytes that may be read from a single zip archive entry.
-     * Defaults to -1 (disabled). Set to a positive integer to enable protection; a value of 268,435,456
-     * (256 MB) is a reasonable starting point for most use cases.
+     * Defaults to 0 (disabled). Any value less than 1 disables the limit. Set to a positive
+     * integer to enable protection; a value of 268,435,456 (256 MB) is a reasonable starting
+     * point for most use cases.
      *
      * @since 3.1.2
      */
@@ -144,8 +145,9 @@ public abstract class Options {
 
     /**
      * Maximum number of entries that may be iterated in a single zip archive.
-     * Defaults to -1 (disabled). Set to a positive integer to enable protection; a value of 100,000
-     * is a reasonable starting point for most use cases.
+     * Defaults to 0 (disabled). Any value less than 1 disables the limit. Set to a positive
+     * integer to enable protection; a value of 100,000 is a reasonable starting point for most
+     * use cases.
      *
      * @since 3.1.2
      */
