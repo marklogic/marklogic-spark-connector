@@ -12,8 +12,10 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.AnalysisException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +27,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * 11 though. Will investigate more soon.
  */
 class PushDownFilterTest extends AbstractPushDownTest {
+
+    // Tracks URIs written by insertAuthor() so they can be removed after each test, ensuring the shared "author"
+    // collection - which many other tests expect to contain exactly 15 documents - isn't permanently polluted.
+    private final List<String> insertedAuthorUris = new ArrayList<>();
+
+    @AfterEach
+    void deleteInsertedAuthors() {
+        if (!insertedAuthorUris.isEmpty()) {
+            getDatabaseClient().newJSONDocumentManager().delete(insertedAuthorUris.toArray(new String[0]));
+            insertedAuthorUris.clear();
+        }
+    }
 
     /**
      * equalTo has several tests to verify that filter/where work the same (or at least appear to) and they can be
@@ -367,6 +381,7 @@ class PushDownFilterTest extends AbstractPushDownTest {
         metadata.getCollections().add("author");
 
         getDatabaseClient().newJSONDocumentManager().write(uri, metadata, new JacksonHandle(doc));
+        insertedAuthorUris.add(uri);
     }
 
     private Dataset<Row> newDataset() {

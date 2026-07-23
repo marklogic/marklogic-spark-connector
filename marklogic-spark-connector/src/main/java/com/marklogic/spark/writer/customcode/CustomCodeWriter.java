@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.MarkLogicServerException;
 import com.marklogic.client.eval.ServerEvaluationCall;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
@@ -168,6 +169,14 @@ class CustomCodeWriter implements DataWriter<InternalRow> {
             WriteProgressLogger.logProgressIfNecessary(itemCount);
         } catch (RuntimeException ex) {
             if (customCodeContext.isAbortOnFailure()) {
+                // MarkLogicServerException - e.g. FailedRequestException - wraps a non-serializable FailedRequest
+                // object. Spark must be able to serialize a task failure in order to report it back to the driver;
+                // if it cannot, the task failure can be silently dropped, causing the Spark job to hang indefinitely
+                // instead of failing (observed with Spark 4.2.0). So the exception is wrapped in a ConnectorException
+                // with just the message, ensuring the exception that propagates to Spark can always be serialized.
+                if (ex instanceof MarkLogicServerException) {
+                    throw new ConnectorException(ex.getMessage());
+                }
                 throw ex;
             }
             this.failedItemCount += itemCount;

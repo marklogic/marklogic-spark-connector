@@ -6,6 +6,7 @@ package com.marklogic.spark.reader.document;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.MarkLogicServerException;
 import com.marklogic.client.document.DocumentManager;
 import com.marklogic.client.document.DocumentPage;
 import com.marklogic.client.document.DocumentRecord;
@@ -19,6 +20,7 @@ import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.query.QueryDefinition;
 import com.marklogic.client.query.SearchQueryDefinition;
 import com.marklogic.client.query.StructuredQueryBuilder;
+import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.ReadProgressLogger;
@@ -188,7 +190,17 @@ class ForestReader implements PartitionReader<InternalRow> {
         // Must do a search so that a POST is sent instead of a GET. A GET can fail with a Request-URI error if too
         // many URIs are included in the querystring. However, content is always retrieved with a search, so there's
         // some inefficiency if the caller only wants metadata and no content.
-        DocumentPage page = this.documentManager.search(queryDefinition, 0);
+        DocumentPage page;
+        try {
+            page = this.documentManager.search(queryDefinition, 0);
+        } catch (MarkLogicServerException ex) {
+            // MarkLogicServerException wraps a non-serializable FailedRequest object. Spark must be able to
+            // serialize a task failure in order to report it back to the driver; if it cannot, the task failure
+            // can be silently dropped, causing the Spark job to hang indefinitely instead of failing (observed
+            // with Spark 4.2.0). So the exception is wrapped in a ConnectorException with just the message,
+            // ensuring the exception that propagates to Spark can always be serialized.
+            throw new ConnectorException(ex.getMessage());
+        }
         if (logger.isTraceEnabled()) {
             logger.trace("Retrieved page of documents in {}ms from partition {}", (System.currentTimeMillis() - start), this.forestPartition);
         }

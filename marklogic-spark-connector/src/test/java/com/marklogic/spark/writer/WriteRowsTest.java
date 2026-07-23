@@ -94,16 +94,17 @@ class WriteRowsTest extends AbstractWriteTest {
                 testConfig.getHost(), testConfig.getRestPort()));
 
         SparkException ex = assertThrows(SparkException.class, writer::save);
-        assertNull(ex.getCause(), "Surprisingly, in this scenario where the exception is thrown during the " +
-            "construction of WriteBatcherDataWriter, Spark does not populate the 'cause' of the exception but rather " +
-            "shoves the entire stacktrace of the exception into the exception message. This is not a good UX for " +
-            "connector or Flux users, as it puts an ugly stacktrace right into their face. I have not figured out " +
-            "how to avoid this yet, so this test is capturing this behavior in the hopes that an upgraded version of " +
-            "Spark will properly set the cause instead.");
-        assertTrue(ex.getMessage().contains("at com.marklogic.client.impl.OkHttpServices"), "This is confirming that " +
-            "the exception message contains the stacktrace of the MarkLogic exception - which we don't want. Hoping " +
-            "this assertion breaks during a future upgrade of Spark and we have a proper exception message " +
-            "instead. Actual message: " + ex.getMessage());
+        assertTrue(ex.getCause() instanceof ConnectorException, "When WriteBatcherDataWriter's constructor fails " +
+            "due to a MarkLogicServerException - e.g. FailedRequestException, which wraps a non-serializable " +
+            "FailedRequest object - the connector must ensure that only a message-only ConnectorException " +
+            "propagates out of the writer factory. Spark 4.2.0 is otherwise unable to serialize the task failure " +
+            "in order to report it back to the driver, which causes the entire job to hang indefinitely instead " +
+            "of failing with a helpful error. Actual cause: " + ex.getCause());
+        assertFalse(ex.getCause().getMessage().contains("at com.marklogic.client.impl.OkHttpServices"),
+            "The exception message should be a clean, user-friendly error rather than a raw Java stacktrace. " +
+            "Actual message: " + ex.getCause().getMessage());
+        assertTrue(ex.getCause().getMessage().contains("You do not have permission to this method and URL"),
+            "Actual message: " + ex.getCause().getMessage());
     }
 
     @Test
