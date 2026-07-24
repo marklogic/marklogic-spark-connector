@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark;
 
@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -164,7 +166,27 @@ public abstract class AbstractIntegrationTest extends AbstractSpringMarkLogicTes
             "Expect the Spark-thrown SparkException to wrap our ConnectorException, which is an exception that we " +
                 "intentionally throw when an error condition is detected. " +
                 "Actual exception cause type: " + ex.getCause());
-        return (ConnectorException) ex.getCause();
+
+        ConnectorException connectorException = (ConnectorException) ex.getCause();
+        String message = connectorException.getMessage();
+        if (message != null) {
+            Pattern sensitiveOptionPattern = Pattern.compile(RedactionUtil.RECOMMENDED_SPARK_REDACTION_REGEX);
+            Pattern optionValuePattern = Pattern.compile("(spark\\.marklogic\\.[^,\\s}\\]]+)\\s*[=:]\\s*(\\\"[^\\\"]*\\\"|'[^']*'|[^,}\\]]+)");
+            Matcher matcher = optionValuePattern.matcher(message);
+            while (matcher.find()) {
+                String optionName = matcher.group(1);
+                String optionValue = matcher.group(2);
+                if (sensitiveOptionPattern.matcher(optionName).find()) {
+                    if ((optionValue.startsWith("\"") && optionValue.endsWith("\"")) ||
+                        (optionValue.startsWith("'") && optionValue.endsWith("'"))) {
+                        optionValue = optionValue.substring(1, optionValue.length() - 1);
+                    }
+                    assertEquals("********", optionValue,
+                        "ConnectorException message appears to include an unredacted sensitive option value: " + message);
+                }
+            }
+        }
+        return connectorException;
     }
 
     protected final DocumentMetadataHandle readMetadata(String uri) {
