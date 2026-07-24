@@ -86,7 +86,15 @@ public class FileContext extends ContextSupport implements Serializable {
      */
     public long getZipMaxUncompressedEntryBytes() {
         String val = getStringOption(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES);
-        return val != null ? Long.parseLong(val) : 0L;
+        if (val == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException(String.format(
+                "Invalid value for %s: %s", Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, val));
+        }
     }
 
     /**
@@ -96,7 +104,15 @@ public class FileContext extends ContextSupport implements Serializable {
      */
     public int getZipMaxEntryCount() {
         String val = getStringOption(Options.READ_ZIP_MAX_ENTRY_COUNT);
-        return val != null ? Integer.parseInt(val) : 0;
+        if (val == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException(String.format(
+                "Invalid value for %s: %s", Options.READ_ZIP_MAX_ENTRY_COUNT, val));
+        }
     }
 
     /**

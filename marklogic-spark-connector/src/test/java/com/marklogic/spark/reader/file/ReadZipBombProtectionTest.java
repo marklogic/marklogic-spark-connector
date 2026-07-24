@@ -200,4 +200,40 @@ class ReadZipBombProtectionTest extends AbstractIntegrationTest {
             .collectAsList();
         assertEquals(4, rows.size(), "Any negative value should disable the limit: all 4 entries should be read.");
     }
+
+    // -----------------------------------------------------------------------
+    // Invalid (non-numeric) option values
+    // -----------------------------------------------------------------------
+
+    @Test
+    void invalidByteLimitStringThrowsConnectorException() {
+        ConnectorException ex = assertThrowsConnectorException(() ->
+            newSparkSession().read()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.READ_FILES_COMPRESSION, "zip")
+                .option(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, "not-a-number")
+                .load("src/test/resources/zip-files/mixed-files.zip")
+                .collectAsList()
+        );
+        assertTrue(ex.getMessage().contains("Invalid value for"),
+            "Expected invalid-value message, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES),
+            "Error message should include the option name; got: " + ex.getMessage());
+    }
+
+    @Test
+    void invalidEntryCountStringThrowsConnectorException() {
+        ConnectorException ex = assertThrowsConnectorException(() ->
+            newSparkSession().read()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.READ_FILES_COMPRESSION, "zip")
+                .option(Options.READ_ZIP_MAX_ENTRY_COUNT, "not-a-number")
+                .load("src/test/resources/zip-files/mixed-files.zip")
+                .collectAsList()
+        );
+        assertTrue(ex.getMessage().contains("Invalid value for"),
+            "Expected invalid-value message, got: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(Options.READ_ZIP_MAX_ENTRY_COUNT),
+            "Error message should include the option name; got: " + ex.getMessage());
+    }
 }

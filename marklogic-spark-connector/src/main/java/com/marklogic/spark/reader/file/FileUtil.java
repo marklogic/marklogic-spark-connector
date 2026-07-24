@@ -26,18 +26,18 @@ public interface FileUtil {
      * @throws IOException
      */
     static byte[] readBytes(InputStream inputStream) throws IOException {
-        return readBytes(inputStream, -1L);
+        return readBytes(inputStream, 0L);
     }
 
     /**
      * Reads all bytes from {@code inputStream} into a byte array, enforcing an optional upper bound on the
-     * number of bytes read. Pass {@code -1} for {@code maxBytes} to disable the limit.
+     * number of bytes read. Pass {@code 0} (or any value less than 1) for {@code maxBytes} to disable the limit.
      *
      * <p>Uses a 4096-byte read buffer (an improvement over the legacy 1024-byte buffer used prior to 3.1.2),
      * which benefits all callers including non-zip readers.
      *
      * @param inputStream the stream to drain
-     * @param maxBytes    the maximum number of bytes to allow; -1 means unlimited
+     * @param maxBytes    the maximum number of bytes to allow; any value less than 1 means unlimited
      * @return the bytes read
      * @throws IOException          on I/O errors
      * @throws ConnectorException   when {@code maxBytes} is non-negative and the limit is exceeded
