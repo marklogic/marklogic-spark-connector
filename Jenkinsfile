@@ -27,16 +27,6 @@ def runtests(){
   junit '**/build/**/*.xml'
 }
 
-def runSonarScan(){
-    sh label:'run-sonar', script: '''#!/bin/bash
-      export JAVA_HOME=$JAVA17_HOME_DIR
-      export GRADLE_USER_HOME=$WORKSPACE/$GRADLE_DIR
-      export PATH=$GRADLE_USER_HOME:$JAVA_HOME/bin:$PATH
-      cd marklogic-spark-connector
-     ./gradlew sonar -Dsonar.projectKey='marklogic_marklogic-spark-connector_AY1bXn6J_50_odbCDKMX' -Dsonar.projectName='ML-DevExp-marklogic-spark-connector' || true
-    '''
-}
-
 def tearDownDocker() {
   updateWorkspacePermissions()
   sh label:'mlcleanup', script: '''#!/bin/bash
@@ -71,9 +61,6 @@ pipeline{
   stages{
 
     stage('tests'){
-      environment{
-        scannerHome = tool 'SONAR_Progress'
-      }
       agent {label 'devExpLinuxPool'}
       steps{
         cleanupDocker()
@@ -86,9 +73,6 @@ pipeline{
             MARKLOGIC_LOGS_VOLUME=/tmp docker-compose up -d --build
           '''
         runtests()
-        withSonarQubeEnv('SONAR_Progress') {
-          runSonarScan()
-        }
       }
       post{
         always{
