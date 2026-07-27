@@ -6,9 +6,6 @@ plugins {
 configurations {
   all {
     resolutionStrategy {
-      // Compile-only/test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-24281
-      force "org.apache.zookeeper:zookeeper:3.9.5"
-
       // Test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-23907
       force "org.apache.pdfbox:pdfbox:3.0.7"
 
@@ -28,7 +25,7 @@ configurations.configureEach {
      // will need it bumped for sure.
      if (details.requested.group.equals("io.netty") and (details.requested.version.startsWith("4.1.") || details.requested.version.startsWith("4.2."))) {
        details.useVersion "4.2.16.Final"
-       details.because "Forcing Spark 4.1.x to use latest Netty to minimize CVEs"
+       details.because "Forcing Spark 4.x to use latest Netty to minimize CVEs"
      }
    }
  }

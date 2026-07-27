@@ -4,6 +4,7 @@
 package com.marklogic.spark.writer;
 
 import com.marklogic.client.DatabaseClient;
+import com.marklogic.client.MarkLogicServerException;
 import com.marklogic.client.datamovement.DataMovementManager;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.filter.FilterException;
@@ -289,7 +290,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             // So the original exception is retained. But oddly, this results in a SparkException with a null cause - ???.
             // That doesn't really impact a user - it's a SparkException regardless - but caused some tests to no longer
             // be able to catch a ConnectorException.
-            throw new ConnectorException(failure.getMessage(), failure);
+            //
+            // MarkLogicServerException - e.g. FailedRequestException - wraps a non-serializable FailedRequest object.
+            // Spark must be able to serialize a task failure to report it back to the driver; if it cannot, the task
+            // failure can be silently dropped, causing the Spark job to hang indefinitely instead of failing
+            // (observed with Spark 4.2.0). So the original exception is only retained as the cause when it's not a
+            // MarkLogicServerException, ensuring the exception that propagates to Spark can always be serialized.
+            Throwable cause = failure instanceof MarkLogicServerException ? null : failure;
+            throw new ConnectorException(failure.getMessage(), cause);
         }
     }
 
