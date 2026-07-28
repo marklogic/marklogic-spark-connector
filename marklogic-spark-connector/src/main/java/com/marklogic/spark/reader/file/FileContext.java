@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
@@ -79,9 +79,75 @@ public class FileContext extends ContextSupport implements Serializable {
         return getBooleanOption(Options.READ_FILES_ABORT_ON_FAILURE, true);
     }
 
+    /**
+     * @return the maximum number of uncompressed bytes to read from a single zip entry;
+     *         any value less than 1 means unlimited (the default is 0). Zip bomb protection
+     *         is opt-in: set a positive integer to enable the limit.
+     */
+    public long getZipMaxUncompressedEntryBytes() {
+        String val = getStringOption(Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES);
+        if (val == null) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException(String.format(
+                "Invalid value for %s: %s", Options.READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES, val));
+        }
+    }
+
+    /**
+     * @return the maximum number of entries to iterate in a single zip archive;
+     *         any value less than 1 means unlimited (the default is 0). Zip bomb protection
+     *         is opt-in: set a positive integer to enable the limit.
+     */
+    public int getZipMaxEntryCount() {
+        String val = getStringOption(Options.READ_ZIP_MAX_ENTRY_COUNT);
+        if (val == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(val);
+        } catch (NumberFormatException e) {
+            throw new ConnectorException(String.format(
+                "Invalid value for %s: %s", Options.READ_ZIP_MAX_ENTRY_COUNT, val));
+        }
+    }
+
+    /**
+     * Wraps the given stream in a {@link MaxBytesInputStream} if the zip byte limit is configured,
+     * otherwise returns the stream unchanged. Callers (such as XML and RDF parsers in sub-packages)
+     * should use this instead of instantiating {@code MaxBytesInputStream} directly, since that
+     * class is package-private to {@code com.marklogic.spark.reader.file}.
+     *
+     * @param in the raw zip entry stream
+     * @return a byte-limited wrapper, or {@code in} if the limit is disabled (any value less than 1)
+     */
+    public InputStream boundedZipEntryStream(InputStream in) {
+        long maxBytes = getZipMaxUncompressedEntryBytes();
+        return maxBytes > 0 ? new MaxBytesInputStream(in, maxBytes) : in;
+    }
+
     byte[] readBytes(InputStream inputStream) throws IOException {
-        byte[] bytes = FileUtil.readBytes(inputStream);
+        // Only apply the zip entry byte limit when reading from a zip-based format
+        // (compression=zip, type=archive, or type=mlcp_archive). Non-zip callers such as
+        // GenericFileReader and GzipFileReader must not be subject to the zip-specific limit.
+        long maxBytes = isZipBasedRead() ? getZipMaxUncompressedEntryBytes() : 0L;
+        byte[] bytes = FileUtil.readBytes(inputStream, maxBytes);
         return this.encoding != null ? new String(bytes, this.encoding).getBytes() : bytes;
+    }
+
+    /**
+     * @return true when the current read context is a zip-based format — i.e. compression=zip,
+     *         type=archive, or type=mlcp_archive. Used to scope the zip byte limit to zip readers only.
+     */
+    private boolean isZipBasedRead() {
+        if (isZip()) {
+            return true;
+        }
+        String fileType = getStringOption(Options.READ_FILES_TYPE);
+        return "archive".equalsIgnoreCase(fileType) || "mlcp_archive".equalsIgnoreCase(fileType);
     }
 
     private boolean isFileGzipped(String filePath, boolean guessIfGzipped) {

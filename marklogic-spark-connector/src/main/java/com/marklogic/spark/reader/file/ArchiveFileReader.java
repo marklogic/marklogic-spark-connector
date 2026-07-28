@@ -32,6 +32,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
     private ZipInputStream currentZipInputStream;
     private int nextFilePathIndex;
     private InternalRow nextRowToReturn;
+    private int zipEntryCount = 0;
 
     // Legacy = content first, then metadata.
     private Boolean isLegacyFormat;
@@ -68,6 +69,15 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
             ZipEntry nextZipEntry = FileUtil.findNextFileEntry(currentZipInputStream);
             if (nextZipEntry == null) {
                 return openNextFileAndReadNextEntry();
+            }
+
+            zipEntryCount++;
+            int maxEntryCount = fileContext.getZipMaxEntryCount();
+            if (maxEntryCount > 0 && zipEntryCount > maxEntryCount) {
+                throw new ConnectorException(String.format(
+                    "Zip archive entry count exceeds the maximum of %d entries. " +
+                        "Use connector option '%s' to increase the limit. Set to 0 or less to disable.",
+                    maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
             }
 
             if (isLegacyFormat == null) {
@@ -199,6 +209,7 @@ public class ArchiveFileReader implements PartitionReader<InternalRow> {
         final boolean isStreamingDuringRead = StreamingMode.STREAM_DURING_READER_PHASE.equals(this.streamingMode);
         this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
+        this.zipEntryCount = 0;
 
         if (!isStreamingDuringRead) {
             this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));

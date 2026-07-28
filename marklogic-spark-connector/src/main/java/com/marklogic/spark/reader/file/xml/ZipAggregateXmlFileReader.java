@@ -1,9 +1,10 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file.xml;
 
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
 import com.marklogic.spark.reader.file.FileContext;
 import com.marklogic.spark.reader.file.FilePartition;
@@ -15,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -28,6 +30,9 @@ public class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
 
     // Used solely for a default URI prefix.
     private int entryCounter;
+
+    // Tracks total entries iterated for zip bomb protection (READ_ZIP_MAX_ENTRY_COUNT).
+    private int zipEntryCount = 0;
 
     private InternalRow rowToReturn;
 
@@ -86,6 +91,7 @@ public class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
         this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+        this.zipEntryCount = 0;
     }
 
     /**
@@ -113,14 +119,26 @@ public class ZipAggregateXmlFileReader implements PartitionReader<InternalRow> {
             if (zipEntry == null) {
                 return false;
             }
+
+            zipEntryCount++;
+            int maxEntryCount = fileContext.getZipMaxEntryCount();
+            if (maxEntryCount > 0 && zipEntryCount > maxEntryCount) {
+                throw new ConnectorException(String.format(
+                    "Zip archive entry count exceeds the maximum of %d entries. " +
+                        "Use connector option '%s' to increase the limit. Set to 0 or less to disable.",
+                    maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
+            }
+
             if (logger.isTraceEnabled()) {
                 logger.trace("Reading entry {} in {}", zipEntry.getName(), this.currentFilePath);
             }
             entryCounter++;
             String identifierForError = "entry " + zipEntry.getName() + " in " + this.currentFilePath;
 
+            InputStream entryStream = fileContext.boundedZipEntryStream(this.currentZipInputStream);
+
             try {
-                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, this.currentZipInputStream, this.fileContext);
+                aggregateXMLSplitter = new AggregateXmlSplitter(identifierForError, entryStream, this.fileContext);
                 // Fail fast if the next entry is not valid XML.
                 aggregateXMLSplitter.hasNext();
                 return true;

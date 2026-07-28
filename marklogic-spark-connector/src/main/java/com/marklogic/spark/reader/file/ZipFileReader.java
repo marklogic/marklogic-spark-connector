@@ -1,10 +1,11 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.file;
 
 import com.marklogic.client.io.InputStreamHandle;
 import com.marklogic.spark.ConnectorException;
+import com.marklogic.spark.Options;
 import com.marklogic.spark.reader.document.DocumentRowBuilder;
 import org.apache.commons.crypto.utils.IoUtils;
 import org.apache.spark.sql.catalyst.InternalRow;
@@ -33,6 +34,7 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
     private String currentFilePath;
     private ZipInputStream currentZipInputStream;
     private ZipEntry currentZipEntry;
+    private int zipEntryCount = 0;
 
     ZipFileReader(FilePartition filePartition, FileContext fileContext) {
         this(filePartition, fileContext, fileContext.isStreamingFiles() ? StreamingMode.STREAM_DURING_READER_PHASE : null);
@@ -59,6 +61,14 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
         }
 
         if (currentZipEntry != null) {
+            zipEntryCount++;
+            int maxEntryCount = fileContext.getZipMaxEntryCount();
+            if (maxEntryCount > 0 && zipEntryCount > maxEntryCount) {
+                throw new ConnectorException(String.format(
+                    "Zip archive entry count exceeds the maximum of %d entries. " +
+                        "Use connector option '%s' to increase the limit. Set to 0 or less to disable.",
+                    maxEntryCount, Options.READ_ZIP_MAX_ENTRY_COUNT));
+            }
             return true;
         }
         close();
@@ -125,6 +135,7 @@ public class ZipFileReader implements PartitionReader<InternalRow> {
         this.currentFilePath = filePartition.getPaths().get(nextFilePathIndex);
         nextFilePathIndex++;
         this.currentZipInputStream = new ZipInputStream(fileContext.openFile(this.currentFilePath));
+        this.zipEntryCount = 0;
     }
 
     private byte[] readZipEntry() {
