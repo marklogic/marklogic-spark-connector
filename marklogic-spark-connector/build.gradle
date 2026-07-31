@@ -36,8 +36,8 @@ configurations.configureEach {
 dependencies {
   // Overrides are needed here for runtime dependencies so that Flux picks up the overridden dependency as well.
   constraints {
-    implementation("org.apache.thrift:libthrift:0.23.0") {
-      because "Bumping from 0.22.0 to 0.23.0 to eliminate several CVEs; this is brought in by jena-arq."
+    implementation("org.apache.thrift:libthrift:0.24.0") {
+      because "Bumping from 0.22.0 to 0.24.0 to eliminate several CVEs; this is brought in by jena-arq."
     }
   }
 
