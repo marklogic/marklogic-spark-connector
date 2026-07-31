@@ -15,6 +15,9 @@ configurations {
 
       // Compile-only dependency, resolves CVE in 2.24.3
       force "org.apache.logging.log4j:log4j-layout-template-json:2.26.0"
+
+      // Compile/test dependency via Spark; resolves BDSA-2026-24084
+      force "at.yawk.lz4:lz4-java:1.11.1"
     }
   }
 }
