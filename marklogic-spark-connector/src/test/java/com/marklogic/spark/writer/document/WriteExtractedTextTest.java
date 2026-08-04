@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.document;
 
@@ -71,7 +71,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
 
         JsonNode doc = readJsonDocument("/extract-test/hello-world.docx-extracted-text.json");
         assertEquals("/extract-test/hello-world.docx", doc.get("source-uri").asText());
-        assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", doc.get("content").asText());
+        assertEquals("Hello world.\nThis file is used for testing text extraction.\n", doc.get("content").asText());
         assertEquals("application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             doc.get("extracted-metadata").get("Content-Type").asText());
     }
@@ -83,7 +83,7 @@ class WriteExtractedTextTest extends AbstractIntegrationTest {
         try (ByteArrayInputStream inputStream = new ByteArrayInputStream(bytes)) {
             Metadata metadata = new Metadata();
             String text = new Tika().parseToString(inputStream, metadata);
-            assertEquals("Hello world.\n\nThis file is used for testing text extraction.\n", text,
+            assertEquals("Hello world.\nThis file is used for testing text extraction.\n", text,
                 "The point of this test is to make sure that Tika works by itself with the tika-parser-microsoft-module " +
                     "dependency on the classpath, as we've had some mysterious classpath issues, like the wrong " +
                     "version of commons-compress being used. If this test fails, then we know something is awry " +
