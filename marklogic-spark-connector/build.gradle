@@ -18,6 +18,12 @@ configurations {
 
       // Compile/test dependency via Spark; resolves BDSA-2026-24084
       force "at.yawk.lz4:lz4-java:1.11.1"
+
+      // Compile/test dependency via OkHttp; resolves BDSA-2026-17028 / CVE-2026-53914
+      force "org.jetbrains.kotlin:kotlin-stdlib:2.4.10"
+      force "org.jetbrains.kotlin:kotlin-stdlib-common:2.4.10"
+      force "org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.4.10"
+      force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.4.10"
     }
   }
 }
