@@ -168,13 +168,19 @@ public class WriteContext extends ContextSupport {
             .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
 
         if (hasOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS)) {
-            String[] jsonExclusions = getStringOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS).split("\\r?\\n");
-            builder.jsonExclusions(jsonExclusions);
+             String jsonOption = getStringOption(Options.WRITE_INCREMENTAL_JSON_EXCLUSIONS);
+             if (jsonOption != null) {
+                 String[] jsonExclusions = jsonOption.split("\\r?\\n");
+                 builder.jsonExclusions(jsonExclusions);
+             }
         }
 
         if (hasOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS)) {
-            String[] xmlExclusions = getStringOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS).split("\\r?\\n");
-            builder.xmlExclusions(xmlExclusions);
+             String xmlOption = getStringOption(Options.WRITE_INCREMENTAL_XML_EXCLUSIONS);
+             if (xmlOption != null) {
+                 String[] xmlExclusions = xmlOption.split("\\r?\\n");
+                 builder.xmlExclusions(xmlExclusions);
+             }
         }
 
         return builder.build();
