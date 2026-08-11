@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -12,6 +12,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.jdom2.Namespace;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -28,6 +29,11 @@ class WriteArchiveTest extends AbstractIntegrationTest {
     @BeforeEach
     void beforeEach() {
         TestUtil.insertTwoDocumentsWithAllMetadata(getDatabaseClient());
+    }
+
+    @AfterEach
+    void resetTestListener() {
+        UriCountTestListener.reset();
     }
 
     @ParameterizedTest
@@ -50,11 +56,16 @@ class WriteArchiveTest extends AbstractIntegrationTest {
             .write()
             .format(CONNECTOR_IDENTIFIER)
             .option(Options.WRITE_FILES_COMPRESSION, "zip")
+            .option(Options.WRITE_FILES_LISTENER_CLASS_NAME, UriCountTestListener.class.getName())
             .mode(SaveMode.Append)
             .save(tempDir.toFile().getAbsolutePath());
 
         assertEquals(1, tempDir.toFile().listFiles().length, "Expecting 1 zip since repartition created 1 partition writer.");
         verifyMetadataFiles(tempDir, metadata);
+
+        assertEquals(2, UriCountTestListener.writtenUriCounts.get(0), "Expecting a single callback to the " +
+            "listener interface with a count of 2 URIs having been written.");
+        assertEquals(1, UriCountTestListener.writtenUriCounts.size());
     }
 
     @Test

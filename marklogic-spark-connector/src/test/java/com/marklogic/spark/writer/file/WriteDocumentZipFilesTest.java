@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.file;
 
@@ -44,6 +44,37 @@ class WriteDocumentZipFilesTest extends AbstractIntegrationTest {
 
         verifyZipFilesHaveExpectedFilenames(tempDir);
         verifyZipFilesContainFifteenAuthors(tempDir);
+    }
+
+    @Test
+    void withCustomFileWriteListenerIntervalAndParams(@TempDir Path tempDir) {
+        try {
+            readAuthorCollection()
+                .repartition(1)
+                .write()
+                .format(CONNECTOR_IDENTIFIER)
+                .option(Options.WRITE_FILES_COMPRESSION, "zip")
+                .option(Options.WRITE_FILES_LISTENER_CLASS_NAME, UriCountTestListener.class.getName())
+                .option(Options.WRITE_FILES_LISTENER_PROGRESS_INTERVAL, "4")
+                .option(Options.WRITE_FILES_LISTENER_PARAM_PREFIX + "exportId", "export-123")
+                .option(Options.WRITE_FILES_LISTENER_PARAM_PREFIX + "hello", "world")
+                .mode(SaveMode.Append)
+                .save(tempDir.toFile().getAbsolutePath());
+
+            assertEquals(2, UriCountTestListener.params.size());
+            assertEquals("export-123", UriCountTestListener.params.get("exportId"));
+            assertEquals("world", UriCountTestListener.params.get("hello"));
+
+            assertEquals(4, UriCountTestListener.writtenUriCounts.size(), "The listener should have been " +
+                "invoked 4 times - once for each time 4 more rows were written to the zip, and then a final time " +
+                "when all of the rows had been written.");
+            assertEquals(4, UriCountTestListener.writtenUriCounts.get(0));
+            assertEquals(8, UriCountTestListener.writtenUriCounts.get(1));
+            assertEquals(12, UriCountTestListener.writtenUriCounts.get(2));
+            assertEquals(15, UriCountTestListener.writtenUriCounts.get(3));
+        } finally {
+            UriCountTestListener.reset();
+        }
     }
 
     @Test
