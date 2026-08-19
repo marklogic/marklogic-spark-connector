@@ -14,6 +14,7 @@ import com.marklogic.client.document.ServerTransform;
 import com.marklogic.client.impl.GenericDocumentImpl;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.*;
+import com.marklogic.spark.api.WriteListener;
 import com.marklogic.spark.core.splitter.ChunkAssemblerFactory;
 import com.marklogic.spark.dom.NamespaceContextFactory;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
@@ -21,7 +22,7 @@ import com.marklogic.spark.reader.file.TripleRowSchema;
 import org.apache.spark.sql.types.StructType;
 
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.IntConsumer;
 import java.util.stream.Stream;
 
@@ -42,7 +43,6 @@ public class WriteContext extends ContextSupport {
 
     // This unfortunately is not final as we don't know it when this object is created.
     private int numPartitions;
-
 
     public WriteContext(StructType schema, Map<String, String> properties) {
         super(properties);
@@ -96,7 +96,14 @@ public class WriteContext extends ContextSupport {
         return getIntOption(Options.WRITE_THREAD_COUNT_PER_PARTITION, 0, 1);
     }
 
-    WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager) {
+    /**
+     * @param dataMovementManager
+     * @param skippedItemCount    This was added to support the WriteListener interface. The split of BatchListener
+     *                            construction between WriteBatcherDataWriter and this class is not ideal, but is fine
+     *                            for now.
+     * @return
+     */
+    WriteBatcher newWriteBatcher(DataMovementManager dataMovementManager, AtomicInteger skippedItemCount) {
         // If the user told us how many threads they want per partition (we expect this to be rare), then use that.
         // Otherwise, use the calculated number of threads per partition based on the total thread count that either
         // the user configured or using the default value for that option.
@@ -106,22 +113,43 @@ public class WriteContext extends ContextSupport {
         if (Util.MAIN_LOGGER.isDebugEnabled()) {
             Util.MAIN_LOGGER.debug("Creating new batcher with thread count of {} and batch size of {}.", threadCount, batchSize);
         }
+
+        final WriteListener writeListener = makeWriteListener();
+
         WriteBatcher writeBatcher = dataMovementManager
             .newWriteBatcher()
             .withBatchSize(batchSize)
             .withThreadCount(threadCount)
-            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION))
-            .onBatchSuccess(this::logBatchOnSuccess);
+            .withTemporalCollection(getStringOption(Options.WRITE_TEMPORAL_COLLECTION));
+
+        if (writeListener != null) {
+            writeBatcher.onBatchSuccess(batch -> {
+                long totalSuccessCount = this.logBatchOnSuccess(batch);
+                if (totalSuccessCount > 0) {
+                    writeListener.onSuccessCountLogged(totalSuccessCount);
+                }
+                writeListener.onBatchSuccess(batch);
+            });
+        } else {
+            writeBatcher.onBatchSuccess(this::logBatchOnSuccess);
+        }
+
+        if (getBooleanOption(Options.WRITE_INCREMENTAL, false)) {
+            writeBatcher.withDocumentWriteSetFilter(
+                buildIncrementalWriteFilter(n -> skippedItemCount.addAndGet(n), writeListener)
+            );
+        }
 
         Optional<ServerTransform> transform = makeRestTransform();
         if (transform.isPresent()) {
             writeBatcher.withTransform(transform.get());
         }
 
+
         return writeBatcher;
     }
 
-    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer) {
+    protected final IncrementalWriteFilter buildIncrementalWriteFilter(IntConsumer skippedCountConsumer, WriteListener writeListener) {
         IncrementalWriteFilter.Builder builder = IncrementalWriteFilter.newBuilder()
             .fromView(
                 getStringOption(Options.WRITE_INCREMENTAL_SCHEMA),
@@ -131,8 +159,11 @@ public class WriteContext extends ContextSupport {
             .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
             .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
             .onDocumentsSkipped(skippedDocs -> {
-                WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
+                long totalSkippedCount = WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
                 skippedCountConsumer.accept(skippedDocs.length);
+                if (writeListener != null) {
+                    writeListener.onSkippedCountLogged(totalSkippedCount);
+                }
             })
             .xmlNamespaces(NamespaceContextFactory.makePrefixesToNamespaces(getProperties()));
 
@@ -185,21 +216,6 @@ public class WriteContext extends ContextSupport {
         forEachOptionStartingWith(Options.WRITE_DOCUMENT_PROPERTIES_PREFIX, factory::withDocumentProperty);
 
         return factory.newDocBuilder();
-    }
-
-    /**
-     * Convenience for finding and processing dynamic options that start with a certain prefix.
-     *
-     * @param prefix
-     * @param consumer processes the name (the option minus the prefix) and the option value
-     */
-    private void forEachOptionStartingWith(final String prefix, BiConsumer<String, String> consumer) {
-        getProperties().entrySet().stream()
-            .filter(entry -> entry.getKey().startsWith(prefix))
-            .forEach(entry -> {
-                String name = entry.getKey().substring(prefix.length());
-                consumer.accept(name, entry.getValue());
-            });
     }
 
     public Format getDocumentFormat() {
@@ -293,7 +309,7 @@ public class WriteContext extends ContextSupport {
         }
     }
 
-    private void logBatchOnSuccess(WriteBatch batch) {
+    private long logBatchOnSuccess(WriteBatch batch) {
         int documentCount = batch.getItems().length;
         if (documentCount > 0) {
             WriteEvent firstEvent = batch.getItems()[0];
@@ -303,14 +319,15 @@ public class WriteContext extends ContextSupport {
                 documentCount--;
             }
         }
-        logBatchOnSuccess(documentCount, batch.getJobBatchNumber());
+        return logBatchOnSuccess(documentCount, batch.getJobBatchNumber());
     }
 
-    public void logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
-        WriteProgressLogger.logProgressIfNecessary(documentCount);
+    long logBatchOnSuccess(int documentCount, long optionalJobBatchNumber) {
+        long returnValue = WriteProgressLogger.logProgressIfNecessary(documentCount);
         if (Util.MAIN_LOGGER.isTraceEnabled() && optionalJobBatchNumber > 0) {
             Util.MAIN_LOGGER.trace("Wrote batch; length: {}; job batch number: {}", documentCount, optionalJobBatchNumber);
         }
+        return returnValue;
     }
 
     boolean isUsingFileSchema() {
@@ -383,5 +400,32 @@ public class WriteContext extends ContextSupport {
 
         String extension = uri.substring(lastDot + 1).toLowerCase(Locale.ROOT);
         return streamTransformBinaryExtensions.contains(extension);
+    }
+
+    public WriteListener makeWriteListener() {
+        if (!hasOption(Options.WRITE_LISTENER_CLASS_NAME)) {
+            return null;
+        }
+
+        final String className = getStringOption(Options.WRITE_LISTENER_CLASS_NAME);
+        Object listenerInstance;
+        try {
+            Class<?> clazz = Class.forName(className);
+            Map<String, String> params = new HashMap<>();
+            forEachOptionStartingWith(Options.WRITE_LISTENER_PARAM_PREFIX, params::put);
+            listenerInstance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Failed to instantiate WriteListener class: %s", className), e);
+        }
+
+        if (listenerInstance instanceof WriteListener writeListener) {
+            return writeListener;
+        } else {
+            throw new ConnectorException(String.format("Class %s does not implement WriteListener", className));
+        }
+    }
+
+    public int getMaxFailedDocumentCount() {
+        return getIntOption(Options.WRITE_LISTENER_MAX_FAILED_DOCUMENTS, 0, 0);
     }
 }

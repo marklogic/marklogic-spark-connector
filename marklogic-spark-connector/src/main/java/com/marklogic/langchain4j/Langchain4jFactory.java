@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.langchain4j;
 
@@ -69,11 +69,24 @@ public class Langchain4jFactory implements TextSplitterFactory, EmbeddingProduce
 
         final String className = context.getStringOption(Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME);
         try {
-            Object instance = Class.forName(className).getDeclaredConstructor().newInstance();
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            if (classLoader == null) {
+                classLoader = Langchain4jFactory.class.getClassLoader();
+            }
+            Class<?> clazz = Class.forName(className, false, classLoader);
+            if (!Function.class.isAssignableFrom(clazz)) {
+                throw new ConnectorException(String.format(
+                    "Class '%s' specified for option '%s' does not implement java.util.function.Function; " +
+                    "expected a Function whose apply(Map<String, String> options) method returns an EmbeddingModel.",
+                    className, Options.WRITE_EMBEDDER_MODEL_FUNCTION_CLASS_NAME));
+            }
+            Object instance = clazz.getDeclaredConstructor().newInstance();
             @SuppressWarnings("unchecked")
             Function<Map<String, String>, EmbeddingModel> modelFunction = (Function<Map<String, String>, EmbeddingModel>) instance;
             Map<String, String> embedderOptions = makeEmbedderOptions(context);
             return Optional.of(modelFunction.apply(embedderOptions));
+        } catch (ConnectorException ex) {
+            throw ex;
         } catch (Exception ex) {
             String message = ex.getMessage();
             if (ex instanceof ClassNotFoundException) {

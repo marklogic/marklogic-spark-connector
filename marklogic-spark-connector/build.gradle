@@ -6,9 +6,6 @@ plugins {
 configurations {
   all {
     resolutionStrategy {
-      // Compile-only/test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-24281
-      force "org.apache.zookeeper:zookeeper:3.9.5"
-
       // Test-only dependency; resolves https://nvd.nist.gov/vuln/detail/CVE-2026-23907
       force "org.apache.pdfbox:pdfbox:3.0.7"
 
@@ -18,6 +15,9 @@ configurations {
 
       // Compile-only dependency, resolves CVE in 2.24.3
       force "org.apache.logging.log4j:log4j-layout-template-json:2.26.0"
+
+      // Compile/test dependency via Spark; resolves BDSA-2026-24084
+      force "at.yawk.lz4:lz4-java:1.11.1"
     }
   }
 }
@@ -27,8 +27,8 @@ configurations.configureEach {
      // This is a test-only / compile-only dependency, but doing this as it helps ensure tests pass as Flux
      // will need it bumped for sure.
      if (details.requested.group.equals("io.netty") and (details.requested.version.startsWith("4.1.") || details.requested.version.startsWith("4.2."))) {
-       details.useVersion "4.2.13.Final"
-       details.because "Forcing Spark 4.1.x to use latest Netty to minimize CVEs"
+       details.useVersion "4.2.16.Final"
+       details.because "Forcing Spark 4.x to use latest Netty to minimize CVEs"
      }
    }
  }
@@ -36,8 +36,8 @@ configurations.configureEach {
 dependencies {
   // Overrides are needed here for runtime dependencies so that Flux picks up the overridden dependency as well.
   constraints {
-    implementation("org.apache.thrift:libthrift:0.23.0") {
-      because "Bumping from 0.22.0 to 0.23.0 to eliminate several CVEs; this is brought in by jena-arq."
+    implementation("org.apache.thrift:libthrift:0.24.0") {
+      because "Bumping from 0.22.0 to 0.24.0 to eliminate several CVEs; this is brought in by jena-arq."
     }
   }
 
@@ -82,10 +82,10 @@ dependencies {
 
   // Need this so that an OkHttpClientConfigurator can be created.
   // Only needs compileOnly, as the Java Client brings this as an implementation dependency.
-  compileOnly 'com.squareup.okhttp3:okhttp:5.3.2'
+  compileOnly 'com.squareup.okhttp3:okhttp:5.4.0'
 
   // For Nuclia support
-  implementation 'com.squareup.okhttp3:okhttp-sse:5.3.2'
+  implementation 'com.squareup.okhttp3:okhttp-sse:5.4.0'
 
   // Automatic loading of test framework implementation dependencies is deprecated.
   // https://docs.gradle.org/current/userguide/upgrading_version_8.html#test_framework_implementation_dependencies
@@ -97,8 +97,10 @@ dependencies {
     exclude module: "rocksdbjni"
   }
 
-  // Supports testing the embedder feature.
-  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.11.0-beta19"
+  // Pinned to 1.14.1-beta24 (uses ai.djl.huggingface:tokenizers:0.31.1) rather than ${langchain4jVersion}-beta27
+  // (uses tokenizers:0.36.0) because 0.36.0's libtokenizers.so requires GLIBC 2.29, which is not available on
+  // the CI build server. 1.15.0-beta25 was the first version to require GLIBC 2.29.
+  testImplementation "dev.langchain4j:langchain4j-embeddings-all-minilm-l6-v2:1.14.1-beta24"
 
   testImplementation "com.marklogic:ml-app-deployer:6.2.0"
   testImplementation "com.marklogic:marklogic-junit5:2.0.0"
@@ -106,7 +108,7 @@ dependencies {
   // For asserting on log messages.
   testImplementation "io.github.hakky54:logcaptor:2.12.5"
 
-  testImplementation "ch.qos.logback:logback-classic:1.5.32"
+  testImplementation "ch.qos.logback:logback-classic:1.5.37"
   testImplementation "org.skyscreamer:jsonassert:1.5.3"
 
   testImplementation "org.apache.tika:tika-parser-microsoft-module:${tikaVersion}"
@@ -186,6 +188,18 @@ publishing {
     }
   }
   repositories {
+    // Supports publishing to a GH packages repository for GH Action workflows that are not able to access our
+    // internal repository.
+    if (project.hasProperty("ghToken") && project.hasProperty("ghPackagesUrl")) {
+      maven {
+        name = "GitHubPackages"
+        url = uri(ghPackagesUrl)
+        credentials {
+          username = ghActor
+          password = ghToken
+        }
+      }
+    }
     maven {
       if (project.hasProperty("mavenUser")) {
         credentials {

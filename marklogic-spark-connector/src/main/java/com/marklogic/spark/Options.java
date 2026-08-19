@@ -133,6 +133,26 @@ public abstract class Options {
     public static final String READ_FILES_ABORT_ON_FAILURE = "spark.marklogic.read.files.abortOnFailure";
     public static final String READ_ARCHIVES_CATEGORIES = "spark.marklogic.read.archives.categories";
 
+    /**
+     * Maximum number of uncompressed bytes that may be read from a single zip archive entry.
+     * Defaults to 0 (disabled). Any value less than 1 disables the limit. Set to a positive
+     * integer to enable protection; a value of 268,435,456 (256 MB) is a reasonable starting
+     * point for most use cases.
+     *
+     * @since 3.1.2
+     */
+    public static final String READ_ZIP_MAX_UNCOMPRESSED_ENTRY_BYTES = "spark.marklogic.read.zip.maxUncompressedEntryBytes";
+
+    /**
+     * Maximum number of entries that may be iterated in a single zip archive.
+     * Defaults to 0 (disabled). Any value less than 1 disables the limit. Set to a positive
+     * integer to enable protection; a value of 100,000 is a reasonable starting point for most
+     * use cases.
+     *
+     * @since 3.1.2
+     */
+    public static final String READ_ZIP_MAX_ENTRY_COUNT = "spark.marklogic.read.zip.maxEntryCount";
+
     // "Aggregate" = an XML document containing N child elements, each of which should become a row / document.
     // "xml" is included in the name in anticipation of eventually supporting "aggregate JSON" - i.e. an array of N
     // objects, where each object should become a row / document (this is different from JSON lines format).
@@ -145,6 +165,24 @@ public abstract class Options {
     public static final String WRITE_THREAD_COUNT = "spark.marklogic.write.threadCount";
     public static final String WRITE_THREAD_COUNT_PER_PARTITION = "spark.marklogic.write.threadCountPerPartition";
     public static final String WRITE_ABORT_ON_FAILURE = "spark.marklogic.write.abortOnFailure";
+
+    /**
+     * @since 3.2.0
+     */
+    public static final String WRITE_LISTENER_CLASS_NAME = "spark.marklogic.write.listener.className";
+
+    /**
+     * @since 3.2.0
+     */
+    public static final String WRITE_LISTENER_PARAM_PREFIX = "spark.marklogic.write.listener.param.";
+
+    /**
+     * Max number of failed documents to include in the message sent to the write listener when commit is called on
+     * {@code MarkLogicWrite}.
+     *
+     * @since 3.2.0
+     */
+    public static final String WRITE_LISTENER_MAX_FAILED_DOCUMENTS = "spark.marklogic.write.listener.maxFailedDocuments";
 
     // For logging progress when writing documents or processing with custom code. Defines the interval at which
     // progress should be logged - e.g. a value of 10,000 will result in a message being logged on every 10,000 items
@@ -580,6 +618,20 @@ public abstract class Options {
      * @since 2.6.0
      */
     public static final String WRITE_CLASSIFIER_BATCH_SIZE = "spark.marklogic.write.classifier.batchSize";
+
+    /**
+     * Defines the socket timeout in seconds for classification requests.
+     *
+     * @since 3.1.2
+     */
+    public static final String WRITE_CLASSIFIER_SOCKET_TIMEOUT = "spark.marklogic.write.classifier.socketTimeout";
+
+    /**
+     * Defines the connection timeout in seconds for classification requests.
+     *
+     * @since 3.1.2
+     */
+    public static final String WRITE_CLASSIFIER_CONNECTION_TIMEOUT = "spark.marklogic.write.classifier.connectionTimeout";
 
     /**
      * Allows for passing any additional options to the text classifier.

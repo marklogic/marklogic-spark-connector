@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.reader.optic;
 
@@ -11,11 +11,13 @@ import org.apache.spark.sql.connector.expressions.SortOrder;
 import org.apache.spark.sql.connector.expressions.aggregate.*;
 import org.apache.spark.sql.connector.read.*;
 import org.apache.spark.sql.sources.Filter;
+import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, SupportsPushDownLimit,
@@ -63,11 +65,14 @@ public class OpticScanBuilder implements ScanBuilder, SupportsPushDownFilters, S
 
         List<Filter> unsupportedFilters = new ArrayList<>();
         List<OpticFilter> opticFilters = new ArrayList<>();
+        final Set<String> knownColumnNames = Arrays.stream(opticReadContext.getSchema().fields())
+            .map(StructField::name)
+            .collect(Collectors.toSet());
         if (logger.isDebugEnabled()) {
             logger.debug("Filter count: {}", filters.length);
         }
         for (Filter filter : filters) {
-            OpticFilter opticFilter = FilterFactory.toPlanFilter(filter);
+            OpticFilter opticFilter = FilterFactory.toPlanFilter(filter, knownColumnNames);
             if (opticFilter != null && opticFilter.isValid()) {
                 if (logger.isDebugEnabled()) {
                     logger.debug("Pushing down filter: {}", filter);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.dom;
 
@@ -41,7 +41,7 @@ public class DOMHelper {
     public DOMHelper(NamespaceContext namespaceContext) {
         // This can be reused for multiple calls, which will only be in the context of a single partition writer and
         // thus we don't need to worry about thread safety for it.
-        this.documentBuilderFactory = DocumentBuilderFactory.newInstance();
+        this.documentBuilderFactory = newSecureDocumentBuilderFactory();
         this.documentBuilderFactory.setNamespaceAware(true);
         this.namespaceContext = namespaceContext;
     }
@@ -90,6 +90,28 @@ public class DOMHelper {
                 purposeForErrorMessage, xpathExpression, message), e
             );
         }
+    }
+
+    public static DocumentBuilderFactory newSecureDocumentBuilderFactory() {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        try {
+            // Disallows DOCTYPE declarations entirely, which prevents all XXE attacks.
+            // Recommended by OWASP and mirrored by Sonar rule java:S2755.
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+
+            // Defense-in-depth: disallow any external access via JAXP properties.
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+        } catch (ParserConfigurationException | IllegalArgumentException e) {
+            throw new ConnectorException(
+                String.format("Unable to configure secure XML document builder; cause: %s", e.getMessage()), e);
+        }
+        factory.setExpandEntityReferences(false);
+        return factory;
     }
 
     public static TransformerFactory newTransformerFactory() throws TransformerConfigurationException {

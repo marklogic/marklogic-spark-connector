@@ -6,6 +6,7 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.api.WriteListener;
 import com.marklogic.spark.reader.customcode.CustomCodeContext;
 import com.marklogic.spark.writer.customcode.CustomCodeWriterFactory;
 import com.marklogic.spark.writer.rdf.GraphWriter;
@@ -19,17 +20,15 @@ import org.apache.spark.sql.connector.write.streaming.StreamingDataWriterFactory
 import org.apache.spark.sql.connector.write.streaming.StreamingWrite;
 import org.apache.spark.util.SerializableConfiguration;
 
+import java.io.Closeable;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 
 public class MarkLogicWrite implements BatchWrite, StreamingWrite {
 
-    private WriteContext writeContext;
-
-    // Used solely for testing. Will never be populated in a real world scenario.
-    private static Consumer<Integer> successCountConsumer;
-    private static Consumer<Integer> failureCountConsumer;
+    private final WriteContext writeContext;
 
     MarkLogicWrite(WriteContext writeContext) {
         this.writeContext = writeContext;
@@ -56,29 +55,24 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
     @Override
     public void commit(WriterCommitMessage[] messages) {
         if (messages != null && messages.length > 0) {
-            final CommitResults commitResults = aggregateCommitMessages(messages);
-            if (!commitResults.graphs.isEmpty()) {
+            final WriteListener.CommitResults commitResults = aggregateCommitMessages(messages);
+            if (!commitResults.getGraphs().isEmpty()) {
                 try (DatabaseClient client = writeContext.connectToMarkLogic()) {
                     GraphWriter graphWriter = new GraphWriter(client, writeContext.getProperties().get(Options.WRITE_PERMISSIONS));
-                    graphWriter.createGraphs(commitResults.graphs);
+                    graphWriter.createGraphs(commitResults.getGraphs());
                 }
             }
 
-            if (successCountConsumer != null) {
-                successCountConsumer.accept(commitResults.successCount);
-            }
-            if (failureCountConsumer != null) {
-                failureCountConsumer.accept(commitResults.failureCount);
-            }
+            invokeCommitListener(commitResults);
 
             if (Util.MAIN_LOGGER.isInfoEnabled()) {
-                Util.MAIN_LOGGER.info("Success count: {}", commitResults.successCount);
-                if (commitResults.skippedCount > 0) {
-                    Util.MAIN_LOGGER.info("Skipped count: {}", commitResults.skippedCount);
+                Util.MAIN_LOGGER.info("Success count: {}", commitResults.getSuccessCount());
+                if (commitResults.getSkippedCount() > 0) {
+                    Util.MAIN_LOGGER.info("Skipped count: {}", commitResults.getSkippedCount());
                 }
             }
-            if (commitResults.failureCount > 0) {
-                Util.MAIN_LOGGER.error("Failure count: {}", commitResults.failureCount);
+            if (commitResults.getFailureCount() > 0) {
+                Util.MAIN_LOGGER.error("Failure count: {}", commitResults.getFailureCount());
             }
         }
     }
@@ -127,11 +121,15 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
         }
     }
 
-    private CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
-        int successCount = 0;
-        int failureCount = 0;
-        int skippedCount = 0;
+    private WriteListener.CommitResults aggregateCommitMessages(WriterCommitMessage[] messages) {
+        long successCount = 0;
+        long failureCount = 0;
+        long skippedCount = 0;
         Set<String> graphs = new HashSet<>();
+
+        final int maxFailedDocumentCount = writeContext.getMaxFailedDocumentCount();
+        final Map<String, String> failedDocuments = new HashMap<>();
+
         for (WriterCommitMessage message : messages) {
             CommitMessage msg = (CommitMessage) message;
             successCount += msg.successItemCount();
@@ -140,22 +138,35 @@ public class MarkLogicWrite implements BatchWrite, StreamingWrite {
             if (msg.graphs() != null) {
                 graphs.addAll(msg.graphs());
             }
+            if (msg.failedDocuments() != null) {
+                msg.failedDocuments().forEach((key, value) -> {
+                    if (failedDocuments.size() < maxFailedDocumentCount) {
+                        failedDocuments.put(key, value);
+                    }
+                });
+            }
         }
-        return new CommitResults(successCount, failureCount, skippedCount, graphs);
+
+        return new WriteListener.CommitResults(successCount, skippedCount, failureCount, graphs, failedDocuments);
     }
 
-    /**
-     * Aggregates the results of each CommitMessage.
-     */
-    private record CommitResults(int successCount, int failureCount, int skippedCount, Set<String> graphs) {
-    }
+    private void invokeCommitListener(WriteListener.CommitResults commitResults) {
+        final WriteListener writeListener = writeContext.makeWriteListener();
+        if (writeListener != null) {
+            Util.MAIN_LOGGER.debug("Invoking commit listener: {}", writeListener.getClass().getName());
+            try {
+                writeListener.onWriteCommit(commitResults);
+            } catch (Exception e) {
+                Util.MAIN_LOGGER.warn("Commit listener failed; cause: " + e.getMessage(), e);
+            }
 
-    public static void setSuccessCountConsumer(Consumer<Integer> consumer) {
-        successCountConsumer = consumer;
+            if (writeListener instanceof Closeable) {
+                try {
+                    ((Closeable) writeListener).close();
+                } catch (Exception e) {
+                    Util.MAIN_LOGGER.warn("Failed to close write listener; cause: " + e.getMessage(), e);
+                }
+            }
+        }
     }
-
-    public static void setFailureCountConsumer(Consumer<Integer> consumer) {
-        failureCountConsumer = consumer;
-    }
-
 }

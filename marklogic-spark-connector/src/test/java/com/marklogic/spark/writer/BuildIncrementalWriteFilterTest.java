@@ -85,6 +85,6 @@ class BuildIncrementalWriteFilterTest {
     private void buildFilter() {
         StructType schemaDoesntMatterForThisTest = DocumentRowSchema.SCHEMA;
         WriteContext context = new WriteContext(schemaDoesntMatterForThisTest, options);
-        filter = context.buildIncrementalWriteFilter(n -> {});
+        filter = context.buildIncrementalWriteFilter(n -> {}, null);
     }
 }

@@ -107,6 +107,25 @@ which may be appropriate in a development or test environment. The
 [MarkLogic Java Client documentation](https://docs.marklogic.com/javadoc/client/com/marklogic/client/DatabaseClientFactory.SSLHostnameVerifier.html)
 describes the other choices for this option.
 
+## Security considerations
+
+Some connector options can contain credential or secret values, including connection-related options such as
+`spark.marklogic.client.password`.
+
+Spark may expose connector options in Spark UI pages and event logs consumed by the Spark History Server. In many
+cluster environments, the History Server is reachable by all cluster users unless additional access controls are
+configured. Without Spark redaction, credential values may appear in job metadata and error output.
+
+To reduce this risk, configure Spark redaction so that sensitive option keys are masked (such as option names
+containing `password`, `apikey`, `connectionString`, `secret`, or `token`):
+
+```
+spark.redaction.regex=(?i).*password.*|.*apikey.*|.*connectionstring.*|.*secret.*|.*token.*
+```
+
+You can apply this in Spark defaults, via `spark-submit --conf`, or in session configuration before loading data.
+This is a defense-in-depth measure; operators should also enable Spark UI authentication and TLS.
+
 ## Read options
 
 See [the guide on reading](reading-data/reading.md) for more information on how data is read from MarkLogic.
@@ -130,9 +149,9 @@ The following options control how the connector reads rows from MarkLogic via cu
 | --- | --- |
 | spark.marklogic.read.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.javascript | JavaScript code to execute. |
-| spark.marklogic.read.javascriptFile | Local file path containing JavaScript code to execute. |
+| spark.marklogic.read.javascriptFile | Local file path containing JavaScript code to execute; the file is read from the Spark executor's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.read.xquery | XQuery code to execute. |
-| spark.marklogic.read.xqueryFile | Local file path containing XQuery code to execute. |
+| spark.marklogic.read.xqueryFile | Local file path containing XQuery code to execute; the file is read from the Spark executor's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.read.vars. | Prefix for user-defined variables to be sent to the custom code. |
 
 If you are using Spark's streaming support with custom code, or you need to break up your custom code query into 
@@ -142,9 +161,9 @@ multiple queries, the following options can also be used to control how partitio
 | --- | --- |
 | spark.marklogic.read.partitions.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.read.partitions.javascript | JavaScript code to execute. |
-| spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute. |
+| spark.marklogic.read.partitions.javascriptFile | Local file path containing JavaScript code to execute; the file is read from the Spark driver's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.read.partitions.xquery | XQuery code to execute. |
-| spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute. |
+| spark.marklogic.read.partitions.xqueryFile | Local file path containing XQuery code to execute; the file is read from the Spark driver's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.read.partitions.vars. | Prefix for user-defined variables to be sent to the partition code. |
 
 ### Read options for documents
@@ -219,9 +238,9 @@ The following options control how rows can be processed with custom code in Mark
 | spark.marklogic.write.batchSize | The number of rows sent in a call to MarkLogic; defaults to 1. |
 | spark.marklogic.write.invoke | The path to a module to invoke; the module must be in your application's modules database. |
 | spark.marklogic.write.javascript | JavaScript code to execute. |
-| spark.marklogic.write.javascriptFile | Local file path containing JavaScript code to execute. |
+| spark.marklogic.write.javascriptFile | Local file path containing JavaScript code to execute; the file is read from the Spark executor's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.write.xquery | XQuery code to execute. |
-| spark.marklogic.write.xqueryFile | Local file path containing XQuery code to execute. |
+| spark.marklogic.write.xqueryFile | Local file path containing XQuery code to execute; the file is read from the Spark executor's local filesystem and access is governed by OS-level file permissions. |
 | spark.marklogic.write.externalVariableName | Name of the external variable in custom code that is populated with row values; defaults to `URI`. |
 | spark.marklogic.write.externalVariableDelimiter | Delimiter used when multiple row values are sent in a single call; defaults to a comma. |
 | spark.marklogic.write.vars. | Prefix for user-defined variables to be sent to the custom code. |

@@ -10,7 +10,6 @@ import nl.altindag.log.LogCaptor;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,6 +21,7 @@ class IncrementalWriteTest extends AbstractWriteTest {
         try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             newWriter(1)
                 .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .option(Options.WRITE_BATCH_SIZE, 20)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .option(Options.WRITE_LOG_PROGRESS, 50)
@@ -29,10 +29,15 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 .option(Options.WRITE_LOG_SKIPPED_DOCUMENTS, 50)
                 .save();
 
+            assertEquals(200, CommitResultsTestConsumer.successCount.get());
+            assertEquals(0, CommitResultsTestConsumer.skippedCount.get());
+            assertEquals(0, CommitResultsTestConsumer.loggedSkippedCounts.size());
             Stream.of(50, 100, 150, 200).forEach(count -> {
                 String message = "Documents written: " + count;
                 verifyMessageWasLogged(logCaptor, message);
                 verifyNoMessageContains(logCaptor, "Documents skipped");
+                assertTrue(CommitResultsTestConsumer.loggedSuccessCounts.contains(Long.valueOf(count)),
+                    "Did not find count " + count + " in " + CommitResultsTestConsumer.loggedSuccessCounts);
             });
 
             verifyMessageWasLogged(logCaptor, "Success count: 200");
@@ -44,10 +49,13 @@ class IncrementalWriteTest extends AbstractWriteTest {
         assertFalse(metadata.getMetadataValues().containsKey("incrementalWriteTimestamp"));
         assertEquals(1, metadata.getMetadataValues().size());
 
+        CommitResultsTestConsumer.reset();
+
         // Write the same documents again and verify documents are skipped instead of written.
         try (LogCaptor logCaptor = LogCaptor.forName(Util.MAIN_LOGGER.getName())) {
             newWriter(1)
                 .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .option(Options.WRITE_BATCH_SIZE, 20)
                 .option(Options.WRITE_THREAD_COUNT, 1)
                 .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}.json")
@@ -55,9 +63,15 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 .option(Options.WRITE_LOG_SKIPPED_DOCUMENTS, 50)
                 .save();
 
+            assertEquals(0, CommitResultsTestConsumer.successCount.get());
+            assertEquals(200, CommitResultsTestConsumer.skippedCount.get());
+            assertEquals(0, CommitResultsTestConsumer.loggedSuccessCounts.size());
+
             Stream.of(50, 100, 150, 200).forEach(count -> {
                 String message = "Documents skipped: " + count;
                 verifyMessageWasLogged(logCaptor, message);
+                assertTrue(CommitResultsTestConsumer.loggedSkippedCounts.contains(Long.valueOf(count)),
+                    "Did not find count " + count + " in " + CommitResultsTestConsumer.loggedSkippedCounts);
             });
 
             verifyNoMessageContains(logCaptor, "Documents written");
@@ -101,10 +115,7 @@ class IncrementalWriteTest extends AbstractWriteTest {
 
     @Test
     void filterErrorShouldNotBeRetried() {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
-        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+        CommitResultsTestConsumer.reset();
 
         try {
             newSparkSession().read()
@@ -121,18 +132,18 @@ class IncrementalWriteTest extends AbstractWriteTest {
                 // Setting this to false normally causes the BatchRetrier to kick in and retry failed batches,
                 // but it shouldn't due to the filter error being non-retryable.
                 .option(Options.WRITE_ABORT_ON_FAILURE, false)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
                 .mode(SaveMode.Append)
                 .save();
 
-            assertEquals(0, successCount.get());
-            assertEquals(32, failureCount.get(), "All rows in the test file should have failed.");
+            assertEquals(0, CommitResultsTestConsumer.successCount.get());
+            assertEquals(32, CommitResultsTestConsumer.failureCount.get(), "All rows in the test file should have failed.");
             assertCollectionSize(
                 "No data should have been written due to the filter error",
                 "parquet-test", 0
             );
         } finally {
-            MarkLogicWrite.setFailureCountConsumer(null);
-            MarkLogicWrite.setSuccessCountConsumer(null);
+            CommitResultsTestConsumer.reset();
         }
     }
 

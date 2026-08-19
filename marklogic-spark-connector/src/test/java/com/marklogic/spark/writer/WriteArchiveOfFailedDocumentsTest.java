@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -9,7 +9,6 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import scala.collection.Seq;
@@ -19,25 +18,17 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
 
-    @AfterEach
-    void afterEach() {
-        MarkLogicWrite.setFailureCountConsumer(null);
-        MarkLogicWrite.setSuccessCountConsumer(null);
-    }
-
     @Test
     void happyPath(@TempDir Path tempDir) {
-        AtomicInteger successCount = new AtomicInteger();
-        AtomicInteger failureCount = new AtomicInteger();
-        MarkLogicWrite.setSuccessCountConsumer(successCount::set);
-        MarkLogicWrite.setFailureCountConsumer(failureCount::set);
+        CommitResultsTestConsumer.reset();
 
         SparkSession session = newSparkSession();
 
@@ -48,13 +39,22 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
             .option(Options.WRITE_COLLECTIONS, "partial-batch")
             .option(Options.WRITE_URI_SUFFIX, ".json")
             .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_URI_REPLACE, ".*/mixed-files,''")
             .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, tempDir.toFile().getAbsolutePath())
+            .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+            .option(Options.WRITE_LISTENER_MAX_FAILED_DOCUMENTS, 5)
         );
 
         assertCollectionSize("Only the JSON document should have succeeded; error messages should have been logged " +
             "for the other 3 documents.", "partial-batch", 1);
-        assertEquals(1, successCount.get());
-        assertEquals(3, failureCount.get());
+        assertEquals(1, CommitResultsTestConsumer.successCount.get());
+        assertEquals(3, CommitResultsTestConsumer.failureCount.get());
+
+        assertEquals(3, CommitResultsTestConsumer.failedDocuments.size(),
+            "The onWriteCommit method should have captured the 3 failures and their URIs.");
+        Set<String> failedUris = CommitResultsTestConsumer.failedDocuments.keySet();
+        Stream.of("/hello.txt.json", "/hello.xml.json", "/hello2.txt.gz.json").forEach(uri ->
+            assertTrue(failedUris.contains(uri), "Expected failed URI not found: " + uri + "; URIs: " + failedUris));
 
         // Read the archive file back in and verify the contents.
         List<Row> rows = session.read().format(CONNECTOR_IDENTIFIER)

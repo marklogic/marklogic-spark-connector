@@ -295,6 +295,10 @@ You can specify local file paths containing either JavaScript or XQuery code via
 .option("spark.marklogic.read.secondaryUris.javascriptFile", "/path/to/findRelatedAuthors.js") \
 ```
 
+**Security note:** These options read files from the local filesystem of the Spark executor process. The connector
+does not restrict which paths may be specified. Access to files on the executor host is determined by the OS-level
+file permissions of the user running the Spark executor; ensure appropriate permissions are in place on the executor host.
+
 ### Custom external variables
 
 You can pass external variables to your secondary query code by configuring options with names starting with `spark.marklogic.read.secondaryUris.vars.`. The remainder of the option name will be used as the external variable name:

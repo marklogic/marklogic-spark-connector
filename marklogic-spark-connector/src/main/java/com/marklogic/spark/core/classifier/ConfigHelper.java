@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -22,6 +22,8 @@ class ConfigHelper {
     private final String protocol;
     private final String classifierPath;
     private final String tokenEndpoint;
+    private final int socketTimeoutSeconds;
+    private final int connectionTimeoutSeconds;
     private final Map<String, String> additionalParameters = new HashMap<>();
 
     ConfigHelper(Context context) {
@@ -30,6 +32,8 @@ class ConfigHelper {
         this.protocol = "true".equalsIgnoreCase(context.getStringOption(Options.WRITE_CLASSIFIER_HTTP)) ? "http" : "https";
         this.classifierPath = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_PATH, "/"));
         this.tokenEndpoint = fixPath(context.getStringOption(Options.WRITE_CLASSIFIER_TOKEN_PATH, "/token"));
+        this.socketTimeoutSeconds = context.getIntOption(Options.WRITE_CLASSIFIER_SOCKET_TIMEOUT, -1, 1);
+        this.connectionTimeoutSeconds = context.getIntOption(Options.WRITE_CLASSIFIER_CONNECTION_TIMEOUT, -1, 1);
 
         context.getProperties().forEach((key, value) -> {
             if (key.startsWith(Options.WRITE_CLASSIFIER_OPTION_PREFIX)) {
@@ -49,6 +53,12 @@ class ConfigHelper {
         config.setHostPort(port);
         config.setProtocol(protocol);
         config.setHostPath(classifierPath);
+        if (socketTimeoutSeconds > 0) {
+            config.setSocketTimeoutMS(socketTimeoutSeconds * 1000);
+        }
+        if (connectionTimeoutSeconds > 0) {
+            config.setConnectionTimeoutMS(connectionTimeoutSeconds * 1000);
+        }
         if (!this.additionalParameters.isEmpty()) {
             config.setAdditionalParameters(additionalParameters);
         }
