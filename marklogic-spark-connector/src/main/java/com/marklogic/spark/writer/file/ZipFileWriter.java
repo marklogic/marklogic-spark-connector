@@ -7,6 +7,7 @@ import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.ContextSupport;
 import com.marklogic.spark.Options;
 import com.marklogic.spark.Util;
+import com.marklogic.spark.api.FileWriteListener;
 import com.marklogic.spark.reader.document.DocumentRowSchema;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -19,6 +20,7 @@ import org.apache.spark.util.SerializableConfiguration;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
@@ -71,6 +73,15 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     private int zipEntryCounter;
     private boolean hasLoggedThresholdWarning;
 
+    // Support for notifying a FileWriteListener as URIs are processed. Distinct from zipEntryCounter above, which
+    // increments once per zip entry (content and, when present, metadata are each their own entry) -- a caller
+    // reporting on "documents processed" wants one count per URI regardless of whether it produced one or two
+    // zip entries.
+    private final FileWriteListener fileWriteListener;
+    private final long fileWriteListenerProgressInterval;
+    private long uriCounter;
+    private long nextFileWriteListenerThreshold;
+
     ZipFileWriter(Map<String, String> properties, SerializableConfiguration hadoopConfiguration, int partitionId) {
         this(properties.get("path"), properties, hadoopConfiguration, partitionId, true);
     }
@@ -82,11 +93,42 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         this.context = new ContextSupport(properties);
         this.hadoopConfiguration = hadoopConfiguration;
         this.warnThreshold = context.getIntOption(Options.WRITE_FILES_ZIP_WARN_THRESHOLD, DEFAULT_WARN_THRESHOLD, 0);
+        this.fileWriteListener = makeFileWriteListener(properties);
+        this.fileWriteListenerProgressInterval = context.getIntOption(Options.WRITE_FILES_LISTENER_PROGRESS_INTERVAL, 0, 0);
+        this.nextFileWriteListenerThreshold = fileWriteListenerProgressInterval;
 
         if (createZipFileImmediately) {
             createZipFileAndContentWriter();
         }
     }
+
+    private static FileWriteListener makeFileWriteListener(Map<String, String> properties) {
+        final String className = properties.get(Options.WRITE_FILES_LISTENER_CLASS_NAME);
+        if (className == null || className.isEmpty()) {
+            return null;
+        }
+
+        Map<String, String> params = new HashMap<>();
+        properties.forEach((key, value) -> {
+            if (key.startsWith(Options.WRITE_FILES_LISTENER_PARAM_PREFIX)) {
+                params.put(key.substring(Options.WRITE_FILES_LISTENER_PARAM_PREFIX.length()), value);
+            }
+        });
+
+        Object listenerInstance;
+        try {
+            Class<?> clazz = Class.forName(className);
+            listenerInstance = clazz.getDeclaredConstructor(Map.class).newInstance(params);
+        } catch (Exception e) {
+            throw new ConnectorException(String.format("Failed to instantiate FileWriteListener class: %s", className), e);
+        }
+
+        if (listenerInstance instanceof FileWriteListener fileWriteListener) {
+            return fileWriteListener;
+        }
+        throw new ConnectorException(String.format("Class %s does not implement FileWriteListener", className));
+    }
+
 
     @Override
     public void write(InternalRow row) throws IOException {
@@ -122,6 +164,8 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
             zipEntryCounter++;
         }
         logThresholdWarningIfNecessary();
+        uriCounter++;
+        notifyFileWriteListenerIfNecessary();
     }
 
     @Override
@@ -132,6 +176,10 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
 
     @Override
     public WriterCommitMessage commit() {
+        if (fileWriteListener != null) {
+            // Always report the true final count, even if it didn't land exactly on a progress-interval boundary.
+            fileWriteListener.onUrisProcessed(uriCounter);
+        }
         return new ZipCommitMessage(path, zipPath.toString(), zipEntryCounter);
     }
 
@@ -237,6 +285,16 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
                 zipPath.getName(), zipEntryCounter
             );
             hasLoggedThresholdWarning = true;
+        }
+    }
+
+    private void notifyFileWriteListenerIfNecessary() {
+        if (fileWriteListener == null || fileWriteListenerProgressInterval <= 0) {
+            return;
+        }
+        if (uriCounter >= nextFileWriteListenerThreshold) {
+            fileWriteListener.onUrisProcessed(uriCounter);
+            nextFileWriteListenerThreshold += fileWriteListenerProgressInterval;
         }
     }
 
