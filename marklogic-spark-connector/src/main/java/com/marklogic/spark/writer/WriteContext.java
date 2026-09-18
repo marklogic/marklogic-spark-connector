@@ -157,6 +157,7 @@ public class WriteContext extends ContextSupport {
             )
             .canonicalizeJson(getBooleanOption(Options.WRITE_INCREMENTAL_CANONICALIZE_JSON, true))
             .hashKeyName(getStringOption(Options.WRITE_INCREMENTAL_HASH_KEY_NAME))
+            .sourceUriKeyName(getStringOption(Options.WRITE_INCREMENTAL_SOURCE_URI_KEY_NAME))
             .timestampKeyName(getStringOption(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME))
             .onDocumentsSkipped(skippedDocs -> {
                 long totalSkippedCount = WriteProgressLogger.logSkippedProgressIfNecessary(skippedDocs.length);
