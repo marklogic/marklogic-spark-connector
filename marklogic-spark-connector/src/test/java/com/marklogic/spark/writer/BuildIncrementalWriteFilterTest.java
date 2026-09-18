@@ -50,6 +50,7 @@ class BuildIncrementalWriteFilterTest {
     @Test
     void everyOption() {
         options.put(Options.WRITE_INCREMENTAL_HASH_KEY_NAME, "customHash");
+        options.put(Options.WRITE_INCREMENTAL_SOURCE_URI_KEY_NAME, "mySourceUri");
         options.put(Options.WRITE_INCREMENTAL_TIMESTAMP_KEY_NAME, "customTimestamp");
         options.put(Options.WRITE_INCREMENTAL_SCHEMA, "mySchema");
         options.put(Options.WRITE_INCREMENTAL_VIEW, "myView");
@@ -62,6 +63,7 @@ class BuildIncrementalWriteFilterTest {
         IncrementalWriteConfig config = filter.getConfig();
         assertNotNull(config.getSkippedDocumentsConsumer());
         assertEquals("customHash", config.getHashKeyName());
+        assertEquals("mySourceUri", config.getSourceUriKeyName());
         assertEquals("customTimestamp", config.getTimestampKeyName());
         assertEquals("mySchema", config.getSchemaName());
         assertEquals("myView", config.getViewName());
