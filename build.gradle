@@ -41,6 +41,17 @@ subprojects {
     maven {
       url = "https://bed-artifactory.bedford.progress.com:443/artifactory/ml-maven-snapshots/"
     }
+
+    // Allows for resolving the Spark connector dependency from a GH packages repository.
+    if (project.hasProperty("ghPackagesUrl")) {
+      maven {
+        url ghPackagesUrl
+        credentials {
+          username = ghActor
+          password = ghToken
+        }
+      }
+    }
   }
 
   test {
