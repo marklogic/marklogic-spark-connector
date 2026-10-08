@@ -13,6 +13,9 @@ public interface ChunkAssemblerFactory {
     static ChunkAssembler makeChunkAssembler(Context context) {
         DocumentMetadataHandle metadata = new DocumentMetadataHandle();
 
+        boolean inheritCollections = context.getBooleanOption(Options.WRITE_SPLITTER_SIDECAR_INHERIT_COLLECTIONS, false);
+        boolean inheritPermissions = context.getBooleanOption(Options.WRITE_SPLITTER_SIDECAR_INHERIT_PERMISSIONS, false);
+
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS)) {
             metadata.getCollections().addAll(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS).split(","));
         }
@@ -20,13 +23,15 @@ public interface ChunkAssemblerFactory {
         if (context.hasOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_PERMISSIONS);
             Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
-        } else if (context.hasOption(Options.WRITE_PERMISSIONS)) {
+        } else if (!inheritPermissions && context.hasOption(Options.WRITE_PERMISSIONS)) {
             String value = context.getStringOption(Options.WRITE_PERMISSIONS);
             Util.addPermissionsFromDelimitedString(metadata.getPermissions(), value);
         }
 
         return new DefaultChunkAssembler(new ChunkConfig.Builder()
             .withMetadata(metadata)
+            .withInheritCollections(inheritCollections)
+            .withInheritPermissions(inheritPermissions)
             .withMaxChunks(context.getIntOption(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1, 0))
             .withDocumentType(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_DOCUMENT_TYPE))
             .withRootName(context.getStringOption(Options.WRITE_SPLITTER_SIDECAR_ROOT_NAME))
