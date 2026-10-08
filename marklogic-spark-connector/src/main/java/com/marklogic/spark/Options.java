@@ -376,6 +376,20 @@ public abstract class Options {
     public static final String WRITE_SPLITTER_SIDECAR_PERMISSIONS = WRITE_SPLITTER_PREFIX + "sidecar.permissions";
 
     /**
+     * Whether sidecar chunk documents should inherit the collections of their source document.
+     *
+     * @since 3.2.0
+     */
+    public static final String WRITE_SPLITTER_SIDECAR_INHERIT_COLLECTIONS = WRITE_SPLITTER_PREFIX + "sidecar.inheritCollections";
+
+    /**
+     * Whether sidecar chunk documents should inherit the permissions of their source document.
+     *
+     * @since 3.2.0
+     */
+    public static final String WRITE_SPLITTER_SIDECAR_INHERIT_PERMISSIONS = WRITE_SPLITTER_PREFIX + "sidecar.inheritPermissions";
+
+    /**
      * Root name for a JSON or XML sidecar chunk document.
      *
      * @since 2.5.0

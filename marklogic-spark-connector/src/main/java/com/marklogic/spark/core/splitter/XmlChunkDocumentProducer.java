@@ -6,6 +6,7 @@ package com.marklogic.spark.core.splitter;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
 import com.marklogic.client.io.DOMHandle;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
@@ -74,8 +75,11 @@ class XmlChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "xml");
+        DocumentMetadataHandle sourceMeta = sourceDocument.getMetadata() instanceof DocumentMetadataHandle
+            ? (DocumentMetadataHandle) sourceDocument.getMetadata()
+            : null;
         return new DocumentAndChunks(
-            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new DOMHandle(doc)),
+            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.buildChunkMetadata(sourceMeta), new DOMHandle(doc)),
             addedChunks
         );
     }
