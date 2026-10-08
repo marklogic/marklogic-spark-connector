@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.marklogic.client.document.DocumentWriteOperation;
 import com.marklogic.client.impl.DocumentWriteOperationImpl;
+import com.marklogic.client.io.DocumentMetadataHandle;
 import com.marklogic.client.io.Format;
 import com.marklogic.client.io.JacksonHandle;
 import com.marklogic.client.io.marker.AbstractWriteHandle;
@@ -106,8 +107,11 @@ class JsonChunkDocumentProducer extends AbstractChunkDocumentProducer {
         }
 
         final String chunkDocumentUri = makeChunkDocumentUri(sourceDocument, "json");
+        DocumentMetadataHandle sourceMeta = sourceDocument.getMetadata() instanceof DocumentMetadataHandle
+            ? (DocumentMetadataHandle) sourceDocument.getMetadata()
+            : null;
         return new DocumentAndChunks(
-            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.getMetadata(), new JacksonHandle(doc)),
+            new DocumentWriteOperationImpl(chunkDocumentUri, chunkConfig.buildChunkMetadata(sourceMeta), new JacksonHandle(doc)),
             chunks
         );
     }

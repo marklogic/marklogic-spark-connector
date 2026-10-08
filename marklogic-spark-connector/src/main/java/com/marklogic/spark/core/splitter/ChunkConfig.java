@@ -13,6 +13,8 @@ import com.marklogic.spark.Util;
 public class ChunkConfig {
 
     private final DocumentMetadataHandle metadata;
+    private final boolean inheritCollections;
+    private final boolean inheritPermissions;
     private final int maxChunks;
     private final String documentType;
     private final String rootName;
@@ -25,10 +27,13 @@ public class ChunkConfig {
 
     // Ignoring Sonar warning about too many constructor args, as that's mitigated via the builder.
     @SuppressWarnings("java:S107")
-    private ChunkConfig(DocumentMetadataHandle metadata, int maxChunks, String documentType, String rootName,
+    private ChunkConfig(DocumentMetadataHandle metadata, boolean inheritCollections, boolean inheritPermissions,
+                        int maxChunks, String documentType, String rootName,
                         String embeddingName,
                         String xmlNamespace, String embeddingXmlNamespace, String uriPrefix, String uriSuffix, boolean base64EncodeVectors) {
         this.metadata = metadata;
+        this.inheritCollections = inheritCollections;
+        this.inheritPermissions = inheritPermissions;
         this.maxChunks = maxChunks;
         this.documentType = documentType;
         this.rootName = rootName;
@@ -42,6 +47,8 @@ public class ChunkConfig {
 
     public static class Builder {
         private DocumentMetadataHandle metadata;
+        private boolean inheritCollections = false;
+        private boolean inheritPermissions = false;
         private int maxChunks;
         private String documentType;
         private String rootName;
@@ -53,12 +60,22 @@ public class ChunkConfig {
         private boolean base64EncodeVectors = false;
 
         public ChunkConfig build() {
-            return new ChunkConfig(metadata, maxChunks, documentType, rootName, embeddingName,
+            return new ChunkConfig(metadata, inheritCollections, inheritPermissions, maxChunks, documentType, rootName, embeddingName,
                 xmlNamespace, embeddingXmlNamespace, uriPrefix, uriSuffix, base64EncodeVectors);
         }
 
         public Builder withMetadata(DocumentMetadataHandle metadata) {
             this.metadata = metadata;
+            return this;
+        }
+
+        public Builder withInheritCollections(boolean inheritCollections) {
+            this.inheritCollections = inheritCollections;
+            return this;
+        }
+
+        public Builder withInheritPermissions(boolean inheritPermissions) {
+            this.inheritPermissions = inheritPermissions;
             return this;
         }
 
@@ -114,8 +131,64 @@ public class ChunkConfig {
         }
     }
 
+    public DocumentMetadataHandle buildChunkMetadata(DocumentMetadataHandle sourceMetadata) {
+        if (!inheritCollections && !inheritPermissions) {
+            return this.metadata;
+        }
+
+        DocumentMetadataHandle chunkMetadata = new DocumentMetadataHandle();
+
+        if (inheritCollections) {
+            if (sourceMetadata != null && sourceMetadata.getCollections() != null) {
+                chunkMetadata.getCollections().addAll(sourceMetadata.getCollections());
+            }
+            if (this.metadata != null && this.metadata.getCollections() != null) {
+                chunkMetadata.getCollections().addAll(this.metadata.getCollections());
+            }
+        } else {
+            if (this.metadata != null && this.metadata.getCollections() != null) {
+                chunkMetadata.getCollections().addAll(this.metadata.getCollections());
+            }
+        }
+
+        if (inheritPermissions) {
+            if (sourceMetadata != null && sourceMetadata.getPermissions() != null) {
+                mergePermissions(chunkMetadata.getPermissions(), sourceMetadata.getPermissions());
+            }
+            if (this.metadata != null && this.metadata.getPermissions() != null) {
+                mergePermissions(chunkMetadata.getPermissions(), this.metadata.getPermissions());
+            }
+        } else {
+            if (this.metadata != null && this.metadata.getPermissions() != null) {
+                mergePermissions(chunkMetadata.getPermissions(), this.metadata.getPermissions());
+            }
+        }
+
+        return chunkMetadata;
+    }
+
+    private void mergePermissions(DocumentMetadataHandle.DocumentPermissions target, DocumentMetadataHandle.DocumentPermissions source) {
+        if (source != null) {
+            source.forEach((role, caps) -> {
+                if (target.containsKey(role)) {
+                    target.get(role).addAll(caps);
+                } else {
+                    target.add(role, caps.toArray(new DocumentMetadataHandle.Capability[0]));
+                }
+            });
+        }
+    }
+
     public DocumentMetadataHandle getMetadata() {
         return metadata;
+    }
+
+    public boolean isInheritCollections() {
+        return inheritCollections;
+    }
+
+    public boolean isInheritPermissions() {
+        return inheritPermissions;
     }
 
     public int getMaxChunks() {
