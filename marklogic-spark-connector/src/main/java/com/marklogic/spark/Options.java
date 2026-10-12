@@ -697,6 +697,15 @@ public abstract class Options {
     public static final String WRITE_INCREMENTAL_HASH_KEY_NAME = WRITE_INCREMENTAL + ".hashKeyName";
 
     /**
+     * Name of the MarkLogic metadata key that holds the source URI value for identifying changed documents. No default
+     * value. Useful when the document to match against does not have the same URI as when it was originally written.
+     * When set, the source URI will be stored in the given metadata key as well.
+     *
+     * @since 3.2.0
+     */
+    public static final String WRITE_INCREMENTAL_SOURCE_URI_KEY_NAME = WRITE_INCREMENTAL + ".sourceUriKeyName";
+
+    /**
      * Name of the optional MarkLogic metadata key that holds the timestamp value for identifying changed documents.
      * No default value.
      *
