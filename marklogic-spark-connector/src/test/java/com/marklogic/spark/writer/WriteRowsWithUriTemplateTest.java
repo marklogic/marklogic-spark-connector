@@ -9,6 +9,9 @@ import org.apache.spark.SparkException;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -134,5 +137,57 @@ class WriteRowsWithUriTemplateTest extends AbstractWriteTest {
         String message = ex.getMessage();
         expectedMessage = "Invalid value for " + Options.WRITE_URI_TEMPLATE + ": " + uriTemplate + "; " + expectedMessage;
         assertEquals(expectedMessage, message, "Unexpected error message: " + message);
+    }
+
+    @Test
+    void uriTemplateWithHashValuesSingleColumn() {
+        newWriter()
+            .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}.json")
+            .option(Options.WRITE_URI_TEMPLATE_HASH_VALUES, true)
+            .save();
+
+        assertCollectionSize(COLLECTION, 200);
+        for (int i = 1; i <= 200; i++) {
+            final String expectedUri = String.format("/test/%s.json", sha256Hex(String.valueOf(i)));
+            assertInCollections(expectedUri, COLLECTION);
+        }
+    }
+
+    @Test
+    void uriTemplateWithHashValuesMultipleColumns() {
+        newWriter()
+            .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}/{docName}.json")
+            .option(Options.WRITE_URI_TEMPLATE_HASH_VALUES, true)
+            .save();
+
+        assertCollectionSize(COLLECTION, 200);
+        for (int i = 1; i <= 200; i++) {
+            final String expectedUri = String.format("/test/%s/%s.json", sha256Hex(String.valueOf(i)), sha256Hex("doc" + i));
+            assertInCollections(expectedUri, COLLECTION);
+        }
+    }
+
+    @Test
+    void uriTemplateWithHashValuesExplicitlyFalse() {
+        newWriter()
+            .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}/{docName}.json")
+            .option(Options.WRITE_URI_TEMPLATE_HASH_VALUES, false)
+            .save();
+
+        assertCollectionSize(COLLECTION, 200);
+        for (int i = 1; i <= 200; i++) {
+            final String expectedUri = String.format("/test/%d/doc%d.json", i, i);
+            assertInCollections(expectedUri, COLLECTION);
+        }
+    }
+
+    private static String sha256Hex(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
