@@ -227,6 +227,7 @@ The following options control how the connector writes rows as documents to Mark
 | spark.marklogic.write.uriSuffix | String to append to each document URI, where the URI defaults to a UUID. |
 | spark.marklogic.write.uriTemplate | String defining a template for constructing each document URI. See [Writing data](writing.md) for more information. |
 | spark.marklogic.write.uriTemplate.warnOnMissingField | New in 3.0.0; boolean defining whether to log a warning instead of fail when a URI template has an expression that cannot be resolved for a row. If set to true, the expression will be replaced with "UNRESOLVED-" followed by a random UUID. |
+| spark.marklogic.write.uriTemplate.hashValues | New in 3.2.0; boolean defining whether to hash resolved expression values using SHA-256 (lowercase hex) before substituting them into the URI template. Defaults to false. |
 
 ### Processing rows via custom code
 
