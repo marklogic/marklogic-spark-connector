@@ -7,6 +7,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Util;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -19,18 +23,34 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
     private final String uriTemplate;
     private final String uriTemplateOptionName;
     private final boolean warnOnMissingField;
+    private final boolean hashValues;
+    private final MessageDigest messageDigest;
 
     // The matcher can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
     // its own and never has multiple threads trying to access it at the same time.
     private Matcher matcher;
 
     SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName, boolean warnOnMissingField) {
+        this(uriTemplate, uriTemplateOptionName, warnOnMissingField, false);
+    }
+
+    SparkRowUriMaker(String uriTemplate, String uriTemplateOptionName, boolean warnOnMissingField, boolean hashValues) {
         this.uriTemplate = uriTemplate;
         this.uriTemplateOptionName = uriTemplateOptionName;
+        this.warnOnMissingField = warnOnMissingField;
+        this.hashValues = hashValues;
         validateUriTemplate();
 
         this.matcher = Pattern.compile("\\{([^}]+)\\}", Pattern.CASE_INSENSITIVE).matcher(uriTemplate);
-        this.warnOnMissingField = warnOnMissingField;
+        if (hashValues) {
+            try {
+                this.messageDigest = MessageDigest.getInstance("SHA-256");
+            } catch (NoSuchAlgorithmException e) {
+                throw new IllegalStateException(e);
+            }
+        } else {
+            this.messageDigest = null;
+        }
     }
 
     @Override
@@ -118,7 +138,12 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
             throw new ConnectorException(message);
         }
 
-        return text;
+        return hashValues ? hashValue(text) : text;
+    }
+
+    private String hashValue(String value) {
+        byte[] hash = messageDigest.digest(value.getBytes(StandardCharsets.UTF_8));
+        return HexFormat.of().formatHex(hash);
     }
 
     private String replaceExpressionWithUnresolvedUUID(String message) {

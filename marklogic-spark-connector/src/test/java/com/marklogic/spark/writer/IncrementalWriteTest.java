@@ -81,6 +81,42 @@ class IncrementalWriteTest extends AbstractWriteTest {
     }
 
     @Test
+    void incrementalWriteWithUriTemplateHashValues() {
+        CommitResultsTestConsumer.reset();
+
+        try {
+            newWriter(1)
+                .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+                .option(Options.WRITE_BATCH_SIZE, 20)
+                .option(Options.WRITE_THREAD_COUNT, 1)
+                .option(Options.WRITE_URI_TEMPLATE, "/hashed/{docNum}.json")
+                .option(Options.WRITE_URI_TEMPLATE_HASH_VALUES, true)
+                .save();
+
+            assertEquals(200, CommitResultsTestConsumer.successCount.get());
+            assertEquals(0, CommitResultsTestConsumer.skippedCount.get());
+
+            CommitResultsTestConsumer.reset();
+
+            // Write the same documents again and verify all documents are skipped because hashed URIs are deterministic
+            newWriter(1)
+                .option(Options.WRITE_INCREMENTAL, true)
+                .option(Options.WRITE_LISTENER_CLASS_NAME, "com.marklogic.spark.writer.CommitResultsTestConsumer")
+                .option(Options.WRITE_BATCH_SIZE, 20)
+                .option(Options.WRITE_THREAD_COUNT, 1)
+                .option(Options.WRITE_URI_TEMPLATE, "/hashed/{docNum}.json")
+                .option(Options.WRITE_URI_TEMPLATE_HASH_VALUES, true)
+                .save();
+
+            assertEquals(0, CommitResultsTestConsumer.successCount.get());
+            assertEquals(200, CommitResultsTestConsumer.skippedCount.get());
+        } finally {
+            CommitResultsTestConsumer.reset();
+        }
+    }
+
+    @Test
     void customKeyNames() {
         newWriter(1)
             .option(Options.WRITE_URI_TEMPLATE, "/test/{docNum}.json")
