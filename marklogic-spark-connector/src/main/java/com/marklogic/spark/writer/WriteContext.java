@@ -246,8 +246,9 @@ public class WriteContext extends ContextSupport {
         final String uriTemplate = getProperties().get(Options.WRITE_URI_TEMPLATE);
         final String optionAlias = getOptionNameForMessage(Options.WRITE_URI_TEMPLATE);
         final boolean warnOnMissingField = getBooleanOption(Options.WRITE_URI_TEMPLATE_WARN_ON_MISSING_FIELD, false);
+        final boolean hashValues = getBooleanOption(Options.WRITE_URI_TEMPLATE_HASH_VALUES, false);
 
-        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias, warnOnMissingField));
+        factory.withUriMaker(new SparkRowUriMaker(uriTemplate, optionAlias, warnOnMissingField, hashValues));
 
         Stream.of(Options.WRITE_URI_PREFIX, Options.WRITE_URI_SUFFIX, Options.WRITE_URI_REPLACE).forEach(option -> {
             String value = getProperties().get(option);
