@@ -97,6 +97,11 @@ class IncrementalWriteTest extends AbstractWriteTest {
             assertEquals(200, CommitResultsTestConsumer.successCount.get());
             assertEquals(0, CommitResultsTestConsumer.skippedCount.get());
 
+            // SHA-256 of "1".
+            final String hashedUri = "/hashed/6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b.json";
+            assertNotNull(getDatabaseClient().newDocumentManager().exists(hashedUri));
+            assertNull(getDatabaseClient().newDocumentManager().exists("/hashed/1.json"));
+
             CommitResultsTestConsumer.reset();
 
             // Write the same documents again and verify all documents are skipped because hashed URIs are deterministic

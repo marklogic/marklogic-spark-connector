@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer;
 
@@ -26,7 +26,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
     private final boolean hashValues;
     private final MessageDigest messageDigest;
 
-    // The matcher can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
+    // The matcher and message digest can be reused as this class is not expected to be thread-safe, as each WriteBatcherDataWriter creates
     // its own and never has multiple threads trying to access it at the same time.
     private Matcher matcher;
 
@@ -46,7 +46,7 @@ class SparkRowUriMaker implements DocBuilder.UriMaker {
             try {
                 this.messageDigest = MessageDigest.getInstance("SHA-256");
             } catch (NoSuchAlgorithmException e) {
-                throw new IllegalStateException(e);
+                throw new ConnectorException("Unable to create SHA-256 message digest; cause: " + e.getMessage(), e);
             }
         } else {
             this.messageDigest = null;

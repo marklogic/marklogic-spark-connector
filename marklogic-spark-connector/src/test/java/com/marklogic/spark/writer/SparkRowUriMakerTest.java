@@ -60,9 +60,8 @@ class SparkRowUriMakerTest {
         ObjectNode row = objectMapper.createObjectNode().put("id", "12345");
 
         String uri = uriMaker.makeURI("/initial.json", row);
-        String expectedHash = sha256Hex("12345");
-        assertEquals("/employee/" + expectedHash + ".json", uri);
-        assertEquals(64, expectedHash.length());
+        // Known SHA-256 of "12345", independent of the production hashing code.
+        assertEquals("/employee/5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5.json", uri);
     }
 
     @Test
