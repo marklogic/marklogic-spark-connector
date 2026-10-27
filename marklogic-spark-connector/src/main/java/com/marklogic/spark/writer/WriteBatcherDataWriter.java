@@ -61,6 +61,7 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     private final WriteBatcher writeBatcher;
     private final BatchRetrier batchRetrier;
     private final ZipFileWriter archiveWriter;
+    private boolean archiveWriterClosed;
 
     private final DocBuilder docBuilder;
 
@@ -146,6 +147,8 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         this.writeBatcher.flushAndWait();
 
         throwWriteFailureIfExists();
+        // Ensures a failure to finish the archive file fails the task.
+        closeArchiveWriter();
 
         Set<String> graphs = getGraphNames();
         return new CommitMessage(successItemCount.get(), failedItemCount.get(), skippedItemCount.get(), graphs, failedDocuments);
@@ -165,8 +168,11 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
             logger.debug("Close called.");
         }
         stopJobAndRelease();
-        closeArchiveWriter();
-        IOUtils.closeQuietly(documentPipeline);
+        try {
+            closeArchiveWriter();
+        } finally {
+            IOUtils.closeQuietly(documentPipeline);
+        }
     }
 
     /**
@@ -369,11 +375,14 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
     }
 
     private void closeArchiveWriter() {
-        if (archiveWriter != null) {
-            if (failedItemCount.get() > 0) {
-                Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipFilePath());
-            }
-            archiveWriter.close();
+        // Spark calls abort/close after a failed commit; only report the archive if this call closed it successfully.
+        if (archiveWriter == null || archiveWriterClosed) {
+            return;
+        }
+        archiveWriterClosed = true;
+        archiveWriter.close();
+        if (failedItemCount.get() > 0) {
+            Util.MAIN_LOGGER.info("Wrote failed documents to archive file at {}.", archiveWriter.getZipFilePath());
         }
     }
 

@@ -168,14 +168,13 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
         notifyFileWriteListenerIfNecessary();
     }
 
-    @Override
-    public void close() {
-        IOUtils.closeQuietly(zipOutputStream);
-        IOUtils.closeQuietly(contentWriter);
-    }
-
+    /**
+     * Closes the zip file before reporting success, so that a failure to finish writing it - e.g. writing the central
+     * directory or completing an object store upload - fails the Spark task instead of being silently ignored.
+     */
     @Override
     public WriterCommitMessage commit() {
+        closeZipOutputStream();
         if (fileWriteListener != null) {
             // Always report the true final count, even if it didn't land exactly on a progress-interval boundary.
             fileWriteListener.onUrisProcessed(uriCounter);
@@ -186,6 +185,29 @@ public class ZipFileWriter implements DataWriter<InternalRow> {
     @Override
     public void abort() {
         // No action to take.
+    }
+
+    @Override
+    public void close() {
+        try {
+            closeZipOutputStream();
+        } finally {
+            IOUtils.closeQuietly(contentWriter);
+        }
+    }
+
+    // Closes at most once, so close() after commit() - or after a failed commit() - does not retry finishing the zip.
+    private void closeZipOutputStream() {
+        if (zipOutputStream != null) {
+            ZipOutputStream stream = zipOutputStream;
+            zipOutputStream = null;
+            try {
+                stream.close();
+            } catch (IOException e) {
+                throw new ConnectorException(String.format("Unable to finish writing zip file %s; cause: %s",
+                    zipPath, e.getMessage()), e);
+            }
+        }
     }
 
     private void createZipFileAndContentWriter() {
