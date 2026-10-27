@@ -171,6 +171,20 @@ As of the 3.0.0 release, you can set the new `spark.marklogic.write.uriTemplate.
 so that if an expression in a URI template cannot be resolved for a row, the error is logged as a warning instead of 
 thrown. In addition, the expression will be replaced with "UNRESOLVED-" followed by a random UUID.
 
+As of the 3.2.0 release, you can set the new `spark.marklogic.write.uriTemplate.hashValues` option to `true` to 
+hash each resolved expression value using SHA-256 (lowercase hex) before substituting it into the URI template:
+
+    .option("spark.marklogic.write.uriTemplate", "/example/{organization}/{employee_id}.json")
+    .option("spark.marklogic.write.uriTemplate.hashValues", "true")
+
+When enabled, every resolved expression in the template is individually hashed into a 64-character lowercase hex 
+string. If `spark.marklogic.write.uriTemplate.warnOnMissingField` is also set, unresolved expressions are still 
+replaced with "UNRESOLVED-" followed by a random UUID and are not hashed. 
+This is useful for preventing sensitive values (such as employee IDs or national IDs) from appearing verbatim in 
+document URIs, and for generating deterministic, repeatable URIs from tabular datasets that lack file paths (which is 
+especially valuable when combined with incremental write). Note that this unsalted hashing provides pseudonymization, 
+not complete anonymization, as low-entropy inputs could potentially be recovered via dictionary or brute-force attacks.
+
 If you are writing file rows that conform to 
 [Spark's binaryFile schema](https://spark.apache.org/docs/latest/sql-data-sources-binaryFile.html), the `path`, 
 `modificationTime`, and `length` columns will be available for use with the template. The `content` column will not be
