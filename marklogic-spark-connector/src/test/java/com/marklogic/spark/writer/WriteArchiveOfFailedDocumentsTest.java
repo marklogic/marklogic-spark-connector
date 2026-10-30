@@ -5,6 +5,8 @@ package com.marklogic.spark.writer;
 
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.writer.file.FailingFileSystem;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
@@ -22,6 +24,7 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
@@ -145,6 +148,30 @@ class WriteArchiveOfFailedDocumentsTest extends AbstractWriteTest {
         assertEquals(500, count,
             "All 500 employee docs should have failed since we tried to write them as XML documents. All 500 " +
                 "should have been written to 4 separate archive files.");
+    }
+
+    @Test
+    void archiveCloseFailureFailsTask(@TempDir Path tempDir) {
+        FailingFileSystem.failOnClose = true;
+        try {
+            SparkSession session = newSparkSession();
+            FailingFileSystem.register(session.sparkContext().hadoopConfiguration());
+
+            Exception ex = assertThrows(Exception.class, () -> defaultWrite(session.read().format(CONNECTOR_IDENTIFIER)
+                .load("src/test/resources/mixed-files")
+                .repartition(1)
+                .write().format(CONNECTOR_IDENTIFIER)
+                .option(Options.WRITE_URI_SUFFIX, ".json")
+                .option(Options.WRITE_ABORT_ON_FAILURE, false)
+                .option(Options.WRITE_ARCHIVE_PATH_FOR_FAILED_DOCUMENTS, FailingFileSystem.toPath(tempDir))
+            ));
+
+            String stackTrace = ExceptionUtils.getStackTrace(ex);
+            assertTrue(stackTrace.contains("Unable to finish writing zip file"), stackTrace);
+            assertTrue(stackTrace.contains(FailingFileSystem.FAILURE_MESSAGE), stackTrace);
+        } finally {
+            FailingFileSystem.failOnClose = false;
+        }
     }
 
     private void verifyArchiveRows(List<Row> rows) {

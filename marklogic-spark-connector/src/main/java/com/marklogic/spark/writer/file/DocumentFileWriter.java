@@ -42,13 +42,10 @@ class DocumentFileWriter implements DataWriter<InternalRow> {
         if (logger.isTraceEnabled()) {
             logger.trace("Will write to: {}", filePath);
         }
-        OutputStream outputStream = makeOutputStream(filePath);
-        try {
+        try (OutputStream outputStream = makeOutputStream(filePath)) {
             this.contentWriter.writeContent(row, outputStream);
-            fileCounter++;
-        } finally {
-            IOUtils.closeQuietly(outputStream);
         }
+        fileCounter++;
     }
 
     @Override
