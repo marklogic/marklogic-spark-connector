@@ -22,8 +22,10 @@ public class FailingFileSystem extends RawLocalFileSystem {
 
     public static final String SCHEME = "failing";
     public static final String FAILURE_MESSAGE = "Simulated failure on close";
+    public static final String WRITE_FAILURE_MESSAGE = "Simulated failure on write";
 
     public static volatile boolean failOnClose;
+    public static volatile boolean failOnWrite;
 
     public static void register(Configuration config) {
         config.set("fs." + SCHEME + ".impl", FailingFileSystem.class.getName());
@@ -50,7 +52,14 @@ public class FailingFileSystem extends RawLocalFileSystem {
         OutputStream out = super.create(path, overwrite, bufferSize, replication, blockSize, progress);
         return new FSDataOutputStream(new FilterOutputStream(out) {
             @Override
+            public void write(int b) throws IOException {
+                failIfConfiguredForWrite();
+                out.write(b);
+            }
+
+            @Override
             public void write(byte[] b, int off, int len) throws IOException {
+                failIfConfiguredForWrite();
                 out.write(b, off, len);
             }
 
@@ -62,5 +71,11 @@ public class FailingFileSystem extends RawLocalFileSystem {
                 }
             }
         }, statistics);
+    }
+
+    private static void failIfConfiguredForWrite() throws IOException {
+        if (failOnWrite) {
+            throw new IOException(WRITE_FAILURE_MESSAGE);
+        }
     }
 }

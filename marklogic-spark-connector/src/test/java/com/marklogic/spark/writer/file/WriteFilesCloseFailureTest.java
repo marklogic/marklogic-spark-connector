@@ -39,6 +39,7 @@ class WriteFilesCloseFailureTest {
     @AfterEach
     void afterEach() {
         FailingFileSystem.failOnClose = false;
+        FailingFileSystem.failOnWrite = false;
         UriCountTestListener.reset();
         if (session != null) {
             session.stop();
@@ -65,6 +66,29 @@ class WriteFilesCloseFailureTest {
             "closed a second time.");
         assertEquals(1, tempDir.toFile().listFiles().length, "The connector should not delete the file; the user " +
             "decides what to do with it.");
+    }
+
+    @Test
+    void zipCommitFailsWhenFinishingZipFails(@TempDir Path tempDir) throws Exception {
+        Map<String, String> properties = newProperties(tempDir);
+        properties.put(Options.WRITE_FILES_LISTENER_CLASS_NAME, UriCountTestListener.class.getName());
+
+        ZipFileWriter writer = new ZipFileWriter(properties, newHadoopConfig(), 0);
+        writer.write(makeRow("/doc1.json"));
+        // Fails the writes made while finishing the zip, such as writing the central directory.
+        FailingFileSystem.failOnWrite = true;
+
+        ConnectorException ex = assertThrows(ConnectorException.class, writer::commit);
+        assertTrue(ex.getMessage().startsWith("Unable to finish writing zip file " + writer.getZipFilePath()),
+            "Unexpected error: " + ex.getMessage());
+        assertTrue(ex.getMessage().contains(FailingFileSystem.WRITE_FAILURE_MESSAGE), "Unexpected error: " + ex.getMessage());
+        assertTrue(UriCountTestListener.writtenUriCounts.isEmpty(), "The final listener callback should not be " +
+            "invoked when the zip file could not be finished.");
+
+        assertDoesNotThrow(writer::abort);
+        assertDoesNotThrow(writer::close, "Spark calls close after a failed commit; the zip file should not be " +
+            "closed a second time.");
+        assertDoesNotThrow(writer::close);
     }
 
     @Test
