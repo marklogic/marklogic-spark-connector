@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -115,12 +116,38 @@ class WritePartialBatchTest extends AbstractWriteTest {
             "should not have been notified of any; actual URIs: " + UriRecordingWriteListener.uris);
     }
 
+    @Test
+    void throwingWriteListenerDoesNotStopRecovery() {
+        UriRecordingWriteListener.reset();
+
+        defaultWrite(newSparkSession().read().format(CONNECTOR_IDENTIFIER)
+            .option(Options.READ_FILES_COMPRESSION, "zip")
+            .load("src/test/resources/spark-json/some-bad-json-docs.zip")
+            .repartition(1)
+            .write().format(CONNECTOR_IDENTIFIER)
+            .option(Options.WRITE_COLLECTIONS, "partial-batch")
+            .option(Options.WRITE_URI_REPLACE, ".*/spark-json,''")
+            .option(Options.WRITE_ABORT_ON_FAILURE, false)
+            .option(Options.WRITE_BATCH_SIZE, 5)
+            .option(Options.WRITE_LISTENER_CLASS_NAME, ThrowingUriRecordingWriteListener.class.getName())
+        );
+
+        List<String> writtenUris = getUrisInCollection("partial-batch", 5).stream().sorted().toList();
+        List<String> notifiedUris = UriRecordingWriteListener.uris.stream().sorted().toList();
+        assertEquals(writtenUris, notifiedUris, "A listener that throws should not stop the remaining retries, " +
+            "nor cause written documents to be retried and thus notified more than once.");
+        assertEquals(5, UriRecordingWriteListener.commitSuccessCount.get(),
+            "A listener that throws should not affect the success count.");
+    }
+
     public static class UriRecordingWriteListener implements WriteListener {
 
         static final Queue<String> uris = new ConcurrentLinkedQueue<>();
+        static final AtomicLong commitSuccessCount = new AtomicLong();
 
         static void reset() {
             uris.clear();
+            commitSuccessCount.set(0);
         }
 
         public UriRecordingWriteListener(Map<String, String> params) {
@@ -131,6 +158,24 @@ class WritePartialBatchTest extends AbstractWriteTest {
             for (WriteEvent item : batch.getItems()) {
                 uris.add(item.getTargetUri());
             }
+        }
+
+        @Override
+        public void onWriteCommit(CommitResults commitResults) {
+            commitSuccessCount.set(commitResults.getSuccessCount());
+        }
+    }
+
+    public static class ThrowingUriRecordingWriteListener extends UriRecordingWriteListener {
+
+        public ThrowingUriRecordingWriteListener(Map<String, String> params) {
+            super(params);
+        }
+
+        @Override
+        public void onBatchSuccess(WriteBatch batch) {
+            super.onBatchSuccess(batch);
+            throw new RuntimeException("Intentional error to verify that recovery continues");
         }
     }
 }
