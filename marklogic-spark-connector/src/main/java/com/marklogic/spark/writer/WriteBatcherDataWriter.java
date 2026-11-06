@@ -6,6 +6,8 @@ package com.marklogic.spark.writer;
 import com.marklogic.client.DatabaseClient;
 import com.marklogic.client.MarkLogicServerException;
 import com.marklogic.client.datamovement.DataMovementManager;
+import com.marklogic.client.datamovement.WriteBatch;
+import com.marklogic.client.datamovement.WriteBatchListener;
 import com.marklogic.client.datamovement.WriteBatcher;
 import com.marklogic.client.datamovement.filter.FilterException;
 import com.marklogic.client.document.DocumentWriteOperation;
@@ -315,9 +317,24 @@ class WriteBatcherDataWriter implements DataWriter<InternalRow> {
         return new BatchRetrier(
             writeContext.newDocumentManager(this.databaseClient),
             writeContext.getStringOption(Options.WRITE_TEMPORAL_COLLECTION),
-            successfulBatch -> successItemCount.getAndAdd(successfulBatch.size()),
+            this::notifyBatchSuccessListeners,
             makeFailureListener()
         );
+    }
+
+    /**
+     * Documents written by the BatchRetrier must be processed the same as documents in a successful WriteBatcher
+     * batch, which includes updating the success count and notifying any user-defined WriteListener.
+     */
+    private void notifyBatchSuccessListeners(WriteBatch batch) {
+        for (WriteBatchListener listener : this.writeBatcher.getBatchSuccessListeners()) {
+            try {
+                listener.processEvent(batch);
+            } catch (Exception ex) {
+                // Mirrors how WriteBatcher handles a failed success listener.
+                Util.MAIN_LOGGER.error("Exception thrown by an onBatchSuccess listener", ex);
+            }
+        }
     }
 
     private BiConsumer<DocumentWriteOperation, Throwable> makeFailureListener() {
