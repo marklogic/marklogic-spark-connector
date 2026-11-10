@@ -93,6 +93,8 @@ class WritePartialBatchTest extends AbstractWriteTest {
         List<String> notifiedUris = UriRecordingWriteListener.uris.stream().sorted().toList();
         assertEquals(writtenUris, notifiedUris, "Each document written by the batch retrier should be sent to " +
             "the write listener exactly once, and failed documents should not be sent to it.");
+        assertFalse(UriRecordingWriteListener.jobBatchNumbers.contains(0L), "Each retried batch should retain the " +
+            "job batch number of the original batch; actual: " + UriRecordingWriteListener.jobBatchNumbers);
     }
 
     @Test
@@ -143,10 +145,12 @@ class WritePartialBatchTest extends AbstractWriteTest {
     public static class UriRecordingWriteListener implements WriteListener {
 
         static final Queue<String> uris = new ConcurrentLinkedQueue<>();
+        static final Queue<Long> jobBatchNumbers = new ConcurrentLinkedQueue<>();
         static final AtomicLong commitSuccessCount = new AtomicLong();
 
         static void reset() {
             uris.clear();
+            jobBatchNumbers.clear();
             commitSuccessCount.set(0);
         }
 
@@ -155,6 +159,7 @@ class WritePartialBatchTest extends AbstractWriteTest {
 
         @Override
         public void onBatchSuccess(WriteBatch batch) {
+            jobBatchNumbers.add(batch.getJobBatchNumber());
             for (WriteEvent item : batch.getItems()) {
                 uris.add(item.getTargetUri());
             }
