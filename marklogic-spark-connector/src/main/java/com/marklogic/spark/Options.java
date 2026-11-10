@@ -471,7 +471,8 @@ public abstract class Options {
      * Number of URIs processed between calls to the {@code FileWriteListener} configured via
      * {@link #WRITE_FILES_LISTENER_CLASS_NAME}. A URI counts once whether it results in one zip entry (content
      * only) or two (content and metadata). Set to 0 (the default) to disable periodic callbacks; the listener,
-     * if configured, is still always invoked once more with the final count when the writer commits.
+     * if configured, is still always invoked once more with the final count after the zip file has been fully
+     * written and closed.
      *
      * @since 3.2.0
      */
