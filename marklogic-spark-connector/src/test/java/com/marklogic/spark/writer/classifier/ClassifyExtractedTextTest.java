@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.classifier;
 
@@ -13,6 +13,11 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -26,6 +31,23 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
+        assertEquals("marklogic-reference-architecture.pdf", MockSemaphoreProxy.getLastFileName());
+        verifyExtractedJsonDocumentHasMetadataAndClassification();
+    }
+
+    @Test
+    void extractedJsonWithLongFileName(@TempDir Path tempDir) throws IOException {
+        Path sourcePdf = Path.of("src/test/resources/extraction-files/marklogic-reference-architecture.pdf");
+        Path longFile = tempDir.resolve("a".repeat(150) + ".pdf");
+        Files.copy(sourcePdf, longFile);
+
+        startReadAndWrite(longFile.toFile().getAbsolutePath())
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
+            .mode(SaveMode.Append)
+            .save();
+
+        // Expected stem length is ClassificationFileName.MAX_FILE_NAME_LENGTH (100) minus the ".pdf" extension.
+        assertEquals("a".repeat(100 - ".pdf".length()) + ".pdf", MockSemaphoreProxy.getLastFileName());
         verifyExtractedJsonDocumentHasMetadataAndClassification();
     }
 
@@ -150,9 +172,13 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
     }
 
     private DataFrameWriter<Row> startReadAndWrite() {
+        return startReadAndWrite("src/test/resources/extraction-files/marklogic-reference-architecture.pdf");
+    }
+
+    private DataFrameWriter<Row> startReadAndWrite(String path) {
         return newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/marklogic-reference-architecture.pdf")
+            .load(path)
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             // Force use of a single batch by matching the document + its 27 expected chunks.
