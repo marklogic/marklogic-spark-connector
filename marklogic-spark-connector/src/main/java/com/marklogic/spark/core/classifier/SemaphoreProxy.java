@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -14,7 +14,12 @@ import java.io.Closeable;
  */
 public interface SemaphoreProxy extends Closeable {
 
-    byte[] classifyDocument(byte[] content, String uri);
+    /**
+     * @param content  bytes to classify
+     * @param fileName bounded, safe name sent to Classification Server (used by its TypeGuesser)
+     * @param uri      original document URI, used only in error messages
+     */
+    byte[] classifyDocument(byte[] content, String fileName, String uri);
 
     Document classifyArticles(byte[] multiArticleDocumentBytes);
 }
