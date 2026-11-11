@@ -14,6 +14,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 class SemaphoreTextClassifierTest {
 
@@ -23,37 +25,53 @@ class SemaphoreTextClassifierTest {
         AtomicReference<String> capturedUri = new AtomicReference<>();
         byte[] expectedClassification = "<response/>".getBytes(StandardCharsets.UTF_8);
 
-        SemaphoreProxy capturingProxy = new SemaphoreProxy() {
+        SemaphoreProxy capturingProxy = new TestProxy() {
             @Override
             public byte[] classifyDocument(byte[] content, String fileName, String uri) {
                 capturedFileName.set(fileName);
                 capturedUri.set(uri);
                 return expectedClassification;
             }
-
-            @Override
-            public Document classifyArticles(byte[] multiArticleDocumentBytes) {
-                return null;
-            }
-
-            @Override
-            public void close() {
-            }
         };
 
         String longUri = "/deep/path/" + "x".repeat(150) + ".json";
-        DocumentInputs inputs = new DocumentInputs(
-            longUri,
-            new StringHandle("{\"hello\":\"world\"}").withFormat(Format.JSON),
-            null,
-            null
-        );
+        DocumentInputs inputs = newJsonInputs(longUri);
 
-        SemaphoreTextClassifier classifier = new SemaphoreTextClassifier(capturingProxy, "UTF-8", 20);
-        classifier.classifyDocument(inputs);
+        new SemaphoreTextClassifier(capturingProxy, "UTF-8", 20, false).classifyDocument(inputs);
 
         assertEquals("x".repeat(95) + ".json", capturedFileName.get());
         assertEquals(longUri, capturedUri.get());
         assertArrayEquals(expectedClassification, inputs.getDocumentClassification());
+    }
+
+    @Test
+    void skipDocumentDoesNotInvokeProxyAndLeavesDocumentClassificationNull() {
+        SemaphoreProxy failingProxy = new TestProxy() {
+            @Override
+            public byte[] classifyDocument(byte[] content, String fileName, String uri) {
+                return fail("classifyDocument should not be invoked when skipDocument is true");
+            }
+        };
+
+        DocumentInputs inputs = newJsonInputs("/some/doc.json");
+
+        new SemaphoreTextClassifier(failingProxy, "UTF-8", 20, true).classifyDocument(inputs);
+
+        assertNull(inputs.getDocumentClassification());
+    }
+
+    private static DocumentInputs newJsonInputs(String uri) {
+        return new DocumentInputs(uri, new StringHandle("{\"hello\":\"world\"}").withFormat(Format.JSON), null, null);
+    }
+
+    private abstract static class TestProxy implements SemaphoreProxy {
+        @Override
+        public Document classifyArticles(byte[] multiArticleDocumentBytes) {
+            return null;
+        }
+
+        @Override
+        public void close() {
+        }
     }
 }

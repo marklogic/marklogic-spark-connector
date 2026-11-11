@@ -13,7 +13,8 @@ public class MockSemaphoreProxy implements SemaphoreProxy {
     private final Document mockResponse;
     private static int timesInvoked;
     private static boolean wasClosed;
-    // Not thread-safe; tests asserting on this must use a single partition so only one proxy is created and invoked.
+    // Not thread-safe; tests asserting on these must use a single partition so only one proxy is created and invoked.
+    private static int documentClassificationCount;
     private static String lastFileName;
 
     // Sonar doesn't like this static assignment, but it's fine in a class that's only used as a mock.
@@ -22,6 +23,7 @@ public class MockSemaphoreProxy implements SemaphoreProxy {
         this.mockResponse = new DOMHelper(null).parseXmlString(mockResponse, null);
         timesInvoked = 0;
         lastFileName = null;
+        documentClassificationCount = 0;
     }
 
     public static boolean isClosed() {
@@ -36,9 +38,14 @@ public class MockSemaphoreProxy implements SemaphoreProxy {
         return lastFileName;
     }
 
+    public static int getDocumentClassificationCount() {
+        return documentClassificationCount;
+    }
+
     @Override
     public byte[] classifyDocument(byte[] content, String fileName, String uri) {
         lastFileName = fileName;
+        documentClassificationCount++;
         String mockSingleArticleResponse = """
             <?xml version="1.0" encoding="UTF-8"?>
             <response>

@@ -7,6 +7,7 @@ import com.marklogic.langchain4j.Langchain4jFactory;
 import com.marklogic.spark.ConnectorException;
 import com.marklogic.spark.Context;
 import com.marklogic.spark.Options;
+import com.marklogic.spark.Util;
 import com.marklogic.spark.core.classifier.TextClassifier;
 import com.marklogic.spark.core.classifier.TextClassifierFactory;
 import com.marklogic.spark.core.embedding.ChunkSelector;
@@ -42,6 +43,11 @@ public abstract class DocumentPipelineFactory {
         final TextSplitter textSplitter = newTextSplitter(context);
         final TextClassifier textClassifier = TextClassifierFactory.newTextClassifier(context);
         final EmbeddingProducer embeddingProducer = newEmbeddingProducer(context);
+
+        if (textClassifier != null && textSplitter == null
+            && context.getBooleanOption(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, false)) {
+            Util.MAIN_LOGGER.warn("Whole-document classification is skipped and no text splitter is configured; no text will be classified.");
+        }
 
         ChunkSelector chunkSelector = null;
         if (embeddingProducer != null && textSplitter == null) {
