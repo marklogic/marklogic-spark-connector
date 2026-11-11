@@ -689,6 +689,15 @@ public abstract class Options {
     public static final String WRITE_CLASSIFIER_OPTION_PREFIX = "spark.marklogic.write.classifier.option.";
 
     /**
+     * When true, skips whole-document classification so that only chunks are classified. This avoids one
+     * Classification Server request per document and omits the document-level classification element. Has no
+     * effect unless a classifier is configured. Defaults to false.
+     *
+     * @since 3.2.0
+     */
+    public static final String WRITE_CLASSIFIER_SKIP_DOCUMENT = "spark.marklogic.write.classifier.skipDocument";
+
+    /**
      * Enables the incremental write feature, defaulting to an Optic query that uses fromLexicons and depends on a
      * field range index.
      *
