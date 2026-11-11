@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassifyExtractedTextTest extends AbstractIntegrationTest {
@@ -74,6 +75,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = verifyExtractedJsonDocumentHasMetadataAndClassification();
+        assertEquals(1, MockSemaphoreProxy.getDocumentClassificationCount());
         assertTrue(doc.has("chunks"));
         ArrayNode chunks = (ArrayNode) doc.get("chunks");
         assertEquals(27, chunks.size(), "Expecting 27 chunks based on the default of 1000 chars");
@@ -83,6 +85,94 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             assertTrue(chunk.has("classification"));
             assertTrue(chunk.get("classification").has("SYSTEM"));
         }
+    }
+
+    @Test
+    void skipDocumentWithChunks() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount(),
+            "No whole-document classification request should be sent when skipDocument is true");
+
+        JsonNode doc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
+        assertTrue(doc.has("extracted-metadata"));
+        assertFalse(doc.has("classification"), "Extracted-text document should not have document-level classification");
+        assertTrue(doc.has("chunks"));
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(27, chunks.size());
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("text"));
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
+        }
+    }
+
+    @Test
+    void skipDocumentWithSidecarChunks() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+
+        JsonNode extractedDoc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
+        assertFalse(extractedDoc.has("classification"));
+
+        for (String chunkUri : getUrisInCollection("chunks", 27)) {
+            JsonNode chunkDoc = readJsonDocument(chunkUri);
+            assertEquals(1, chunkDoc.get("chunks").size());
+            JsonNode chunk = chunkDoc.get("chunks").get(0);
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
+        }
+    }
+
+    @Test
+    void skipDocumentXml() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+
+        XmlNode doc = readXmlDocument("/aaa/arch.pdf-extracted-text.xml");
+        doc.assertElementValue("/model:root/model:extracted-metadata/model:Content-Type", "application/pdf");
+        doc.assertElementMissing("Document-level classification must be omitted when skipDocument is true",
+            "/model:root/model:classification");
+        int expectedChunkCount = 27;
+        doc.assertElementCount("/model:root/model:chunks/model:chunk[model:text and model:classification]", expectedChunkCount);
+        doc.assertElementCount("/model:root/model:chunks/model:chunk[model:classification/model:SYSTEM/@name = 'DeterminedLanguage']", expectedChunkCount);
+    }
+
+    @Test
+    void skipDocumentBinaryNoExtraction() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT, false)
+            .option(Options.WRITE_COLLECTIONS, "binary")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+        assertCollectionSize("binary", 1);
     }
 
     @Test

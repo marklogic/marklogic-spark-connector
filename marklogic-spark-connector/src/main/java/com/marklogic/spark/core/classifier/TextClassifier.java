@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -16,7 +16,8 @@ public interface TextClassifier extends Closeable {
     /**
      * Classify the content of a single document. This will always result in a single document being sent to Semaphore
      * in a single request, which is typically not ideal for performance. However, combining 2+ documents into a single
-     * "multi-article" request can be problematic when the document types differ.
+     * "multi-article" request can be problematic when the document types differ. May be a no-op when configured to
+     * skip whole-document classification.
      *
      * @param inputs
      */
