@@ -30,6 +30,14 @@ configurations.configureEach {
        details.useVersion "4.2.16.Final"
        details.because "Forcing Spark 4.x to use latest Netty to minimize CVEs"
      }
+
+     // The Java Client's jackson-bom brings in 2.22.1, which is affected by BDSA-2026-26434 / GHSA-649p-m576-vr99.
+     // All Jackson modules must stay on the same version. jackson-annotations only has major.minor versions.
+     if (details.requested.group.startsWith("com.fasterxml.jackson")) {
+       def isAnnotations = details.requested.name.equals("jackson-annotations")
+       details.useVersion isAnnotations ? jacksonVersion.replaceFirst(/\.\d+$/, "") : jacksonVersion
+       details.because "Aligning Jackson to ${jacksonVersion} to resolve BDSA-2026-26434"
+     }
    }
  }
 
