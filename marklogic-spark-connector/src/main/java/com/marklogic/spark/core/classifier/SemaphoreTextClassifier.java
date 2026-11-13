@@ -52,8 +52,11 @@ class SemaphoreTextClassifier implements TextClassifier {
 
     @Override
     public void classifyDocument(DocumentInputs inputs) {
-        byte[] content = inputs.getContentAsBytes();
-        byte[] classification = semaphoreProxy.classifyDocument(content, inputs.getInitialUri());
+        final String uri = inputs.getInitialUri();
+        final String fileName = ClassificationFileName.from(uri,
+            Util.determineSourceDocumentFormat(inputs.getContent(), uri));
+        SEMAPHORE_LOGGER.debug("Using file name '{}' to classify document with URI: {}", fileName, uri);
+        byte[] classification = semaphoreProxy.classifyDocument(inputs.getContentAsBytes(), fileName, uri);
         inputs.setDocumentClassification(classification);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.core.classifier;
 
@@ -40,16 +40,16 @@ class SemaphoreProxyImpl implements SemaphoreProxy {
     }
 
     @Override
-    public byte[] classifyDocument(byte[] content, String uri) {
+    public byte[] classifyDocument(byte[] content, String fileName, String uri) {
         try {
             classificationClient.getClassificationConfiguration().setMultiArticle(false);
             if (tokenRefreshHandler != null) {
                 return tokenRefreshHandler.executeWithTokenRefresh(
-                    () -> doClassifyDocument(content, uri),
+                    () -> doClassifyDocument(content, fileName),
                     String.format("Unable to classify content with URI: %s; cause: ", uri)
                 );
             }
-            return doClassifyDocument(content, uri);
+            return doClassifyDocument(content, fileName);
         } catch (ClassificationException ex) {
             throw new ConnectorException(String.format("Unable to classify content with URI: %s; cause: %s", uri, ex.getMessage()), ex);
         } finally {
@@ -57,9 +57,9 @@ class SemaphoreProxyImpl implements SemaphoreProxy {
         }
     }
 
-    private byte[] doClassifyDocument(byte[] content, String uri) throws ClassificationException {
+    private byte[] doClassifyDocument(byte[] content, String fileName) throws ClassificationException {
         long start = System.currentTimeMillis();
-        byte[] response = classificationClient.getClassificationServerResponse(content, uri, null, null);
+        byte[] response = classificationClient.getClassificationServerResponse(content, fileName, null, null);
         logDuration(start);
         return response;
     }
