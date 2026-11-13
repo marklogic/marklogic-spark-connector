@@ -40,20 +40,28 @@ class SemaphoreTextClassifier implements TextClassifier {
     private final String encoding;
     private final XPathExpression articleExpression;
     private final int batchSize;
+    private final boolean skipDocument;
 
-    SemaphoreTextClassifier(SemaphoreProxy semaphoreProxy, String encoding, int batchSize) {
+    SemaphoreTextClassifier(SemaphoreProxy semaphoreProxy, String encoding, int batchSize, boolean skipDocument) {
         this.semaphoreProxy = semaphoreProxy;
         this.domHelper = new DOMHelper(null);
         this.transformer = newTransformer();
         this.encoding = encoding;
         this.batchSize = batchSize;
+        this.skipDocument = skipDocument;
         this.articleExpression = domHelper.compileXPath("//ARTICLE", "Unable to evaluate XPath expression");
     }
 
     @Override
     public void classifyDocument(DocumentInputs inputs) {
-        byte[] content = inputs.getContentAsBytes();
-        byte[] classification = semaphoreProxy.classifyDocument(content, inputs.getInitialUri());
+        if (skipDocument) {
+            return;
+        }
+        final String uri = inputs.getInitialUri();
+        final String fileName = ClassificationFileName.from(uri,
+            Util.determineSourceDocumentFormat(inputs.getContent(), uri));
+        SEMAPHORE_LOGGER.debug("Using file name '{}' to classify document with URI: {}", fileName, uri);
+        byte[] classification = semaphoreProxy.classifyDocument(inputs.getContentAsBytes(), fileName, uri);
         inputs.setDocumentClassification(classification);
     }
 

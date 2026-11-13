@@ -49,7 +49,8 @@ public abstract class TextClassifierFactory {
             // We may need a dedicated encoding for this
             String encoding = context.getStringOption(Options.READ_FILES_ENCODING, "UTF-8");
             int batchSize = context.getIntOption(Options.WRITE_CLASSIFIER_BATCH_SIZE, 20, 1);
-            return new SemaphoreTextClassifier(semaphoreProxy, encoding, batchSize);
+            boolean skipDocument = context.getBooleanOption(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, false);
+            return new SemaphoreTextClassifier(semaphoreProxy, encoding, batchSize, skipDocument);
         }
         return null;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2025 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
+ * Copyright (c) 2023-2026 Progress Software Corporation and/or its subsidiaries or affiliates. All Rights Reserved.
  */
 package com.marklogic.spark.writer.classifier;
 
@@ -13,8 +13,14 @@ import org.apache.spark.sql.DataFrameWriter;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ClassifyExtractedTextTest extends AbstractIntegrationTest {
@@ -26,6 +32,23 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .mode(SaveMode.Append)
             .save();
 
+        assertEquals("marklogic-reference-architecture.pdf", MockSemaphoreProxy.getLastFileName());
+        verifyExtractedJsonDocumentHasMetadataAndClassification();
+    }
+
+    @Test
+    void extractedJsonWithLongFileName(@TempDir Path tempDir) throws IOException {
+        Path sourcePdf = Path.of("src/test/resources/extraction-files/marklogic-reference-architecture.pdf");
+        Path longFile = tempDir.resolve("a".repeat(150) + ".pdf");
+        Files.copy(sourcePdf, longFile);
+
+        startReadAndWrite(longFile.toFile().getAbsolutePath())
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
+            .mode(SaveMode.Append)
+            .save();
+
+        // Expected stem length is ClassificationFileName.MAX_FILE_NAME_LENGTH (100) minus the ".pdf" extension.
+        assertEquals("a".repeat(100 - ".pdf".length()) + ".pdf", MockSemaphoreProxy.getLastFileName());
         verifyExtractedJsonDocumentHasMetadataAndClassification();
     }
 
@@ -52,6 +75,7 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             .save();
 
         JsonNode doc = verifyExtractedJsonDocumentHasMetadataAndClassification();
+        assertEquals(1, MockSemaphoreProxy.getDocumentClassificationCount());
         assertTrue(doc.has("chunks"));
         ArrayNode chunks = (ArrayNode) doc.get("chunks");
         assertEquals(27, chunks.size(), "Expecting 27 chunks based on the default of 1000 chars");
@@ -61,6 +85,94 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
             assertTrue(chunk.has("classification"));
             assertTrue(chunk.get("classification").has("SYSTEM"));
         }
+    }
+
+    @Test
+    void skipDocumentWithChunks() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount(),
+            "No whole-document classification request should be sent when skipDocument is true");
+
+        JsonNode doc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
+        assertTrue(doc.has("extracted-metadata"));
+        assertFalse(doc.has("classification"), "Extracted-text document should not have document-level classification");
+        assertTrue(doc.has("chunks"));
+        ArrayNode chunks = (ArrayNode) doc.get("chunks");
+        assertEquals(27, chunks.size());
+        for (int i = 0; i < chunks.size(); i++) {
+            JsonNode chunk = chunks.get(i);
+            assertTrue(chunk.has("text"));
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
+        }
+    }
+
+    @Test
+    void skipDocumentWithSidecarChunks() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 1)
+            .option(Options.WRITE_SPLITTER_SIDECAR_COLLECTIONS, "chunks")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+
+        JsonNode extractedDoc = readJsonDocument("/aaa/arch.pdf-extracted-text.json");
+        assertFalse(extractedDoc.has("classification"));
+
+        for (String chunkUri : getUrisInCollection("chunks", 27)) {
+            JsonNode chunkDoc = readJsonDocument(chunkUri);
+            assertEquals(1, chunkDoc.get("chunks").size());
+            JsonNode chunk = chunkDoc.get("chunks").get(0);
+            assertTrue(chunk.has("classification"));
+            assertTrue(chunk.get("classification").has("SYSTEM"));
+        }
+    }
+
+    @Test
+    void skipDocumentXml() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(27))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT_DOCUMENT_TYPE, "xml")
+            .option(Options.WRITE_SPLITTER_TEXT, true)
+            .option(Options.WRITE_SPLITTER_SIDECAR_MAX_CHUNKS, 0)
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+
+        XmlNode doc = readXmlDocument("/aaa/arch.pdf-extracted-text.xml");
+        doc.assertElementValue("/model:root/model:extracted-metadata/model:Content-Type", "application/pdf");
+        doc.assertElementMissing("Document-level classification must be omitted when skipDocument is true",
+            "/model:root/model:classification");
+        int expectedChunkCount = 27;
+        doc.assertElementCount("/model:root/model:chunks/model:chunk[model:text and model:classification]", expectedChunkCount);
+        doc.assertElementCount("/model:root/model:chunks/model:chunk[model:classification/model:SYSTEM/@name = 'DeterminedLanguage']", expectedChunkCount);
+    }
+
+    @Test
+    void skipDocumentBinaryNoExtraction() {
+        startReadAndWrite()
+            .option(ClassifierTestUtil.MOCK_RESPONSE_OPTION, ClassifierTestUtil.buildMockResponse(1))
+            .option(Options.WRITE_CLASSIFIER_SKIP_DOCUMENT, true)
+            .option(Options.WRITE_EXTRACTED_TEXT, false)
+            .option(Options.WRITE_COLLECTIONS, "binary")
+            .mode(SaveMode.Append)
+            .save();
+
+        assertEquals(0, MockSemaphoreProxy.getDocumentClassificationCount());
+        assertCollectionSize("binary", 1);
     }
 
     @Test
@@ -150,9 +262,13 @@ class ClassifyExtractedTextTest extends AbstractIntegrationTest {
     }
 
     private DataFrameWriter<Row> startReadAndWrite() {
+        return startReadAndWrite("src/test/resources/extraction-files/marklogic-reference-architecture.pdf");
+    }
+
+    private DataFrameWriter<Row> startReadAndWrite(String path) {
         return newSparkSession()
             .read().format(CONNECTOR_IDENTIFIER)
-            .load("src/test/resources/extraction-files/marklogic-reference-architecture.pdf")
+            .load(path)
             .write().format(CONNECTOR_IDENTIFIER)
             .option(Options.CLIENT_URI, makeClientUri())
             // Force use of a single batch by matching the document + its 27 expected chunks.
