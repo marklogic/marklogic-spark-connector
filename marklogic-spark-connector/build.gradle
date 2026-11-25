@@ -18,6 +18,9 @@ configurations {
 
       // Compile/test dependency via Spark; resolves BDSA-2026-24084
       force "at.yawk.lz4:lz4-java:1.12.1"
+
+      // Compile/test dependency via Spark; resolves BDSA-2026-33872 / MLE-34391
+      force "org.xerial.snappy:snappy-java:1.1.10.12"
     }
   }
 }
